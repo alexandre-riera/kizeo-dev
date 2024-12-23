@@ -833,26 +833,6 @@ class FormRepository extends ServiceEntityRepository
             if ($allFormsArray[$key]['class'] === 'MAINTENANCE') {
                 // Récuperation des forms ID
                 array_push($allFormsKeyId, $allFormsArray[$key]['id']);
-                // $allFormsMaintenanceArray = $cache->get('allFormsMaintenanceArray', function(ItemInterface $item) use ($allFormsArray, $key, $allFormsMaintenanceArray) {
-                //     $item->expiresAfter(604800); // 1 week
-
-                //     $response = $this->client->request(
-                //         'POST',
-                //         'https://forms.kizeo.com/rest/v3/forms/' . $allFormsArray[$key]['id'] . '/data/advanced', [
-                //             'headers' => [
-                //                 'Accept' => 'application/json',
-                //                 'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                //             ],
-                //         ]
-                //     );
-                //     $content = $response->getContent();
-                //     $content = $response->toArray();
-                    
-                //     foreach ($content['data'] as $key => $value) {
-                //         array_push($allFormsMaintenanceArray, $value);
-                //     }
-                    
-                // });
             }
         }
         // -----------------------------  FIN Return all forms with class "MAINTENANCE"
@@ -888,9 +868,6 @@ class FormRepository extends ServiceEntityRepository
             
             foreach ($formUnread['data'] as $form) {
                 array_push($formUnreadArray, $form);
-                // J'incrémente le compteur de formulaire non lu
-                // $unreadFormCounter += 1;
-                // dump('Compteur début de boucle : ' . $unreadFormCounter);
                 $response = $this->client->request(
                     'GET',
                     'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/data/' . $form['_id'], [

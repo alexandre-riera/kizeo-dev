@@ -148,44 +148,48 @@ class FormController extends AbstractController
      * 
      */
     #[Route('/api/forms/update/lists/equipements', name: 'app_api_form_update_lists_equipements', methods: ['GET','PUT'])]
-    public function putUpdatesListsEquipementsFromKizeoForms(FormRepository $formRepository, CacheInterface $cache){
+    public function putUpdatesListsEquipementsFromKizeoForms(FormRepository $formRepository, CacheInterface $cache): JsonResponse {
         $dataOfFormList  =  $formRepository->getDataOfFormsMaintenance($cache);
 
         // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
         // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         $equipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
             return $result;
         });
         $equipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
             return $result;
         });
         $equipmentsParis = $cache->get('equipments_paris', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
             return $result;
         });
         $equipmentsMontpellier = $cache->get('equipments_montpellier', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
             return $result;
         });
         $equipmentsStEtienne = $cache->get('equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
             return $result;
         });
         $equipmentsSmp = $cache->get('equipments_smp', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(302400); // 3 jours en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
+            return $result;
+        });
+        $equipmentsHautsDeFrance = $cache->get('equipments_hdf', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(302400); // 3 jours en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
         
         // $equipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        // $equipmentsHautsDeFrance = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $equipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $equipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $equipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
@@ -226,20 +230,20 @@ class FormController extends AbstractController
                     dump('Uploads for S100 OK');
                     break;
                 
-                // case 'S120':
-                //     $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsHautsDeFrance, );
-                //     dump('Uploads for S120 OK');
-                //     break;
+                case 'S120':
+                    $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsHautsDeFrance, 434252);
+                    dump('Uploads for S120 OK');
+                    break;
                 
                 // case 'S130':
                 //     $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsToulouse, );
                 //     dump('Uploads for S130 OK');
                 //     break;
                 
-                case 'S140':
-                    $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsSmp, 427682);
-                    dump('Uploads for S140 OK');
-                    break;
+                // case 'S140':
+                //     $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsSmp, 427682);
+                //     dump('Uploads for S140 OK');
+                //     break;
                 
                 // case 'S150':
                 //     $formRepository->uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $equipmentsSogefi, );
@@ -257,12 +261,12 @@ class FormController extends AbstractController
                 //     break;
                 
                 default:
-                    return new JsonResponse('this not for our agencies', Response::HTTP_OK, [], true);
+                    dump('this not for our agencies');
                     break;
             }
         }
-        // return new JsonResponse('La mise à jour sur KIZEO s\'est bien déroulée !', Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
+        return new JsonResponse('La mise à jour sur KIZEO s\'est bien déroulée !', Response::HTTP_OK, [], true);
+        // return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
 
     /**
