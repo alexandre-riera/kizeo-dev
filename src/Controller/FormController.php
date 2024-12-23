@@ -124,6 +124,10 @@ class FormController extends AbstractController
         return new JsonResponse("Formulaires parc client sur API KIZEO : " . count($formList) . " | Formulaires parc client en BDD : " . count($allFormsInDatabase) . "\n", Response::HTTP_OK, [], true);
     }
 
+    // ------------------------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------------------------------
+
     /**
      * 
      * Save maintenance equipments in local database then call save equipments to KIZEO  --  FIRST CALL IN CRON TASK
@@ -135,7 +139,8 @@ class FormController extends AbstractController
         
         
         // return new JsonResponse("Les équipements de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_api_form_update_lists_equipements');
+        // return $this->redirectToRoute('app_api_form_update_lists_equipements'); // Remettre quand la nouvelle liste d'équipements n'écrasera plus l'ancienne sur KIZEO
+        return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
 
     /**
@@ -265,12 +270,12 @@ class FormController extends AbstractController
      * Save PDF maintenance on remote server --  THIRD CALL IN CRON TASK
      */
     #[Route('/api/forms/save/maintenance/pdf', name: 'app_api_form_save_maintenance_pdf', methods: ['GET'])]
-    public function savePdfInAssetsPdfFolder(FormRepository $formRepository, CacheInterface $cache): JsonResponse
+    public function savePdfInAssetsPdfFolder(FormRepository $formRepository, CacheInterface $cache)//: JsonResponse
     {
         $formRepository->savePdfInAssetsPdfFolder($cache);
         
-        // return $this->redirectToRoute('app_api_form_save_maintenance_equipments');
-        return new JsonResponse("Les pdf de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
+        return $this->redirectToRoute('app_api_form_save_maintenance_equipments');
+        // return new JsonResponse("Les pdf de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
     }
     /**
      * 
@@ -284,7 +289,9 @@ class FormController extends AbstractController
         
         return new JsonResponse("Les pdf de maintenance ont bien été mis en non lu ", Response::HTTP_OK, [], true);
     }
-
+    // ------------------------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------------------------------------------------------
 
     /**
      * 
