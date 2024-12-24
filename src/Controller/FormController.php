@@ -154,37 +154,37 @@ class FormController extends AbstractController
         // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
         // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         $equipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
             return $result;
         });
         $equipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
             return $result;
         });
         $equipmentsParis = $cache->get('equipments_paris', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
             return $result;
         });
         $equipmentsMontpellier = $cache->get('equipments_montpellier', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
             return $result;
         });
         $equipmentsStEtienne = $cache->get('equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
             return $result;
         });
         $equipmentsSmp = $cache->get('equipments_smp', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
             return $result;
         });
         $equipmentsHautsDeFrance = $cache->get('equipments_hdf', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(302400); // 3 jours en cache
+            $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
