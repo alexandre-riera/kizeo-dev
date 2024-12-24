@@ -192,8 +192,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -208,8 +206,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -223,8 +219,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -238,8 +232,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -253,8 +245,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -269,8 +259,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -285,8 +273,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -300,8 +286,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -315,8 +299,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -330,8 +312,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -345,8 +325,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -360,8 +338,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -375,8 +351,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -390,8 +364,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -405,8 +377,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -420,8 +390,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -435,8 +403,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -450,8 +416,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -465,8 +429,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -480,8 +442,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -495,8 +455,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -510,8 +468,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -525,8 +481,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -540,8 +494,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -555,8 +507,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
@@ -570,8 +520,6 @@ class HomeController extends AbstractController
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            $numEquipment = $equipment->getNumeroEquipement();
-                            
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
