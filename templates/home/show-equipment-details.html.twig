@@ -88,6 +88,12 @@
                 <h4>Statut conformité</h4>
                 <p type="text" id="modal_show_statutConformite">{{ equipment.getstatutConformite() }}</p>
             </div>
+            <div class="galerie-photos">
+                <h4>Galerie photos</h4>
+                {% for picture in picturesArray %}
+                picture
+                {% endfor %}
+            </div>
         </div>
     {% endif %}
 {% endblock %}
