@@ -551,8 +551,8 @@ class HomeController extends AbstractController
             'agenceSelected' => $agenceSelected, // String
             'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)
             'clientSelectedInformations'  => $clientSelectedInformations, // Selected Entity Contact
-            'clientSelectedEquipmentsFiltered'  => array_unique($clientSelectedEquipmentsFiltered), // Selected Entity Equipement where last visit is superior 3 months ago
-            'totalClientSelectedEquipmentsFiltered'  => count(array_unique($clientSelectedEquipmentsFiltered)), // Total Selected Entity Equipement where last visit is superior 3 months ago
+            'clientSelectedEquipmentsFiltered'  => array_unique($clientSelectedEquipmentsFiltered, SORT_REGULAR), // Selected Entity Equipement where last visit is superior 3 months ago
+            'totalClientSelectedEquipmentsFiltered'  => count(array_unique($clientSelectedEquipmentsFiltered, SORT_REGULAR)), // Total Selected Entity Equipement where last visit is superior 3 months ago
             'directoriesLists' => $directoriesLists, // Total Selected Entity Equipement where last visit is superior 3 months ago
             'visiteDuClient' =>  $visiteDuClient,
             'idClientSelected' =>  $idClientSelected,
