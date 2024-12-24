@@ -193,7 +193,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -211,7 +211,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -228,7 +228,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -245,7 +245,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -262,7 +262,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -280,7 +280,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -298,7 +298,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -315,7 +315,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -332,7 +332,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -349,7 +349,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -366,7 +366,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -383,7 +383,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -400,7 +400,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -417,7 +417,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -434,7 +434,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -451,7 +451,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -468,7 +468,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -485,7 +485,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -502,7 +502,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -519,7 +519,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -536,7 +536,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -553,7 +553,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -570,7 +570,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -587,7 +587,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -604,7 +604,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
@@ -621,7 +621,7 @@ class HomeController extends AbstractController
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
                             $numEquipment = $equipment->getNumeroEquipement();
-                            if(!in_array($numEquipment, $clientSelectedEquipmentsFiltered)){
+                            if(!in_array($equipment, $clientSelectedEquipmentsFiltered)){
 
                                 array_push($clientSelectedEquipmentsFiltered, $equipment);
                             }
