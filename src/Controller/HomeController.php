@@ -205,7 +205,7 @@ class HomeController extends AbstractController
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($e && !in_array($equipment, $clientSelectedEquipmentsFiltered, true)quipment->getDateEnregistrement() != NULL) {
+                        if ($equipment->getDateEnregistrement() != NULL && !in_array($equipment, $clientSelectedEquipmentsFiltered, true)) {
                             array_push($clientSelectedEquipmentsFiltered, $equipment);
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
                             $visiteDuClient =  $equipment->getVisite();
