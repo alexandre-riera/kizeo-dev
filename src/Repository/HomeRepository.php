@@ -38,9 +38,11 @@ class HomeRepository{
     }
 
     public function getListOfPdf($clientSelected, $visite, $agenceSelected){
+        // I add 2024 in the url cause we are in 2025 and there is not 2025 folder yet
+        // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
         $thisYear = date('Y');
         $agenceSelected = trim($agenceSelected);
-        $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$thisYear/$visite" );
+        $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/2024/$visite" );
         $results = [];
         foreach($directoriesLists as $fichier){
 
