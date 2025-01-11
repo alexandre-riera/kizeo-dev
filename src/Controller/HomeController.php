@@ -758,7 +758,7 @@ class HomeController extends AbstractController
         $dataId = "";
         dump($picturesArray);
         foreach ($picturesArray as $key => $value) {
-            array_push($picturesDataArray, $key);
+            array_push($picturesDataArray, $value);
             // dump("je suis value: " . $value);
         }
         dump($picturesDataArray);
