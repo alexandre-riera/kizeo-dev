@@ -1875,7 +1875,8 @@ class FormRepository extends ServiceEntityRepository
         foreach ($picturesArray as $key => $value) {
             if ($value->photo_plaque != "" || $value->photo_plaque != null) {
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
-                array_push($picturesdata, $photoJpg);
+                $pictureEncoded = base64_encode($photoJpg);
+                array_push($picturesdata, $pictureEncoded);
             }
         }
         // dump(exif_read_data("data://image/jpeg;base64," . base64_encode($photoJpg)));
