@@ -93,7 +93,7 @@
                 <div class="image-gallery">
                     {% for picture in picturesData %}
                         <div class="image-item">
-                            <img src="data:image/jpeg; base64, {{ base64_encode(picture) }}" />
+                            <img src="data:image/jpeg; base64, {{ picture|base64_encode }}" />
                         </div>
                     {% endfor %}
                 </div>
