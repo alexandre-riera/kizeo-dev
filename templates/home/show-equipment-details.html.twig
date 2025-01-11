@@ -93,7 +93,7 @@
                 <div style="display:flex; flex-wrap:wrap; justify-content:center;">
                     {% for picture in picturesData %}
                         <div style="width:200px; height: 100px; margin: 10px;">
-                            <img src="{{ 'data://image/jpeg;base64,' . base64_encode(picture) }}" >
+                            <img src="{{ 'data://image/jpeg;base64,' ~ base64_encode(picture) }}" >
                         </div>
                     {% endfor %}
                 </div>
