@@ -1854,24 +1854,41 @@ class FormRepository extends ServiceEntityRepository
             // }
         }
     }
-
-    public function getPictureArrayByIdEquipment($picturesArray){
-        $picturesNames = [];
-        foreach ($picturesArray as $key => $value) {
-            $pictureObject =  (object) [
-                'photo_plaque' => $value->photo_plaque,
-                    'photo_joue' => $value->photo_joue,
-                    'photo_2' => $value->photo_2,
-                    'form_id' => $value->form_id,
-                    'data_id' => $value->data_id,
-                    'code_equipement' => $value->code_equipement,
-                    'update_time' => $value->update_time,
-                ];
-            if (!in_array($pictureObject, $picturesNames, true)) {
-                array_push($picturesNames, $pictureObject);
-            }
-        }
-        dump($picturesNames);
-        return $picturesNames;
+    public function getJpgPictureFromStringName($value){
+        $response = $this->client->request(
+            'GET',
+            'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->photo_plaque, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+            ]
+        );
+        $photoJpg= $response->getContent();
+        return $photoJpg;
     }
+    public function getPictureArrayByIdEquipment($picturesArray, EntityManagerInterface $entityManager){
+        // $picturesNames = [];
+        $picturesdata = [];
+        foreach ($picturesArray as $key => $value) {
+            // $pictureObject =  (object) [
+            //     'photo_plaque' => $value->photo_plaque,
+            //         'photo_joue' => $value->photo_joue,
+            //         'photo_2' => $value->photo_2,
+            //         'form_id' => $value->form_id,
+            //         'data_id' => $value->data_id,
+            //         'code_equipement' => $value->code_equipement,
+            //         'update_time' => $value->update_time,
+            // ];
+            if ($value->photo_plaque != "" || $value->photo_plaque != null) {
+                $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
+                // $result= $response->toArray();
+                array_push($picturesdata, $photoJpg);
+            }
+            // array_push($picturesNames, $pictureObject);
+        }
+        dump($picturesdata);
+        return $picturesdata;
+    }
+    
 }
