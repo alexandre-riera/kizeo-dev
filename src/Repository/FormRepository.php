@@ -1865,27 +1865,17 @@ class FormRepository extends ServiceEntityRepository
             ]
         );
         $photoJpg= $response->getContent();
+        $photoJpg = base64_encode($photoJpg);
         return $photoJpg;
     }
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager){
         // $picturesNames = [];
         $picturesdata = [];
         foreach ($picturesArray as $key => $value) {
-            // $pictureObject =  (object) [
-            //     'photo_plaque' => $value->photo_plaque,
-            //         'photo_joue' => $value->photo_joue,
-            //         'photo_2' => $value->photo_2,
-            //         'form_id' => $value->form_id,
-            //         'data_id' => $value->data_id,
-            //         'code_equipement' => $value->code_equipement,
-            //         'update_time' => $value->update_time,
-            // ];
             if ($value->photo_plaque != "" || $value->photo_plaque != null) {
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
-                // $result= $response->toArray();
                 array_push($picturesdata, $photoJpg);
             }
-            // array_push($picturesNames, $pictureObject);
         }
         dump($picturesdata);
         return $picturesdata;
