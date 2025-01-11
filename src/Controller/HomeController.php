@@ -707,7 +707,7 @@ class HomeController extends AbstractController
             case 'S50':
                 $equipment = $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
-                $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray);
+                $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S60':
                 $equipment = $entityManager->getRepository(EquipementS60::class)->findOneBy(['id' => $id]);
