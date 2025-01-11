@@ -1861,7 +1861,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($picturesArray as $key => $value) {
             $keyPic = $key;
             $valuePic = $value;
-            return $keyPic . ' et voici sa valeur ' . $valuePic;
+            return $keyPic;
         }
     }
 }
