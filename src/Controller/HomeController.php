@@ -694,7 +694,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/show/equipement/details/{agence}/{id}', name: 'app_show_equipement_details_by_id')]
-    public function showEquipmentDetailsById(string $agence, string $id, EntityManagerInterface $entityManager, HomeRepository $homeRepository){
+    public function showEquipmentDetailsById(string $agence, string $id, EntityManagerInterface $entityManager){
         switch ($agence) {
             case 'S10':
                 $equipment = $entityManager->getRepository(EquipementS10::class)->findOneBy(['id' => $id]);
