@@ -90,9 +90,9 @@
             </div>
             <div class="galerie-photos">
                 <h4>Galerie photos</h4>
-                <div class="image-gallery">
+                <div style="display:flex; flex-wrap:wrap; justify-content:center;">
                     {% for picture in picturesData %}
-                        <div class="image-item">
+                        <div style="width:200px; height: 100px; margin: 10px;">
                             <img src="{{ 'data:image/jpg,base64, '~picture }}" />
                         </div>
                     {% endfor %}
