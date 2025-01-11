@@ -757,11 +757,10 @@ class HomeController extends AbstractController
         $formId = "";
         $dataId = "";
         dump($picturesArray);
-        foreach ($picturesArray as $key => $value) {
-            array_push($picturesDataArray, $value);
-            // dump("je suis value: " . $value);
+        foreach ($picturesArray as $pic) {
+            array_push($picturesDataArray, $pic);
         }
-        dump($picturesDataArray['photo_plaque']);
+        dump($picturesDataArray);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesArray" => $picturesArray,
