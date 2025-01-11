@@ -1865,7 +1865,7 @@ class FormRepository extends ServiceEntityRepository
             ]
         );
         $photoJpg= $response->getContent();
-        $photoJpg = file_get_contents($photoJpg);
+        // $photoJpg = file_get_contents($photoJpg);
         return $photoJpg;
     }
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager){
