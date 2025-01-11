@@ -1859,7 +1859,7 @@ class FormRepository extends ServiceEntityRepository
         $keyPic = "";
         $valuePic = "";
         foreach ($picturesArray as $key => $value) {
-            $keyPic = $key;
+            $keyPic = $value;
             dump(gettype($keyPic));
         }
         return gettype($keyPic);
