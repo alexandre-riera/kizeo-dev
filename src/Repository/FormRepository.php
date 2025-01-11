@@ -1865,7 +1865,8 @@ class FormRepository extends ServiceEntityRepository
             ]
         );
         $photoJpg= $response->getContent();
-        $photoJpg = base64_encode($photoJpg);
+        dump($photoJpg);
+        // $photoJpg = base64_encode($photoJpg);
         return $photoJpg;
     }
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager){
@@ -1877,7 +1878,7 @@ class FormRepository extends ServiceEntityRepository
                 array_push($picturesdata, $photoJpg);
             }
         }
-        dump($picturesdata);
+        // dump($picturesdata);
         return $picturesdata;
     }
     
