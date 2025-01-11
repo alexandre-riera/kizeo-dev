@@ -70,7 +70,7 @@ class HomeRepository{
         foreach ($picturesArray as $key => $value) {
             $keyPic = $key;
             $valuePic = $value;
-            dump($keyPic . ' et voici sa valeur ' . $valuePic);
+            return $keyPic . ' et voici sa valeur ' . $valuePic;
         }
     }
 }
