@@ -753,7 +753,15 @@ class HomeController extends AbstractController
                 dump($agence . " est vide ou id equipment est vide");
                 break;
         }
+        $picturesDataArray = [];
+        $formId = "";
+        $dataId = "";
         dump($picturesArray);
+        foreach ($picturesArray as $key => $value) {
+            array_push($picturesDataArray, $key);
+            // dump("je suis value: " . $value);
+        }
+        dump($picturesDataArray);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesArray" => $picturesArray,

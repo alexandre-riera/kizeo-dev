@@ -64,4 +64,7 @@ class HomeRepository{
         return $results;
     }
 
+    public function getPictureArrayByIdEquipment(){
+        
+    }
 }
