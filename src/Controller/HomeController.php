@@ -761,7 +761,7 @@ class HomeController extends AbstractController
             array_push($picturesDataArray, $value);
             // dump("je suis value: " . $value);
         }
-        dump($picturesDataArray);
+        dump($picturesDataArray['photo_plaque']);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesArray" => $picturesArray,
