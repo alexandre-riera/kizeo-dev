@@ -1857,9 +1857,7 @@ class FormRepository extends ServiceEntityRepository
 
     public function getPictureArrayByIdEquipment($picturesArray){
         foreach ($picturesArray as $key => $value) {
-            foreach ($value as $formPictureInfos) {
-                dump($formPictureInfos);
-            }
+            dump($value->photo_plaque);
         }
         return gettype($value);
     }

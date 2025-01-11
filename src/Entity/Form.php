@@ -14,121 +14,121 @@ class Form
     private ?int $id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_plaque = null;
+    public ?string $photo_plaque = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_choc = null;
+    public ?string $photo_choc = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_choc_montant = null;
+    public ?string $photo_choc_montant = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_panneau_intermediaire_i = null;
+    public ?string $photo_panneau_intermediaire_i = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_panneau_bas_inter_ext = null;
+    public ?string $photo_panneau_bas_inter_ext = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_lame_basse__int_ext = null;
+    public ?string $photo_lame_basse__int_ext = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_lame_intermediaire_int_ = null;
+    public ?string $photo_lame_intermediaire_int_ = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_envirronement_eclairage = null;
+    public ?string $photo_envirronement_eclairage = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_bache = null;
+    public ?string $photo_bache = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_marquage_au_sol = null;
+    public ?string $photo_marquage_au_sol = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_environnement_equipement1 = null;
+    public ?string $photo_environnement_equipement1 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_coffret_de_commande = null;
+    public ?string $photo_coffret_de_commande = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_carte = null;
+    public ?string $photo_carte = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_rail = null;
+    public ?string $photo_rail = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_equerre_rail = null;
+    public ?string $photo_equerre_rail = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_fixation_coulisse = null;
+    public ?string $photo_fixation_coulisse = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_moteur = null;
+    public ?string $photo_moteur = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_deformation_plateau = null;
+    public ?string $photo_deformation_plateau = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_deformation_plaque = null;
+    public ?string $photo_deformation_plaque = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_deformation_structure = null;
+    public ?string $photo_deformation_structure = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_deformation_chassis = null;
+    public ?string $photo_deformation_chassis = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_deformation_levre = null;
+    public ?string $photo_deformation_levre = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_fissure_cordon = null;
+    public ?string $photo_fissure_cordon = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_joue = null;
+    public ?string $photo_joue = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_butoir = null;
+    public ?string $photo_butoir = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_vantail = null;
+    public ?string $photo_vantail = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_linteau = null;
+    public ?string $photo_linteau = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_barriere = null;
+    public ?string $photo_barriere = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_tourniquet = null;
+    public ?string $photo_tourniquet = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_sas = null;
+    public ?string $photo_sas = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_marquage_au_sol_ = null;
+    public ?string $photo_marquage_au_sol_ = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_marquage_au_sol_2 = null;
+    public ?string $photo_marquage_au_sol_2 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_2 = null;
+    public ?string $photo_2 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $form_id = null;
+    public ?string $form_id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $data_id = null;
+    public ?string $data_id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $equipment_id = null;
+    public ?string $equipment_id = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $update_time = null;
+    public ?string $update_time = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $code_equipement = null;
+    public ?string $code_equipement = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $raison_sociale_visite = null;
+    public ?string $raison_sociale_visite = null;
 
     public function getId(): ?int
     {
