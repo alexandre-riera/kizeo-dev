@@ -694,7 +694,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/show/equipement/details/{agence}/{id}', name: 'app_show_equipement_details_by_id')]
-    public function showEquipmentDetailsById(string $agence, string $id, EntityManagerInterface $entityManager){
+    public function showEquipmentDetailsById(string $agence, string $id, EntityManagerInterface $entityManager, HomeRepository $homeRepository){
         switch ($agence) {
             case 'S10':
                 $equipment = $entityManager->getRepository(EquipementS10::class)->findOneBy(['id' => $id]);
@@ -707,6 +707,7 @@ class HomeController extends AbstractController
             case 'S50':
                 $equipment = $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $homeRepository->getPictureArrayByIdEquipment($picturesArray);
                 break;
             case 'S60':
                 $equipment = $entityManager->getRepository(EquipementS60::class)->findOneBy(['id' => $id]);
@@ -753,17 +754,7 @@ class HomeController extends AbstractController
                 dump($agence . " est vide ou id equipment est vide");
                 break;
         }
-        $picturesDataArray = [];
-        $formId = "";
-        $dataId = "";
         dump($picturesArray);
-        foreach ($picturesArray as $formPicture) {
-            foreach ($formPicture as $pic) {
-                # code...
-                array_push($picturesDataArray, $pic);
-            }
-        }
-        dump($picturesDataArray);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesArray" => $picturesArray,

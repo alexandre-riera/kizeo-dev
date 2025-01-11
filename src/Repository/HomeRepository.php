@@ -64,7 +64,13 @@ class HomeRepository{
         return $results;
     }
 
-    public function getPictureArrayByIdEquipment(){
-        
+    public function getPictureArrayByIdEquipment($picturesArray){
+        $keyPic = "";
+        $valuePic = "";
+        foreach ($picturesArray as $key => $value) {
+            $keyPic = $key;
+            $valuePic = $value;
+            dump($keyPic . ' et voici sa valeur ' . $valuePic);
+        }
     }
 }
