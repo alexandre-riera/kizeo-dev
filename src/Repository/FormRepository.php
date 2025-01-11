@@ -1871,12 +1871,14 @@ class FormRepository extends ServiceEntityRepository
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager){
         // $picturesNames = [];
         $picturesdata = [];
+        $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
             if ($value->photo_plaque != "" || $value->photo_plaque != null) {
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
                 array_push($picturesdata, $photoJpg);
             }
         }
+        dump($photoJpg);
         // dump($picturesdata);
         return $picturesdata;
     }
