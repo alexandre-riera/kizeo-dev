@@ -1878,7 +1878,7 @@ class FormRepository extends ServiceEntityRepository
                 array_push($picturesdata, $photoJpg);
             }
         }
-        dump(exif_read_data("data://image/jpeg;base64," . base64_encode($photoJpg)));
+        // dump(exif_read_data("data://image/jpeg;base64," . base64_encode($photoJpg)));
         // dump($picturesdata);
         return $picturesdata;
     }
