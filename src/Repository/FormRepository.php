@@ -1856,9 +1856,21 @@ class FormRepository extends ServiceEntityRepository
     }
 
     public function getPictureArrayByIdEquipment($picturesArray){
+        $picturesNames = [];
         foreach ($picturesArray as $key => $value) {
             dump($value->photo_plaque);
+            $pictureObject =  (object) [
+                'photo_plaque' => $value->photo_plaque,
+                'photo_joue' => $value->photo_joue,
+                'photo_2' => $value->photo_2,
+                'form_id' => $value->form_id,
+                'data_id' => $value->data_id,
+                'code_equipement' => $value->code_equipement,
+                'update_time' => $value->update_time,
+            ];
+            array_push($picturesNames, $pictureObject);
+            dump($picturesNames);
         }
-        return gettype($value);
+        return $picturesNames;
     }
 }
