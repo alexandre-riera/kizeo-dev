@@ -26,4 +26,6 @@
 }
 .card-img-top:hover{
     scale: 2;
+    position: absolute;
+    z-index: 4000;
 }
