@@ -726,10 +726,11 @@ class FormRepository extends ServiceEntityRepository
                 array_push($agencyEquipments,  $theEquipment);
             }
         }
-        
+        dump(count($agencyEquipments));
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
         $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments);
-
+        dd(count($agencyEquipments));
+        
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $client = new Client();
         $response = $client->request(

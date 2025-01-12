@@ -188,7 +188,8 @@ class FormController extends AbstractController
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
-        dd($equipmentsGrenoble);
+        // dd($equipmentsGrenoble); On a bien 5710 équipements sur Grenoble
+        
         // $equipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $equipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $equipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
