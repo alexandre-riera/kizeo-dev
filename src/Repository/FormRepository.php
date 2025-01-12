@@ -717,15 +717,24 @@ class FormRepository extends ServiceEntityRepository
             '|' . 
             $dataOfFormList[$key]['id_agence']['value'] // Code agence
             ;
-
-            $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate;
-            dd($theEquipment);
+            
+            /* Le double antislash correspond à 1 antislash échappé avec un autre
+             $equipment['equipement']['path']  =  à LEROY MERLIN VALENCE LOGISITQUE\CE1 auquel on ajoute 1 antislash + les update au dessus
+             \NIV28|Niveleur|A RENSEIGNER|A RENSEIGNER|A RENSEIGNER|2200|2400||6257|5947|S50
+            */
+            $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate; 
+            // dd($theEquipment);
             // if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
             //     $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
             //     unset($agencyEquipments[$keyEquipment]);
             //     array_push($agencyEquipments,  $theEquipment);
             // }
-            array_push($agencyEquipments,  $theEquipment); 
+            if (in_array($theEquipment, $agencyEquipments, true)) {
+                $keyEquipment = array_search($theEquipment, $agencyEquipments);
+                unset($agencyEquipments[$keyEquipment]);
+                array_push($agencyEquipments,  $theEquipment);
+            }
+            // array_push($agencyEquipments,  $theEquipment); 
         }
         dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
