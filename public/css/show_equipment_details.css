@@ -3,6 +3,10 @@
     flex-wrap: wrap;
     justify-content: center;
 }
+#showEquipmentDetails{
+    padding: 70px;
+    background-color: cadetblue;
+}
 /*Cards container*/
 .cards_container{
     width: 80vw;
@@ -10,6 +14,11 @@
 }
 .card{
     max-width: 18rem;
+    margin: 10px;
+}
+.card-body p{
+    font-size: x-large;
+    text-align: center;
 }
 .picture_container .equipment_picture{
     width:300px;
