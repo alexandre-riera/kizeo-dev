@@ -3,9 +3,11 @@
     flex-wrap: wrap;
     justify-content: center;
 }
-
 .picture_container .equipment_picture{
     width:300px;
     height: 300px;
     margin: 10px;
+}
+.equipment_picture:hover{
+    scale: 1.5;
 }
