@@ -724,12 +724,12 @@ class FormRepository extends ServiceEntityRepository
             //     $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
             //     unset($agencyEquipments[$keyEquipment]);
             // }
-            array_push($agencyEquipments,  $theEquipment);
+            array_push($agencyEquipments,  $theEquipment); // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         }
         dump(count($agencyEquipments));
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
         $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments);
-        dd(count($agencyEquipments));
+        dd(count($arrayEquipmentsToPutToKizeo));
 
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $client = new Client();
