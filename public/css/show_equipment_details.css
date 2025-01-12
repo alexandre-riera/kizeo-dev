@@ -1,5 +1,7 @@
 .picture_container{
     display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .picture_container .equipment_picture{
