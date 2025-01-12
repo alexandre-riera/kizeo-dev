@@ -719,16 +719,17 @@ class FormRepository extends ServiceEntityRepository
             ;
 
             $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate;
-            
+            dd($theEquipment);
             // if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
             //     $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
             //     unset($agencyEquipments[$keyEquipment]);
+            //     array_push($agencyEquipments,  $theEquipment);
             // }
-            array_push($agencyEquipments,  $theEquipment); // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
+            array_push($agencyEquipments,  $theEquipment); 
         }
-        dump(count($agencyEquipments));
+        dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
-        $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments);
+        $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments); // array_unique n'enlève aucun équipement de la liste
         dd(count($arrayEquipmentsToPutToKizeo));
 
         Request::enableHttpMethodParameterOverride(); // <-- add this line
