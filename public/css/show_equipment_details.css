@@ -20,11 +20,10 @@
     font-size: x-large;
     text-align: center;
 }
-.picture_container .equipment_picture{
-    width:300px;
-    height: 300px;
-    margin: 10px;
+.card-img, .card-img-bottom, .card-img-top {
+    width: 100%;
+    height: -webkit-fill-available;
 }
-.equipment_picture:hover{
+.card-img-top:hover{
     scale: 2;
 }
