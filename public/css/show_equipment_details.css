@@ -3,6 +3,11 @@
     flex-wrap: wrap;
     justify-content: center;
 }
+/*Cards container*/
+.cards_container{
+    width: 80vw;
+    border: 1px solid black;
+}
 .picture_container .equipment_picture{
     width:300px;
     height: 300px;

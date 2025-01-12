@@ -25,12 +25,18 @@
         <!-- Modal show equipment details -->
         <div id="showEquipmentDetails" >
             <h3 class="col-md-12">Détails équipement</h3>
-            <div class="col-md-10">
-                <div class="col-md-5">
-                    <h4>Équipement cible</h4>
-                    <p type="text" id="modal_show_trigramme">{{ equipment.getNumeroEquipement() }}</p>
-                    <h4>Code Agence</h4>
-                    <p type="text" id="modal_show_codeAgence">{{ equipment.getCodeAgence() }}</p>
+            <div class="cards_container">
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h4 class="card-title">Équipement cible</h4>
+                        <p class="card-text" id="modal_show_trigramme">{{ equipment.getNumeroEquipement() }}</p>
+                    </div>
+                </div>
+                <div class="card bg-light mb-3">
+                    <div class="card-body">
+                        <h4 class="card-title">Code Agence</h4>
+                        <p class="card-text"  id="modal_show_codeAgence">{{ equipment.getCodeAgence() }}</p>
+                    </div>
                 </div>
                 <div class="col-6">
                     <h4>Dernière visite de maintenance</h4>
