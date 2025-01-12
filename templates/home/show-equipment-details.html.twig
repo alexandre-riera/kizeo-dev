@@ -25,77 +25,75 @@
         <!-- Modal show equipment details -->
         <div id="showEquipmentDetails" >
             <h3 class="col-md-12">Détails équipement</h3>
-            <div class="cards_container">
-                <div class="card bg-light mb-3">
-                    <div class="card-body">
-                        <h4 class="card-title">Équipement cible</h4>
-                        <p class="card-text" id="modal_show_trigramme">{{ equipment.getNumeroEquipement() }}</p>
-                    </div>
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <h4 class="card-title">Équipement cible</h4>
+                    <p class="card-text" id="modal_show_trigramme">{{ equipment.getNumeroEquipement() }}</p>
                 </div>
-                <div class="card bg-light mb-3">
-                    <div class="card-body">
-                        <h4 class="card-title">Code Agence</h4>
-                        <p class="card-text"  id="modal_show_codeAgence">{{ equipment.getCodeAgence() }}</p>
-                    </div>
+            </div>
+            <div class="card bg-light mb-3">
+                <div class="card-body">
+                    <h4 class="card-title">Code Agence</h4>
+                    <p class="card-text"  id="modal_show_codeAgence">{{ equipment.getCodeAgence() }}</p>
                 </div>
-                <div class="col-6">
-                    <h4>Dernière visite de maintenance</h4>
-                    <p type="text" id="modal_show_derniereVisite">{{ equipment.getDerniereVisite() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Numéro de série</h4>
-                    <p type="text" id="modal_show_numeroDeSerie">{{ equipment.getNumeroDeSerie() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Année d'installation</h4>
-                    <p type="text" id="modal_show_miseEnService">{{ equipment.getMiseEnService() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Marque</h4>
-                    <p type="text" id="modal_show_marque">{{ equipment.getMarque() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Hauteur</h4>
-                    <p type="text" id="modal_show_hauteur">{{ equipment.getHauteur() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Largeur</h4>
-                    <p type="text" id="modal_show_largeur">{{ equipment.getLargeur() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Longueur</h4>
-                    <p type="text" id="modal_show_longueur">{{ equipment.getLongueur() }}</p>
-                </div>
-                <div class="col-12">
-                    <h4>État de l'équipement</h4>
-                    <p id="modal_show_etat">{{ equipment.getEtat() }}</p>
-                </div>
-                <div class="col-6">
-                    <h4>Statut actuel de l'équipement</h4>
-                    <p type="text" id="modal_show_statut">{{ equipment.getStatutDeMaintenance() }}</p>
-                </div>
-    
-    
-                <div class="col-md-5">
-                    <h4>Mode de fonctionnement</h4>
-                    <p type="text" id="modal_show_modeFonctionnement">{{ equipment.getModeFonctionnement() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Repère site client</h4>
-                    <p type="text" id="modal_show_repereSiteClient">{{ equipment.getRepereSiteClient() }}</p>
-                </div>
-                <div class="col-md-12">
-                    <h4>Plaque signalétique</h4>
-                    <p type="text" id="modal_show_plaqueSignaletique">{{ equipment.getPlaqueSignaletique() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Présence carnet d'entretien</h4>
-                    <p type="text" id="modal_show_carnetEntretien">{{ equipment.getPresenceCarnetEntretien() }}</p>
-                </div>
-                <div class="col-md-5">
-                    <h4>Statut conformité</h4>
-                    <p type="text" id="modal_show_statutConformite">{{ equipment.getstatutConformite() }}</p>
-                </div>
+            </div>
+            <div class="col-6">
+                <h4>Dernière visite de maintenance</h4>
+                <p type="text" id="modal_show_derniereVisite">{{ equipment.getDerniereVisite() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Numéro de série</h4>
+                <p type="text" id="modal_show_numeroDeSerie">{{ equipment.getNumeroDeSerie() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Année d'installation</h4>
+                <p type="text" id="modal_show_miseEnService">{{ equipment.getMiseEnService() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Marque</h4>
+                <p type="text" id="modal_show_marque">{{ equipment.getMarque() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Hauteur</h4>
+                <p type="text" id="modal_show_hauteur">{{ equipment.getHauteur() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Largeur</h4>
+                <p type="text" id="modal_show_largeur">{{ equipment.getLargeur() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Longueur</h4>
+                <p type="text" id="modal_show_longueur">{{ equipment.getLongueur() }}</p>
+            </div>
+            <div class="col-12">
+                <h4>État de l'équipement</h4>
+                <p id="modal_show_etat">{{ equipment.getEtat() }}</p>
+            </div>
+            <div class="col-6">
+                <h4>Statut actuel de l'équipement</h4>
+                <p type="text" id="modal_show_statut">{{ equipment.getStatutDeMaintenance() }}</p>
+            </div>
+
+
+            <div class="col-md-5">
+                <h4>Mode de fonctionnement</h4>
+                <p type="text" id="modal_show_modeFonctionnement">{{ equipment.getModeFonctionnement() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Repère site client</h4>
+                <p type="text" id="modal_show_repereSiteClient">{{ equipment.getRepereSiteClient() }}</p>
+            </div>
+            <div class="col-md-12">
+                <h4>Plaque signalétique</h4>
+                <p type="text" id="modal_show_plaqueSignaletique">{{ equipment.getPlaqueSignaletique() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Présence carnet d'entretien</h4>
+                <p type="text" id="modal_show_carnetEntretien">{{ equipment.getPresenceCarnetEntretien() }}</p>
+            </div>
+            <div class="col-md-5">
+                <h4>Statut conformité</h4>
+                <p type="text" id="modal_show_statutConformite">{{ equipment.getstatutConformite() }}</p>
             </div>
             <div class="galerie-photos">
                 <h4>Galerie photos</h4>
