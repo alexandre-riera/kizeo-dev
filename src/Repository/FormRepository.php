@@ -724,17 +724,11 @@ class FormRepository extends ServiceEntityRepository
             */
             $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate; 
             // dd($theEquipment);
-            // if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
-            //     $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
-            //     unset($agencyEquipments[$keyEquipment]);
-            //     array_push($agencyEquipments, $theEquipment);
-            // }
-            if (in_array($theEquipment, $agencyEquipments, true)) {
-                $keyEquipment = array_search($theEquipment, $agencyEquipments);
+            if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
+                $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
                 unset($agencyEquipments[$keyEquipment]);
-                // array_push($agencyEquipments, $theEquipment);
+                array_push($agencyEquipments, $theEquipment);
             }
-            array_push($agencyEquipments, $theEquipment); 
         }
         dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
