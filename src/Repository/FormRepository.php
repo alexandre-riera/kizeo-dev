@@ -736,7 +736,7 @@ class FormRepository extends ServiceEntityRepository
             // }
             array_push($agencyEquipments,  $theEquipment); 
         }
-        // dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
+        dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
         $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments); // array_unique n'enlève aucun équipement de la liste
         dd(count($arrayEquipmentsToPutToKizeo));
