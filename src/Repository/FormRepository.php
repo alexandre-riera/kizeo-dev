@@ -729,8 +729,8 @@ class FormRepository extends ServiceEntityRepository
             //     unset($agencyEquipments[$keyEquipment]);
             //     array_push($agencyEquipments, $theEquipment);
             // }
-            if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
-                $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
+            if (in_array($theEquipment, $agencyEquipments, true)) {
+                $keyEquipment = array_search($theEquipment, $agencyEquipments);
                 unset($agencyEquipments[$keyEquipment]);
                 // array_push($agencyEquipments, $theEquipment);
             }
