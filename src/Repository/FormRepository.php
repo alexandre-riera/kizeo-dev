@@ -720,17 +720,17 @@ class FormRepository extends ServiceEntityRepository
 
             $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate;
             
-            if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
-                $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
-                unset($agencyEquipments[$keyEquipment]);
-                array_push($agencyEquipments,  $theEquipment);
-            }
+            // if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
+            //     $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
+            //     unset($agencyEquipments[$keyEquipment]);
+            // }
+            array_push($agencyEquipments,  $theEquipment);
         }
         dump(count($agencyEquipments));
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
         $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments);
         dd(count($agencyEquipments));
-        
+
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $client = new Client();
         $response = $client->request(
