@@ -125,8 +125,11 @@
                 <h4>Galerie photos</h4>
                 <div class="picture_container">
                     {% for picture in picturesData %}
-                        <div>
-                            <img class="equipment_picture" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                        <div class="card">
+                            <img class="equipment_picture card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                            <div class="card-body">
+                                <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
