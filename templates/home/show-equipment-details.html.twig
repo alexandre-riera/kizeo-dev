@@ -121,18 +121,18 @@
                     <p class="card-text" id="modal_show_statutConformite">{{ equipment.getstatutConformite() }}</p>
                 </div>
             </div>
-            <div class="galerie-photos">
-                <h4>Galerie photos</h4>
-                <div class="picture_container">
-                    {% for picture in picturesData %}
-                        <div class="card">
-                            <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
-                            <div class="card-body">
-                                <p class="card-text">date de la photo à venir</p>
-                            </div>
+        </div>
+        <div class="galerie-photos">
+            <h4>Galerie photos</h4>
+            <div class="picture_container">
+                {% for picture in picturesData %}
+                    <div class="card">
+                        <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                        <div class="card-body">
+                            <p class="card-text">date de la photo à venir</p>
                         </div>
-                    {% endfor %}
-                </div>
+                    </div>
+                {% endfor %}
             </div>
         </div>
     {% endif %}
