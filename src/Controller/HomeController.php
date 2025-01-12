@@ -699,10 +699,12 @@ class HomeController extends AbstractController
             case 'S10':
                 $equipment = $entityManager->getRepository(EquipementS10::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S40':
                 $equipment = $entityManager->getRepository(EquipementS40::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S50':
                 $equipment = $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]);
@@ -712,42 +714,52 @@ class HomeController extends AbstractController
             case 'S60':
                 $equipment = $entityManager->getRepository(EquipementS60::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S70':
                 $equipment = $entityManager->getRepository(EquipementS70::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S80':
                 $equipment = $entityManager->getRepository(EquipementS80::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S100':
                 $equipment = $entityManager->getRepository(EquipementS100::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S120':
                 $equipment = $entityManager->getRepository(EquipementS120::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S130':
                 $equipment = $entityManager->getRepository(EquipementS130::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S140':
                 $equipment = $entityManager->getRepository(EquipementS140::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S150':
                 $equipment = $entityManager->getRepository(EquipementS150::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S160':
                 $equipment = $entityManager->getRepository(EquipementS160::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             case 'S170':
                 $equipment = $entityManager->getRepository(EquipementS170::class)->findOneBy(['id' => $id]);
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager);
                 break;
             
             default:
