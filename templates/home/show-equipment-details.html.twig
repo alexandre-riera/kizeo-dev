@@ -90,10 +90,10 @@
             </div>
             <div class="galerie-photos">
                 <h4>Galerie photos</h4>
-                <div style="display:flex; flex-wrap:wrap; justify-content:center;">
+                <div style="display:flex;">
                     {% for picture in picturesData %}
-                        <div style="width:200px; height: 100px; margin: 10px;">
-                            <img src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                        <div>
+                            <img style="width:300px; height: 300px; margin: 10px;" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
                         </div>
                     {% endfor %}
                 </div>
