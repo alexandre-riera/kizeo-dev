@@ -1451,9 +1451,9 @@ class FormRepository extends ServiceEntityRepository
     * Implementation du cache symfony pour améliorer la performance en remote
     */
     public function saveEquipmentsInDatabase($cache){
-        // -----------------------------   Return all forms in an array | cached for 2419200 seconds 1 month
+        // -----------------------------   Return all forms in an array | cached for 3600 seconds 1 hour
         $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(3600);
             $result = FormRepository::getForms();
             return $result['forms'];
         });
@@ -1549,11 +1549,11 @@ class FormRepository extends ServiceEntityRepository
                 // Passer à la fonction createAndSaveInDatabaseByAgency()
                 // les variables $equipements avec les nouveaux équipements des formulaires de maintenance, le tableau des résumés de l'agence et son entité ex: $entiteEquipementS10
                 case 'S10':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
                     break;
                 
                 case 'S40':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS40);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS40);
                     break;
                 
                 case 'S50':
@@ -1562,17 +1562,17 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S60':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS60);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS60);
                     break;
                 
                 
                 case 'S70':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS70);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS70);
                     break;
                 
                 
                 case 'S80':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS80);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS80);
                     break;
                 
                 
@@ -1582,32 +1582,32 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S120':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS120);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS120);
                     break;
                 
                 
                 case 'S130':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS130);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS130);
                     break;
                 
                 
                 case 'S140':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS140);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS140);
                     break;
                 
                 
                 case 'S150':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS150);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS150);
                     break;
                 
                 
                 case 'S160':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS160);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS160);
                     break;
                 
                 
                 case 'S170':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
+                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
                     break;
                 
                 default:
