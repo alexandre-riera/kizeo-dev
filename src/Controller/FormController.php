@@ -144,7 +144,7 @@ class FormController extends AbstractController
     }
 
     /**
-     * UPDATE LIST OF EQUIPMENTS ON KIZEO THEN CALL SAVE IN PUBLIC/PDF/MAINTENANCE FOLDER  --  SECOND CALL IN CRON TASK
+     * UPDATE LIST OF EQUIPMENTS ON KIZEO THEN CALL SAVE IN PDF/MAINTENANCE FOLDER  --  SECOND CALL IN CRON TASK
      * 
      */
     #[Route('/api/forms/update/lists/equipements', name: 'app_api_form_update_lists_equipements', methods: ['GET','PUT'])]
