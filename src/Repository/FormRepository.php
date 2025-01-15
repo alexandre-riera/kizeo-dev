@@ -1862,10 +1862,10 @@ class FormRepository extends ServiceEntityRepository
 
     public function getJpgPictureFromStringName($value, $entityManager){
         $picturesNames = ["photo_plaque", "photo_choc", "photo_choc_montant", "photo_panneau_intermediaire_i", "photo_panneau_bas_inter_ext", "photo_lame_basse__int_ext", "photo_lame_intermediaire_int_", "photo_envirronement_eclairage", "photo_bache", "photo_marquage_au_sol", "photo_environnement_equipement1", "photo_coffret_de_commande", "photo_carte", "photo_rail", "photo_equerre_rail", "photo_fixation_coulisse", "photo_moteur", "photo_deformation_plateau", "photo_deformation_plaque", "photo_deformation_structure", "photo_deformation_chassis", "photo_deformation_levre", "photo_fissure_cordon", "photo_joue", "photo_butoir", "photo_vantail", "photo_linteau", "photo_barriere", "photo_tourniquet", "photo_sas", "photo_marquage_au_sol_", "photo_marquage_au_sol_2"];
+        $the_picture = [];
         foreach ($picturesNames as $pictureName) {
             if (!str_contains($pictureName, ", ")) {
                 if ($value->$pictureName != "" || $value->$pictureName != null) {
-                    $photoJpg = "";
                     $response = $this->client->request(
                         'GET',
                         'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->$pictureName, [
@@ -1876,12 +1876,11 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
-                    return $photoJpg;
+                    array_push($the_picture, $photoJpg);
                 }
             }
             else{
                 $photosSupplementaires = explode(", ", $pictureName);
-                $photoJpg = "";
                 foreach ($photosSupplementaires as $photo) {
                     // Call kizeo url to get jpeg here and encode the result
                     $response = $this->client->request(
@@ -1894,10 +1893,11 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
-                    return $photoJpg;
+                    array_push($the_picture, $photoJpg);
                 }
             }
         }
+        return $the_picture;
     }
 
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
@@ -1905,9 +1905,11 @@ class FormRepository extends ServiceEntityRepository
         $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
             if ($equipment->getRaisonSociale() . "\\" . $equipment->getVisite() === $value->raison_sociale_visite) {
-                $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value, $entityManager);
-                $pictureEncoded = base64_encode($photoJpg);
-                array_push($picturesdata, $pictureEncoded);
+                $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value, $entityManager); // It's an array now
+                foreach ($photoJpg as $photo) {
+                    $pictureEncoded = base64_encode($photo);
+                    array_push($picturesdata, $pictureEncoded);
+                }
             }
         }
         return $picturesdata;
