@@ -1875,7 +1875,7 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
-                    return $photoJpg;
+                    // return $photoJpg;
                 }
             }
             else{
@@ -1892,9 +1892,10 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
-                    return $photoJpg;
+                    // return $photoJpg;
                 }
             }
+            return $photoJpg;
         }
     }
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
