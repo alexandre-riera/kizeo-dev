@@ -26,6 +26,7 @@
 }
 .card-img-top:hover{
     transform: scale(1.5);
-    position: absolute;
+    scale: 1.5;
+    position: relative;
     z-index: 4000;
 }
