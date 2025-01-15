@@ -1860,6 +1860,12 @@ class FormRepository extends ServiceEntityRepository
         }
     }
     public function getJpgPictureFromStringName($value){
+        for ($i=0; $i < count($value); $i++) { 
+            dd($$value[$i]);
+            // if ($value[$i] != ) {
+            //     # code...
+            // }
+        }
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->photo_plaque, [
@@ -1873,12 +1879,12 @@ class FormRepository extends ServiceEntityRepository
         // $photoJpg = file_get_contents($photoJpg);
         return $photoJpg;
     }
-    public function getPictureArrayByIdEquipment($picturesArray, $entityManager){
+    public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
         // $picturesNames = [];
         $picturesdata = [];
         $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
-            if ($value->photo_plaque != "" || $value->photo_plaque != null) {
+            if ($equipment->raison_sociale . "\\" . $equipment->visite === $value->raison_sociale_visite) {
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
                 $pictureEncoded = base64_encode($photoJpg);
                 array_push($picturesdata, $pictureEncoded);
