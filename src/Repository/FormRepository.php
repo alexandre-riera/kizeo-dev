@@ -1860,12 +1860,12 @@ class FormRepository extends ServiceEntityRepository
         }
     }
     public function getJpgPictureFromStringName($value){
-        for ($i=0; $i < count($value); $i++) { 
-            dd($$value[$i]);
+        dd($value);
+        // for ($i=0; $i < count($value); $i++) { 
             // if ($value[$i] != ) {
             //     # code...
             // }
-        }
+        // }
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->photo_plaque, [
