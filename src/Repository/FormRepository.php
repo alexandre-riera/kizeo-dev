@@ -1860,27 +1860,26 @@ class FormRepository extends ServiceEntityRepository
         }
     }
     public function getJpgPictureFromStringName($value){
-        dd($value);
-        // for ($i=0; $i < count($value); $i++) { 
-            // if ($value[$i] != ) {
-            //     # code...
-            // }
-        // }
-        $response = $this->client->request(
-            'GET',
-            'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->photo_plaque, [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]
-        );
-        $photoJpg= $response->getContent();
-        // $photoJpg = file_get_contents($photoJpg);
+        $picturesNames = ["photo_plaque", "photo_choc", "photo_choc_montant", "photo_panneau_intermediaire_i", "photo_panneau_bas_inter_ext", "photo_lame_basse__int_ext", "photo_lame_intermediaire_int_", "photo_envirronement_eclairage", "photo_bache", "photo_marquage_au_sol", "photo_environnement_equipement1", "photo_coffret_de_commande", "photo_carte", "photo_rail", "photo_equerre_rail", "photo_fixation_coulisse", "photo_moteur", "photo_deformation_plateau", "photo_deformation_plaque", "photo_deformation_structure", "photo_deformation_chassis", "photo_deformation_levre", "photo_fissure_cordon", "photo_joue", "photo_butoir", "photo_vantail", "photo_linteau", "photo_barriere", "photo_tourniquet", "photo_sas", "photo_marquage_au_sol_", "photo_marquage_au_sol_2", "photo_2",];
+
+        foreach ($picturesNames as $pictureName) {
+            if ($value->$pictureName != "" || $value->$pictureName != null) {
+                $response = $this->client->request(
+                    'GET',
+                    'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $value->$pictureName, [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                    ]
+                );
+                $photoJpg = $response->getContent();
+            }
+        }
+
         return $photoJpg;
     }
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
-        // $picturesNames = [];
         $picturesdata = [];
         $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
