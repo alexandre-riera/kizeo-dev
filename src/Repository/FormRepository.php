@@ -1895,9 +1895,10 @@ class FormRepository extends ServiceEntityRepository
                     // return $photoJpg;
                 }
             }
-            return $photoJpg;
         }
+        return $photoJpg;
     }
+    
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
         $picturesdata = [];
         $photoJpg ="";
