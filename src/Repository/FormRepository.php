@@ -1884,7 +1884,7 @@ class FormRepository extends ServiceEntityRepository
         $picturesdata = [];
         $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
-            if ($equipment->raison_sociale . "\\" . $equipment->visite === $value->raison_sociale_visite) {
+            if ($equipment->getRaisonSociale() . "\\" . $equipment->getVisite() === $value->raison_sociale_visite) {
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value);
                 $pictureEncoded = base64_encode($photoJpg);
                 array_push($picturesdata, $pictureEncoded);
