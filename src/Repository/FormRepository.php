@@ -1896,8 +1896,8 @@ class FormRepository extends ServiceEntityRepository
                     $photoJpg = $response->getContent();
                 }
             }else{
-                $pictureNameToCutByComma = $entityManager->getRepository(Form::class)->getPictureWhenThereIsACommaBetweenTwoNamesInPropertyValue($pictureName, $value->form_id, $value->data_id);
-                return $pictureNameToCutByComma;
+                $photoJpg = $entityManager->getRepository(Form::class)->getPictureWhenThereIsACommaBetweenTwoNamesInPropertyValue($pictureName, $value->form_id, $value->data_id);
+                return $photoJpg;
             }
         }
 
