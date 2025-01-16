@@ -1866,7 +1866,6 @@ class FormRepository extends ServiceEntityRepository
         $the_picture = [];
         
         foreach ($picturesNames as $pictureName) {
-            dump("Je suis picture name " . $pictureName);
             if (!str_contains($pictureName, ", ")) {
                 if ($pictureName != "" || $pictureName != null) {
                     $response = $this->client->request(

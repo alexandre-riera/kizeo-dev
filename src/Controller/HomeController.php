@@ -708,7 +708,7 @@ class HomeController extends AbstractController
                 break;
             case 'S50':
                 $equipment = $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]); // L'ID remonté est bon
-                $picturesArray = $entityManager->getRepository(Form::class)->findBy(['code_equipement' => $equipment->getNumeroEquipement()]);
+                $picturesArray = $entityManager->getRepository(Form::class)->findBy(array('code_equipement' => $equipment->getNumeroEquipement(), 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()));
                 $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
                 break;
             case 'S60':
