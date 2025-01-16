@@ -1900,8 +1900,8 @@ class FormRepository extends ServiceEntityRepository
                     array_push($the_picture, $photoJpg);
                 }
             }
-            dump($the_picture);
         }
+        dump($the_picture);
         return $the_picture;
     }
 
