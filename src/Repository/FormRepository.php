@@ -1865,7 +1865,7 @@ class FormRepository extends ServiceEntityRepository
         $the_picture = [];
         foreach ($picturesNames as $pictureName) {
             dump("Je suis picture name " . $pictureName);
-            if (!str_contains($pictureName, ", ")) {
+            // if (!str_contains($pictureName, ", ")) {
                 if ($value->$pictureName != "" || $value->$pictureName != null) {
                     $response = $this->client->request(
                         'GET',
@@ -1881,7 +1881,7 @@ class FormRepository extends ServiceEntityRepository
                     // dump($the_picture);
                     array_push($the_picture, $photoJpg);
                 }
-            }
+            // }
             // else{
             //     $photosSupplementaires = explode(", ", $pictureName);
             //     foreach ($photosSupplementaires as $photo) {
@@ -1902,7 +1902,7 @@ class FormRepository extends ServiceEntityRepository
             //     }
             // }
         }
-        dump($the_picture);
+        // dump($the_picture); // Ca ne dump pas ici
         return $the_picture;
     }
 
