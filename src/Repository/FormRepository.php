@@ -1876,6 +1876,8 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
+                    dump("Sans virgule");
+                    dump($the_picture);
                     array_push($the_picture, $photoJpg);
                 }
             }
@@ -1893,6 +1895,8 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     );
                     $photoJpg = $response->getContent();
+                    dump("Avec virgule dans le nom");
+                    dump($the_picture);
                     array_push($the_picture, $photoJpg);
                 }
             }
