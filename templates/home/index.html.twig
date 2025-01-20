@@ -434,8 +434,12 @@
                         <div class="card-body">
                             <h4 class="card-title">Compte-rendu</h4>
                             <ul>
-                                {% for file in directoriesLists %}
-                                <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/2024/'~visiteDuClient~'/'~file) }}">{{ file }}</a></li>
+                                {% for year in yearsArray %}
+                                    {% for file in directoriesLists %}
+                                        {% if  {{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~year~'/'~visiteDuClient~'/'~file) }} %}
+                                            <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~year~'/'~visiteDuClient~'/'~file) }}">{{ file }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
                                 {% endfor %}
                             </ul>
                         </div>
