@@ -436,7 +436,7 @@
                             <ul>
                                 {% for year in yearsArray %}
                                     {% for file in directoriesLists %}
-                                        {% if  {{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~year~'/'~visiteDuClient~'/'~file) }} %}
+                                        {% if  "{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~year~'/'~visiteDuClient~'/'~file) }}" %}
                                             <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~year~'/'~visiteDuClient~'/'~file) }}">{{ file }}</a></li>
                                         {% endif %}
                                     {% endfor %}
