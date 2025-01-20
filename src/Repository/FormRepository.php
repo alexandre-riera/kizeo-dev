@@ -1886,7 +1886,7 @@ class FormRepository extends ServiceEntityRepository
             else{
                 $photosSupplementaires = explode(", ", $pictureName);
                 foreach ($photosSupplementaires as $photo) {
-                    dump('Je suis la photo supplémentaire ligne 1889 : ' . $photo);
+                    // dump('Je suis la photo supplémentaire ligne 1889 : ' . $photo);
                     // Call kizeo url to get jpeg here and encode the result
                     $response = $this->client->request(
                         'GET',
@@ -1902,7 +1902,6 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
         }
-        // dump($the_picture); // Ca ne dump pas ici
         return $the_picture;
     }
 

@@ -63,6 +63,4 @@ class HomeRepository{
         }
         return $results;
     }
-
-    
 }
