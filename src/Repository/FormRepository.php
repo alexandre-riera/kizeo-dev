@@ -150,6 +150,7 @@ class FormRepository extends ServiceEntityRepository
         //          array_push($equipementsSplittedArray, preg_split("/[|]/", $equipementsArray[$i]));
         //      }
         //  }
+        dd($equipementsArray);
          return $equipementsArray;
     }
  
@@ -809,6 +810,10 @@ class FormRepository extends ServiceEntityRepository
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
+        
+        // foreach ($kizeoEquipmentsGrenoble as $kizeoEquipement) {
+        //     $equipementSplitted
+        // }
         dd($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
