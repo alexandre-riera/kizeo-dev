@@ -814,7 +814,7 @@ class FormRepository extends ServiceEntityRepository
         // foreach ($kizeoEquipmentsGrenoble as $kizeoEquipement) {
         //     $equipementSplitted
         // }
-        dd($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
+        dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
