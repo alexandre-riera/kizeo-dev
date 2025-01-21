@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use stdClass;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 /**
@@ -50,6 +51,9 @@ class HomeRepository{
 
                     if(preg_match("#\.(pdf)$#i", $fichier)){
                         
+                        $myFile = new stdClass;
+                        $myFile->path = $fichier;
+                        $myFile->annee = $year;
                         //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
                         
                         //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
@@ -58,8 +62,8 @@ class HomeRepository{
                         
                         //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
                         
-                        if (!in_array($fichier, $results)) {
-                            array_push($results, $fichier);
+                        if (!in_array($myFile, $results)) {
+                            array_push($results, $myFile);
                         }
                     }
                 }
