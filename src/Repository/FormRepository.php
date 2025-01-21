@@ -777,7 +777,7 @@ class FormRepository extends ServiceEntityRepository
         $kizeoEquipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
-            return json_decode($result);
+            return $result;
         });
         $kizeoEquipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
@@ -809,7 +809,7 @@ class FormRepository extends ServiceEntityRepository
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
-        dd($kizeoEquipmentsGrenoble);// On a bien 5710 équipements sur Grenoble
+        dd($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
