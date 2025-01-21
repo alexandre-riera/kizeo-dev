@@ -692,6 +692,7 @@ class FormRepository extends ServiceEntityRepository
     public function uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $agencyEquipments, $agencyListId){
         
         foreach ($dataOfFormList[$key]['contrat_de_maintenance']['value'] as $equipment) {
+            dump('Équipement remonté avant la mise à jour de la liste : ' . $equipment);
             // A remplacer  "SEC01|Porte sectionnelle|2005|206660A02|nc|A RENSEIGNER|A RENSEIGNER||1533|1533|S50"
             // A remplacer  "Libelle equipement|Type equipement|Année|N° de série|Marque|Hauteur|Largeur|Repère site client|Id client|Id societe|Code agence"
             $columnsUpdate = 
@@ -717,13 +718,13 @@ class FormRepository extends ServiceEntityRepository
             '|' . 
             $dataOfFormList[$key]['id_agence']['value'] // Code agence
             ;
-            
+            dump('Column updates avant la mise à jour de la liste : ' . $columnsUpdate);
             /* Le double antislash correspond à 1 antislash échappé avec un autre
              $equipment['equipement']['path']  =  à LEROY MERLIN VALENCE LOGISITQUE\CE1 auquel on ajoute 1 antislash + les update au dessus
              \NIV28|Niveleur|A RENSEIGNER|A RENSEIGNER|A RENSEIGNER|2200|2400||6257|5947|S50
             */
             $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate; 
-            // dd($theEquipment);
+            dd('Équipement remonté avant la mise à jour de la liste : ' . $theEquipment);
             if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
                 $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
                 unset($agencyEquipments[$keyEquipment]);
@@ -1453,7 +1454,7 @@ class FormRepository extends ServiceEntityRepository
     public function saveEquipmentsInDatabase($cache){
         // -----------------------------   Return all forms in an array | cached for 3600 seconds 1 hour
         $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
-            $item->expiresAfter(3600);
+            $item->expiresAfter(900); // 15 minutes
             $result = FormRepository::getForms();
             return $result['forms'];
         });
