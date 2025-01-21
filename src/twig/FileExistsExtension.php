@@ -10,7 +10,7 @@ class FileExistsExtension extends AbstractExtension
     public function getFilters(): array
     {
         return [
-            new TwigFilter('file_exists', [$this, 'file_exists']),
+            new TwigFilter('fileExists', [$this, 'fileExists']),
         ];
     }
 

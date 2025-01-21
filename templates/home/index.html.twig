@@ -444,7 +444,7 @@
                                 {% for year in yearsArray %}
                                     {% for file in directoriesLists %}
                                         {% set filePath = 'pdf/maintenance/' ~ agenceSelected ~ '/' ~ clientSelected ~ '/' ~ year ~ '/' ~ visiteDuClient ~ '/' ~ file %}
-                                        {% if asset(filePath)|file_exists %}
+                                        {% if asset(filePath)|fileExists %}
                                             <li><a href="{{ asset(filePath) }}">{{ file }}</a></li>
                                         {% endif %}
                                     {% endfor %}
