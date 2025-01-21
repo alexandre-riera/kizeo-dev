@@ -441,14 +441,18 @@
                                         {% endif %}
                                     {% endfor %}
                                 {% endfor %} #}
-                                {% for year in yearsArray %}
+                                {# {% for year in yearsArray %} #}
                                     {% for file in directoriesLists %}
+                                        {% set year = 2024 %}
                                         {% set filePath = '../pdf/maintenance/' ~ agenceSelected ~ '/' ~ clientSelected ~ '/' ~ year ~ '/' ~ visiteDuClient ~ '/' ~ file %}
                                         {% if asset(filePath) %}
                                             <li><a href="{{ asset(filePath) }}">{{ file }}</a></li>
+                                        {% else %}
+                                            {% set year = 2025 %}
+                                            <li><a href="{{ asset(filePath) }}">{{ file }}</a></li>
                                         {% endif %}
                                     {% endfor %}
-                                {% endfor %}
+                                {# {% endfor %} #}
                             </ul>
                         </div>
                     </div>
