@@ -777,7 +777,7 @@ class FormRepository extends ServiceEntityRepository
         $kizeoEquipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
-            return json_encode($result);
+            return json_decode($result);
         });
         $kizeoEquipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
