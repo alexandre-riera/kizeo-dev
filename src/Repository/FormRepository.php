@@ -755,7 +755,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Get equipments in BDD by agency. Then read them and prepare a list of equipments by agency. Then send the list to Kizeo with her list ID
      */
-    public function updateKizeoWithEquipmentsListFromBdd($entityManager){
+    public function updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache){
         // GET ALL équipments by agency from BDD
         $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
         $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
@@ -770,7 +770,52 @@ class FormRepository extends ServiceEntityRepository
         $equipementsPaca = $entityManager->getRepository(EquipementS150::class)->findAll();
         $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
         $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
-        dd($equipementsGrenoble);
+        
+        dump($equipementsGrenoble[0]);
+        // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
+        // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        $kizeoEquipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
+            return $result;
+        });
+        $kizeoEquipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
+            return $result;
+        });
+        $kizeoEquipmentsParis = $cache->get('equipments_paris', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
+            return $result;
+        });
+        $kizeoEquipmentsMontpellier = $cache->get('equipments_montpellier', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
+            return $result;
+        });
+        $kizeoEquipmentsStEtienne = $cache->get('equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
+            return $result;
+        });
+        $kizeoEquipmentsSmp = $cache->get('equipments_smp', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
+            return $result;
+        });
+        $kizeoEquipmentsHautsDeFrance = $cache->get('equipments_hdf', function(ItemInterface $item) use ($formRepository){
+            $item->expiresAfter(900); // 15 minutes en cache
+            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
+            return $result;
+        });
+        dd($kizeoEquipmentsGrenoble[0]);// On a bien 5710 équipements sur Grenoble
+        
+        // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // $kizeoEquipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // $kizeoEquipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // $kizeoEquipmentsRennes = $formRepository->getAgencyListEquipementsFromKizeoByListId();
     }
 
 
