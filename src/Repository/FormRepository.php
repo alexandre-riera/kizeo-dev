@@ -1452,7 +1452,7 @@ class FormRepository extends ServiceEntityRepository
     * Implementation du cache symfony pour améliorer la performance en remote
     */
     public function saveEquipmentsInDatabase($cache){
-        // -----------------------------   Return all forms in an array | cached for 3600 seconds 1 hour
+        // -----------------------------   Return all forms in an array | cached for 900 seconds 15 minutes
         $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
             $item->expiresAfter(900); // 15 minutes
             $result = FormRepository::getForms();
