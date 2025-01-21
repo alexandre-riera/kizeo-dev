@@ -270,7 +270,12 @@ class FormController extends AbstractController
         // return new JsonResponse('La mise à jour sur KIZEO s\'est bien déroulée !', Response::HTTP_OK, [], true);
         return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
-
+    #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
+    public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, EntityManagerInterface $entityManager)//: JsonResponse
+    {
+        $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager);
+        return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
+    }
     /**
      * 
      * Save PDF maintenance on remote server --  THIRD CALL IN CRON TASK

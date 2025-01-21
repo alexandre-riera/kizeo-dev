@@ -753,6 +753,28 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /**
+     * Get equipments in BDD by agency. Then read them and prepare a list of equipments by agency. Then send the list to Kizeo with her list ID
+     */
+    public function updateKizeoWithEquipmentsListFromBdd($entityManager){
+        // GET ALL équipments by agency from BDD
+        $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
+        $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
+        $equipementsGrenoble = $entityManager->getRepository(EquipementS50::class)->findAll();
+        $equipementsLyon = $entityManager->getRepository(EquipementS60::class)->findAll();
+        $equipementsBordeaux = $entityManager->getRepository(EquipementS70::class)->findAll();
+        $equipementsParisnord = $entityManager->getRepository(EquipementS80::class)->findAll();
+        $equipementsMontpellier = $entityManager->getRepository(EquipementS100::class)->findAll();
+        $equipementsHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findAll();
+        $equipementsToulouse = $entityManager->getRepository(EquipementS130::class)->findAll();
+        $equipementsSmp = $entityManager->getRepository(EquipementS140::class)->findAll();
+        $equipementsPaca = $entityManager->getRepository(EquipementS150::class)->findAll();
+        $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
+        $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
+        dd($equipementsGrenoble);
+    }
+
+
+    /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
      */
     // public function uploadListAgencyEtatDesLieuxPortailsWithNewRecordsOnKizeo($dataOfFormList, $key, $agencyEquipments, $agencyListId){
