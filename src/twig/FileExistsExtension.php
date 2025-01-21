@@ -16,6 +16,7 @@ class FileExistsExtension extends AbstractExtension
 
     public function fileExists($path)
     {
+        dump($path);
         return file_exists($path);
     }
 }
