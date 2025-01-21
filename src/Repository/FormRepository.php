@@ -809,7 +809,7 @@ class FormRepository extends ServiceEntityRepository
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
-        dd($kizeoEquipmentsGrenoble[0]);// On a bien 5710 équipements sur Grenoble
+        dd($kizeoEquipmentsGrenoble);// On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
