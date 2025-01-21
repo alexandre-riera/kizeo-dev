@@ -434,7 +434,7 @@
                         <div class="card-body">
                             <h4 class="card-title">Compte-rendu</h4>
                             <ul>
-                                {% for objectFile.path in directoriesLists %}
+                                {% for objectFile in directoriesLists %}
                                     {% if  "{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/' ~ objectFile.annee~'/'~visiteDuClient~'/'~objectFile.path) }}" %}
                                         <span>{{ objectFile.annee }}</span>
                                         <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~objectFile.annee~'/'~visiteDuClient~'/'~objectFile.path) }}">{{ objectFile.path }}</a></li>
