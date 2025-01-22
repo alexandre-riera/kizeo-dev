@@ -150,7 +150,7 @@ class FormRepository extends ServiceEntityRepository
         //          array_push($equipementsSplittedArray, preg_split("/[|]/", $equipementsArray[$i]));
         //      }
         //  }
-        dd($equipementsArray);
+
          return $equipementsArray;
     }
  
@@ -811,18 +811,57 @@ class FormRepository extends ServiceEntityRepository
             return $result;
         });
         
-        // foreach ($kizeoEquipmentsGrenoble as $kizeoEquipement) {
-        //     $equipementSplitted
-        // }
-        dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
+        // dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsRennes = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        
+        // SET BDD results to fit Kizeo structure
+        $structuredEquipementsGroup = $formRepository->structureLikeKizeoEquipmentsList($equipementsGroup);
+        $structuredEquipementsStetienne = $formRepository->structureLikeKizeoEquipmentsList($equipementsStetienne);
+        $structuredEquipementsGrenoble = $formRepository->structureLikeKizeoEquipmentsList($equipementsGrenoble);
+        $structuredEquipementsLyon = $formRepository->structureLikeKizeoEquipmentsList($equipementsLyon);
+        $structuredEquipementsBordeaux = $formRepository->structureLikeKizeoEquipmentsList($equipementsBordeaux);
+        $structuredEquipementsParisnord = $formRepository->structureLikeKizeoEquipmentsList($equipementsParisnord);
+        $structuredEquipementsMontpellier = $formRepository->structureLikeKizeoEquipmentsList($equipementsMontpellier);
+        $structuredEquipementsHautsdefrance = $formRepository->structureLikeKizeoEquipmentsList($equipementsHautsdefrance);
+        $structuredEquipementsToulouse = $formRepository->structureLikeKizeoEquipmentsList($equipementsToulouse);
+        $structuredEquipementsSmp = $formRepository->structureLikeKizeoEquipmentsList($equipementsSmp);
+        $structuredEquipementsPaca = $formRepository->structureLikeKizeoEquipmentsList($equipementsPaca);
+        $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
+        $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
+
+        dump($structuredEquipementsGrenoble[0]);
+        
     }
 
+    public function structureLikeKizeoEquipmentsList($agencyEquipmentsList){
+        $equipmentsList = [];
+        foreach ($agencyEquipmentsList as $equipement) {
+            $theProcessedEquipment = 
+            $equipement->raison_sociale . ":" . $equipement->raison_sociale . "\\" .
+            $equipement->visite . ":" . $equipement->visite . "\\" .
+            $equipement->numero_equipement . ":" . $equipement->numero_equipement . "|" .
+            $equipement->libelle_equipement . ":" . $equipement->libelle_equipement . "|" .
+            $equipement->mise_en_service . ":" . $equipement->mise_en_service . "|" .
+            $equipement->numero_de_serie . ":" . $equipement->numero_de_serie . "|" .
+            $equipement->marque . ":" . $equipement->marque . "|" .
+            $equipement->hauteur . ":" . $equipement->hauteur . "|" .
+            $equipement->largeur . ":" . $equipement->largeur . "|" .
+            $equipement->repere_site_client . ":" . $equipement->repere_site_client . "|" .
+            $equipement->id_contact . ":" . $equipement->id_contact . "|" .
+            $equipement->id_societe . ":" . $equipement->id_societe . "|" .
+            $equipement->code_agence . ":" . $equipement->code_agence
+            ;
+            
+            array_push($listeEquipementsGrenoble, $theProcessedEquipment);
+        }
+
+        return $equipmentsList;
+    }
 
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
