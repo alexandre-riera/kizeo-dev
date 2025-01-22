@@ -834,7 +834,7 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
         $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
 
-        dd($structuredEquipementsGrenoble[0]);
+        dd(preg_split('/|/',$structuredEquipementsGrenoble[0]));
         
     }
 
@@ -856,6 +856,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
+            $equipement->setIfExistDB($theProcessedEquipment);
             
             array_push($equipmentsList, $theProcessedEquipment);
         }
