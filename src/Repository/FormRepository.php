@@ -834,7 +834,7 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
         $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
 
-        dd(preg_split('[|]',$structuredEquipementsGrenoble[0]));
+        dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
         
     }
 
