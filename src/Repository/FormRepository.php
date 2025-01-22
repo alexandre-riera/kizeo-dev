@@ -842,19 +842,19 @@ class FormRepository extends ServiceEntityRepository
         $equipmentsList = [];
         foreach ($agencyEquipmentsList as $equipement) {
             $theProcessedEquipment = 
-            $equipement->raison_sociale . ":" . $equipement->raison_sociale . "\\" .
-            $equipement->visite . ":" . $equipement->visite . "\\" .
-            $equipement->numero_equipement . ":" . $equipement->numero_equipement . "|" .
-            $equipement->libelle_equipement . ":" . $equipement->libelle_equipement . "|" .
-            $equipement->mise_en_service . ":" . $equipement->mise_en_service . "|" .
-            $equipement->numero_de_serie . ":" . $equipement->numero_de_serie . "|" .
-            $equipement->marque . ":" . $equipement->marque . "|" .
-            $equipement->hauteur . ":" . $equipement->hauteur . "|" .
-            $equipement->largeur . ":" . $equipement->largeur . "|" .
-            $equipement->repere_site_client . ":" . $equipement->repere_site_client . "|" .
-            $equipement->id_contact . ":" . $equipement->id_contact . "|" .
-            $equipement->id_societe . ":" . $equipement->id_societe . "|" .
-            $equipement->code_agence . ":" . $equipement->code_agence
+            $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
+            $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
+            $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
+            $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
+            $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
+            $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
+            $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
+            $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
+            $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
+            $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
+            $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
+            $equipement->getIdSociete() . ":" . $equipement->getIdSociete() . "|" .
+            $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             
             array_push($listeEquipementsGrenoble, $theProcessedEquipment);
