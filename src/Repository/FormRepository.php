@@ -834,7 +834,7 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
         $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
 
-        dump($structuredEquipementsGrenoble[0]);
+        dd($structuredEquipementsGrenoble[0]);
         
     }
 
