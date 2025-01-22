@@ -853,7 +853,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
             $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
             $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
-            $equipement->getIdSociete() . ":" . $equipement->getIdSociete() . "|" .
+            $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             
