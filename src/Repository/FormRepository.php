@@ -872,9 +872,9 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
-            // UPDATE if_exits_DB
+            // UPDATE if_exist_DB
             $equipement->setIfExistDB($theProcessedEquipment);
-            
+            dump(count($equipmentsList));
             // don't push in if exist in array yet
             // if (array_search($theProcessedEquipment, $equipmentsList)) {
             //     continue;
@@ -882,8 +882,6 @@ class FormRepository extends ServiceEntityRepository
             // }
             array_push($equipmentsList, $theProcessedEquipment);
         }
-
-        dd(count($equipmentsList));
         return $equipmentsList;
     }
 
