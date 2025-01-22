@@ -876,11 +876,11 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setIfExistDB($theProcessedEquipment);
             
             // don't push in if exist in array yet
-            if (array_search($theProcessedEquipment, $equipmentsList)) {
-                continue;
-            }else{
-                array_push($equipmentsList, $theProcessedEquipment);
-            }
+            // if (array_search($theProcessedEquipment, $equipmentsList)) {
+            //     continue;
+            // }else{
+            // }
+            array_push($equipmentsList, $theProcessedEquipment);
         }
 
         dd(count($equipmentsList));
