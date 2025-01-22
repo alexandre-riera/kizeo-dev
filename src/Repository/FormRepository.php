@@ -757,7 +757,7 @@ class FormRepository extends ServiceEntityRepository
      * Get equipments in BDD by agency. Then read them and prepare a list of equipments by agency. Then send the list to Kizeo with her list ID
      */
     public function updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache){
-        // GET ALL équipments by agency from BDD
+        // GET ALL equipments by agency from BDD
         $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
         $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
         $equipementsGrenoble = $entityManager->getRepository(EquipementS50::class)->findAll();
@@ -834,13 +834,29 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
         $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
 
-        dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
+        // dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
+        // array:11 [▼
+        //     0 => "UMICORE:UMICORE\CE2:CE2\SEC01:SEC01"
+        //     1 => "porte sectionnelle:porte sectionnelle"
+        //     2 => "nc:nc"
+        //     3 => "nc:nc"
+        //     4 => "nc:nc"
+        //     5 => "3520:3520"
+        //     6 => "7800:7800"
+        //     7 => "5737 - MAG MP - EWR48:5737 - MAG MP - EWR48"
+        //     8 => "5898:5898"
+        //     9 => "5729:5729"
+        //     10 => "S50:S50"
+        // ]
         
+
     }
 
+    // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
     public function structureLikeKizeoEquipmentsList($agencyEquipmentsList){
         $equipmentsList = [];
         foreach ($agencyEquipmentsList as $equipement) {
+            
             $theProcessedEquipment = 
             $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
             $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
@@ -856,12 +872,17 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
+            // UPDATE if_exits_DB
             $equipement->setIfExistDB($theProcessedEquipment);
             
-            array_push($equipmentsList, $theProcessedEquipment);
+            // don't push in if exist in array yet
+            if (array_search($theProcessedEquipment, $equipmentsList) === false) {
+                array_push($equipmentsList, $theProcessedEquipment);
+            }
         }
 
-        return $equipmentsList;
+
+        return count($equipmentsList);
     }
 
     /**
