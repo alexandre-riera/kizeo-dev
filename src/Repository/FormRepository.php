@@ -857,7 +857,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             
-            array_push($listeEquipementsGrenoble, $theProcessedEquipment);
+            array_push($equipmentsList, $theProcessedEquipment);
         }
 
         return $equipmentsList;
