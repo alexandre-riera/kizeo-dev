@@ -772,7 +772,7 @@ class FormRepository extends ServiceEntityRepository
         $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
         $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
         
-        dump($equipementsGrenoble[0]);
+        // dump($equipementsGrenoble[0]);
         // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
         // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         $kizeoEquipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
@@ -811,7 +811,7 @@ class FormRepository extends ServiceEntityRepository
             return $result;
         });
         
-        dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
+        // dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
