@@ -881,8 +881,8 @@ class FormRepository extends ServiceEntityRepository
             }
         }
 
-
-        return count($equipmentsList);
+        dd(count($equipmentsList));
+        return $equipmentsList;
     }
 
     /**
