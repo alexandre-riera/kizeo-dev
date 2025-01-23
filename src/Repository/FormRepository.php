@@ -848,7 +848,7 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-        dump($structuredEquipementsGrenoble);
+        dd($structuredEquipementsGrenoble);
 
     }
 
