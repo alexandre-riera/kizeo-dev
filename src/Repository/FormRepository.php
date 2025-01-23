@@ -892,8 +892,8 @@ class FormRepository extends ServiceEntityRepository
     }
 
     public function setEquipmentsIfExistDb($agencyEquipmentsList){
+        $theProcessedEquipment = ""; 
         foreach ($agencyEquipmentsList as $equipement) {
-            
             $theProcessedEquipment = 
             $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
             $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
@@ -910,6 +910,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             $equipement->setIfExistDB($theProcessedEquipment);
+            return $equipement;
         }
         return "IfExistDB updated";
     }
