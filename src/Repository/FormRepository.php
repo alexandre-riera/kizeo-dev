@@ -846,18 +846,15 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-
-        $equipmentsReadyToPushToKizeo = [];
+        dump(count($kizeoEquipmentsGrenoble));
         foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
             if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
                 $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
                 unset($kizeoEquipmentsGrenoble[$keyEquipment]);
-                array_push($structuredEquipment, $equipmentsReadyToPushToKizeo);
+                array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
             }
         }
-        dump(count($structuredEquipementsGrenoble));
-        dump(count($kizeoEquipmentsGrenoble));
-        dd(count($equipmentsReadyToPushToKizeo));
+        dd(count($kizeoEquipmentsGrenoble));
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
