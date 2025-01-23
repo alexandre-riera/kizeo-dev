@@ -289,6 +289,7 @@ class FormController extends AbstractController
         $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
 
         $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
+        
         $formRepository->setEquipmentsIfExistDb($equipementsGroup);
         $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
         $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);

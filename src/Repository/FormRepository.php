@@ -893,6 +893,7 @@ class FormRepository extends ServiceEntityRepository
 
     public function setEquipmentsIfExistDb($agencyEquipmentsList){
         foreach ($agencyEquipmentsList as $equipement) {
+            dd($equipement);
             $theProcessedEquipment = 
             $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
             $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
