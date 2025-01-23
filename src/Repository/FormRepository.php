@@ -846,19 +846,19 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-        // dump(count($kizeoEquipmentsGrenoble));
-        // foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-        //     if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
-        //         dump($structuredEquipment);
-        //         dd($kizeoEquipmentsGrenoble[0]);
-        //         // $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
-        //         // unset($kizeoEquipmentsGrenoble[$keyEquipment]);
-        //         continue;
-        //     }else{
-        //         array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-        //     }
-        // }
-        // dd(count($kizeoEquipmentsGrenoble));
+        dump(count($kizeoEquipmentsGrenoble));
+        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
+            $clientVisiteCodeEquipement = preg_split('/[|]/',$structuredEquipment);
+            if (str_contains($kizeoEquipmentsGrenoble, $clientVisiteCodeEquipement[0])) {
+                $keyEquipment = array_search($clientVisiteCodeEquipement[0], $kizeoEquipmentsGrenoble);
+                dump($structuredEquipment);
+                dump($kizeoEquipmentsGrenoble[$keyEquipment]);
+                unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+            }else{
+                array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
+            }
+        }
+        dd(count($kizeoEquipmentsGrenoble));
 
         // Request to flush all equipments lists to KIZEO FORMS
         // First try with Grenoble
@@ -872,7 +872,7 @@ class FormRepository extends ServiceEntityRepository
                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                 ],
                 'json'=>[
-                    'items' => $structuredEquipementsGrenoble,
+                    'items' => $kizeoEquipmentsGrenoble,
                 ]
             ]
         );
