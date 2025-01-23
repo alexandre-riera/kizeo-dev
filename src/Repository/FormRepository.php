@@ -849,8 +849,12 @@ class FormRepository extends ServiceEntityRepository
         // dump(count($kizeoEquipmentsGrenoble));
         foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
             if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
-                $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
-                unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+                dump($structuredEquipment);
+                dd($kizeoEquipmentsGrenoble[0]);
+                // $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
+                // unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+                continue;
+            }else{
                 array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
             }
         }
