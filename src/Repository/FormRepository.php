@@ -852,11 +852,11 @@ class FormRepository extends ServiceEntityRepository
         // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsGroup);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
-        $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
+        // $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsLyon);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
-        $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
+        // $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsSmp);
