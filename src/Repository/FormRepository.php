@@ -850,19 +850,19 @@ class FormRepository extends ServiceEntityRepository
         // ]
 
         // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
-        $formRepository->setEquipmentsIfExistDb($equipementsGroup);
-        $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
-        $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
-        $formRepository->setEquipmentsIfExistDb($equipementsLyon);
-        $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
-        $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
-        $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
-        $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
-        $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
-        $formRepository->setEquipmentsIfExistDb($equipementsSmp);
-        $formRepository->setEquipmentsIfExistDb($equipementsPaca);
-        $formRepository->setEquipmentsIfExistDb($equipementsRouen);
-        $formRepository->setEquipmentsIfExistDb($equipementsRennes);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsGroup);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsLyon);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsSmp);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsPaca);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsRouen);
+        $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsRennes);
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
