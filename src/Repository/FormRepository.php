@@ -911,6 +911,7 @@ class FormRepository extends ServiceEntityRepository
             ;
             $equipement->setIfExistDB($theProcessedEquipment);
         }
+        return "IfExistDB updated";
     }
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
