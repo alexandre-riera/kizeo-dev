@@ -846,7 +846,7 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-        dump(count($kizeoEquipmentsGrenoble));
+        // dump(count($kizeoEquipmentsGrenoble));
         foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
             if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
                 $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
@@ -854,7 +854,24 @@ class FormRepository extends ServiceEntityRepository
                 array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
             }
         }
-        dd(count($kizeoEquipmentsGrenoble));
+        // dd(count($kizeoEquipmentsGrenoble));
+
+        // Request to flush all equipments lists to KIZEO FORMS
+        // First try with Grenoble
+        Request::enableHttpMethodParameterOverride(); // <-- add this line
+        $client = new Client();
+        $response = $client->request(
+            'PUT',
+            'https://forms.kizeo.com/rest/v3/lists/' . 414025, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'json'=>[
+                    'items' => $kizeoEquipmentsGrenoble,
+                ]
+            ]
+        );
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
