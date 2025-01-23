@@ -886,34 +886,35 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             array_push($equipmentsList, $theProcessedEquipment);
+            $equipement->setIfExistDB($theProcessedEquipment);
         }
         
         return $equipmentsList;
     }
 
-    public function setEquipmentsIfExistDb($agencyEquipmentsList){
-        $theProcessedEquipment = ""; 
-        foreach ($agencyEquipmentsList as $equipement) {
-            $theProcessedEquipment = 
-            $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
-            $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
-            $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
-            $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
-            $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
-            $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
-            $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
-            $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
-            $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
-            $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
-            $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
-            $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
-            $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
-            ;
-            $equipement->setIfExistDB($theProcessedEquipment);
-            return $equipement;
-        }
-        return dd("IfExistDB updated" . $theProcessedEquipment);
-    }
+    // public function setEquipmentsIfExistDb($agencyEquipmentsList){
+    //     $theProcessedEquipment = ""; 
+    //     foreach ($agencyEquipmentsList as $equipement) {
+    //         $theProcessedEquipment = 
+    //         $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
+    //         $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
+    //         $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
+    //         $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
+    //         $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
+    //         $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
+    //         $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
+    //         $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
+    //         $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
+    //         $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
+    //         $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
+    //         $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
+    //         $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
+    //         ;
+    //         $equipement->setIfExistDB($theProcessedEquipment);
+    //         return $equipement;
+    //     }
+    //     return dd("IfExistDB updated" . $theProcessedEquipment);
+    // }
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
      */
