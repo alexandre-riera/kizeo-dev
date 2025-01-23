@@ -909,9 +909,9 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
-            dump($theProcessedEquipment); // Send the good string
+            // dump($theProcessedEquipment); // Send the good string
             $equipement->setIfExistDB($theProcessedEquipment);
-            dd($equipement->getIfExistDB()); // GET the good if exist DB but it is NOT in BDD  That's curious !
+            // dd($equipement->getIfExistDB()); // GET the good if exist DB but it is NOT in BDD  That's curious !
         }
     }
     /**
