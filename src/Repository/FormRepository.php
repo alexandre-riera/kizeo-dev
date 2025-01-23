@@ -848,8 +848,21 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-        dd($structuredEquipementsGrenoble);
 
+        // Set if exist DB with new value from structured agency list for all agencies
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsGroup);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsStetienne);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsGrenoble);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsLyon);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsBordeaux);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsParisnord);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsMontpellier);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsHautsdefrance);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsToulouse);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsSmp);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsPaca);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsRouen);
+        $formRepository->setEquipmentsIfExistDb($structuredEquipementsRennes);
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
@@ -874,14 +887,15 @@ class FormRepository extends ServiceEntityRepository
             ;
             array_push($equipmentsList, $theProcessedEquipment);
         }
-        // UPDATE if_exist_DB
-        foreach ($agencyEquipmentsList as $item) {
-            $item->setIfExistDB($theProcessedEquipment);
-            // dump($equipmentsList);
-        }
+        
         return $equipmentsList;
     }
 
+    public function setEquipmentsIfExistDb($agencyEquipmentsList){
+        foreach ($agencyEquipmentsList as $equipement) {
+            $equipement->setIfExistDB($equipement);
+        }
+    }
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
      */
