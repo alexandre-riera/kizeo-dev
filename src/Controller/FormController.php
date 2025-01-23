@@ -273,7 +273,37 @@ class FormController extends AbstractController
     #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
     public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager)//: JsonResponse
     {
+        // GET ALL equipments by agency from BDD
+        $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
+        $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
+        $equipementsGrenoble = $entityManager->getRepository(EquipementS50::class)->findAll();
+        $equipementsLyon = $entityManager->getRepository(EquipementS60::class)->findAll();
+        $equipementsBordeaux = $entityManager->getRepository(EquipementS70::class)->findAll();
+        $equipementsParisnord = $entityManager->getRepository(EquipementS80::class)->findAll();
+        $equipementsMontpellier = $entityManager->getRepository(EquipementS100::class)->findAll();
+        $equipementsHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findAll();
+        $equipementsToulouse = $entityManager->getRepository(EquipementS130::class)->findAll();
+        $equipementsSmp = $entityManager->getRepository(EquipementS140::class)->findAll();
+        $equipementsPaca = $entityManager->getRepository(EquipementS150::class)->findAll();
+        $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
+        $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
+
         $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
+        $formRepository->setEquipmentsIfExistDb($equipementsGroup);
+        $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
+        $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
+        $formRepository->setEquipmentsIfExistDb($equipementsLyon);
+        $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
+        $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
+        $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
+        $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
+        $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
+        $formRepository->setEquipmentsIfExistDb($equipementsSmp);
+        $formRepository->setEquipmentsIfExistDb($equipementsPaca);
+        $formRepository->setEquipmentsIfExistDb($equipementsRouen);
+        $formRepository->setEquipmentsIfExistDb($equipementsRennes);
+
+
         return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
     }
     /**
