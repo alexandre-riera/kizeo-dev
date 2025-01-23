@@ -849,6 +849,7 @@ class FormRepository extends ServiceEntityRepository
         dump(count($kizeoEquipmentsGrenoble));
         foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
             $clientVisiteCodeEquipement = preg_split('/[|]/',$structuredEquipment);
+            dd($clientVisiteCodeEquipement);
             $keyEquipment = array_search($clientVisiteCodeEquipement[0], $kizeoEquipmentsGrenoble);
             if (str_contains($kizeoEquipmentsGrenoble[$keyEquipment], $clientVisiteCodeEquipement[0])) {
                 dump($structuredEquipment);
