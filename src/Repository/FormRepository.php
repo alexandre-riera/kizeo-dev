@@ -848,21 +848,30 @@ class FormRepository extends ServiceEntityRepository
         // ]
         dump(count($kizeoEquipmentsGrenoble));
         foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-            $clientVisiteCodeEquipement = preg_split('/[|]/',$structuredEquipment);
-            $clientVisiteCodeEquipement = $clientVisiteCodeEquipement[0];
-            $keyEquipment = array_search($clientVisiteCodeEquipement, $kizeoEquipmentsGrenoble);
-            if ($keyEquipment != false) {
-                if (str_contains($kizeoEquipmentsGrenoble[$keyEquipment], $clientVisiteCodeEquipement)) {
-                    dump($structuredEquipment);
-                    dump($kizeoEquipmentsGrenoble[$keyEquipment]);
-                    unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+            $clientVisiteCodeEquipementBdd = preg_split('/[|]/',$structuredEquipment);
+            $clientVisiteCodeEquipementBdd = $clientVisiteCodeEquipementBdd[0];
+
+            foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
+                $clientVisiteCodeEquipementKizeo = preg_split('/[|]/',$kizeoEquipment);
+                $clientVisiteCodeEquipementKizeo = $clientVisiteCodeEquipementKizeo[0];
+                
+                $keyEquipment = array_search($clientVisiteCodeEquipementBdd, $kizeoEquipmentsGrenoble);
+                if ($keyEquipment != false) {
+                    if ($clientVisiteCodeEquipementBdd === $kizeoEquipment) {
+                        dump($clientVisiteCodeEquipementBdd);
+                        dump($kizeoEquipment);
+                        unset($kizeoEquipment);
+                        array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
+                    }
+                }
+                else{
+                    array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
                 }
             }
-            else{
-                array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-            }
         }
-        dd(count($kizeoEquipmentsGrenoble));
+        dd(count($kizeoEquipmentsGrenoble)); // -----------------------------             REPRENDRE ICI ----------------------------------------------------
+        // ----------------------    Le foreach au dessus a juste ajouté les 1147 equipements de la BDD à la liste de KIZEO donc checker le array_search()
+        // ----------------------------------------------------------------------------------------------------------------------------------------------------
 
         // Request to flush all equipments lists to KIZEO FORMS
         // First try with Grenoble
