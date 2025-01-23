@@ -852,11 +852,11 @@ class FormRepository extends ServiceEntityRepository
         // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsGroup);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
-        // $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
+        $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsLyon);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
-        // $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
+        $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
         // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsSmp);
@@ -886,35 +886,31 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
             array_push($equipmentsList, $theProcessedEquipment);
-            $equipement->setIfExistDB($theProcessedEquipment);
         }
         
         return $equipmentsList;
     }
 
-    // public function setEquipmentsIfExistDb($agencyEquipmentsList){
-    //     $theProcessedEquipment = ""; 
-    //     foreach ($agencyEquipmentsList as $equipement) {
-    //         $theProcessedEquipment = 
-    //         $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
-    //         $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
-    //         $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
-    //         $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
-    //         $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
-    //         $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
-    //         $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
-    //         $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
-    //         $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
-    //         $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
-    //         $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
-    //         $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
-    //         $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
-    //         ;
-    //         $equipement->setIfExistDB($theProcessedEquipment);
-    //         return $equipement;
-    //     }
-    //     return dd("IfExistDB updated" . $theProcessedEquipment);
-    // }
+    public function setEquipmentsIfExistDb($agencyEquipmentsList){
+        foreach ($agencyEquipmentsList as $equipement) {
+            $theProcessedEquipment = 
+            $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
+            $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
+            $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
+            $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
+            $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
+            $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
+            $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
+            $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
+            $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
+            $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
+            $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
+            $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
+            $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
+            ;
+            $equipement->setIfExistDB($theProcessedEquipment);
+        }
+    }
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
      */
