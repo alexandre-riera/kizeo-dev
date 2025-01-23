@@ -847,17 +847,17 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // ]
         // dump(count($kizeoEquipmentsGrenoble));
-        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-            if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
-                dump($structuredEquipment);
-                dd($kizeoEquipmentsGrenoble[0]);
-                // $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
-                // unset($kizeoEquipmentsGrenoble[$keyEquipment]);
-                continue;
-            }else{
-                array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-            }
-        }
+        // foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
+        //     if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
+        //         dump($structuredEquipment);
+        //         dd($kizeoEquipmentsGrenoble[0]);
+        //         // $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
+        //         // unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+        //         continue;
+        //     }else{
+        //         array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
+        //     }
+        // }
         // dd(count($kizeoEquipmentsGrenoble));
 
         // Request to flush all equipments lists to KIZEO FORMS
@@ -872,7 +872,7 @@ class FormRepository extends ServiceEntityRepository
                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                 ],
                 'json'=>[
-                    'items' => $kizeoEquipmentsGrenoble,
+                    'items' => $structuredEquipementsGrenoble,
                 ]
             ]
         );
