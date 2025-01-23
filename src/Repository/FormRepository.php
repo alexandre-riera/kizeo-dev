@@ -856,7 +856,8 @@ class FormRepository extends ServiceEntityRepository
             }
         }
         dump(count($structuredEquipementsGrenoble));
-        dd(count($kizeoEquipmentsGrenoble));
+        dump(count($kizeoEquipmentsGrenoble));
+        dd(count($equipmentsReadyToPushToKizeo));
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
