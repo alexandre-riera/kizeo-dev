@@ -849,20 +849,20 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // ]
 
-        // Set if exist DB with new value from structured agency list for all agencies
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsGroup);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsStetienne);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsGrenoble);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsLyon);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsBordeaux);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsParisnord);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsMontpellier);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsHautsdefrance);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsToulouse);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsSmp);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsPaca);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsRouen);
-        $formRepository->setEquipmentsIfExistDb($structuredEquipementsRennes);
+        // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
+        $formRepository->setEquipmentsIfExistDb($equipementsGroup);
+        $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
+        $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
+        $formRepository->setEquipmentsIfExistDb($equipementsLyon);
+        $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
+        $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
+        $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
+        $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
+        $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
+        $formRepository->setEquipmentsIfExistDb($equipementsSmp);
+        $formRepository->setEquipmentsIfExistDb($equipementsPaca);
+        $formRepository->setEquipmentsIfExistDb($equipementsRouen);
+        $formRepository->setEquipmentsIfExistDb($equipementsRennes);
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
@@ -893,7 +893,23 @@ class FormRepository extends ServiceEntityRepository
 
     public function setEquipmentsIfExistDb($agencyEquipmentsList){
         foreach ($agencyEquipmentsList as $equipement) {
-            $equipement->setIfExistDB($equipement);
+            
+            $theProcessedEquipment = 
+            $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
+            $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
+            $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
+            $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
+            $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
+            $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
+            $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
+            $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
+            $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
+            $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
+            $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
+            $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
+            $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
+            ;
+            $equipement->setIfExistDB($theProcessedEquipment);
         }
     }
     /**
