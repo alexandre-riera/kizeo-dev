@@ -775,43 +775,41 @@ class FormRepository extends ServiceEntityRepository
         // dump($equipementsGrenoble[0]);
         // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
         // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        $kizeoEquipmentsGrenoble = $cache->get('equipments_grenoble', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsGrenoble = $cache->get('kizeo_equipments_grenoble', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
             return $result;
         });
-        $kizeoEquipmentsLyon = $cache->get('equipments_lyon', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsLyon = $cache->get('kizeo_equipments_lyon', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
             return $result;
         });
-        $kizeoEquipmentsParis = $cache->get('equipments_paris', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsParis = $cache->get('kizeo_equipments_paris', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
             return $result;
         });
-        $kizeoEquipmentsMontpellier = $cache->get('equipments_montpellier', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsMontpellier = $cache->get('kizeo_equipments_montpellier', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
             return $result;
         });
-        $kizeoEquipmentsStEtienne = $cache->get('equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsStEtienne = $cache->get('kizeo_equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
             return $result;
         });
-        $kizeoEquipmentsSmp = $cache->get('equipments_smp', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsSmp = $cache->get('kizeo_equipments_smp', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
             return $result;
         });
-        $kizeoEquipmentsHautsDeFrance = $cache->get('equipments_hdf', function(ItemInterface $item) use ($formRepository){
+        $kizeoEquipmentsHautsDeFrance = $cache->get('kizeo_equipments_hdf', function(ItemInterface $item) use ($formRepository){
             $item->expiresAfter(900); // 15 minutes en cache
             $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
             return $result;
         });
-        
-        // dump($kizeoEquipmentsGrenoble[0]); // On a bien 5710 équipements sur Grenoble
         
         // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
@@ -819,7 +817,7 @@ class FormRepository extends ServiceEntityRepository
         // $kizeoEquipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         // $kizeoEquipmentsRennes = $formRepository->getAgencyListEquipementsFromKizeoByListId();
         
-        // SET BDD results to fit Kizeo structure
+        // SET BDD results to fit Kizeo structure + SET ifExistDB with the complete string of the structured equipment
         $structuredEquipementsGroup = $formRepository->structureLikeKizeoEquipmentsList($equipementsGroup);
         $structuredEquipementsStetienne = $formRepository->structureLikeKizeoEquipmentsList($equipementsStetienne);
         $structuredEquipementsGrenoble = $formRepository->structureLikeKizeoEquipmentsList($equipementsGrenoble);
@@ -849,6 +847,22 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // ]
 
+        // GET ALL equipments ifExistDB by agency from BDD
+        $equipementsIfExistDbGroup = $entityManager->getRepository(EquipementS10::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbStetienne = $entityManager->getRepository(EquipementS40::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbGrenoble = $entityManager->getRepository(EquipementS50::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbLyon = $entityManager->getRepository(EquipementS60::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbBordeaux = $entityManager->getRepository(EquipementS70::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbParisnord = $entityManager->getRepository(EquipementS80::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbMontpellier = $entityManager->getRepository(EquipementS100::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbToulouse = $entityManager->getRepository(EquipementS130::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbSmp = $entityManager->getRepository(EquipementS140::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbPaca = $entityManager->getRepository(EquipementS150::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbRouen = $entityManager->getRepository(EquipementS160::class)->findBy(array('if_exist_db' => 'ASC'));
+        $equipementsIfExistDbRennes = $entityManager->getRepository(EquipementS170::class)->findBy(array('if_exist_db' => 'ASC'));
+
+        dump($equipementsIfExistDbGrenoble);
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
@@ -871,6 +885,8 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
+
+            // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
             $equipement->setIfExistDB($theProcessedEquipment);
             array_push($equipmentsList, $theProcessedEquipment);
 
@@ -883,110 +899,7 @@ class FormRepository extends ServiceEntityRepository
         return $equipmentsList;
     }
 
-    // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
-    // public function setEquipmentsIfExistDb($agencyEquipmentsList){
-    //     foreach ($agencyEquipmentsList as $equipement) {
-    //         $theProcessedEquipment = 
-    //         $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
-    //         $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
-    //         $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
-    //         $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
-    //         $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
-    //         $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
-    //         $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
-    //         $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
-    //         $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
-    //         $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
-    //         $equipement->getIdContact() . ":" . $equipement->getIdContact() . "|" .
-    //         $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
-    //         $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
-    //         ;
-    //         switch ($equipement->getCodeAgence()) {
-    //             case 'S10':
-    //                 $equipementToSave = new EquipementS10;
-                    
-    //                 break;
-    //             case 'S40':
-    //                 $equipementToSave = new EquipementS40;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S50':
-    //                 $equipementToSave = new EquipementS50;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S60':
-    //                 $equipementToSave = new EquipementS60;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S70':
-    //                 $equipementToSave = new EquipementS70;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S80':
-    //                 $equipementToSave = new EquipementS80;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S100':
-    //                 $equipementToSave = new EquipementS100;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S120':
-    //                 $equipementToSave = new EquipementS120;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S130':
-    //                 $equipementToSave = new EquipementS130;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S140':
-    //                 $equipementToSave = new EquipementS140;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S150':
-    //                 $equipementToSave = new EquipementS150;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S160':
-    //                 $equipementToSave = new EquipementS160;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-    //             case 'S170':
-    //                 $equipementToSave = new EquipementS170;
-    //                 $equipementToSave->setIfExistDB($theProcessedEquipment);
-    //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-    //                 $this->getEntityManager()->persist($equipementToSave);
-    //                 break;
-                
-    //             default:
-    //                 # code...
-    //                 break;
-    //         }
-            
-            
-    //     }
-    // }
+
     
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
