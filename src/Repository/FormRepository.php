@@ -848,7 +848,7 @@ class FormRepository extends ServiceEntityRepository
         //     9 => "5729:5729"
         //     10 => "S50:S50"
         // ]
-        
+        dd(count($structuredEquipementsGrenoble));
 
     }
 
@@ -877,7 +877,7 @@ class FormRepository extends ServiceEntityRepository
         // UPDATE if_exist_DB
         foreach ($agencyEquipmentsList as $item) {
             $item->setIfExistDB($theProcessedEquipment);
-            dump($equipmentsList);
+            // dump($equipmentsList);
         }
         return $equipmentsList;
     }
