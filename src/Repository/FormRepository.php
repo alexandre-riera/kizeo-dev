@@ -847,22 +847,16 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // ]
 
-        // GET ALL equipments ifExistDB by agency from BDD
-        $equipementsIfExistDbGroup = $entityManager->getRepository(EquipementS10::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbStetienne = $entityManager->getRepository(EquipementS40::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbGrenoble = $entityManager->getRepository(EquipementS50::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbLyon = $entityManager->getRepository(EquipementS60::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbBordeaux = $entityManager->getRepository(EquipementS70::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbParisnord = $entityManager->getRepository(EquipementS80::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbMontpellier = $entityManager->getRepository(EquipementS100::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbToulouse = $entityManager->getRepository(EquipementS130::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbSmp = $entityManager->getRepository(EquipementS140::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbPaca = $entityManager->getRepository(EquipementS150::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbRouen = $entityManager->getRepository(EquipementS160::class)->findBy(array('if_exist_db' => 'ASC'));
-        $equipementsIfExistDbRennes = $entityManager->getRepository(EquipementS170::class)->findBy(array('if_exist_db' => 'ASC'));
-
-        dump($equipementsIfExistDbGrenoble);
+        $equipmentsReadyToPushToKizeo = [];
+        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
+            if (in_array($structuredEquipment, $kizeoEquipmentsGrenoble, true)) {
+                $keyEquipment = array_search($structuredEquipment, $kizeoEquipmentsGrenoble);
+                unset($kizeoEquipmentsGrenoble[$keyEquipment]);
+                array_push($structuredEquipment, $equipmentsReadyToPushToKizeo);
+            }
+        }
+        dump(count($structuredEquipementsGrenoble));
+        dd(count($kizeoEquipmentsGrenoble));
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
