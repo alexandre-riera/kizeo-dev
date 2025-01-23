@@ -849,20 +849,6 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // ]
 
-        // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsGroup);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsStetienne);
-        // $formRepository->setEquipmentsIfExistDb($equipementsGrenoble);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsLyon);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsBordeaux);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsParisnord);
-        // $formRepository->setEquipmentsIfExistDb($equipementsMontpellier);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsHautsdefrance);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsToulouse);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsSmp);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsPaca);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsRouen);
-        // $tempVariable = $formRepository->setEquipmentsIfExistDb($equipementsRennes);
     }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
@@ -891,9 +877,9 @@ class FormRepository extends ServiceEntityRepository
         return $equipmentsList;
     }
 
+    // Set if equipment exist DB with new value from structured agency list for all agencies to match strings from Kizeo Forms
     public function setEquipmentsIfExistDb($agencyEquipmentsList){
         foreach ($agencyEquipmentsList as $equipement) {
-            // dd($equipement);
             $theProcessedEquipment = 
             $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
             $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
@@ -909,9 +895,93 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getCodeSociete() . ":" . $equipement->getCodeSociete() . "|" .
             $equipement->getCodeAgence() . ":" . $equipement->getCodeAgence()
             ;
-            // dump($theProcessedEquipment); // Send the good string
-            $equipement->setIfExistDB($theProcessedEquipment);
-            // dd($equipement->getIfExistDB()); // GET the good if exist DB but it is NOT in BDD  That's curious !
+            switch ($equipement->getCodeAgence()) {
+                case 'S10':
+                    $equipementToSave = new EquipementS10;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S40':
+                    $equipementToSave = new EquipementS40;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S50':
+                    $equipementToSave = new EquipementS50;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S60':
+                    $equipementToSave = new EquipementS60;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S70':
+                    $equipementToSave = new EquipementS70;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S80':
+                    $equipementToSave = new EquipementS80;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S100':
+                    $equipementToSave = new EquipementS100;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S120':
+                    $equipementToSave = new EquipementS120;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S130':
+                    $equipementToSave = new EquipementS130;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S140':
+                    $equipementToSave = new EquipementS140;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S150':
+                    $equipementToSave = new EquipementS150;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S160':
+                    $equipementToSave = new EquipementS160;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                case 'S170':
+                    $equipementToSave = new EquipementS170;
+                    $equipementToSave->setIfExistDB($theProcessedEquipment);
+                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $this->getEntityManager()->persist($equipement);
+                    break;
+                
+                default:
+                    # code...
+                    break;
+            }
+            
+            // actually executes the queries (i.e. the INSERT query)
+            $this->getEntityManager()->flush();
         }
     }
     /**
