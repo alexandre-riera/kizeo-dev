@@ -900,79 +900,79 @@ class FormRepository extends ServiceEntityRepository
                     $equipementToSave = new EquipementS10;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S40':
                     $equipementToSave = new EquipementS40;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S50':
                     $equipementToSave = new EquipementS50;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S60':
                     $equipementToSave = new EquipementS60;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S70':
                     $equipementToSave = new EquipementS70;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S80':
                     $equipementToSave = new EquipementS80;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S100':
                     $equipementToSave = new EquipementS100;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S120':
                     $equipementToSave = new EquipementS120;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S130':
                     $equipementToSave = new EquipementS130;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S140':
                     $equipementToSave = new EquipementS140;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S150':
                     $equipementToSave = new EquipementS150;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S160':
                     $equipementToSave = new EquipementS160;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 case 'S170':
                     $equipementToSave = new EquipementS170;
                     $equipementToSave->setIfExistDB($theProcessedEquipment);
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $this->getEntityManager()->persist($equipement);
+                    $this->getEntityManager()->persist($equipementToSave);
                     break;
                 
                 default:
