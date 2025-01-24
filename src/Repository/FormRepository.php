@@ -845,41 +845,50 @@ class FormRepository extends ServiceEntityRepository
         //     8 => "5898:5898"
         //     9 => "5729:5729"
         //     10 => "S50:S50"
-        // ]
-        dump(count($kizeoEquipmentsGrenoble));
-        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-            $clientVisiteCodeEquipementBdd = preg_split('/[|]/',$structuredEquipment);
-            $clientVisiteCodeEquipementBdd = $clientVisiteCodeEquipementBdd[0];
+        // // ]
+        // dump(count($kizeoEquipmentsGrenoble));
+        // foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
+        //     $clientVisiteCodeEquipementBdd = preg_split('/[|]/',$structuredEquipment);
+        //     $clientVisiteCodeEquipementBdd = $clientVisiteCodeEquipementBdd[0];
 
-            foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
-                $clientVisiteCodeEquipementKizeo = preg_split('/[|]/',$kizeoEquipment);
-                $clientVisiteCodeEquipementKizeo = $clientVisiteCodeEquipementKizeo[0];
-                
-                $keyEquipment = array_search($clientVisiteCodeEquipementBdd, $kizeoEquipmentsGrenoble);
-                if ($keyEquipment != false) {
-                    if ($clientVisiteCodeEquipementBdd === $kizeoEquipment) {
-                        dump($clientVisiteCodeEquipementBdd);
-                        dump($kizeoEquipment);
-                        unset($kizeoEquipment);
-                        array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-                    }
-                }
-                else{
-                    array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-                }
+        //     foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
+        //         $clientVisiteCodeEquipementKizeo = preg_split('/[|]/',$kizeoEquipment);
+        //         $clientVisiteCodeEquipementKizeo = $clientVisiteCodeEquipementKizeo[0];
+        //         if ($clientVisiteCodeEquipementBdd === $kizeoEquipment) {
+        //             dump($clientVisiteCodeEquipementBdd);
+        //             dump($kizeoEquipment);
+        //             unset($kizeoEquipment);
+        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
+        //         }
+        //         else{
+        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
+        //         }
+        //     }
+        // }
+
+        foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
+            if (in_array($kizeoEquipment, $structuredEquipementsGrenoble)) {
+                dump($kizeoEquipment);
+                unset($kizeoEquipment);
+                array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+            }
+            else{
+                array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
             }
         }
+
         dd(count($kizeoEquipmentsGrenoble)); // -----------------------------             REPRENDRE ICI ----------------------------------------------------
         // ----------------------    Le foreach au dessus a juste ajouté les 1147 equipements de la BDD à la liste de KIZEO donc checker le array_search()
-        // ----------------------------------------------------------------------------------------------------------------------------------------------------
+        // ----------------------------------------------------------------------------------------   504 Gateway Time-out   ----------------------------------
 
         // Request to flush all equipments lists to KIZEO FORMS
-        // First try with Grenoble
+        // First try with Grenobleon list Remontee equipements test with ID 437695
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $client = new Client();
         $response = $client->request(
             'PUT',
-            'https://forms.kizeo.com/rest/v3/lists/' . 414025, [
+            'https://forms.kizeo.com/rest/v3/lists/' . 437695, 
+            [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
