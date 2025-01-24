@@ -866,7 +866,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
             for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
                 if (str_starts_with($kizeoEquipment, $structuredEquipementsGrenobleSplitted[$i])) {
-                    dd("I'm present in kizeo list : " + $structuredEquipementsGrenobleSplitted[$i]);
+                    dd("I'm present in kizeo list : " . $structuredEquipementsGrenobleSplitted[$i]);
                     unset($kizeoEquipment);
                     array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
                 }
