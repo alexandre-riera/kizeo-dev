@@ -831,7 +831,7 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsPaca = $formRepository->structureLikeKizeoEquipmentsList($equipementsPaca);
         $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
         $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
-
+        
         // dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
         // array:11 [▼
         //     0 => "UMICORE:UMICORE\CE2:CE2\SEC01:SEC01"
@@ -847,33 +847,33 @@ class FormRepository extends ServiceEntityRepository
         //     10 => "S50:S50"
         // // ]
         // dump(count($kizeoEquipmentsGrenoble));
-        // foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-        //     $clientVisiteCodeEquipementBdd = preg_split('/[|]/',$structuredEquipment);
-        //     $clientVisiteCodeEquipementBdd = $clientVisiteCodeEquipementBdd[0];
+        
+        $structuredEquipementsGroupSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGroup);
+        $structuredEquipementsStetienneSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsStetienne);
+        $structuredEquipementsGrenobleSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGrenoble);
+        $structuredEquipementsLyonSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsLyon);
+        $structuredEquipementsBordeauxSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsBordeaux);
+        $structuredEquipementsParisnordSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsParisnord);
+        $structuredEquipementsMontpellierSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsMontpellier);
+        $structuredEquipementsHautsdefranceSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsHautsdefrance);
+        $structuredEquipementsToulouseSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsToulouse);
+        $structuredEquipementsSmpSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsSmp); 
+        $structuredEquipementsPacaSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsPaca);  
+        $structuredEquipementsRouenSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRouen);
+        $structuredEquipementsRennesSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRennes);
+        dd($structuredEquipementsGrenobleSplitted);
 
-        //     foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
-        //         $clientVisiteCodeEquipementKizeo = preg_split('/[|]/',$kizeoEquipment);
-        //         $clientVisiteCodeEquipementKizeo = $clientVisiteCodeEquipementKizeo[0];
-        //         if ($clientVisiteCodeEquipementBdd === $kizeoEquipment) {
-        //             dump($clientVisiteCodeEquipementBdd);
-        //             dump($kizeoEquipment);
-        //             unset($kizeoEquipment);
-        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-        //         }
-        //         else{
-        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipment);
-        //         }
-        //     }
-        // }
-
-        foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
-            if (in_array($kizeoEquipment, $structuredEquipementsGrenoble)) {
-                dump($kizeoEquipment);
-                unset($kizeoEquipment);
-                array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
-            }
-            else{
-                array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
+            $structuredEquipmentExploded = preg_split('/[|]/', $structuredEquipment);
+            for ($i=0; $i < count($kizeoEquipmentsGrenoble) ; $i++) {
+                if (in_array($kizeoExploded[0], $structuredEquipementsGrenoble)) {
+                    dump($kizeoExploded[0]);
+                    unset($kizeoEquipment);
+                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+                }
+                else{
+                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+                }
             }
         }
 
@@ -934,7 +934,16 @@ class FormRepository extends ServiceEntityRepository
         return $equipmentsList;
     }
 
-
+    // Function to preg_split structured equipments to keep only the first part  raison_sociale|visit|numero_equipment
+    public function splitStructuredEquipmentsToKeepFirstPart($structuredEquipmentsList){
+        $structuredEquipmentsListSplitted = [];
+        foreach ($structuredEquipmentsList as $structuredEquipment) {
+            $clientVisiteCodeEquipementBdd = preg_split('/[|]/',$structuredEquipment);
+            $clientVisiteCodeEquipementBdd = $clientVisiteCodeEquipementBdd[0];
+            array_push($structuredEquipmentsListSplitted, $clientVisiteCodeEquipementBdd);
+        }
+        return $structuredEquipmentsListSplitted;
+    }
     
     /**
      * Function to upload and save list agency with new records from ETAT DES LIEUX PORTAILS formulaires to Kizeo --- OK POUR TOUTES LES AGENCES DE S10 à S170
