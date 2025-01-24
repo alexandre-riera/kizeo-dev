@@ -863,8 +863,8 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsRennesSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRennes);
         // dd($structuredEquipementsGrenobleSplitted);
 
-        foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
-            for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
+        for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
+            foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $structuredEquipementsGrenobleSplitted[$i])) {
                     dump("I'm present in kizeo list : " . $structuredEquipementsGrenobleSplitted[$i]);
                     unset($kizeoEquipment);
