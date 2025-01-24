@@ -861,18 +861,17 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipementsPacaSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsPaca);  
         $structuredEquipementsRouenSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRouen);
         $structuredEquipementsRennesSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRennes);
-        dd($structuredEquipementsGrenobleSplitted);
+        // dd($structuredEquipementsGrenobleSplitted);
 
-        foreach ($structuredEquipementsGrenoble as $structuredEquipment) {
-            $structuredEquipmentExploded = preg_split('/[|]/', $structuredEquipment);
-            for ($i=0; $i < count($kizeoEquipmentsGrenoble) ; $i++) {
-                if (in_array($kizeoExploded[0], $structuredEquipementsGrenoble)) {
-                    dump($kizeoExploded[0]);
+        foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
+            for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
+                if (str_starts_with($kizeoEquipment, $structuredEquipementsGrenobleSplitted[$i])) {
+                    dd("I'm present in kizeo list : " + $structuredEquipementsGrenobleSplitted[$i]);
                     unset($kizeoEquipment);
-                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
                 }
                 else{
-                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble);
+                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
                 }
             }
         }
