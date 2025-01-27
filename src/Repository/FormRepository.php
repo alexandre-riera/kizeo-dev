@@ -856,32 +856,32 @@ class FormRepository extends ServiceEntityRepository
         // en fonction de l'entité d'équipement (par exemple, à partir d'une configuration)
         // Exemple :
         switch ($entite) {
-            // case EquipementS10::class:
-            //     return ; // ID de la liste Kizeo pour Group
+            case EquipementS10::class:
+                return ; // ID de la liste Kizeo pour Group
             case EquipementS40::class:
                 return 427442; // ID de la liste Kizeo pour St Etienne
             case EquipementS50::class:
                 return 437695; // ID de la liste Kizeo pour Grenoble 414025 mais changé pour mettre celui de la liste de test
             case EquipementS60::class:
                 return 427444; // ID de la liste Kizeo pour Lyon
-            // case EquipementS70::class:
-            //     return ; // ID de la liste Kizeo pour Bordeaux
+            case EquipementS70::class:
+                return ; // ID de la liste Kizeo pour Bordeaux
             case EquipementS80::class:
                 return 421993; // ID de la liste Kizeo pour Paris Nord
             case EquipementS100::class:
                 return 423853; // ID de la liste Kizeo pour Montpellier
             case EquipementS120::class:
                 return 434252; // ID de la liste Kizeo pour Hauts de France
-            // case EquipementS130::class:
-            //     return ; // ID de la liste Kizeo pour Toulouse
+            case EquipementS130::class:
+                return ; // ID de la liste Kizeo pour Toulouse
             case EquipementS140::class:
                 return 427682; // ID de la liste Kizeo pour SMP
-            // case EquipementS150::class:
-            //     return ; // ID de la liste Kizeo pour SOGEFI
-            // case EquipementS160::class:
-            //     return ; // ID de la liste Kizeo pour Rouen
-            // case EquipementS170::class:
-            //     return ; // ID de la liste Kizeo pour Rennes
+            case EquipementS150::class:
+                return ; // ID de la liste Kizeo pour SOGEFI
+            case EquipementS160::class:
+                return ; // ID de la liste Kizeo pour Rouen
+            case EquipementS170::class:
+                return ; // ID de la liste Kizeo pour Rennes
             // ... autres cas
             default:
                 throw new Exception("Nom de liste Kizeo non défini pour l'entité " . $entite);
