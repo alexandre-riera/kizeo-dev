@@ -17,15 +17,16 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\EntityManager;
+use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 
 /**
  * @extends ServiceEntityRepository<ApiForm>
@@ -757,147 +758,280 @@ class FormRepository extends ServiceEntityRepository
      * Get equipments in BDD by agency. Then read them and prepare a list of equipments by agency. Then send the list to Kizeo with her list ID
      */
     public function updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache){
-        // GET ALL equipments by agency from BDD
-        $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
-        $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
-        $equipementsGrenoble = $entityManager->getRepository(EquipementS50::class)->findAll();
-        $equipementsLyon = $entityManager->getRepository(EquipementS60::class)->findAll();
-        $equipementsBordeaux = $entityManager->getRepository(EquipementS70::class)->findAll();
-        $equipementsParisnord = $entityManager->getRepository(EquipementS80::class)->findAll();
-        $equipementsMontpellier = $entityManager->getRepository(EquipementS100::class)->findAll();
-        $equipementsHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findAll();
-        $equipementsToulouse = $entityManager->getRepository(EquipementS130::class)->findAll();
-        $equipementsSmp = $entityManager->getRepository(EquipementS140::class)->findAll();
-        $equipementsPaca = $entityManager->getRepository(EquipementS150::class)->findAll();
-        $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
-        $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
-        
-        // dump($equipementsGrenoble[0]);
-        // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
-        // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        $kizeoEquipmentsGrenoble = $cache->get('kizeo_equipments_grenoble', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
-            return $result;
-        });
-        $kizeoEquipmentsLyon = $cache->get('kizeo_equipments_lyon', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
-            return $result;
-        });
-        $kizeoEquipmentsParis = $cache->get('kizeo_equipments_paris', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
-            return $result;
-        });
-        $kizeoEquipmentsMontpellier = $cache->get('kizeo_equipments_montpellier', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
-            return $result;
-        });
-        $kizeoEquipmentsStEtienne = $cache->get('kizeo_equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
-            return $result;
-        });
-        $kizeoEquipmentsSmp = $cache->get('kizeo_equipments_smp', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
-            return $result;
-        });
-        $kizeoEquipmentsHautsDeFrance = $cache->get('kizeo_equipments_hdf', function(ItemInterface $item) use ($formRepository){
-            $item->expiresAfter(900); // 15 minutes en cache
-            $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
-            return $result;
-        });
-        
-        // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        // $kizeoEquipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        // $kizeoEquipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        // $kizeoEquipmentsRennes = $formRepository->getAgencyListEquipementsFromKizeoByListId();
-        
-        // SET BDD results to fit Kizeo structure + SET ifExistDB with the complete string of the structured equipment
-        $structuredEquipementsGroup = $formRepository->structureLikeKizeoEquipmentsList($equipementsGroup);
-        $structuredEquipementsStetienne = $formRepository->structureLikeKizeoEquipmentsList($equipementsStetienne);
-        $structuredEquipementsGrenoble = $formRepository->structureLikeKizeoEquipmentsList($equipementsGrenoble);
-        $structuredEquipementsLyon = $formRepository->structureLikeKizeoEquipmentsList($equipementsLyon);
-        $structuredEquipementsBordeaux = $formRepository->structureLikeKizeoEquipmentsList($equipementsBordeaux);
-        $structuredEquipementsParisnord = $formRepository->structureLikeKizeoEquipmentsList($equipementsParisnord);
-        $structuredEquipementsMontpellier = $formRepository->structureLikeKizeoEquipmentsList($equipementsMontpellier);
-        $structuredEquipementsHautsdefrance = $formRepository->structureLikeKizeoEquipmentsList($equipementsHautsdefrance);
-        $structuredEquipementsToulouse = $formRepository->structureLikeKizeoEquipmentsList($equipementsToulouse);
-        $structuredEquipementsSmp = $formRepository->structureLikeKizeoEquipmentsList($equipementsSmp);
-        $structuredEquipementsPaca = $formRepository->structureLikeKizeoEquipmentsList($equipementsPaca);
-        $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
-        $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
-        
-        // dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
-        // array:11 [▼
-        //     0 => "UMICORE:UMICORE\CE2:CE2\SEC01:SEC01"
-        //     1 => "porte sectionnelle:porte sectionnelle"
-        //     2 => "nc:nc"
-        //     3 => "nc:nc"
-        //     4 => "nc:nc"
-        //     5 => "3520:3520"
-        //     6 => "7800:7800"
-        //     7 => "5737 - MAG MP - EWR48:5737 - MAG MP - EWR48"
-        //     8 => "5898:5898"
-        //     9 => "5729:5729"
-        //     10 => "S50:S50"
-        // // ]
-        // dump(count($kizeoEquipmentsGrenoble));
-        
-        $structuredEquipementsGroupSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGroup);
-        $structuredEquipementsStetienneSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsStetienne);
-        $structuredEquipementsGrenobleSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGrenoble);
-        $structuredEquipementsLyonSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsLyon);
-        $structuredEquipementsBordeauxSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsBordeaux);
-        $structuredEquipementsParisnordSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsParisnord);
-        $structuredEquipementsMontpellierSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsMontpellier);
-        $structuredEquipementsHautsdefranceSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsHautsdefrance);
-        $structuredEquipementsToulouseSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsToulouse);
-        $structuredEquipementsSmpSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsSmp); 
-        $structuredEquipementsPacaSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsPaca);  
-        $structuredEquipementsRouenSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRouen);
-        $structuredEquipementsRennesSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRennes);
-        // dd($structuredEquipementsGrenobleSplitted);
+        // Liste des entités d'équipement
+        $entitesEquipements = [
+            EquipementS10::class,
+            EquipementS40::class,
+            EquipementS50::class,
+            EquipementS60::class,
+            EquipementS70::class,
+            EquipementS80::class,
+            EquipementS100::class,
+            EquipementS120::class,
+            EquipementS130::class,
+            EquipementS140::class,
+            EquipementS150::class,
+            EquipementS160::class,
+            EquipementS170::class,
+        ];
 
-        for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
-            foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
-                if (str_starts_with($kizeoEquipment, $structuredEquipementsGrenobleSplitted[$i])) {
-                    dump("I'm present in kizeo list : " . $structuredEquipementsGrenobleSplitted[$i]);
-                    unset($kizeoEquipment);
-                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
-                }
-                else{
-                    array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
+        // Traitement par entité d'équipement
+        foreach ($entitesEquipements as $entite) {
+            // Récupérer les équipements depuis la BDD
+            $equipements = $entityManager->getRepository($entite)->findAll();
+
+            // Structurer les équipements pour Kizeo
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+
+            // Diviser les équipements pour faciliter la comparaison
+            $structuredEquipementsSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipements);
+
+            // Initialisation de la variable contenant l'id de la liste d'équipements sur Kizeo
+            $idListeKizeo = 0;
+            // Récupérer la liste des équipements Kizeo depuis le cache
+            $nomCache = strtolower(str_replace('Equipement', '', $entite)); 
+            $kizeoEquipments = $cache->get('kizeo_equipments_' . $nomCache, function(ItemInterface $item) use ($formRepository, $entite) {
+                $item->expiresAfter(900); // 15 minutes en cache
+                $idListeKizeo = $this->getIdListeKizeoPourEntite($entite); // Obtenir l'ID de la liste Kizeo associée à l'entité
+                $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+                return $result;
+            });
+
+            // Comparer et mettre à jour la liste Kizeo
+            $this->comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $structuredEquipements, $kizeoEquipments);
+
+            // Envoyer la liste d'équipements mise à jour à Kizeo
+            $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
+        }
+    }
+
+    /**
+     * Compare les équipements de la BDD avec ceux de Kizeo et met à jour la liste Kizeo
+     */
+    private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $structuredEquipements, &$kizeoEquipments)
+    {
+        foreach ($structuredEquipementsSplitted as $index => $equipmentSplitted) {
+            $trouve = false;
+            foreach ($kizeoEquipments as $key => $kizeoEquipment) {
+                if (str_starts_with($kizeoEquipment, $equipmentSplitted[0])) {
+                    $trouve = true;
+                    unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
+                    break;
                 }
             }
+            if (!$trouve) {
+                $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
+            }
         }
+    }
 
-        dd(count($kizeoEquipmentsGrenoble)); // -----------------------------             REPRENDRE ICI ----------------------------------------------------
-        // ----------------------    Le foreach au dessus a juste ajouté les 1147 equipements de la BDD à la liste de KIZEO donc checker le array_search()
-        // ----------------------------------------------------------------------------------------   504 Gateway Time-out   ----------------------------------
-
-        // Request to flush all equipments lists to KIZEO FORMS
-        // First try with Grenobleon list Remontee equipements test with ID 437695
-        Request::enableHttpMethodParameterOverride(); // <-- add this line
+    /**
+     * Envoie la liste d'équipements mise à jour à Kizeo
+     */
+    private function envoyerListeKizeo($kizeoEquipments, $idListeKizeo)
+    {
+        Request::enableHttpMethodParameterOverride();
         $client = new Client();
         $response = $client->request(
             'PUT',
-            'https://forms.kizeo.com/rest/v3/lists/' . 437695, 
+            'https://forms.kizeo.com/rest/v3/lists/' . $idListeKizeo,
             [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                 ],
-                'json'=>[
-                    'items' => $kizeoEquipmentsGrenoble,
+                'json' => [
+                    'items' => $kizeoEquipments,
                 ]
             ]
         );
     }
+
+    /**
+     * Obtient le nom de la liste Kizeo associée à l'entité d'équipement
+     */
+    private function getIdListeKizeoPourEntite($entite)
+    {
+        // Implémentez ici la logique pour obtenir le nom de la liste Kizeo 
+        // en fonction de l'entité d'équipement (par exemple, à partir d'une configuration)
+        // Exemple :
+        switch ($entite) {
+            // case EquipementS10::class:
+            //     return ; // ID de la liste Kizeo pour Group
+            case EquipementS40::class:
+                return 427442; // ID de la liste Kizeo pour St Etienne
+            case EquipementS50::class:
+                return 437695; // ID de la liste Kizeo pour Grenoble 414025 mais changé pour mettre celui de la liste de test
+            case EquipementS60::class:
+                return 427444; // ID de la liste Kizeo pour Lyon
+            // case EquipementS70::class:
+            //     return ; // ID de la liste Kizeo pour Bordeaux
+            case EquipementS80::class:
+                return 421993; // ID de la liste Kizeo pour Paris Nord
+            case EquipementS100::class:
+                return 423853; // ID de la liste Kizeo pour Montpellier
+            case EquipementS120::class:
+                return 434252; // ID de la liste Kizeo pour Hauts de France
+            // case EquipementS130::class:
+            //     return ; // ID de la liste Kizeo pour Toulouse
+            case EquipementS140::class:
+                return 427682; // ID de la liste Kizeo pour SMP
+            // case EquipementS150::class:
+            //     return ; // ID de la liste Kizeo pour SOGEFI
+            // case EquipementS160::class:
+            //     return ; // ID de la liste Kizeo pour Rouen
+            // case EquipementS170::class:
+            //     return ; // ID de la liste Kizeo pour Rennes
+            // ... autres cas
+            default:
+                throw new Exception("Nom de liste Kizeo non défini pour l'entité " . $entite);
+        }
+    }
+
+
+
+        // --------------------------------------------------------------------------  Keep code under this line
+        // GET ALL equipments by agency from BDD
+        // $equipementsGroup = $entityManager->getRepository(EquipementS10::class)->findAll();
+        // $equipementsStetienne = $entityManager->getRepository(EquipementS40::class)->findAll();
+        // $equipementsGrenoble = $entityManager->getRepository(EquipementS50::class)->findAll();
+        // $equipementsLyon = $entityManager->getRepository(EquipementS60::class)->findAll();
+        // $equipementsBordeaux = $entityManager->getRepository(EquipementS70::class)->findAll();
+        // $equipementsParisnord = $entityManager->getRepository(EquipementS80::class)->findAll();
+        // $equipementsMontpellier = $entityManager->getRepository(EquipementS100::class)->findAll();
+        // $equipementsHautsdefrance = $entityManager->getRepository(EquipementS120::class)->findAll();
+        // $equipementsToulouse = $entityManager->getRepository(EquipementS130::class)->findAll();
+        // $equipementsSmp = $entityManager->getRepository(EquipementS140::class)->findAll();
+        // $equipementsPaca = $entityManager->getRepository(EquipementS150::class)->findAll();
+        // $equipementsRouen = $entityManager->getRepository(EquipementS160::class)->findAll();
+        // $equipementsRennes = $entityManager->getRepository(EquipementS170::class)->findAll();
+        
+        // // dump($equipementsGrenoble[0]);
+        // // GET equipments des agences de Grenoble, Paris et Montpellier en apellant la fonction getAgencyListEquipementsFromKizeoByListId($list_id) avec leur ID de list sur KIZEO
+        // // $equipmentsGroup = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // $kizeoEquipmentsGrenoble = $cache->get('kizeo_equipments_grenoble', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(414025);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsLyon = $cache->get('kizeo_equipments_lyon', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427444);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsParis = $cache->get('kizeo_equipments_paris', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(421993);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsMontpellier = $cache->get('kizeo_equipments_montpellier', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(423853);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsStEtienne = $cache->get('kizeo_equipments_st_etienne', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427442);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsSmp = $cache->get('kizeo_equipments_smp', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(427682);
+        //     return $result;
+        // });
+        // $kizeoEquipmentsHautsDeFrance = $cache->get('kizeo_equipments_hdf', function(ItemInterface $item) use ($formRepository){
+        //     $item->expiresAfter(900); // 15 minutes en cache
+        //     $result = $formRepository->getAgencyListEquipementsFromKizeoByListId(434252);
+        //     return $result;
+        // });
+        
+        // // $kizeoEquipmentsBordeaux = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // // $kizeoEquipmentsToulouse = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // // $kizeoEquipmentsSogefi = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // // $kizeoEquipmentsRouen = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        // // $kizeoEquipmentsRennes = $formRepository->getAgencyListEquipementsFromKizeoByListId();
+        
+        // // SET BDD results to fit Kizeo structure + SET ifExistDB with the complete string of the structured equipment
+        // $structuredEquipementsGroup = $formRepository->structureLikeKizeoEquipmentsList($equipementsGroup);
+        // $structuredEquipementsStetienne = $formRepository->structureLikeKizeoEquipmentsList($equipementsStetienne);
+        // $structuredEquipementsGrenoble = $formRepository->structureLikeKizeoEquipmentsList($equipementsGrenoble);
+        // $structuredEquipementsLyon = $formRepository->structureLikeKizeoEquipmentsList($equipementsLyon);
+        // $structuredEquipementsBordeaux = $formRepository->structureLikeKizeoEquipmentsList($equipementsBordeaux);
+        // $structuredEquipementsParisnord = $formRepository->structureLikeKizeoEquipmentsList($equipementsParisnord);
+        // $structuredEquipementsMontpellier = $formRepository->structureLikeKizeoEquipmentsList($equipementsMontpellier);
+        // $structuredEquipementsHautsdefrance = $formRepository->structureLikeKizeoEquipmentsList($equipementsHautsdefrance);
+        // $structuredEquipementsToulouse = $formRepository->structureLikeKizeoEquipmentsList($equipementsToulouse);
+        // $structuredEquipementsSmp = $formRepository->structureLikeKizeoEquipmentsList($equipementsSmp);
+        // $structuredEquipementsPaca = $formRepository->structureLikeKizeoEquipmentsList($equipementsPaca);
+        // $structuredEquipementsRouen = $formRepository->structureLikeKizeoEquipmentsList($equipementsRouen);
+        // $structuredEquipementsRennes = $formRepository->structureLikeKizeoEquipmentsList($equipementsRennes);
+        
+        // // dd(preg_split('/[|]/',$structuredEquipementsGrenoble[0]));
+        // // array:11 [▼
+        // //     0 => "UMICORE:UMICORE\CE2:CE2\SEC01:SEC01"
+        // //     1 => "porte sectionnelle:porte sectionnelle"
+        // //     2 => "nc:nc"
+        // //     3 => "nc:nc"
+        // //     4 => "nc:nc"
+        // //     5 => "3520:3520"
+        // //     6 => "7800:7800"
+        // //     7 => "5737 - MAG MP - EWR48:5737 - MAG MP - EWR48"
+        // //     8 => "5898:5898"
+        // //     9 => "5729:5729"
+        // //     10 => "S50:S50"
+        // // // ]
+        // // dump(count($kizeoEquipmentsGrenoble));
+        
+        // $structuredEquipementsGroupSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGroup);
+        // $structuredEquipementsStetienneSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsStetienne);
+        // $structuredEquipementsGrenobleSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsGrenoble);
+        // $structuredEquipementsLyonSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsLyon);
+        // $structuredEquipementsBordeauxSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsBordeaux);
+        // $structuredEquipementsParisnordSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsParisnord);
+        // $structuredEquipementsMontpellierSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsMontpellier);
+        // $structuredEquipementsHautsdefranceSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsHautsdefrance);
+        // $structuredEquipementsToulouseSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsToulouse);
+        // $structuredEquipementsSmpSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsSmp); 
+        // $structuredEquipementsPacaSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsPaca);  
+        // $structuredEquipementsRouenSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRouen);
+        // $structuredEquipementsRennesSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipementsRennes);
+        // // dd($structuredEquipementsGrenobleSplitted);
+
+        // for ($i=0; $i < count($structuredEquipementsGrenobleSplitted) ; $i++) {
+        //     foreach ($kizeoEquipmentsGrenoble as $kizeoEquipment) {
+        //         if (str_starts_with($kizeoEquipment, $structuredEquipementsGrenobleSplitted[$i])) {
+        //             dump("I'm present in kizeo list : " . $structuredEquipementsGrenobleSplitted[$i]);
+        //             unset($kizeoEquipment);
+        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
+        //         }
+        //         else{
+        //             array_push($kizeoEquipmentsGrenoble, $structuredEquipementsGrenoble[$i]);
+        //         }
+        //     }
+        // }
+
+        // dd(count($kizeoEquipmentsGrenoble)); // -----------------------------             REPRENDRE ICI ----------------------------------------------------
+        // // ----------------------    Le foreach au dessus a juste ajouté les 1147 equipements de la BDD à la liste de KIZEO donc checker le array_search()
+        // // ----------------------------------------------------------------------------------------   504 Gateway Time-out   ----------------------------------
+
+        // // Request to flush all equipments lists to KIZEO FORMS
+        // // First try with Grenobleon list Remontee equipements test with ID 437695
+        // Request::enableHttpMethodParameterOverride(); // <-- add this line
+        // $client = new Client();
+        // $response = $client->request(
+        //     'PUT',
+        //     'https://forms.kizeo.com/rest/v3/lists/' . 437695, 
+        //     [
+        //         'headers' => [
+        //             'Accept' => 'application/json',
+        //             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+        //         ],
+        //         'json'=>[
+        //             'items' => $kizeoEquipmentsGrenoble,
+        //         ]
+        //     ]
+        // );
+    // }
 
     // Function for agency equipments lists to structure them like Kizeo, to set their "if_exist_DB" with the structured string tuple
     public function structureLikeKizeoEquipmentsList($agencyEquipmentsList){
