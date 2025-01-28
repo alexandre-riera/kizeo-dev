@@ -830,6 +830,8 @@ class FormRepository extends ServiceEntityRepository
      */
     private function envoyerListeKizeo($kizeoEquipments, $idListeKizeo)
     {
+        dump($idListeKizeo);
+
         Request::enableHttpMethodParameterOverride();
         $client = new Client();
         $response = $client->request(
