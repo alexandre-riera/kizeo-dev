@@ -817,7 +817,7 @@ class FormRepository extends ServiceEntityRepository
                     $trouve = true;
                     dump($kizeoEquipments[$key]);
                     dump($structuredEquipementsSplitted[0]);
-                    dd($structuredEquipementsSplitted);
+                    dd($structuredEquipements[$key]);
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
                     $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
                     break;
