@@ -815,6 +815,8 @@ class FormRepository extends ServiceEntityRepository
             foreach ($kizeoEquipments as $key => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $equipmentSplitted[0])) {
                     $trouve = true;
+                    dump($kizeoEquipments[$key]);
+                    dump($equipmentSplitted[0]);
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
                     $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
                     break;
@@ -1045,7 +1047,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->getRaisonSociale() . ":" . $equipement->getRaisonSociale() . "\\" .
             $equipement->getVisite() . ":" . $equipement->getVisite() . "\\" .
             $equipement->getNumeroEquipement() . ":" . $equipement->getNumeroEquipement() . "|" .
-            $equipement->getLibelleEquipement() . ":" . $equipement->getLibelleEquipement() . "|" .
+            ucfirst($equipement->getLibelleEquipement()) . ":" . ucfirst($equipement->getLibelleEquipement()) . "|" .
             $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
             $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
             $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
