@@ -821,7 +821,9 @@ class FormRepository extends ServiceEntityRepository
                     break;
                 }
             }
-            $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
+            if ($index != 0) {
+                $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
+            }
         }
     }
 
