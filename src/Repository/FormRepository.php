@@ -818,11 +818,11 @@ class FormRepository extends ServiceEntityRepository
                     // dump($structuredEquipementsSplitted[0]);
                     // dd($structuredEquipements[$index -= 1]);
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
+                    if ($index != 0) {
+                        $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
+                    }
                     break;
                 }
-            }
-            if ($index != 0) {
-                $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
             }
         }
     }
