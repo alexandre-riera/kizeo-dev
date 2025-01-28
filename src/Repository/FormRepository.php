@@ -815,11 +815,11 @@ class FormRepository extends ServiceEntityRepository
             foreach ($kizeoEquipments as $key => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $structuredEquipementsSplitted[0])) {
                     $trouve = true;
-                    dump($kizeoEquipments[$key]);
-                    dump($structuredEquipementsSplitted[0]);
-                    dd($structuredEquipements[$index -= 1]);
+                    // dump($kizeoEquipments[$key]);
+                    // dump($structuredEquipementsSplitted[0]);
+                    // dd($structuredEquipements[$index -= 1]);
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
-                    $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
+                    $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
                     break;
                 }
             }
