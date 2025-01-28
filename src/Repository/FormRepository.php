@@ -816,6 +816,7 @@ class FormRepository extends ServiceEntityRepository
                 if (str_starts_with($kizeoEquipment, $equipmentSplitted[0])) {
                     $trouve = true;
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
+                    $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
                     break;
                 }
             }
@@ -862,23 +863,23 @@ class FormRepository extends ServiceEntityRepository
             case EquipementS10::class:
                 return 437895; // ID de la liste Kizeo pour Group
             case EquipementS40::class:
-                return 427442; // ID de la liste Kizeo pour St Etienne
+                return 437995; // ID de la liste Kizeo pour St Etienne mais changé pour mettre celui de la liste de test : 427442
             case EquipementS50::class:
-                return 437695; // ID de la liste Kizeo pour Grenoble 414025 mais changé pour mettre celui de la liste de test
+                return 437695; // ID de la liste Kizeo pour Grenoble mais changé pour mettre celui de la liste de test : 414025
             case EquipementS60::class:
-                return 427444; // ID de la liste Kizeo pour Lyon
+                return 437996; // ID de la liste Kizeo pour Lyon mais changé pour mettre celui de la liste de test : 427444
             case EquipementS70::class:
                 return 437897; // ID de la liste Kizeo pour Bordeaux
             case EquipementS80::class:
-                return 421993; // ID de la liste Kizeo pour Paris Nord
+                return 438000; // ID de la liste Kizeo pour Paris Nord mais changé pour mettre celui de la liste de test : 421993
             case EquipementS100::class:
-                return 423853; // ID de la liste Kizeo pour Montpellier
+                return 437997; // ID de la liste Kizeo pour Montpellier mais changé pour mettre celui de la liste de test : 423853
             case EquipementS120::class:
-                return 434252; // ID de la liste Kizeo pour Hauts de France
+                return 437999; // ID de la liste Kizeo pour Hauts de France mais changé pour mettre celui de la liste de test : 434252
             case EquipementS130::class:
                 return 437977; // ID de la liste Kizeo pour Toulouse
             case EquipementS140::class:
-                return 427682; // ID de la liste Kizeo pour SMP
+                return 438006; // ID de la liste Kizeo pour SMP mais changé pour mettre celui de la liste de test : 427682
             case EquipementS150::class:
                 return 437976; // ID de la liste Kizeo pour SOGEFI
             case EquipementS160::class:
