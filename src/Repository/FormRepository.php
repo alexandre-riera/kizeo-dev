@@ -811,7 +811,6 @@ class FormRepository extends ServiceEntityRepository
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $structuredEquipements, &$kizeoEquipments)
     {
         foreach ($structuredEquipementsSplitted as $index => $equipmentSplitted) {
-            $trouve = false;
             foreach ($kizeoEquipments as $key => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $structuredEquipementsSplitted[0])) {
                     $trouve = true;
@@ -819,18 +818,10 @@ class FormRepository extends ServiceEntityRepository
                     // dump($structuredEquipementsSplitted[0]);
                     // dd($structuredEquipements[$index -= 1]);
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
-                    $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
                     break;
                 }
             }
-            if (!$trouve) {
-                if ( ($index -= 1) != -1) {
-                    $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
-                }else{
-                    $index = 0;
-                    $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
-                }
-            }
+            $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
         }
     }
 
