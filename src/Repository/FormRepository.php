@@ -827,6 +827,7 @@ class FormRepository extends ServiceEntityRepository
                 if ( ($index -= 1) != -1) {
                     $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
                 }else{
+                    $index = 0;
                     $kizeoEquipments[] = $structuredEquipements[$index]; // Ajouter l'équipement à la liste Kizeo
                 }
             }
