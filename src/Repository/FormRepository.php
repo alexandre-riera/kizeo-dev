@@ -813,7 +813,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($structuredEquipementsSplitted as $index => $equipmentSplitted) {
             foreach ($kizeoEquipments as $key => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $structuredEquipementsSplitted[0])) {
-                    $trouve = true;
+                    dd($structuredEquipementsSplitted[0]);
                     // dump($kizeoEquipments[$key]);
                     // dump($structuredEquipementsSplitted[0]);
                     // dd($structuredEquipements[$index -= 1]);
