@@ -49,6 +49,13 @@ class UsersAuthenticator extends AbstractLoginFormAuthenticator
         }
 
         // For example:
+        // Check user rôle to change redirect route 
+        $user = $token->getUser();
+
+        if (in_array("ROLE_KUEHNE_CC", $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('app_kuehne'));
+        }
+
         return new RedirectResponse($this->urlGenerator->generate('app_front'));
         // throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
     }
