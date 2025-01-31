@@ -42,100 +42,51 @@ class KuehneController extends AbstractController
     #[Route('/kuehne', name: 'app_kuehne')]
     public function index(CacheInterface $cache,EntityManagerInterface $entityManager, KuehneRepository $kuehneRepository): Response
     {
-        // GET CONTACTS KIZEO BY AGENCY
-        // $clientsGroup  =  $kuehneRepository->getListClientFromKizeoById();
+        // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
+        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441);
+        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466);
+        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443);
+        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994);
+        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852);
+        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249);
+        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681);
+        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677);
         
-        $clientsStEtienne  =  $cache->get('client_st_etienne', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(427441);
-            return $clients;
-        });
-        $clientsGrenoble  =  $cache->get('client_grenoble', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(409466);
-            return $clients;
-        });
-        $clientsLyon  =  $cache->get('client_lyon', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(427443);
-            return $clients;
-        });
-        // $clientsBordeaux  =  $kuehneRepository->getListClientFromKizeoById();
-        $clientsParisNord  =  $cache->get('client_paris_nord', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(421994);
-            return $clients;
-        });
-        $clientsMontpellier =  $cache->get('client_montpellier', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(423852);
-            return $clients;
-        });
-        $clientsHautsDeFrance =  $cache->get('client_hauts_de_france', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(434249);
-            return $clients;
-        });
-        // $clientsHautsDeFrance  =  $kuehneRepository->getListClientFromKizeoById();
-        // $clientsToulouse  =  $kuehneRepository->getListClientFromKizeoById();
-        $clientsEpinal =  $cache->get('client_epinal', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(427681);
-            return $clients;
-        });
-        // $clientsPaca  =  $kuehneRepository->getListClientFromKizeoById();
-        $clientsRouen =  $cache->get('client_rouen', function (ItemInterface $item) use ($kuehneRepository)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
-            $clients = $kuehneRepository->getListClientFromKizeoById(427677);
-            return $clients;
-        });
-        // $clientsRennes  =  $kuehneRepository->getListClientFromKizeoById();
-        
-        // ---------------------       GET CONTACTS GESTAN BY AGENCY
+        // ---------------------------------------------------------------------- GET KUEHNE CONTACTS GESTAN BY AGENCY
         $clientsGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS10::class)->findAll();
             return $clients;
         });
-        // $clientsStEtienne  =  $entityManager->getRepository(ContactS40::class)->findAll();
-        // $clientsGrenoble  =  $entityManager->getRepository(ContactS50::class)->findAll();
-        // $clientsLyon  =  $entityManager->getRepository(ContactS60::class)->findAll();
         $clientsBordeaux =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS70::class)->findAll();
             return $clients;
         });
-        // $clientsParisNord  =  $entityManager->getRepository(ContactS80::class)->findAll();
-        // $clientsMontpellier  =  $entityManager->getRepository(ContactS100::class)->findAll();
-        // $clientsHautsDeFrance =  $cache->get('client_hauts_de_france', function (ItemInterface $item) use ($entityManager)  {
-        //     $item->expiresAfter(2629800 ); // 1 month in cache
-        //     $clients = $entityManager->getRepository(ContactS120::class)->findAll();
-        //     return $clients;
-        // });
+        dump($clientsBordeaux);
         $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS130::class)->findAll();
             return $clients;
         });
-        // $clientsEpinal  =  $entityManager->getRepository(ContactS140::class)->findAll();
         $clientsPaca =  $cache->get('client_paca', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS150::class)->findAll();
             return $clients;
         });
-        // $clientsRouen  =  $entityManager->getRepository(ContactS160::class)->findAll();
         $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS170::class)->findAll();
             return $clients;
         });
         
         $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(2629800 ); // 1 month in cache
+            $item->expiresAfter(900 ); // 15 minutes in cache
             $agencies = $entityManager->getRepository(Agency::class)->findAll();
             return $agencies;
         });
 
+        
         // GET CLIENT SELECTED INFORMATION BY AGENCY BY HIS RAISON_SOCIALE
         $clientSelectedInformations  = "";
         // GET CLIENT SELECTED EQUIPMENTS BY AGENCY BY HIS ID_CONTACT

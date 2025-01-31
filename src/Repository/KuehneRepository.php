@@ -28,14 +28,17 @@ class KuehneRepository{
         $content = $response->toArray();
         $content = $content['list']['items'];
         $listSplitted = [];
-        $listClientsFiltered = [];
+        $listClientsKuehne = [];
         foreach ($content as $client) {
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
         foreach ($listSplitted as $clientFiltered) {
-            array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+            if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
+                array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+                dump($listClientsKuehne);
+            }
         }
-        return $listClientsFiltered;
+        return $listClientsKuehne;
     }
 
     public function getListOfPdf($clientSelected, $visite, $agenceSelected){
