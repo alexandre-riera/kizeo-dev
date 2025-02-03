@@ -861,8 +861,8 @@ class FormRepository extends ServiceEntityRepository
                     // dump($structuredEquipementsSplitted[$key]);
                     array_push($newListToUpload, $kizeoEquipmentLine);
                 }else{
-                    dump('Cette ligne  ' . $kizeoEquipmentLine);
-                    dump('ne contient pas : ' . $structuredEquipementsSplitted[$key]);
+                    print_r('Cette ligne  ' . $kizeoEquipmentLine);
+                    print_r('ne contient pas : ' . $structuredEquipementsSplitted[$key]);
                     array_push($newListToUpload, $fullEquipmentLine);
                 }
             }
