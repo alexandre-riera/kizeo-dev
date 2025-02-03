@@ -807,7 +807,7 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /**
-     * Compare les équipements de la BDD avec ceux de Kizeo et met à jour la liste Kizeo
+     * Compare les équipements de la BDD avec ceux de Kizeo et met à jour la liste Kizeo || LA LISTE KIZEO CONTIENT LES ANCIENNES ET LES NOUVELLES LIGNES
      */
     // private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     // {
@@ -824,27 +824,42 @@ class FormRepository extends ServiceEntityRepository
     //         }
     //     }
     // }
+
+    /**
+     * La liste Kizeo qui remonte ne contient plus aucun résultat
+     */
+    // private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
+    // {
+    //     $newKizeoEquipments = [];
+
+    //     foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
+    //         $found = false;
+    //         foreach ($kizeoEquipments as $kizeoEquipment) {
+    //             if (str_starts_with($kizeoEquipment, $littleStructuredEquipement) || $kizeoEquipment === $fullStructuredEquipements[$keyStructure]) {
+    //                 $found = true;
+    //                 break;
+    //             }
+    //         }
+
+    //         if (!$found) {
+    //             $newKizeoEquipments[] = $fullStructuredEquipements[$keyStructure];
+    //         }
+    //     }
+
+    //     $kizeoEquipments = $newKizeoEquipments;
+    // }
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        $newKizeoEquipments = [];
+        // Transformer les tableaux en ensembles pour des comparaisons plus efficaces
+        $structuredEquipements = array_unique(array_merge($structuredEquipementsSplitted, $fullStructuredEquipements));
+        $kizeoEquipments = array_unique($kizeoEquipments);
 
-        foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
-            $found = false;
-            foreach ($kizeoEquipments as $kizeoEquipment) {
-                if (str_starts_with($kizeoEquipment, $littleStructuredEquipement) || $kizeoEquipment === $fullStructuredEquipements[$keyStructure]) {
-                    $found = true;
-                    break;
-                }
-            }
+        // Trouver les éléments présents dans structuredEquipements mais pas dans kizeoEquipments
+        $newEquipments = array_diff($structuredEquipements, $kizeoEquipments);
 
-            if (!$found) {
-                $newKizeoEquipments[] = $fullStructuredEquipements[$keyStructure];
-            }
-        }
-
-        $kizeoEquipments = $newKizeoEquipments;
+        // Fusionner les nouveaux équipements avec l'ancien tableau
+        $kizeoEquipments = array_merge($kizeoEquipments, $newEquipments);
     }
-
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
      */
