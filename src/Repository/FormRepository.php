@@ -854,8 +854,8 @@ class FormRepository extends ServiceEntityRepository
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
         $newListToUpload = [];
-        foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
-            foreach ($kizeoEquipments as $kizeoEquipmentLine) {
+        foreach ($kizeoEquipments as $kizeoEquipmentLine) {
+            foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
                 if (str_contains($kizeoEquipmentLine, preg_replace('/ :/', ':', $fullEquipmentLine))) {
                     // dump($kizeoEquipmentLine);
                     // dump($structuredEquipementsSplitted[$key]);
@@ -1095,7 +1095,7 @@ class FormRepository extends ServiceEntityRepository
             ucfirst($equipement->getLibelleEquipement()) . ":" . ucfirst($equipement->getLibelleEquipement()) . "|" .
             $equipement->getMiseEnService() . ":" . $equipement->getMiseEnService() . "|" .
             $equipement->getNumeroDeSerie() . ":" . $equipement->getNumeroDeSerie() . "|" .
-            $equipement->getMarque() . ":" . $equipement->getMarque() . "|" .
+            trim($equipement->getMarque()) . ":" . $equipement->getMarque() . "|" .
             $equipement->getHauteur() . ":" . $equipement->getHauteur() . "|" .
             $equipement->getLargeur() . ":" . $equipement->getLargeur() . "|" .
             $equipement->getRepereSiteClient() . ":" . $equipement->getRepereSiteClient() . "|" .
