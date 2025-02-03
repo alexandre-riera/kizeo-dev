@@ -857,6 +857,8 @@ class FormRepository extends ServiceEntityRepository
         foreach ($kizeoEquipments as $kizeoEquipmentLine) {
             foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
                 $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
+                dump($kizeoEquipmentLine);
+                dd($fullEquipmentLine);
                 if ($kizeoEquipmentLine == $fullEquipmentLine) {
                     array_push($newListToUpload, $kizeoEquipmentLine);
                 }else{
