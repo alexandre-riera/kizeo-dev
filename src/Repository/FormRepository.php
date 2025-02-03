@@ -821,6 +821,9 @@ class FormRepository extends ServiceEntityRepository
                     $kizeoEquipments[] = $fullStructuredEquipements[$keyStructure]; // Ajouter l'équipement à la liste Kizeo
                     break;
                 }
+                if ($kizeoEquipment == $fullStructuredEquipements[$keyStructure]) {
+                    unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà pour être sûr qu'il n'y est pas de doublons
+                }
             }
         }
     }
