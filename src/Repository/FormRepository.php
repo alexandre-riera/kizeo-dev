@@ -796,10 +796,10 @@ class FormRepository extends ServiceEntityRepository
                 $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
                 return $result;
             });
-            dump('Je suis la liste équipement Kizeo avant le tri : ' . count($kizeoEquipments));
+            
             // Comparer et mettre à jour la liste Kizeo
             $this->comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $structuredEquipements, $kizeoEquipments);
-            dd('Je suis la liste équipement Kizeo après le tri : ' . count($kizeoEquipments));
+            
 
             // Envoyer la liste d'équipements mise à jour à Kizeo
             $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
@@ -811,6 +811,7 @@ class FormRepository extends ServiceEntityRepository
      */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
+        dump('Je suis la liste équipement Kizeo avant le tri : ' . count($kizeoEquipments));
         foreach ($kizeoEquipments as $key => $kizeoEquipment) {
             foreach ($structuredEquipementsSplitted as $littleStructuredEquipement) {
                 // dump($kizeoEquipment);
@@ -823,6 +824,7 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
         }
+        dd('Je suis la liste équipement Kizeo après le tri : ' . count($kizeoEquipments));
     }
 
     /**
