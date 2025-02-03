@@ -813,8 +813,9 @@ class FormRepository extends ServiceEntityRepository
         foreach ($kizeoEquipments as $key => $kizeoEquipment) {
             foreach ($structuredEquipementsSplitted as $structuredEquipement) {
                 dump($kizeoEquipment);
-                dd('I am structuredEquipementsSplitted : ' . $structuredEquipement);
-                if (str_starts_with($kizeoEquipment, $structuredEquipementsSplitted[0])) {
+                dump($structuredEquipements[$key]);
+                dd('I am structuredEquipement : ' . $structuredEquipement);
+                if (str_starts_with($kizeoEquipment, $structuredEquipement)) {
                     $kizeoEquipments[] = $structuredEquipements[$index -= 1]; // Ajouter l'équipement à la liste Kizeo
                     unset($kizeoEquipments[$key]); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
                     break;
