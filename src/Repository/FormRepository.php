@@ -857,8 +857,12 @@ class FormRepository extends ServiceEntityRepository
         foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
             foreach ($kizeoEquipments as $kizeoEquipmentLine) {
                 if (str_contains($kizeoEquipmentLine, $structuredEquipementsSplitted[$key])) {
+                    // dump($kizeoEquipmentLine);
+                    // dump($structuredEquipementsSplitted[$key]);
                     array_push($newListToUpload, $kizeoEquipmentLine);
                 }else{
+                    dump('Cette ligne  ' . $kizeoEquipmentLine);
+                    dump('ne contient pas : ' . $structuredEquipementsSplitted[$key]);
                     array_push($newListToUpload, $fullEquipmentLine);
                 }
             }
