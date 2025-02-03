@@ -811,7 +811,6 @@ class FormRepository extends ServiceEntityRepository
      */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        dump('Je suis la liste équipement Kizeo avant le tri : ' . count($kizeoEquipments));
         foreach ($kizeoEquipments as $key => $kizeoEquipment) {
             foreach ($structuredEquipementsSplitted as $littleStructuredEquipement) {
                 // dump($kizeoEquipment);
@@ -824,7 +823,6 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
         }
-        dd('Je suis la liste équipement Kizeo après le tri : ' . count($kizeoEquipments));
     }
 
     /**
