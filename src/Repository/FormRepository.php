@@ -809,23 +809,40 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Compare les équipements de la BDD avec ceux de Kizeo et met à jour la liste Kizeo
      */
+    // private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
+    // {
+    //     foreach ($kizeoEquipments as $key => $kizeoEquipment) {
+    //         foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
+    //             if (str_starts_with($kizeoEquipment, $littleStructuredEquipement)) {
+    //                 unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
+    //                 $kizeoEquipments[] = $fullStructuredEquipements[$keyStructure]; // Ajouter l'équipement à la liste Kizeo
+    //                 break;
+    //             }
+    //             if ($kizeoEquipment == $fullStructuredEquipements[$keyStructure]) {
+    //                 unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà pour être sûr qu'il n'y est pas de doublons
+    //             }
+    //         }
+    //     }
+    // }
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        foreach ($kizeoEquipments as $key => $kizeoEquipment) {
-            foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
-                // dump($kizeoEquipment);
-                // dump($fullStructuredEquipements[$key]);
-                // dd('I am littleStructuredEquipement : ' . $littleStructuredEquipement);
-                if (str_starts_with($kizeoEquipment, $littleStructuredEquipement)) {
-                    unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
-                    $kizeoEquipments[] = $fullStructuredEquipements[$keyStructure]; // Ajouter l'équipement à la liste Kizeo
+        $newKizeoEquipments = [];
+
+        foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
+            $found = false;
+            foreach ($kizeoEquipments as $kizeoEquipment) {
+                if (str_starts_with($kizeoEquipment, $littleStructuredEquipement) || $kizeoEquipment === $fullStructuredEquipements[$keyStructure]) {
+                    $found = true;
                     break;
                 }
-                if ($kizeoEquipment == $fullStructuredEquipements[$keyStructure]) {
-                    unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà pour être sûr qu'il n'y est pas de doublons
-                }
+            }
+
+            if (!$found) {
+                $newKizeoEquipments[] = $fullStructuredEquipements[$keyStructure];
             }
         }
+
+        $kizeoEquipments = $newKizeoEquipments;
     }
 
     /**
