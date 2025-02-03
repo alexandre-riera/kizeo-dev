@@ -856,7 +856,7 @@ class FormRepository extends ServiceEntityRepository
         $newListToUpload = [];
         foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
             foreach ($kizeoEquipments as $kizeoEquipmentLine) {
-                if (str_contains($kizeoEquipmentLine, $fullEquipmentLine)) {
+                if (str_contains($kizeoEquipmentLine, preg_replace('/ :/', ':', $fullEquipmentLine))) {
                     // dump($kizeoEquipmentLine);
                     // dump($structuredEquipementsSplitted[$key]);
                     array_push($newListToUpload, $kizeoEquipmentLine);
@@ -864,8 +864,7 @@ class FormRepository extends ServiceEntityRepository
                     echo nl2br('Cette ligne : ' . $kizeoEquipmentLine);
                     // echo nl2br('ne contient pas : ' . $structuredEquipementsSplitted[$key]); // This is the little string comparaison
                     echo nl2br('ne contient pas : ' . $fullEquipmentLine);
-                    die;
-                    array_push($newListToUpload, $fullEquipmentLine);
+                    array_push($newListToUpload, preg_replace('/ :/', ':', $fullEquipmentLine));
                 }
             }
         }
