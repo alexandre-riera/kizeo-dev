@@ -812,13 +812,13 @@ class FormRepository extends ServiceEntityRepository
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
         foreach ($kizeoEquipments as $key => $kizeoEquipment) {
-            foreach ($structuredEquipementsSplitted as $littleStructuredEquipement) {
+            foreach ($structuredEquipementsSplitted as $keyStructure => $littleStructuredEquipement) {
                 // dump($kizeoEquipment);
                 // dump($fullStructuredEquipements[$key]);
                 // dd('I am littleStructuredEquipement : ' . $littleStructuredEquipement);
                 if (str_starts_with($kizeoEquipment, $littleStructuredEquipement)) {
                     unset($kizeoEquipment); // Supprimer l'équipement de la liste Kizeo s'il existe déjà
-                    $kizeoEquipments[] = $fullStructuredEquipements[$key]; // Ajouter l'équipement à la liste Kizeo
+                    $kizeoEquipments[] = $fullStructuredEquipements[$keyStructure]; // Ajouter l'équipement à la liste Kizeo
                     break;
                 }
             }
