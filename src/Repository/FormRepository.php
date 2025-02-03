@@ -855,9 +855,14 @@ class FormRepository extends ServiceEntityRepository
     {
         foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
             $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
-            if(!in_array($fullEquipmentLine, $kizeoEquipments)) {
-                $kizeoEquipments[] = $fullEquipmentLine;
+            
+            //Si tu trouves la string, tu la supprime
+            if (array_search($fullEquipmentLine, $kizeoEquipments) != false) {
+                unset($kizeoEquipments[array_search($fullEquipmentLine, $kizeoEquipments)]);
             }
+            
+            // A chaque itération tu enregistre la string dans le $tableau kizeoEquipments
+            $kizeoEquipments[] = $fullEquipmentLine;
         }
         $kizeoEquipments = array_unique($kizeoEquipments);
     }
