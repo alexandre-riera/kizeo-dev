@@ -848,17 +848,28 @@ class FormRepository extends ServiceEntityRepository
 
     //     $kizeoEquipments = $newKizeoEquipments;
     // }
+    /**
+     * La liste Kizeo qui remonte contient la liste d'origine + le début des lignes = 7882 résultats pour 5710 à la base
+     */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        // Transformer les tableaux en ensembles pour des comparaisons plus efficaces
-        $structuredEquipements = array_unique(array_merge($structuredEquipementsSplitted, $fullStructuredEquipements));
-        $kizeoEquipments = array_unique($kizeoEquipments);
-
+        $newListToUpload = [];
+        foreach ($fullStructuredEquipements as $fullEquipmentLine) {
+            foreach ($kizeoEquipments as $kizeoEquipmentLine) {
+                if (str_contains($kizeoEquipmentLine, $fullEquipmentLine)) {
+                    array_push($newListToUpload, $kizeoEquipmentLine);
+                }else{
+                    array_push($newListToUpload, $fullEquipmentLine);
+                }
+            }
+        }
+        
+        $kizeoEquipments = array_unique($newListToUpload);
         // Trouver les éléments présents dans structuredEquipements mais pas dans kizeoEquipments
-        $newEquipments = array_diff($structuredEquipements, $kizeoEquipments);
-
+        // $newEquipments = array_diff($structuredEquipements, $kizeoEquipments);
+        
         // Fusionner les nouveaux équipements avec l'ancien tableau
-        $kizeoEquipments = array_merge($kizeoEquipments, $newEquipments);
+        // $kizeoEquipments = array_merge($kizeoEquipments, $newEquipments);
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
