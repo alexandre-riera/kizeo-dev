@@ -856,24 +856,15 @@ class FormRepository extends ServiceEntityRepository
         $newListToUpload = [];
         foreach ($kizeoEquipments as $kizeoEquipmentLine) {
             foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
-                if (str_contains($kizeoEquipmentLine, preg_replace('/ :/', ':', $fullEquipmentLine))) {
-                    // dump($kizeoEquipmentLine);
-                    // dump($structuredEquipementsSplitted[$key]);
+                $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
+                if ($kizeoEquipmentLine == $fullEquipmentLine) {
                     array_push($newListToUpload, $kizeoEquipmentLine);
                 }else{
-                    echo nl2br('\r\n Cette ligne : ' . $kizeoEquipmentLine);
-                    // echo nl2br('ne contient pas : ' . $structuredEquipementsSplitted[$key]); // This is the little string comparaison
-                    echo nl2br('\r\n ne contient pas : ' . $fullEquipmentLine);
-                    array_push($newListToUpload, preg_replace('/ :/', ':', $fullEquipmentLine));
+                    array_push($newListToUpload, $fullEquipmentLine);
                 }
             }
         }
         $kizeoEquipments = array_unique($newListToUpload);
-        // Trouver les éléments présents dans structuredEquipements mais pas dans kizeoEquipments
-        // $newEquipments = array_diff($structuredEquipements, $kizeoEquipments);
-        
-        // Fusionner les nouveaux équipements avec l'ancien tableau
-        // $kizeoEquipments = array_merge($kizeoEquipments, $newEquipments);
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
