@@ -861,10 +861,8 @@ class FormRepository extends ServiceEntityRepository
                 $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
                 $kizeoEquipments[] = $fullEquipmentLine;
             }
-            foreach ($kizeoEquipments as $keyKiz => $kizeoLine) {
-                foreach ($structuredEquipementsSplitted as $littleEquipmentLine) {
-                    unset($kizeoEquipments[array_search($littleEquipmentLine, $kizeoEquipments)]);
-                }
+            foreach ($structuredEquipementsSplitted as $littleEquipmentLine) {
+                unset($kizeoEquipments[array_search($littleEquipmentLine, $kizeoEquipments)]);
             }
         // }
     }
