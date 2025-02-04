@@ -856,10 +856,15 @@ class FormRepository extends ServiceEntityRepository
     {
         // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
         // foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
-            foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
+            foreach ($fullStructuredEquipements as $fullEquipmentLine) {
                 // On supprime les espaces avant les 2 points de chaque $fullEquipmentLine
                 $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
                 $kizeoEquipments[] = $fullEquipmentLine;
+            }
+            foreach ($structuredEquipementsSplitted as $structuredEquipmentLine) {
+                foreach ($kizeoEquipments as $kizeoLine) {
+                    unset($kizeoEquipments[array_search($structuredEquipmentLine, $kizeoEquipments)]);
+                }
             }
         // }
     }
