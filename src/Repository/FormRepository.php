@@ -881,16 +881,12 @@ class FormRepository extends ServiceEntityRepository
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted);
             foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    $elementsKeysToDeleteFromKizeoEquipments[] = $kizeoKey;
+                    unset($kizeoEquipment[$kizeoKey]);
                     // $kizeoEquipment[] = $fullStructuredEquipements[$keySplitted];
                     // continue 2; // Break out of the inner loop
                 }
             }
             $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
-        }
-        foreach($elementsKeysToDeleteFromKizeoEquipments as $keyToDelete){
-            dd(gettype($keyToDelete));
-            unset($kizeoEquipment[intval($keyToDelete)]);
         }
         $kizeoEquipments = $updatedKizeoEquipments;
     }
