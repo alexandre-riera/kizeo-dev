@@ -860,9 +860,7 @@ class FormRepository extends ServiceEntityRepository
                 // On supprime les espaces avant les 2 points de chaque $fullEquipmentLine
                 $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
                 $kizeoEquipments[] = $fullEquipmentLine;
-            }
-            foreach ($structuredEquipementsSplitted as $littleEquipmentLine) {
-                unset($kizeoEquipments[array_search($littleEquipmentLine, $kizeoEquipments)]);
+                unset($kizeoEquipments[array_search($fullEquipmentLine, $kizeoEquipments)]);
             }
         // }
     }
