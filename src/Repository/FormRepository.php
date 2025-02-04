@@ -881,7 +881,6 @@ class FormRepository extends ServiceEntityRepository
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted);
             foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    dump($kizeoKey);
                     $elementsKeysToDeleteFromKizeoEquipments[] = $kizeoKey;
                     // $kizeoEquipment[] = $fullStructuredEquipements[$keySplitted];
                     // continue 2; // Break out of the inner loop
@@ -890,6 +889,7 @@ class FormRepository extends ServiceEntityRepository
             $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
         }
         foreach($elementsKeysToDeleteFromKizeoEquipments as $keyToDelete){
+            dump($keyToDelete);
             unset($kizeoEquipment[$keyToDelete]);
         }
         $kizeoEquipments = $updatedKizeoEquipments;
