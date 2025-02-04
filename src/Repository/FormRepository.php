@@ -852,18 +852,44 @@ class FormRepository extends ServiceEntityRepository
      * La liste Kizeo qui remonte contient la liste d'origine + le début des lignes = 6735 résultats pour 5710 à la base
      * Le problème vient que les valeurs testées ne sont pas les même lors de l'incrémentation.
      */
+    // private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
+    // {
+    //     // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
+    //     foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
+    //         foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
+    //             if (str_starts_with($kizeoEquipmentLine, preg_replace('/ :/', ':', $equipementSplitted))) {
+    //                 unset($kizeoEquipments[array_search(preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]), $kizeoEquipments)]);
+    //             }
+    //             $kizeoEquipments[] = preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]);
+    //         }
+    //     }
+    // }
+
+    /**
+     * 
+     */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
-        foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
-            foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
-                if (str_starts_with($kizeoEquipmentLine, preg_replace('/ :/', ':', $equipementSplitted))) {
-                    unset($kizeoEquipments[array_search(preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]), $kizeoEquipments)]);
+        $regex = '/ :/'; // Compile the regular expression once
+        $kizeoEquipments = array_map(function ($equipment) use ($regex) {
+            return preg_replace($regex, ':', $equipment); 
+        }, $kizeoEquipments); 
+
+        $updatedKizeoEquipments = [];
+        foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
+            $equipementSplitted = preg_replace($regex, ':', $equipementSplitted);
+            foreach ($kizeoEquipments as $kizeoEquipment) {
+                if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
+                    $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
+                    continue 2; // Break out of the inner loop
                 }
-                $kizeoEquipments[] = preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]);
             }
+            $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
         }
+
+        $kizeoEquipments = $updatedKizeoEquipments;
     }
+
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
      */
