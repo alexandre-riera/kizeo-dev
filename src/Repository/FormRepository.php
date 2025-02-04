@@ -871,6 +871,7 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
         }
+        dd(count($newListKizeoTopload));
         $kizeoEquipments = $newListKizeoTopload;
     }
     /**
