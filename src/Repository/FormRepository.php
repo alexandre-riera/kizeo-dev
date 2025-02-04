@@ -871,7 +871,7 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
         }
-        // $kizeoEquipments = array_unique($kizeoEquipments);
+        $kizeoEquipments = $newListKizeoTopload;
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
