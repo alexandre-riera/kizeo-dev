@@ -274,7 +274,7 @@ class FormController extends AbstractController
     /**
      * This route is going to replace the route above to update equipments list on Kizeo Forms
      */
-    #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
+    #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT', 'PATCH'])]
     public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager)//: JsonResponse
     {
         $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
