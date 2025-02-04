@@ -876,19 +876,20 @@ class FormRepository extends ServiceEntityRepository
         }, $kizeoEquipments); 
 
         $updatedKizeoEquipments = [];
+        $elementsKeysToDeleteFromKizeoEquipments = [];
         foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted);
-            foreach ($kizeoEquipments as $kizeoEquipment) {
+            foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    print_r($kizeoEquipment);
-                    print_r($equipementSplitted);
-                    $updatedKizeoEquipments[] = $kizeoEquipment;
+                    $elementsKeysToDeleteFromKizeoEquipments[] = $kizeoKey;
                     continue 2; // Break out of the inner loop
                 }
             }
             $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
         }
-
+        foreach($elementsKeysToDeleteFromKizeoEquipments as $keyToDelete){
+            unset($updatedKizeoEquipments[$keyToDelete]);
+        }
         $kizeoEquipments = $updatedKizeoEquipments;
     }
 
