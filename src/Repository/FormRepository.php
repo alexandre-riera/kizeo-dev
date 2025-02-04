@@ -849,22 +849,29 @@ class FormRepository extends ServiceEntityRepository
     //     $kizeoEquipments = $newKizeoEquipments;
     // }
     /**
-     * La liste Kizeo qui remonte contient la liste d'origine + le début des lignes = 7882 résultats pour 5710 à la base
+     * La liste Kizeo qui remonte contient la liste d'origine + le début des lignes = 6735 résultats pour 5710 à la base
+     * Le problème vient que les valeurs testées ne sont pas les même lors de l'incrémentation.
      */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
-        foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
-            $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
-            
-            //Si tu trouves la string, tu la supprime
-            if (array_search($fullEquipmentLine, $kizeoEquipments) != false) {
-                unset($kizeoEquipments[array_search($fullEquipmentLine, $kizeoEquipments)]);
+        $newListKizeoTopload = [];
+        // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
+        foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
+            foreach ($fullStructuredEquipements as $key => $fullEquipmentLine) {
+                // On supprime les espaces avant les 2 points de chaque $fullEquipmentLine
+                $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
+                
+                // Si la string $fullEquipementLine est égal à $kizeoEquipmentLine, on la supprime sinon on l'ajoute au tableau $kizeoEquipments
+                if (strcmp($fullEquipmentLine, $kizeoEquipmentLine) !== 0) {
+                    // unset($kizeoEquipments[array_search($fullEquipmentLine, $kizeoEquipments)]);
+                    $newListKizeoTopload[] = $kizeoEquipmentLine;
+                }else{
+                    // A chaque itération tu enregistre la string dans le $tableau kizeoEquipments
+                    $newListKizeoTopload[] = $fullEquipmentLine;
+                }
             }
-            
-            // A chaque itération tu enregistre la string dans le $tableau kizeoEquipments
-            $kizeoEquipments[] = $fullEquipmentLine;
         }
-        $kizeoEquipments = array_unique($kizeoEquipments);
+        // $kizeoEquipments = array_unique($kizeoEquipments);
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
