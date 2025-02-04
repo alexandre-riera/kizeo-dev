@@ -879,8 +879,7 @@ class FormRepository extends ServiceEntityRepository
         Request::enableHttpMethodParameterOverride();
         $client = new Client();
         $response = $client->request(
-            // 'PUT',
-            'PATCH',
+            'PUT',
             'https://forms.kizeo.com/rest/v3/lists/' . $idListeKizeo,
             [
                 'headers' => [
