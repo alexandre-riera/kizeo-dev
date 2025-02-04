@@ -869,10 +869,10 @@ class FormRepository extends ServiceEntityRepository
                     // A chaque itération tu enregistre la string dans le $tableau kizeoEquipments
                     $newListKizeoTopload[] = $fullEquipmentLine;
                 }
+                dump(count($newListKizeoTopload));
             }
         }
-        dd(count($kizeoEquipments));
-        $kizeoEquipments = $newListKizeoTopload;
+        // $kizeoEquipments = $newListKizeoTopload;
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
