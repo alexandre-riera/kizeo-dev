@@ -857,7 +857,7 @@ class FormRepository extends ServiceEntityRepository
         // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
         foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
             foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
-                if (str_starts_with($kizeoEquipmentLine, $equipementSplitted)) {
+                if (str_starts_with($kizeoEquipmentLine, preg_replace('/ :/', ':', $equipementSplitted))) {
                     unset($kizeoEquipments[array_search(preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]), $kizeoEquipments)]);
                 }
                 $kizeoEquipments[] = preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]);
