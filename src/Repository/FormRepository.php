@@ -863,7 +863,7 @@ class FormRepository extends ServiceEntityRepository
             }
             foreach ($kizeoEquipments as $keyKiz => $kizeoLine) {
                 foreach ($structuredEquipementsSplitted as $littleEquipmentLine) {
-                    unset($kizeoEquipments[str_starts_with($kizeoLine, $littleEquipmentLine)]);
+                    unset($kizeoEquipments[array_search($kizeoEquipments, $littleEquipmentLine)]);
                 }
             }
         // }
