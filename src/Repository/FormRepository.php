@@ -889,8 +889,7 @@ class FormRepository extends ServiceEntityRepository
             $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
         }
         foreach($elementsKeysToDeleteFromKizeoEquipments as $keyToDelete){
-            dump($keyToDelete);
-            unset($kizeoEquipment[$keyToDelete]);
+            unset($kizeoEquipment[intval($keyToDelete)]);
         }
         $kizeoEquipments = $updatedKizeoEquipments;
     }
