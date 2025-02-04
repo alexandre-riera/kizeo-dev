@@ -855,14 +855,14 @@ class FormRepository extends ServiceEntityRepository
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
         // Pour chaque ligne d'équipement Kizeo dans le tableau $kizeoEquipments, on parcours le tableau de $fullStructuredEquipements
-        // foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
-            foreach ($fullStructuredEquipements as $fullEquipmentLine) {
-                // On supprime les espaces avant les 2 points de chaque $fullEquipmentLine
-                $fullEquipmentLine = preg_replace('/ :/', ':', $fullEquipmentLine);
-                $kizeoEquipments[] = $fullEquipmentLine;
-                unset($kizeoEquipments[array_search($fullEquipmentLine, $kizeoEquipments)]);
+        foreach($kizeoEquipments as $keyKizeo => $kizeoEquipmentLine){
+            foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
+                if (str_starts_with($kizeoEquipmentLine, $equipementSplitted)) {
+                    unset($kizeoEquipments[array_search(preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]), $kizeoEquipments)]);
+                }
+                $kizeoEquipments[] = preg_replace('/ :/', ':', $fullStructuredEquipements[$keySplitted]);
             }
-        // }
+        }
     }
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
