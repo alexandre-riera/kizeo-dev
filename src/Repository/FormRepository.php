@@ -866,7 +866,9 @@ class FormRepository extends ServiceEntityRepository
     // }
 
     /**
-     * 
+     *  Cette fonction ne compare pas les bons éléments 
+     *  avec les autres donc les nouveaux sont ajoutés aux anciens et cela provoque 
+     *  des doublons d'équipement avec 1 ancien pas mis à jour et le nouveau qui devrait être seul
      */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
@@ -881,7 +883,7 @@ class FormRepository extends ServiceEntityRepository
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted);
             foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    dd(gettype($kizeoKey)) ;
+                    dd(gettype($kizeoKey)) ; // Return integer
                     unset($kizeoEquipment[$kizeoKey]);
                     // $kizeoEquipment[] = $fullStructuredEquipements[$keySplitted];
                     // continue 2; // Break out of the inner loop
