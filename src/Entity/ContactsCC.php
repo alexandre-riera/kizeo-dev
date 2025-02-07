@@ -27,6 +27,9 @@ class ContactsCC
     #[ORM\OneToMany(targetEntity: FilesCC::class, mappedBy: 'id_contact_cc')]
     private Collection $filesCCs;
 
+    #[ORM\Column(length: 255)]
+    private ?string $code_agence = null;
+
     public function __construct()
     {
         $this->filesCCs = new ArrayCollection();
@@ -87,6 +90,18 @@ class ContactsCC
                 $filesCC->setIdContactCc(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getCodeAgence(): ?string
+    {
+        return $this->code_agence;
+    }
+
+    public function setCodeAgence(string $code_agence): static
+    {
+        $this->code_agence = $code_agence;
 
         return $this;
     }

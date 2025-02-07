@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\ContactsCC;
 use stdClass;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Repository de la page home
@@ -15,7 +16,7 @@ class KuehneRepository{
         
     }
 
-    public function getListClientFromKizeoById(int $id){
+    public function getListClientFromKizeoById(int $id, $entityManager){
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -34,11 +35,16 @@ class KuehneRepository{
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
         foreach ($listSplitted as $clientFiltered) {
-            dd($clientFiltered);
             if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
                 array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
                 $contactKuehne = new ContactsCC();
-                // $contactKuehne->setIdContact();
+                $contactKuehne->setIdContact($clientFiltered[6]);
+                $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
+                $contactKuehne->setCodeAgence($clientFiltered[8]);
+                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                $entityManager->persist($contactKuehne);
+                // actually executes the queries (i.e. the INSERT query)
+                $entityManager->flush();
                 dump($listClientsKuehne);
             }
         }

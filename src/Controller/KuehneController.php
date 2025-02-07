@@ -46,14 +46,14 @@ class KuehneController extends AbstractController
 
 
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
-        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441);
-        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466);
-        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443);
-        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994);
-        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852);
-        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249);
-        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681);
-        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677);
+        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager);
+        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager);
+        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager);
+        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager);
+        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager);
+        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager);
+        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager);
+        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager);
         
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS GESTAN BY AGENCY
         $clientsGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
