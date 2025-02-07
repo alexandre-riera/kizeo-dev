@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\ContactsCC;
 use stdClass;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -33,8 +34,11 @@ class KuehneRepository{
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
         foreach ($listSplitted as $clientFiltered) {
+            dd($clientFiltered);
             if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
                 array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+                $contactKuehne = new ContactsCC();
+                // $contactKuehne->setIdContact();
                 dump($listClientsKuehne);
             }
         }

@@ -41,7 +41,10 @@ class KuehneController extends AbstractController
 {
     #[Route('/kuehne', name: 'app_kuehne')]
     public function index(CacheInterface $cache,EntityManagerInterface $entityManager, KuehneRepository $kuehneRepository): Response
-    {
+    {   
+        // Mettre en dessous l'appel à la fonction getListClientFromKizeoById(int $id) de kuehneRepository pour enregistrer dans la table  ContactCC les contacts Kuehne
+
+
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
         $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441);
         $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466);
