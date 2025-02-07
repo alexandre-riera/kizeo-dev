@@ -16,6 +16,7 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
+use App\Entity\ContactsCC;
 use App\Entity\EquipementS10;
 use App\Entity\EquipementS40;
 use App\Entity\EquipementS50;
@@ -29,6 +30,7 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Repository\ContactsCCRepository;
 use App\Repository\KuehneRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -40,20 +42,20 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class KuehneController extends AbstractController
 {
     #[Route('/kuehne', name: 'app_kuehne')]
-    public function index(CacheInterface $cache,EntityManagerInterface $entityManager, KuehneRepository $kuehneRepository): Response
+    public function index(CacheInterface $cache,EntityManagerInterface $entityManager, KuehneRepository $kuehneRepository, ContactsCCRepository $contactsCCRepository): Response
     {   
         // Mettre en dessous l'appel à la fonction getListClientFromKizeoById(int $id) de kuehneRepository pour enregistrer dans la table  ContactCC les contacts Kuehne
 
 
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
-        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager);
-        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager);
-        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager);
-        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager);
-        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager);
-        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager);
-        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager);
-        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager);
+        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager, $contactsCCRepository);
+        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager, $contactsCCRepository);
+        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager, $contactsCCRepository);
+        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager, $contactsCCRepository);
+        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager, $contactsCCRepository);
+        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager, $contactsCCRepository);
+        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager, $contactsCCRepository);
+        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager, $contactsCCRepository);
         
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS GESTAN BY AGENCY
         $clientsGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {

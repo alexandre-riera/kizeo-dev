@@ -16,7 +16,8 @@ class KuehneRepository{
         
     }
 
-    public function getListClientFromKizeoById(int $id, $entityManager){
+    public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
+        $allKuehneContacts = $contactsCCRepository->findAll();
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -36,15 +37,22 @@ class KuehneRepository{
         }
         foreach ($listSplitted as $clientFiltered) {
             if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
+                // On push et concatene avec un "-" l'id contact, la raison sociale et le code agence
+                // EX : 3239-KUEHNE  ANDREZIEUX-S40
                 array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
-                $contactKuehne = new ContactsCC();
-                $contactKuehne->setIdContact($clientFiltered[6]);
-                $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
-                $contactKuehne->setCodeAgence($clientFiltered[8]);
-                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                $entityManager->persist($contactKuehne);
-                // actually executes the queries (i.e. the INSERT query)
-                $entityManager->flush();
+
+                // Si l'id contact n'est pas présent dans le tableau $allKuehneContacts, on crée un nouveau ContactCC
+                // 39 contact ont été créés sans le if de mit en place
+                if (!in_array($clientFiltered[6], $allKuehneContacts)) {
+                    $contactKuehne = new ContactsCC();
+                    $contactKuehne->setIdContact($clientFiltered[6]);
+                    $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
+                    $contactKuehne->setCodeAgence($clientFiltered[8]);
+                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $entityManager->persist($contactKuehne);
+                    // actually executes the queries (i.e. the INSERT query)
+                    $entityManager->flush();
+                }
                 dump($listClientsKuehne);
             }
         }
