@@ -19,8 +19,8 @@ class KuehneRepository{
     public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
         
         // Return only Kuehne contacts
-        $allKuehneContacts = $contactsCCRepository->findBy(array('raison_sociale_contact' => 'KUEHNE'));
-        
+        $allContactsCC = $contactsCCRepository->findall();
+
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -44,9 +44,9 @@ class KuehneRepository{
                 // EX : 3239-KUEHNE  ANDREZIEUX-S40
                 array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
 
-                // Si l'id contact n'est pas présent dans le tableau $allKuehneContacts, on crée un nouveau ContactCC
+                // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
                 // 39 contact ont déjà été créés sans le if de mit en place
-                if (!in_array($clientFiltered[6], $allKuehneContacts)) {
+                if (!in_array($clientFiltered[6], $allContactsCC)) {
                     $contactKuehne = new ContactsCC();
                     $contactKuehne->setIdContact($clientFiltered[6]);
                     $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
@@ -59,8 +59,11 @@ class KuehneRepository{
                 dump($listClientsKuehne);
             }
         }
-
-        dump($allKuehneContacts);
+        $kuehneContacts = [];
+        foreach ($allContactsCC as $contactCC) {
+            dd($contactCC);
+        }
+        dump($allContactsCC);
         return $listClientsKuehne;
     }
 
