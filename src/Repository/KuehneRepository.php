@@ -20,7 +20,7 @@ class KuehneRepository{
         
         // Return only Kuehne contacts
         $allContactsCC = $contactsCCRepository->findall();
-
+        dump($allContactsCC[0]);
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
