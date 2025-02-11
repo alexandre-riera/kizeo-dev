@@ -71,10 +71,10 @@ class KuehneRepository{
                 // }
             }
         }
-        dd(count($kuehneIds));
         dump($listClientsKuehne);
         
         dump($kuehneContacts);
+        dd(count($kuehneIds));
         return $listClientsKuehne;
     }
 
