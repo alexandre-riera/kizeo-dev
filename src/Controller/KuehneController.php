@@ -68,7 +68,6 @@ class KuehneController extends AbstractController
             $clients = $entityManager->getRepository(ContactS70::class)->findAll();
             return $clients;
         });
-        dump($clientsBordeaux);
         $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS130::class)->findAll();

@@ -48,6 +48,7 @@ class KuehneRepository{
                 if (!in_array($clientFiltered[6], $kuehneIds)) {
                     $kuehneIds [] = $clientFiltered[6];
                 }
+                dd(count($kuehneIds));
 
                 // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
                 // 39 contact ont déjà été créés sans le if de mit en place
