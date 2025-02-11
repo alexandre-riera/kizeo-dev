@@ -35,6 +35,8 @@ class KuehneRepository{
         $content = $content['list']['items'];
         $listSplitted = [];
         $listClientsKuehne = [];
+        $kuehneContacts = [];
+
         foreach ($content as $client) {
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
@@ -46,25 +48,27 @@ class KuehneRepository{
 
                 // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
                 // 39 contact ont déjà été créés sans le if de mit en place
-                if (!in_array($clientFiltered[6], $allContactsCC)) {
-                    $contactKuehne = new ContactsCC();
-                    $contactKuehne->setIdContact($clientFiltered[6]);
-                    $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
-                    $contactKuehne->setCodeAgence($clientFiltered[8]);
-                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $entityManager->persist($contactKuehne);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
+                if (count($allContactsCC) != 0) {
+                    foreach ($allContactsCC as $contactCC) {
+                        if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
+                            $kuehneContacts [] = $contactCC;
+                        }
+                        if ($contactCC->getIdContact() != $clientFiltered[6]) {
+                            $contactKuehne = new ContactsCC();
+                            $contactKuehne->setIdContact($clientFiltered[6]);
+                            $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
+                            $contactKuehne->setCodeAgence($clientFiltered[8]);
+                             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                            $entityManager->persist($contactKuehne);
+                            // actually executes the queries (i.e. the INSERT query)
+                            $entityManager->flush();
+                        }
+                    }
                 }
-                dump($listClientsKuehne);
             }
         }
-        $kuehneContacts = [];
-        foreach ($allContactsCC as $contactCC) {
-            if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
-                $kuehneContacts [] = $contactCC;
-            }
-        }
+        dump($listClientsKuehne);
+        
         dump($kuehneContacts);
         return $listClientsKuehne;
     }
