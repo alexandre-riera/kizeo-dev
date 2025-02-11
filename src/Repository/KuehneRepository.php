@@ -61,9 +61,11 @@ class KuehneRepository{
         }
         $kuehneContacts = [];
         foreach ($allContactsCC as $contactCC) {
-            dd($contactCC);
+            if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
+                $kuehneContacts [] = $contactCC;
+            }
         }
-        dump($allContactsCC);
+        dump($kuehneContacts);
         return $listClientsKuehne;
     }
 
