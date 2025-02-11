@@ -18,6 +18,9 @@ class KuehneRepository{
 
     public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
         
+        // Return only Kuehne contacts
+        $allKuehneContacts = $contactsCCRepository->findBy(array('raison_sociale_contact' => 'KUEHNE'));
+        
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -57,8 +60,6 @@ class KuehneRepository{
             }
         }
 
-        // Return only Kuehne contacts
-        $allKuehneContacts = $contactsCCRepository->findBy(array('raison_sociale_contact' => 'KUEHNE'));
         dump($allKuehneContacts);
         return $listClientsKuehne;
     }
