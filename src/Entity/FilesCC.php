@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\FilesCCRepository;
 use Doctrine\ORM\Mapping as ORM;
 
+
 #[ORM\Entity(repositoryClass: FilesCCRepository::class)]
 class FilesCC
 {
