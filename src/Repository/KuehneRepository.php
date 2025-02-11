@@ -20,6 +20,7 @@ class KuehneRepository{
         
         $allContactsCC = $contactsCCRepository->findall();
         dump($allContactsCC);
+
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -32,13 +33,19 @@ class KuehneRepository{
         $content = $response->getContent();
         $content = $response->toArray();
         $content = $content['list']['items'];
-        $listSplitted = [];
-        $listClientsKuehne = [];
-        $kuehneContacts = [];
-        $kuehneIds = [];
+        dump($content);
         foreach ($content as $client) {
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
+
+        // Return an array of all contacts by agency ID
+        $listSplitted = [];
+
+        $listClientsKuehne = [];
+        $kuehneContacts = [];
+
+        // All contact ID where raison sociale equal Kuehne or KN
+        $kuehneIds = [];
         foreach ($listSplitted as $clientFiltered) {
             if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
                 // On push et concatene avec un "-" l'id contact, la raison sociale et le code agence
