@@ -18,7 +18,6 @@ class KuehneRepository{
 
     public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
         
-        // Return only Kuehne contacts
         $allContactsCC = $contactsCCRepository->findall();
         dump($allContactsCC);
         $response = $this->client->request(
@@ -71,7 +70,7 @@ class KuehneRepository{
                 // }
             }
         }
-        dump($listClientsKuehne);
+        dump($listSplitted);
         
         dump($kuehneContacts);
         dd(count($kuehneIds));
