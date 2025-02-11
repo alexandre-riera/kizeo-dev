@@ -36,7 +36,7 @@ class KuehneRepository{
         $listSplitted = [];
         $listClientsKuehne = [];
         $kuehneContacts = [];
-
+        $kuehneIds = [];
         foreach ($content as $client) {
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
@@ -45,6 +45,9 @@ class KuehneRepository{
                 // On push et concatene avec un "-" l'id contact, la raison sociale et le code agence
                 // EX : 3239-KUEHNE  ANDREZIEUX-S40
                 array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+                if (!in_array($clientFiltered[6], $kuehneIds)) {
+                    $kuehneIds [] = $clientFiltered[6];
+                }
 
                 // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
                 // 39 contact ont déjà été créés sans le if de mit en place
@@ -53,7 +56,7 @@ class KuehneRepository{
                         if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
                             $kuehneContacts [] = $contactCC;
                         }
-                        if ($contactCC->getIdContact() != $clientFiltered[6]) {
+                        if (!in_array($contactCC->getIdContact(), $kuehneIds)) {
                             $contactKuehne = new ContactsCC();
                             $contactKuehne->setIdContact($clientFiltered[6]);
                             $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
