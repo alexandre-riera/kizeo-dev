@@ -48,29 +48,30 @@ class KuehneRepository{
                 if (!in_array($clientFiltered[6], $kuehneIds)) {
                     $kuehneIds [] = $clientFiltered[6];
                 }
-                dd(count($kuehneIds));
+                
 
                 // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
                 // 39 contact ont déjà été créés sans le if de mit en place
-                if (count($allContactsCC) != 0) {
-                    foreach ($allContactsCC as $contactCC) {
-                        if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
-                            $kuehneContacts [] = $contactCC;
-                        }
-                        if (!in_array($contactCC->getIdContact(), $kuehneIds)) {
-                            $contactKuehne = new ContactsCC();
-                            $contactKuehne->setIdContact($clientFiltered[6]);
-                            $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
-                            $contactKuehne->setCodeAgence($clientFiltered[8]);
-                             // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                            $entityManager->persist($contactKuehne);
-                            // actually executes the queries (i.e. the INSERT query)
-                            $entityManager->flush();
-                        }
-                    }
-                }
+                // if (count($allContactsCC) != 0) {
+                //     foreach ($allContactsCC as $contactCC) {
+                //         if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
+                //             $kuehneContacts [] = $contactCC;
+                //         }
+                //         if (!in_array($contactCC->getIdContact(), $kuehneIds)) {
+                //             $contactKuehne = new ContactsCC();
+                //             $contactKuehne->setIdContact($clientFiltered[6]);
+                //             $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
+                //             $contactKuehne->setCodeAgence($clientFiltered[8]);
+                //              // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                //             $entityManager->persist($contactKuehne);
+                //             // actually executes the queries (i.e. the INSERT query)
+                //             $entityManager->flush();
+                //         }
+                //     }
+                // }
             }
         }
+        dd(count($kuehneIds));
         dump($listClientsKuehne);
         
         dump($kuehneContacts);
