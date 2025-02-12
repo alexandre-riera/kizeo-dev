@@ -34,12 +34,13 @@ class KuehneRepository{
         $content = $response->toArray();
         $content = $content['list']['items'];
         dump($content);
+        
+        $listSplitted = [];
         foreach ($content as $client) {
             array_push($listSplitted, preg_split("/[:|]/",$client));
         }
 
         // Return an array of all contacts by agency ID
-        $listSplitted = [];
 
         $listClientsKuehne = [];
         $kuehneContacts = [];
