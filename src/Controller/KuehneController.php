@@ -44,9 +44,6 @@ class KuehneController extends AbstractController
     #[Route('/kuehne', name: 'app_kuehne')]
     public function index(CacheInterface $cache,EntityManagerInterface $entityManager, KuehneRepository $kuehneRepository, ContactsCCRepository $contactsCCRepository): Response
     {   
-        // Mettre en dessous l'appel à la fonction getListClientFromKizeoById(int $id) de kuehneRepository pour enregistrer dans la table  ContactCC les contacts Kuehne
-
-
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
         // IMPORTANT  Return $listClientsKuehneFromKizeo array filled with ContactsCC object structured with his id_contact, raison_sociale and code_agence
         $clientsKuehneStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager, $contactsCCRepository);
@@ -91,7 +88,9 @@ class KuehneController extends AbstractController
             return $agencies;
         });
 
-        
+        // Merge all contacts arrays
+        $allKuehneContactsFromFrance = array_merge($clientsKuehneStEtienne, $clientsKuehneGrenoble, $clientsKuehneLyon, $clientsKuehneParisNord, $clientsKuehneMontpellier, $clientsKuehneHautsDeFrance, $clientsKuehneEpinal, $clientsKuehneRouen);
+
         // GET CLIENT SELECTED INFORMATION BY AGENCY BY HIS RAISON_SOCIALE
         $clientSelectedInformations  = "";
         // GET CLIENT SELECTED EQUIPMENTS BY AGENCY BY HIS ID_CONTACT
@@ -507,6 +506,7 @@ class KuehneController extends AbstractController
             'directoriesLists' => $directoriesLists, // Array with Objects $myFile with path and annee properties in it
             'visiteDuClient' =>  $visiteDuClient,
             'idClientSelected' =>  $idClientSelected,
+            'allKuehneContactsFromFrance' =>  $allKuehneContactsFromFrance,
         ]);
     }
 }

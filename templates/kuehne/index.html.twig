@@ -324,7 +324,7 @@
                             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
                                 <option value = "" selected> Select client </option> 
                                 {# {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %} #}
-                                    {% for client in clientsGrenoble%}
+                                    {% for client in allKuehneContactsFromFrance%}
                                         <option value="{{ client.raison_sociale }} {{ agenceSelected }}" id="client_selected_s50">{{ client.raison_sociale }}</option>
                                     {% endfor %}
                                 {# {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
