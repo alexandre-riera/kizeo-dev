@@ -18,9 +18,12 @@ class KuehneRepository{
 
     public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
         
-        $allContactsCC = $contactsCCRepository->findall();
-        dump($allContactsCC);
+        $allContactsCC = $contactsCCRepository->findall(); // 39 results from BDD
+        $listClientsKuehneFromKizeo = []; // They are from KIZEO with his id_contact, raison_sociale and code_agence
+        $kuehneContactsFromBdd = []; // They are from BDD
+        $kizeoContactsSplitted = []; // [0][1] Raison sociale, [2][3] Code postal, [4][5] ville, [6][7] id contact, [8][9] Code agence, [10][11] id societe
 
+        // 1) We get contact on Kizeo from agency ids
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
@@ -33,56 +36,63 @@ class KuehneRepository{
         $content = $response->getContent();
         $content = $response->toArray();
         $content = $content['list']['items'];
-        dump($content);
         
-        $listSplitted = [];
+        // 2) We split these contacts strings from $content and push results in $kizeoContactsSplitted
+        // ex: "ACIM HYDRO:ACIM HYDRO|42400:42400|ST CHAMOND:ST CHAMOND|5420:5420|S40:S40|5368:5368" (At first)
+        // And then :
+        // 0 => "ACIM HYDRO" 1 => "ACIM HYDRO" 2 => "42400" 3 => "42400" 4 => "ST CHAMOND" 5 => "ST CHAMOND" 6 => "5420" 7 => "5420" 8 => "S40" 9 => "S40" 10 => "5368" 11 => "5368"]
         foreach ($content as $client) {
-            array_push($listSplitted, preg_split("/[:|]/",$client));
+            array_push($kizeoContactsSplitted, preg_split("/[:|]/",$client));
         }
-
-        // Return an array of all contacts by agency ID
-
-        $listClientsKuehne = [];
-        $kuehneContacts = [];
-
-        // All contact ID where raison sociale equal Kuehne or KN
-        $kuehneIds = [];
-        foreach ($listSplitted as $clientFiltered) {
+        
+        // We iterate over $kizeoContactsSplitted array from KIZEO to sort only Kuehne contacts
+        foreach ($kizeoContactsSplitted as $clientFiltered) {
+            // If it's a kuehne contact
             if (str_contains($clientFiltered[0],"KUEHNE") || str_contains($clientFiltered[0],"KN ")) {
                 // On push et concatene avec un "-" l'id contact, la raison sociale et le code agence
                 // EX : 3239-KUEHNE  ANDREZIEUX-S40
-                array_push($listClientsKuehne, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
-                // if (!in_array($clientFiltered[6], $kuehneIds)) {
-                    $kuehneIds [] = $clientFiltered[6];
-                // }
+                // array_push($listClientsKuehneFromKizeo, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
                 
+                // 3) We create a new object, client, with his id_contact, raison_sociale and code_agence
+                // We push him in $listClientKuehne array
+                $clientFromKizeoShortened = new stdClass;
+                $clientFromKizeoShortened->id_contact = $clientFiltered[6];
+                $clientFromKizeoShortened->raison_sociale = $clientFiltered[0];
+                $clientFromKizeoShortened->code_agence = $clientFiltered[8];
+                $listClientsKuehneFromKizeo [] = $clientFromKizeoShortened;
+            }    
+        }
 
-                // Si l'id contact n'est pas présent dans le tableau $allContactsCC, on crée un nouveau ContactCC
-                // 39 contact ont déjà été créés sans le if de mit en place
-                // if (count($allContactsCC) != 0) {
-                //     foreach ($allContactsCC as $contactCC) {
-                //         if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
-                //             $kuehneContacts [] = $contactCC;
-                //         }
-                //         if (!in_array($contactCC->getIdContact(), $kuehneIds)) {
-                //             $contactKuehne = new ContactsCC();
-                //             $contactKuehne->setIdContact($clientFiltered[6]);
-                //             $contactKuehne->setRaisonSocialeContact($clientFiltered[0]);
-                //             $contactKuehne->setCodeAgence($clientFiltered[8]);
-                //              // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                //             $entityManager->persist($contactKuehne);
-                //             // actually executes the queries (i.e. the INSERT query)
-                //             $entityManager->flush();
-                //         }
-                //     }
-                // }
+        // If $allContactsCC from BDD is not empty else return false
+        if (isset($allContactsCC)) {
+            // We iterate over $allContactsCC
+            foreach ($allContactsCC as $contactCC) {
+                // If they are Kuehne contacts, we store them into $kuehneContactsFromBdd array
+                if (str_contains($contactCC->getRaisonSocialeContact(),"KUEHNE") || str_contains($contactCC->getRaisonSocialeContact(),"KN ")) {
+                    $kuehneContactsFromBdd [] = $contactCC;
+                }
             }
         }
-        dump($listSplitted);
-        
-        dump($kuehneContacts);
-        dd(count($kuehneIds));
-        return $listClientsKuehne;
+
+        dump($listClientsKuehneFromKizeo);
+        dump($kuehneContactsFromBdd);
+        // 4) We iterate over $listClientsKuehneFromKizeo with his id_contact, raison_sociale and code_agence
+        // If their Id are NOT into $KuehneContactsFromBdd, so they don't exist yet, we create a new ContactsCC
+        foreach ($listClientsKuehneFromKizeo as $kizeoKuehne) {
+            foreach ($$kuehneContactsFromBdd as $bddKuehne) {
+                if ($kizeoKuehne->id_contact !=  $bddKuehne->getIdContact()) {
+                    $contactKuehne = new ContactsCC();
+                    $contactKuehne->setIdContact($kizeoKuehne->id_contact);
+                    $contactKuehne->setRaisonSocialeContact($kizeoKuehne->raison_sociale);
+                    $contactKuehne->setCodeAgence($kizeoKuehne->raison_sociale);
+                        // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $entityManager->persist($contactKuehne);
+                    // actually executes the queries (i.e. the INSERT query)
+                    $entityManager->flush();
+                }
+            }
+        }
+        return $listClientsKuehneFromKizeo;
     }
 
     public function getListOfPdf($clientSelected, $visite, $agenceSelected){

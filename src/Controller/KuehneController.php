@@ -48,37 +48,38 @@ class KuehneController extends AbstractController
 
 
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
-        $clientsStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager, $contactsCCRepository);
-        $clientsGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager, $contactsCCRepository);
-        $clientsLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager, $contactsCCRepository);
-        $clientsParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager, $contactsCCRepository);
-        $clientsMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager, $contactsCCRepository);
-        $clientsHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager, $contactsCCRepository);
-        $clientsEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager, $contactsCCRepository);
-        $clientsRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager, $contactsCCRepository);
+        // IMPORTANT  Return $listClientsKuehneFromKizeo array filled with ContactsCC object structured with his id_contact, raison_sociale and code_agence
+        $clientsKuehneStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager, $contactsCCRepository);
+        $clientsKuehneGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager, $contactsCCRepository);
+        $clientsKuehneLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager, $contactsCCRepository);
+        $clientsKuehneParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager, $contactsCCRepository);
+        $clientsKuehneMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager, $contactsCCRepository);
+        $clientsKuehneHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager, $contactsCCRepository);
+        $clientsKuehneEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager, $contactsCCRepository);
+        $clientsKuehneRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager, $contactsCCRepository);
         
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS GESTAN BY AGENCY
-        $clientsGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
+        $clientsKuehneGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS10::class)->findAll();
             return $clients;
         });
-        $clientsBordeaux =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($entityManager)  {
+        $clientsKuehneBordeaux =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS70::class)->findAll();
             return $clients;
         });
-        $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($entityManager)  {
+        $clientsKuehneToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS130::class)->findAll();
             return $clients;
         });
-        $clientsPaca =  $cache->get('client_paca', function (ItemInterface $item) use ($entityManager)  {
+        $clientsKuehnePaca =  $cache->get('client_paca', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS150::class)->findAll();
             return $clients;
         });
-        $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($entityManager)  {
+        $clientsKuehneRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($entityManager)  {
             $item->expiresAfter(900 ); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS170::class)->findAll();
             return $clients;
@@ -104,13 +105,13 @@ class KuehneController extends AbstractController
         $directoriesLists = [];
 
         // Récupération de l'agence sélectionnée nécessaire pour charger la liste client de l'agence
-        if(isset($_POST['submitAgence'])){  
-            if(!empty($_POST['agenceName'])) {
-                $agenceSelected = $_POST['agenceName'];
-            } else {  
-                echo 'Please select the value.';
-            }  
-        }
+        // if(isset($_POST['submitAgence'])){  
+        //     if(!empty($_POST['agenceName'])) {
+        //         $agenceSelected = $_POST['agenceName'];
+        //     } else {  
+        //         echo 'Please select the value.';
+        //     }  
+        // }
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
@@ -484,19 +485,19 @@ class KuehneController extends AbstractController
         $agenceSelected = trim($agenceSelected);
 
         return $this->render('kuehne/index.html.twig', [
-            'clientsGroup' => $clientsGroup,  // Array of Contacts
-            'clientsStEtienne' => $clientsStEtienne,  // Array of Contacts
-            'clientsGrenoble' => $clientsGrenoble,  // Array of Contacts
-            'clientsLyon' => $clientsLyon,  // Array of Contacts
-            'clientsBordeaux' => $clientsBordeaux,  // Array of Contacts
-            'clientsParisNord' => $clientsParisNord,  // Array of Contacts
-            'clientsMontpellier' => $clientsMontpellier,  // Array of Contacts
-            'clientsHautsDeFrance' => $clientsHautsDeFrance,  // Array of Contacts
-            'clientsToulouse' => $clientsToulouse,  // Array of Contacts
-            'clientsEpinal' => $clientsEpinal,  // Array of Contacts
-            'clientsPaca' => $clientsPaca,  // Array of Contacts
-            'clientsRouen' => $clientsRouen,  // Array of Contacts
-            'clientsRennes' => $clientsRennes,  // Array of Contacts
+            'clientsGroup' => $clientsKuehneGroup,  // Array of Contacts
+            'clientsStEtienne' => $clientsKuehneStEtienne,  // Array of Contacts
+            'clientsGrenoble' => $clientsKuehneGrenoble,  // Array of Contacts
+            'clientsLyon' => $clientsKuehneLyon,  // Array of Contacts
+            'clientsBordeaux' => $clientsKuehneBordeaux,  // Array of Contacts
+            'clientsParisNord' => $clientsKuehneParisNord,  // Array of Contacts
+            'clientsMontpellier' => $clientsKuehneMontpellier,  // Array of Contacts
+            'clientsHautsDeFrance' => $clientsKuehneHautsDeFrance,  // Array of Contacts
+            'clientsToulouse' => $clientsKuehneToulouse,  // Array of Contacts
+            'clientsEpinal' => $clientsKuehneEpinal,  // Array of Contacts
+            'clientsPaca' => $clientsKuehnePaca,  // Array of Contacts
+            'clientsRouen' => $clientsKuehneRouen,  // Array of Contacts
+            'clientsRennes' => $clientsKuehneRennes,  // Array of Contacts
             'clientSelected' => $clientSelected, // String
             'agenceSelected' => $agenceSelected, // String
             'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)

@@ -299,7 +299,7 @@
         <div class="selections-container">
             <div class="selection-client" >
                 <!-- N'apparait que si le client n'est pas sélectionné et que l'agence n'est pas sélectionnée -->
-                {% if agenceSelected == NULL %}
+                {# {% if agenceSelected == NULL %}
                     <div>
                         <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
                         <form action="" method="post">
@@ -312,20 +312,20 @@
                             <button type="submit"  name ="submitAgence" class="btn btn-primary">Select Agence</button>
                         </form>
                     </div>
-                {% endif %}
-                <!-- N'apparait que si l'agence est sélectionnée -->
-                {% if agenceSelected and clientSelectedInformations == NULL %}
+                {% endif %} #}
+                <!-- N'apparait que si les informations client sont vide -->
+                {% if clientSelectedInformations == NULL %}
                     <div>
-                        <h2><span class="number"> 2 - </span>Sélectionnez maintenant votre client</h2>
-                        <h3>Agence de rattachement : {{ agenceSelected }}</h3>
-                        <label class="selection-client-label" for="client-select">Client sous contrat</label>
+                        <h2><span class="number"> 2 - </span>Sélectionnez votre site</h2>
+                        {# <h3>Agence de rattachement : {{ agenceSelected }}</h3> #}
+                        {# <label class="selection-client-label" for="client-select">Client sous contrat</label> #}
                         <form action="" method="post">
                             <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
                             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
                                 <option value = "" selected> Select client </option> 
                                 {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %}
                                     {% for client in clientsGrenoble%}
-                                        <option value="{{ client }} {{ agenceSelected }}" id="client_selected_s50">{{ client }}</option>
+                                        <option value="{{ client.raison_sociale }} {{ agenceSelected }}" id="client_selected_s50">{{ client.raison_sociale }}</option>
                                     {% endfor %}
                                 {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
                                     {% for client in clientsMontpellier%}
