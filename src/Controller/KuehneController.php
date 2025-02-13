@@ -103,6 +103,7 @@ class KuehneController extends AbstractController
         // GET directories and files OF CLIENT SELECTED
         $directoriesLists = [];
 
+        $idClientSelected ="";
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
@@ -110,6 +111,7 @@ class KuehneController extends AbstractController
                 foreach ($allKuehneContactsFromFrance as $kuehneContact) {
                     if ($clientSelected == $kuehneContact->raison_sociale) {
                         $agenceSelected = $kuehneContact->code_agence;
+                        $idClientSelected = $kuehneContact->id_contact;
                     }
                 }
             } else {  
@@ -124,7 +126,7 @@ class KuehneController extends AbstractController
         // foreach ($clientSelectedSplitted as $key) {
         //     $clientSelected = $key;
         // }
-        $idClientSelected ="";
+        
         dump($agenceSelected);
         dump($clientSelected);
         $visiteDuClient = "";
