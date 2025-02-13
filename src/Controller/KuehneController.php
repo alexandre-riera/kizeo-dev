@@ -103,35 +103,31 @@ class KuehneController extends AbstractController
         // GET directories and files OF CLIENT SELECTED
         $directoriesLists = [];
 
-        // Récupération de l'agence sélectionnée nécessaire pour charger la liste client de l'agence
-        // if(isset($_POST['submitAgence'])){  
-        //     if(!empty($_POST['agenceName'])) {
-        //         $agenceSelected = $_POST['agenceName'];
-        //     } else {  
-        //         echo 'Please select the value.';
-        //     }  
-        // }
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
-                $agenceSelected = substr($clientSelected, -4);
+                foreach ($allKuehneContactsFromFrance as $kuehneContact) {
+                    if ($clientSelected == $kuehneContact->raison_sociale) {
+                        $agenceSelected = $kuehneContact->code_agence;
+                    }
+                }
             } else {  
                 echo 'Please select the value.';
             }  
         }
-
-        // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
-        $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
-        $clientSelectedSplitted = preg_split("/[-]/",$clientSelectedRTrimmed);
-        $idClientSelected = $clientSelectedSplitted[0];
-        foreach ($clientSelectedSplitted as $key) {
-            $clientSelected = $key;
-        }
-        $idClientSelected = rtrim($idClientSelected, "\ ");
-        dump($idClientSelected);
+        
+        // // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
+        // $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
+        // $clientSelectedSplitted = preg_split("/[-]/",$clientSelectedRTrimmed);
+        // $idClientSelected = $clientSelectedSplitted[0];
+        // foreach ($clientSelectedSplitted as $key) {
+        //     $clientSelected = $key;
+        // }
+        // $idClientSelected = rtrim($idClientSelected, "\ ");
+        dump($agenceSelected);
         dump($clientSelected);
-        $visiteDuClient = "";
+        // $visiteDuClient = "";
 
         if ($clientSelected != NULL) {
             switch ($agenceSelected) {
