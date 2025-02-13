@@ -124,10 +124,10 @@ class KuehneController extends AbstractController
         // foreach ($clientSelectedSplitted as $key) {
         //     $clientSelected = $key;
         // }
-        // $idClientSelected = rtrim($idClientSelected, "\ ");
+        $idClientSelected ="";
         dump($agenceSelected);
         dump($clientSelected);
-        // $visiteDuClient = "";
+        $visiteDuClient = "";
 
         if ($clientSelected != NULL) {
             switch ($agenceSelected) {
