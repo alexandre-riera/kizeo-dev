@@ -78,20 +78,41 @@ class KuehneRepository{
         dump($kuehneContactsFromBdd);
         // 4) We iterate over $listClientsKuehneFromKizeo with his id_contact, raison_sociale and code_agence
         // If their Id are NOT into $KuehneContactsFromBdd, so they don't exist yet, we create a new ContactsCC
+        // Création d'un tableau associatif pour stocker les IDs des contacts en BDD
+        $bddContactsIds = [];
+        foreach ($kuehneContactsFromBdd as $bddKuehne) {
+            $bddContactsIds[$bddKuehne->getIdContact()] = true;
+        }
         foreach ($listClientsKuehneFromKizeo as $kizeoKuehne) {
-            foreach ($kuehneContactsFromBdd as $bddKuehne) {
-                if ($kizeoKuehne->id_contact !=  $bddKuehne->getIdContact()) {
-                    $contactKuehne = new ContactsCC();
-                    $contactKuehne->setIdContact($kizeoKuehne->id_contact);
-                    $contactKuehne->setRaisonSocialeContact($kizeoKuehne->raison_sociale);
-                    $contactKuehne->setCodeAgence($kizeoKuehne->raison_sociale);
-                        // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $entityManager->persist($contactKuehne);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
+            $idContact = $kizeoKuehne->id_contact;
+            
+            // Vérification si l'ID existe déjà dans le tableau des IDs en BDD
+            if (!isset($bddContactsIds[$idContact])) {
+                // Si l'ID n'existe pas, on crée le nouveau contact
+                $contactKuehne = new ContactsCC();
+                $contactKuehne->setIdContact($kizeoKuehne->id_contact);
+                $contactKuehne->setRaisonSocialeContact($kizeoKuehne->raison_sociale);
+                $contactKuehne->setCodeAgence($kizeoKuehne->raison_sociale);
+                $entityManager->persist($contactKuehne);
+                $entityManager->flush();
             }
         }
+        
+        // Les 2 boucles foreach ci dessous crééent 39 fois le même contact en BDD
+        // foreach ($listClientsKuehneFromKizeo as $kizeoKuehne) {
+        //     foreach ($kuehneContactsFromBdd as $bddKuehne) {
+        //         if ($kizeoKuehne->id_contact !=  $bddKuehne->getIdContact()) {
+        //             $contactKuehne = new ContactsCC();
+        //             $contactKuehne->setIdContact($kizeoKuehne->id_contact);
+        //             $contactKuehne->setRaisonSocialeContact($kizeoKuehne->raison_sociale);
+        //             $contactKuehne->setCodeAgence($kizeoKuehne->raison_sociale);
+        //                 // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($contactKuehne);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //     }
+        // }
         return $listClientsKuehneFromKizeo;
     }
 
