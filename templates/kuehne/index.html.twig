@@ -384,7 +384,7 @@
                             <br>
                             <div class="mb-4">
                                 {# <label for="formFile" class="form-label">Attaché à ce site</label> #}
-                                <form action="" method="post">
+                                <form action="{{ path('kuehne_upload_file') }}" method="POST" enctype="multipart/form-data">
                                     <input class="form-control" style="width:85%" type="file" id="formFile" name="fileselected">
                                     <br>
                                     <button type="submit"  name ="submitFile" class="btn btn-primary">Enregistrer</button>

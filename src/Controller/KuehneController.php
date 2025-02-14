@@ -9,6 +9,7 @@ use App\Entity\ContactS50;
 use App\Entity\ContactS60;
 use App\Entity\ContactS70;
 use App\Entity\ContactS80;
+use App\Entity\ContactsCC;
 use App\Entity\ContactS100;
 use App\Entity\ContactS120;
 use App\Entity\ContactS130;
@@ -16,7 +17,6 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
-use App\Entity\ContactsCC;
 use App\Entity\EquipementS10;
 use App\Entity\EquipementS40;
 use App\Entity\EquipementS50;
@@ -30,11 +30,12 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
-use App\Repository\ContactsCCRepository;
 use App\Repository\KuehneRepository;
+use App\Repository\ContactsCCRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -119,15 +120,15 @@ class KuehneController extends AbstractController
             }  
         }
         // Récupération du fichier sélectionné 
-        if(isset($_POST['submitFile'])){  
-            if(!empty($_POST['fileselected'])) {  
-                $fileSelected = $_POST['fileselected'];
-                dd($fileSelected);
+        // if(isset($_POST['submitFile'])){  
+        //     if(!empty($_POST['fileselected'])) {  
+        //         $fileSelected = $_POST['fileselected'];
+        //         dd($fileSelected);
                 
-            } else {  
-                echo 'Please select the value.';
-            }  
-        }
+        //     } else {  
+        //         echo 'Please select the value.';
+        //     }  
+        // }
         
         // // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
         // $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
@@ -516,5 +517,11 @@ class KuehneController extends AbstractController
             'idClientSelected' =>  $idClientSelected,
             'allKuehneContactsFromFrance' =>  $allKuehneContactsFromFrance,
         ]);
+    }
+
+    #[Route("/kuehne/upload/file", name:"kuehne_upload_file")]
+    public function temporaryUploadAction(Request $request)
+    {
+        dd($request->files->get('fileselected'));
     }
 }
