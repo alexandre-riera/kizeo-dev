@@ -104,7 +104,7 @@ class KuehneController extends AbstractController
         $directoriesLists = [];
 
         $idClientSelected ="";
-        // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
+        // Récupération du client sélectionné et SET de $agenceSelected et $idClientSlected
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
@@ -114,6 +114,16 @@ class KuehneController extends AbstractController
                         $idClientSelected = $kuehneContact->id_contact;
                     }
                 }
+            } else {  
+                echo 'Please select the value.';
+            }  
+        }
+        // Récupération du fichier sélectionné 
+        if(isset($_POST['submitClient'])){  
+            if(!empty($_POST['clientName'])) {  
+                $fileSelected = $_POST['fileselected'];
+                dd($fileSelected);
+                
             } else {  
                 echo 'Please select the value.';
             }  

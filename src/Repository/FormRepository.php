@@ -1301,7 +1301,7 @@ class FormRepository extends ServiceEntityRepository
                     $normalNameOfTheFile = $OneFormMaintenanceUnread['nom_client']['value'] . '-' . $OneFormMaintenanceUnread['code_agence']['value'] . '.pdf';
                     
                     // Ajouté pour voir si cela fix le mauvais nommage des dossiers PDF sur le nom de la visite de maintenance. Ex: SDCC est enregistré en CE2 au lieu de CEA
-                    // SDDCC bon en BDD mais pas en enregistrement des pdf
+                    // SDCC bon en BDD mais pas en enregistrement des pdf
                     // for ($i=0; $i < count($dataOfFormMaintenanceUnread); $i++) { 
                         # code...
                     if (str_contains($OneFormMaintenanceUnread['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE1')) {
