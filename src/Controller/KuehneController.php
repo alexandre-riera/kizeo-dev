@@ -119,7 +119,7 @@ class KuehneController extends AbstractController
             }  
         }
         // Récupération du fichier sélectionné 
-        if(isset($_POST['submitClient'])){  
+        if(isset($_POST['submitFile'])){  
             if(!empty($_POST['fileselected'])) {  
                 $fileSelected = $_POST['fileselected'];
                 dd($fileSelected);
