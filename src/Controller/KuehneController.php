@@ -526,6 +526,6 @@ class KuehneController extends AbstractController
         /** @var UploadedFile $uploadedFile */
         $uploadedFile = $request->files->get('fileselected');
         $destination = $this->getParameter('kernel.project_dir').'/public/uploads/documents_cc';
-        dd($uploadedFile->move($destination));
+        dd($uploadedFile->move($destination, $uploadedFile->getClientOriginalName()));
     }
 }
