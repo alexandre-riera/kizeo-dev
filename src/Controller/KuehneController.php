@@ -38,6 +38,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class KuehneController extends AbstractController
@@ -522,6 +523,9 @@ class KuehneController extends AbstractController
     #[Route("/kuehne/upload/file", name:"kuehne_upload_file")]
     public function temporaryUploadAction(Request $request)
     {
-        dd($request->files->get('fileselected'));
+        /** @var UploadedFile $uploadedFile */
+        $uploadedFile = $request->files->get('fileselected');
+        $destination = $this->getParameter('kernel.project_dir').'/public/uploads';
+        dd($uploadedFile->move($destination));
     }
 }

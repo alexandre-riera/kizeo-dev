@@ -8,3 +8,5 @@
 /var/
 /vendor/
 /maintenance
+/public/uploads/
+/pdf
