@@ -41,6 +41,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
 
 class KuehneController extends AbstractController
 {
@@ -546,5 +547,6 @@ class KuehneController extends AbstractController
                 echo 'Merci de sélectionner un fichier';
             }  
         }
+        return $this->redirectToRoute('#');
     }
 }
