@@ -547,5 +547,6 @@ class KuehneController extends AbstractController
                 
             }  
         }
+        return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
 }
