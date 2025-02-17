@@ -106,28 +106,11 @@ class KuehneRepository{
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $results = [];
-        foreach ($yearsArray as $year) {
-            if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
-                $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
-                foreach($directoriesLists as $fichier){
-
-                    if(preg_match("#\.(pdf)$#i", $fichier)){
-                        
-                        $myFile = new stdClass;
-                        $myFile->path = $fichier;
-                        $myFile->annee = $year;
-                        //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
-                        
-                        //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
-                        
-                        //"|" parenthèses avec des barres obliques dit "ou" (plusieurs possibilités : jpg ou jpeg ou png...)
-                        
-                        //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
-                        
-                        if (!in_array($myFile, $results)) {
-                            array_push($results, $myFile);
-                        }
-                    }
+        if(is_dir("../public/uploads/documents_cc/$clientSelected")){
+            $directoriesLists = scandir( "../public/uploads/documents_cc/$clientSelected" );
+            foreach($directoriesLists as $fichier){
+                if (!in_array($fichier, $results)) {
+                    array_push($results, $fichier);
                 }
             }
         }
