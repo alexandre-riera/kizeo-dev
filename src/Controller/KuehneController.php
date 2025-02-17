@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Agency;
+use App\Entity\FilesCC;
 use App\Entity\ContactS10;
 use App\Entity\ContactS40;
 use App\Entity\ContactS50;
@@ -523,9 +524,23 @@ class KuehneController extends AbstractController
     #[Route("/kuehne/upload/file", name:"kuehne_upload_file")]
     public function temporaryUploadAction(Request $request)
     {
-        /** @var UploadedFile $uploadedFile */
-        $uploadedFile = $request->files->get('fileselected');
-        $destination = $this->getParameter('kernel.project_dir').'/public/uploads/documents_cc';
-        dd($uploadedFile->move($destination, $uploadedFile->getClientOriginalName()));
+        
+
+        // Récupération du client sélectionné et SET de $agenceSelected et $idClientSlected
+        if(isset($_POST['submitFile'])){  
+            if(!empty($_POST['id_client']) && !empty($_POST['client_name'])) {
+                /** @var UploadedFile $uploadedFile */
+                $uploadedFile = $request->files->get('fileselected');
+                $destination = $this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name'];
+                dd($uploadedFile->move($destination, $uploadedFile->getClientOriginalName()));
+                // Create a new FileCC in BDD
+                $fileCC = new FilesCC();
+                $fileCC->setName($uploadedFile->getClientOriginalName());
+                $fileCC->setPath();
+                $fileCC->setIdContactCc($_POST['id_client']);
+            } else {  
+                echo 'Merci de sélectionner un fichier';
+            }  
+        }
     }
 }
