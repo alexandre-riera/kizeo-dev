@@ -541,11 +541,11 @@ class KuehneController extends AbstractController
                 $fileCC->setIdContactCc($contact);
                 $entityManager->persist($fileCC);
                 $entityManager->flush();
+                return $this->redirectToRoute('app_kuehne', ['message' => 'Le fichier a été téléchargé avec succès.']);
             } else {  
                 echo 'Merci de sélectionner un fichier';
+                
             }  
         }
-        // return $this->redirectToRoute('app_kuehne');
-        return new Response('Le fichier a bien été uploadé pour le site ' . $_POST['client_name'], 200, array('Content-Type' => 'text/html'));
     }
 }
