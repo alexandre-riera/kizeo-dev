@@ -531,7 +531,7 @@ class KuehneController extends AbstractController
                 $destination = $this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name'];
                 $uploadedFile->move($destination, $uploadedFile->getClientOriginalName());
                 // Fetch the Contact entity
-                $contact = $contactsCCRepository->find($_POST['id_client']);
+                $contact = $contactsCCRepository->findOneBy(array('id_contact' => $_POST['id_client']));
                 // Create a new FileCC in BDD
                 $fileCC = new FilesCC();
                 $fileCC->setName($uploadedFile->getClientOriginalName());
