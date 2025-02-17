@@ -536,7 +536,6 @@ class KuehneController extends AbstractController
                 $fileCC = new FilesCC();
                 $fileCC->setName($uploadedFile->getClientOriginalName());
                 $fileCC->setPath($this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name']);
-                $fileCC->setIdContactCc($_POST['id_client']);
                 $entityManager->persist($fileCC);
                 $entityManager->flush();
             } else {  
