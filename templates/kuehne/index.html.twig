@@ -402,8 +402,8 @@
                             <ul>
                                 {% for objectFile in directoriesLists %}
                                     {% if  "{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/' ~ objectFile.annee~'/'~visiteDuClient~'/'~objectFile.path) }}" %}
-                                        <span>{{ objectFile.annee }}</span>
-                                        <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~objectFile.annee~'/'~visiteDuClient~'/'~objectFile.path) }}">{{ objectFile.path }}</a></li>
+                                        {# <span>{{ objectFile.annee }}</span> #}
+                                        <li><a href="{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/'~objectFile.annee~'/'~visiteDuClient~'/'~objectFile) }}">{{ objectFile }}</a></li>
                                     {% endif %}
                                 {% endfor %}
                             </ul>
