@@ -41,6 +41,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Test\Constraint\ResponseIsSuccessful;
+
 class KuehneController extends AbstractController
 {
     #[Route('/kuehne', name: 'app_kuehne')]
@@ -521,7 +523,7 @@ class KuehneController extends AbstractController
     }
 
     #[Route("/kuehne/upload/file", name:"kuehne_upload_file")]
-    public function temporaryUploadAction(Request $request, EntityManagerInterface $entityManager, ContactsCCRepository $contactsCCRepository)
+    public function temporaryUploadAction(Request $request, EntityManagerInterface $entityManager, ContactsCCRepository $contactsCCRepository) : Response
     {
         // Récupération du client sélectionné et SET de $agenceSelected et $idClientSlected
         if(isset($_POST['submitFile'])){  
@@ -543,6 +545,7 @@ class KuehneController extends AbstractController
                 echo 'Merci de sélectionner un fichier';
             }  
         }
-        return $this->redirectToRoute('app_kuehne');
+        // return $this->redirectToRoute('app_kuehne');
+        return new Response('Le fichier a bien été uploadé pour le site ' . $_POST['client_name'], 200, array('Content-Type' => 'text/html'));
     }
 }
