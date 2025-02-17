@@ -399,14 +399,11 @@
                     <div class="card downloadPdf">
                         <div class="card-body">
                             <h4 class="card-title">Compte-rendu</h4>
-                            <ul>
+                            <select>
                                 {% for objectFile in directoriesLists %}
-                                    {# {% if  "{{ asset('../pdf/maintenance/'~agenceSelected~'/'~clientSelected~'/' ~ objectFile.annee~'/'~visiteDuClient~'/'~objectFile.path) }}" %} #}
-                                        {# <span>{{ objectFile.annee }}</span> #}
-                                        <li><a href="#">{{ objectFile }}</a></li>
-                                    {# {% endif %} #}
+                                    <option><a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}">{{ objectFile }}</a></option>
                                 {% endfor %}
-                            </ul>
+                            </select>
                         </div>
                     </div>
                 </div>
