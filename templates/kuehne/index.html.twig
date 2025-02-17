@@ -398,12 +398,10 @@
                 <div class="col-sm-2">
                     <div class="card downloadPdf">
                         <div class="card-body">
-                            <h4 class="card-title">Compte-rendu</h4>
-                            <select>
-                                {% for objectFile in directoriesLists %}
-                                    <option><a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}">{{ objectFile }}</a></option>
-                                {% endfor %}
-                            </select>
+                            <h4 class="card-title">Vos fichiers</h4>
+                            {% for objectFile in directoriesLists %}
+                                <a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}">{{ objectFile }}</a>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
