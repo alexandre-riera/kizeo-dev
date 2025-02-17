@@ -541,7 +541,7 @@ class KuehneController extends AbstractController
                 $fileCC->setIdContactCc($contact);
                 $entityManager->persist($fileCC);
                 $entityManager->flush();
-                return $this->redirectToRoute('app_kuehne', ['message' => 'Le fichier a été téléchargé avec succès.']);
+                echo 'Le fichier a été téléchargé avec succès.';
             } else {  
                 echo 'Merci de sélectionner un fichier';
                 
