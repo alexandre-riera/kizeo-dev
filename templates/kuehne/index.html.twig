@@ -400,7 +400,7 @@
                         <div class="card-body">
                             <h4 class="card-title">Vos fichiers</h4>
                             {% for objectFile in directoriesLists %}
-                                <a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}">{{ objectFile }}</a>
+                                <a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}" target="_blank">{{ objectFile }}</a>
                             {% endfor %}
                         </div>
                     </div>
