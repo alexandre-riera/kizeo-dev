@@ -521,7 +521,7 @@ class KuehneController extends AbstractController
     }
 
     #[Route("/kuehne/upload/file", name:"kuehne_upload_file")]
-    public function temporaryUploadAction(Request $request, EntityManagerInterface $entityManager)
+    public function temporaryUploadAction(Request $request, EntityManagerInterface $entityManager, ContactsCCRepository $contactsCCRepository)
     {
         // Récupération du client sélectionné et SET de $agenceSelected et $idClientSlected
         if(isset($_POST['submitFile'])){  
@@ -529,13 +529,14 @@ class KuehneController extends AbstractController
                 /** @var UploadedFile $uploadedFile */
                 $uploadedFile = $request->files->get('fileselected');
                 $destination = $this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name'];
-                // if (!file_exists($this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name'])){
-                // }
                 $uploadedFile->move($destination, $uploadedFile->getClientOriginalName());
+                // Fetch the Contact entity
+                $contact = $contactsCCRepository->find($_POST['id_client']);
                 // Create a new FileCC in BDD
                 $fileCC = new FilesCC();
                 $fileCC->setName($uploadedFile->getClientOriginalName());
                 $fileCC->setPath($this->getParameter('kernel.project_dir').'/public/uploads/documents_cc/'. $_POST['client_name']);
+                $fileCC->setIdContactCc($contact);
                 $entityManager->persist($fileCC);
                 $entityManager->flush();
             } else {  
