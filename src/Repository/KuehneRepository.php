@@ -114,7 +114,6 @@ class KuehneRepository{
                 }
             }
         }
-        dd($results);
         return $results;
     }
 }
