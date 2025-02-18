@@ -265,7 +265,6 @@ class HomeController extends AbstractController
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
-                    // PUT HERE THE FUNCTION TO GET CLIENTSELECTED PDF
                     break;
                 case 'S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $idClientSelected]);
