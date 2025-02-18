@@ -872,6 +872,8 @@ class FormRepository extends ServiceEntityRepository
      */
     private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
     {
+        dump($structuredEquipementsSplitted);
+        dump($fullStructuredEquipements);
         $regex = '/ :/'; // Compile the regular expression once
         $kizeoEquipments = array_map(function ($equipment) use ($regex) {
             return preg_replace($regex, ':', $equipment); 
@@ -886,10 +888,7 @@ class FormRepository extends ServiceEntityRepository
                 dump($kizeoEquipment);
                 dd($equipementSplitted);
                 if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    dd(gettype($kizeoKey)) ; // Return integer
                     unset($kizeoEquipment[$kizeoKey]);
-                    // $kizeoEquipment[] = $fullStructuredEquipements[$keySplitted];
-                    // continue 2; // Break out of the inner loop
                 }
             }
             $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
