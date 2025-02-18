@@ -875,6 +875,7 @@ class FormRepository extends ServiceEntityRepository
         dump($structuredEquipementsSplitted);
         dump($fullStructuredEquipements);
         $regex = '/ :/'; // Compile the regular expression once
+        $regex2 = '/ |/'; // Compile the regular expression once
         $kizeoEquipments = array_map(function ($equipment) use ($regex) {
             return preg_replace($regex, ':', $equipment); 
         }, $kizeoEquipments); 
@@ -883,6 +884,7 @@ class FormRepository extends ServiceEntityRepository
         $elementsKeysToDeleteFromKizeoEquipments = [];
         foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted); // Replacing space before : in $equipmentSplitted
+            $equipementSplitted = preg_replace($regex, '|', $equipementSplitted); // Replacing space before | in $equipmentSplitted
             
             foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 dump($kizeoEquipment);
