@@ -884,7 +884,7 @@ class FormRepository extends ServiceEntityRepository
         $elementsKeysToDeleteFromKizeoEquipments = [];
         foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
             $equipementSplitted = preg_replace($regex, ':', $equipementSplitted); // Replacing space before : in $equipmentSplitted
-            $equipementSplitted = preg_replace($regex, '|', $equipementSplitted); // Replacing space before | in $equipmentSplitted
+            $equipementSplitted = preg_replace($regex2, '|', $equipementSplitted); // Replacing space before | in $equipmentSplitted
             
             foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
                 dump($kizeoEquipment);
