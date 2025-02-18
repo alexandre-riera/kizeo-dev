@@ -109,6 +109,7 @@ class KuehneRepository{
         if(is_dir("../public/uploads/documents_cc/$clientSelected")){
             $directoriesLists = scandir( "../public/uploads/documents_cc/$clientSelected" );
             foreach($directoriesLists as $fichier){
+                dd($fichier);
                 if (!in_array($fichier, $results)) {
                     array_push($results, $fichier);
                 }
