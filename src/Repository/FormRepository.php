@@ -914,10 +914,9 @@ class FormRepository extends ServiceEntityRepository
     
         // Find elements to add or remove
         $elementsToAdd = array_diff($structuredEquipements, $kizeoEquipments);
-        // $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
+        $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
         // Update Kizeo Equipments
-        // $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
-        $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $structuredEquipements), $elementsToAdd);
+        $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
 
         // Send updated list to Kizeo Forms (replace with your actual function)
         $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
