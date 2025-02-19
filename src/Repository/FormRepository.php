@@ -915,7 +915,8 @@ class FormRepository extends ServiceEntityRepository
         // Find elements to add or remove
         $elementsToAdd = array_diff($structuredEquipements, $kizeoEquipments);
         $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
-    
+        dump($elementsToAdd);
+        dd($elementsToRemove);
         // Update Kizeo Equipments
         $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
 
