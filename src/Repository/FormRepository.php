@@ -900,28 +900,94 @@ class FormRepository extends ServiceEntityRepository
     // }
     
     /**
-     * New one to test
+     * New one to test RENVOI QUE 1147 EQUIPEMENTS MIS A JOUR SUR KIZEO ET SUPPRIME CEUX QUI ETAIENT DANS LA LISTE ET N'ETAIENT PAS A SUPPRIMER
      */
-    private function compareAndSyncEquipments( $structuredEquipements, $kizeoEquipments, $idListeKizeo) {
-        // Prepare data
-        $kizeoEquipments = array_map(function ($equipment) {
-            return str_replace(' :', ':', trim($equipment)); 
-        }, $kizeoEquipments);
+    // private function compareAndSyncEquipments( $structuredEquipements, $kizeoEquipments, $idListeKizeo) {
+    //     // Prepare data
+    //     $kizeoEquipments = array_map(function ($equipment) {
+    //         return str_replace(' :', ':', trim($equipment)); 
+    //     }, $kizeoEquipments);
     
-        $structuredEquipements = array_map(function ($equipment) {
-            return str_replace(' |', '|', trim($equipment)); 
-        }, $structuredEquipements);
+    //     $structuredEquipements = array_map(function ($equipment) {
+    //         return str_replace(' |', '|', trim($equipment)); 
+    //     }, $structuredEquipements);
     
-        // Find elements to add or remove
-        $elementsToAdd = array_diff($structuredEquipements, $kizeoEquipments);
-        $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
-        // Update Kizeo Equipments
-        $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
+    //     // Find elements to add or remove
+    //     $elementsToAdd = array_diff($structuredEquipements, $kizeoEquipments);
+    //     $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
+    //     // Update Kizeo Equipments
+    //     $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
 
-        // Send updated list to Kizeo Forms (replace with your actual function)
+    //     // Send updated list to Kizeo Forms (replace with your actual function)
+    //     $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+    
+    //     return $updatedKizeoEquipments;
+    // }
+
+    /**
+    *   Explication:
+    *
+    *   Fonction compareAndSyncEquipments :
+    *
+    *   Initialise $updatedKizeoEquipments avec les données existantes de Kizeo.
+    *   Parcourt chaque élément de $structuredEquipements (BDD).
+    *   Extrait le préfixe de l'élément de la BDD.
+    *   Parcourt $updatedKizeoEquipments pour trouver un élément avec le même préfixe.
+    *   Si trouvé, remplace l'élément Kizeo par l'élément de la BDD.
+    *   Si non trouvé, ajoute l'élément de la BDD à $updatedKizeoEquipments.
+    *   Appelle la fonction updateAllVisits pour mettre à jour les visites associées.
+    *   Envoie la liste mise à jour à Kizeo Forms.
+    *   Fonction updateAllVisits :
+    *
+    *   Parcourt $kizeoEquipments.
+    *   Si un élément commence par le préfixe à mettre à jour, il est remplacé par le nouvel équipement.
+    *   Points importants:
+    *
+    *   Cette solution compare les équipements en utilisant uniquement la partie "raison_sociale\visite\équipement" de chaque ligne.
+    *   Elle met à jour ou ajoute les lignes en fonction de la présence ou de l'absence du préfixe dans la liste Kizeo.
+    *   La fonction updateAllVisits gère la mise à jour des visites associées en parcourant la liste et en remplaçant les lignes qui correspondent au préfixe.
+    *   Assurez-vous que la fonction envoyerListeKizeo est correctement implémentée pour envoyer les données mises à jour à Kizeo Forms.
+    *   J'ai modifié la fonction updateAllVisits pour qu'elle modifie directement le tableau $kizeoEquipments qui lui est passé en paramètre.
+    */
+    private function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo) {
+        $updatedKizeoEquipments = $kizeoEquipments; // Initialiser avec les données Kizeo existantes
+    
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredPrefix = explode('|', $structuredEquipment)[0]; // Extraire le préfixe de la BDD
+    
+            $foundAndReplaced = false;
+            foreach ($updatedKizeoEquipments as $key => $kizeoEquipment) {
+                $kizeoPrefix = explode('|', $kizeoEquipment)[0]; // Extraire le préfixe de Kizeo
+    
+                if ($kizeoPrefix === $structuredPrefix) {
+                    // Remplacer l'élément Kizeo correspondant par celui de la BDD
+                    $updatedKizeoEquipments[$key] = $structuredEquipment;
+                    $foundAndReplaced = true;
+                    break; // Sortir de la boucle interne une fois le remplacement effectué
+                }
+            }
+    
+            // Si aucun élément correspondant n'a été trouvé dans Kizeo, ajouter le nouvel élément
+            if (!$foundAndReplaced) {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+            }
+    
+            // Mettre à jour toutes les visites associées (si nécessaire)
+            $this->updateAllVisits($updatedKizeoEquipments, $structuredPrefix, $structuredEquipment);
+        }
+    
+        // Envoyer la liste mise à jour à Kizeo Forms
         $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
     
         return $updatedKizeoEquipments;
+    }
+    
+    private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
+        foreach ($kizeoEquipments as $key => $equipment) {
+            if (strpos($equipment, $prefixToUpdate) === 0) {
+                $kizeoEquipments[$key] = $newEquipment;
+            }
+        }
     }
 
     /**
