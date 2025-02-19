@@ -798,7 +798,7 @@ class FormRepository extends ServiceEntityRepository
             });
             
             // Comparer et mettre à jour la liste Kizeo
-            $kizeoEquipments = $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments);
+            $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments);
             
 
             // Envoyer la liste d'équipements mise à jour à Kizeo
