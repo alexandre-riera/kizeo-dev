@@ -779,26 +779,26 @@ class FormRepository extends ServiceEntityRepository
         foreach ($entitesEquipements as $entite) {
             // Récupérer les équipements depuis la BDD
             $equipements = $entityManager->getRepository($entite)->findAll();
-
-            // Structurer les équipements pour Kizeo
+            // Structurer les équipements pour ressembler à la structure de Kizeo
             $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
 
             // Diviser les équipements pour faciliter la comparaison
-            $structuredEquipementsSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipements);
+            // $structuredEquipementsSplitted = $formRepository->splitStructuredEquipmentsToKeepFirstPart($structuredEquipements);
 
             // Initialisation de la variable contenant l'id de la liste d'équipements sur Kizeo
             $idListeKizeo = $this->getIdListeKizeoPourEntite($entite); // Obtenir l'ID de la liste Kizeo associée à l'entité
+
             // Récupérer la liste des équipements Kizeo depuis le cache
             $nomCache = strtolower(str_replace('Equipement', '', $entite)); 
             $kizeoEquipments = $cache->get('kizeo_equipments_' . $nomCache, function(ItemInterface $item) use ($formRepository, $entite, $idListeKizeo) {
                 $item->expiresAfter(900); // 15 minutes en cache
-                // $idListeKizeo = $this->getIdListeKizeoPourEntite($entite); // Obtenir l'ID de la liste Kizeo associée à l'entité
+                $idListeKizeo = $this->getIdListeKizeoPourEntite($entite); // Obtenir l'ID de la liste Kizeo associée à l'entité
                 $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
                 return $result;
             });
             
             // Comparer et mettre à jour la liste Kizeo
-            $this->comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $structuredEquipements, $kizeoEquipments);
+            $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments);
             
 
             // Envoyer la liste d'équipements mise à jour à Kizeo
@@ -870,32 +870,55 @@ class FormRepository extends ServiceEntityRepository
      *  avec les autres donc les nouveaux sont ajoutés aux anciens et cela provoque 
      *  des doublons d'équipement avec 1 ancien pas mis à jour et le nouveau qui devrait être seul
      */
-    private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
-    {
-        dump($structuredEquipementsSplitted);
-        dump($fullStructuredEquipements);
-        $regex = '/ :/'; // Compile the regular expression once
-        $regex2 = '/ |/'; // Compile the regular expression once
-        $kizeoEquipments = array_map(function ($equipment) use ($regex) {
-            return preg_replace($regex, ':', $equipment); 
-        }, $kizeoEquipments); 
+    // private function comparerEtMettreAJourListeKizeo($structuredEquipementsSplitted, $fullStructuredEquipements, &$kizeoEquipments)
+    // {
+    //     dump($structuredEquipementsSplitted);
+    //     dump($fullStructuredEquipements);
+    //     $regex = '/ :/'; // Compile the regular expression once
+    //     $regex2 = '/ |/'; // Compile the regular expression once
+    //     $kizeoEquipments = array_map(function ($equipment) use ($regex) {
+    //         return preg_replace($regex, ':', $equipment); 
+    //     }, $kizeoEquipments); 
 
-        $updatedKizeoEquipments = [];
-        $elementsKeysToDeleteFromKizeoEquipments = [];
-        foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
-            $equipementSplitted = preg_replace($regex, ':', $equipementSplitted); // Replacing space before : in $equipmentSplitted
-            $equipementSplitted = preg_replace($regex2, '|', $fullStructuredEquipements); // Replacing space before | in $equipmentSplitted
+    //     $updatedKizeoEquipments = [];
+    //     $elementsKeysToDeleteFromKizeoEquipments = [];
+    //     foreach ($structuredEquipementsSplitted as $keySplitted => $equipementSplitted) {
+    //         $equipementSplitted = preg_replace($regex, ':', $equipementSplitted); // Replacing space before : in $equipmentSplitted
+    //         $equipementSplitted = preg_replace($regex2, '|', $equipementSplitted); // Replacing space before | in $equipmentSplitted
             
-            foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
-                dump($kizeoEquipment);
-                dd($equipementSplitted);
-                if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
-                    unset($kizeoEquipment[$kizeoKey]);
-                }
-            }
-            $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
-        }
-        $kizeoEquipments = $updatedKizeoEquipments;
+    //         foreach ($kizeoEquipments as $kizeoKey => $kizeoEquipment) {
+    //             dump($kizeoEquipment);
+    //             dd($equipementSplitted);
+    //             if (str_starts_with($kizeoEquipment, $equipementSplitted)) {
+    //                 unset($kizeoEquipment[$kizeoKey]);
+    //             }
+    //         }
+    //         $updatedKizeoEquipments[] = $fullStructuredEquipements[$keySplitted];
+    //     }
+    //     $kizeoEquipments = $updatedKizeoEquipments;
+    // }
+    
+    /**
+     * New one to test
+     */
+    private function compareAndSyncEquipments( $structuredEquipements, $kizeoEquipments) {
+        // Prepare data
+        $kizeoEquipments = array_map(function ($equipment) {
+            return str_replace(' :', ':', trim($equipment)); 
+        }, $kizeoEquipments);
+    
+        $structuredEquipements = array_map(function ($equipment) {
+            return str_replace(' |', '|', trim($equipment)); 
+        }, $structuredEquipements);
+    
+        // Find elements to add or remove
+        $elementsToAdd = array_diff($structuredEquipements, $kizeoEquipments);
+        $elementsToRemove = array_diff($kizeoEquipments, $structuredEquipements);
+    
+        // Update Kizeo Equipments
+        $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
+    
+        return $updatedKizeoEquipments;
     }
 
     /**
