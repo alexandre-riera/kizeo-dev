@@ -796,14 +796,14 @@ class FormRepository extends ServiceEntityRepository
                 $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
                 return $result;
             });
-            dump($structuredEquipements);
-            dump($kizeoEquipments);
+            // dump($structuredEquipements);
+            // dump($kizeoEquipments);
             // Comparer et mettre à jour la liste Kizeo
-            $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments);
+            $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo);
             
-            dump($kizeoEquipments);
-            // Envoyer la liste d'équipements mise à jour à Kizeo
-            $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
+            // dump($kizeoEquipments);
+            // // Envoyer la liste d'équipements mise à jour à Kizeo
+            // $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
         }
     }
 
@@ -902,7 +902,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * New one to test
      */
-    private function compareAndSyncEquipments( $structuredEquipements, $kizeoEquipments) {
+    private function compareAndSyncEquipments( $structuredEquipements, $kizeoEquipments, $idListeKizeo) {
         // Prepare data
         $kizeoEquipments = array_map(function ($equipment) {
             return str_replace(' :', ':', trim($equipment)); 
@@ -918,6 +918,9 @@ class FormRepository extends ServiceEntityRepository
     
         // Update Kizeo Equipments
         $updatedKizeoEquipments = array_merge(array_diff($kizeoEquipments, $elementsToRemove), $elementsToAdd);
+
+        // Send updated list to Kizeo Forms (replace with your actual function)
+        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
     
         return $updatedKizeoEquipments;
     }
