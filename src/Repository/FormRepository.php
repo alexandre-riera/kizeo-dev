@@ -796,11 +796,12 @@ class FormRepository extends ServiceEntityRepository
                 $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
                 return $result;
             });
-            
+            dump($structuredEquipements);
+            dump($kizeoEquipments);
             // Comparer et mettre à jour la liste Kizeo
             $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments);
             
-
+            dump($kizeoEquipments);
             // Envoyer la liste d'équipements mise à jour à Kizeo
             $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
         }
