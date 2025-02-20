@@ -982,9 +982,23 @@ class FormRepository extends ServiceEntityRepository
         return $updatedKizeoEquipments;
     }
     
+    // La fonction ci-dessous fonctionne mais pas sur toutes les visites, seul celle qui vient avec les nouvelles data est mise à jour
+    // private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
+    //     foreach ($kizeoEquipments as $key => $equipment) {
+    //         if (strpos($equipment, $prefixToUpdate) === 0) {
+    //             $kizeoEquipments[$key] = $newEquipment;
+    //         }
+    //     }
+    // }
     private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
+        $clientPrefix = explode('\\', $prefixToUpdate)[0]; // Extrait le préfixe du client (raison_sociale)
+        $equipmentName = explode('|', $newEquipment)[1]; // Extrait le nom de l'équipement
+    
         foreach ($kizeoEquipments as $key => $equipment) {
-            if (strpos($equipment, $prefixToUpdate) === 0) {
+            $kizeoClientPrefix = explode('\\', $equipment)[0];
+            $kizeoEquipmentName = explode('|', $equipment)[1];
+    
+            if ($kizeoClientPrefix === $clientPrefix && $kizeoEquipmentName === $equipmentName) {
                 $kizeoEquipments[$key] = $newEquipment;
             }
         }
