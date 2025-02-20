@@ -1023,31 +1023,31 @@ class FormRepository extends ServiceEntityRepository
         // Exemple :
         switch ($entite) {
             case EquipementS10::class:
-                return 437895; // ID de la liste Kizeo pour Group
+                return 437895; // ID de la liste Kizeo pour Group           Changé par celui de la liste de test : NON EN PRODUCTION 
             case EquipementS40::class:
-                return 437995; // ID de la liste Kizeo pour St Etienne mais changé pour mettre celui de la liste de test : 427442
+                return 437995; // ID de la liste Kizeo pour St Etienne      Changé par celui de la liste de test : 427442
             case EquipementS50::class:
-                return 437695; // ID de la liste Kizeo pour Grenoble mais changé pour mettre celui de la liste de test : 414025
+                return 437695; // ID de la liste Kizeo pour Grenoble        Changé par celui de la liste de test : 414025
             case EquipementS60::class:
-                return 437996; // ID de la liste Kizeo pour Lyon mais changé pour mettre celui de la liste de test : 427444
+                return 437996; // ID de la liste Kizeo pour Lyon            Changé par celui de la liste de test : 427444
             case EquipementS70::class:
-                return 437897; // ID de la liste Kizeo pour Bordeaux
+                return 437897; // ID de la liste Kizeo pour Bordeaux        Changé par celui de la liste de test : 437897
             case EquipementS80::class:
-                return 438000; // ID de la liste Kizeo pour Paris Nord mais changé pour mettre celui de la liste de test : 421993
+                return 438000; // ID de la liste Kizeo pour Paris Nord      Changé par celui de la liste de test : 421993
             case EquipementS100::class:
-                return 437997; // ID de la liste Kizeo pour Montpellier mais changé pour mettre celui de la liste de test : 423853
+                return 437997; // ID de la liste Kizeo pour Montpellier     Changé par celui de la liste de test : 423853
             case EquipementS120::class:
-                return 437999; // ID de la liste Kizeo pour Hauts de France mais changé pour mettre celui de la liste de test : 434252
+                return 437999; // ID de la liste Kizeo pour Hauts de France Changé par celui de la liste de test : 434252
             case EquipementS130::class:
-                return 437977; // ID de la liste Kizeo pour Toulouse
+                return 437977; // ID de la liste Kizeo pour Toulouse        Changé par celui de la liste de test : 437977
             case EquipementS140::class:
-                return 438006; // ID de la liste Kizeo pour SMP mais changé pour mettre celui de la liste de test : 427682
+                return 438006; // ID de la liste Kizeo pour SMP             Changé par celui de la liste de test : 427682
             case EquipementS150::class:
-                return 437976; // ID de la liste Kizeo pour SOGEFI
+                return 437976; // ID de la liste Kizeo pour SOGEFI          Changé par celui de la liste de test : 437976
             case EquipementS160::class:
-                return 437978; // ID de la liste Kizeo pour Rouen
+                return 437978; // ID de la liste Kizeo pour Rouen           Changé par celui de la liste de test : NON EN PRODUCTION 
             case EquipementS170::class:
-                return 437979; // ID de la liste Kizeo pour Rennes
+                return 437979; // ID de la liste Kizeo pour Rennes          Changé par celui de la liste de test : NON EN PRODUCTION 
             default:
                 throw new Exception("Nom de liste Kizeo non défini pour l'entité " . $entite);
         }
