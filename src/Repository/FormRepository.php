@@ -990,16 +990,41 @@ class FormRepository extends ServiceEntityRepository
     //         }
     //     }
     // }
+
+    // Enregistre la ligne de la 1ère visite sur la ligne de la 2ème visite de l'équipement
+    // private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
+    //     $clientPrefix = explode('\\', $prefixToUpdate)[0]; // Extrait le préfixe du client (raison_sociale)
+    //     $equipmentName = explode('|', $newEquipment)[1]; // Extrait le nom de l'équipement
+    
+    //     foreach ($kizeoEquipments as $key => $equipment) {
+    //         $kizeoClientPrefix = explode('\\', $equipment)[0];
+    //         $kizeoEquipmentName = explode('|', $equipment)[1];
+    
+    //         if ($kizeoClientPrefix === $clientPrefix && $kizeoEquipmentName === $equipmentName) {
+    //             $kizeoEquipments[$key] = $newEquipment;
+    //         }
+    //     }
+    // }
+
     private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
         $clientPrefix = explode('\\', $prefixToUpdate)[0]; // Extrait le préfixe du client (raison_sociale)
-        $equipmentName = explode('|', $newEquipment)[1]; // Extrait le nom de l'équipement
+        $newEquipmentData = explode('|', $newEquipment); // Tableau des nouvelles données de l'équipement
     
         foreach ($kizeoEquipments as $key => $equipment) {
             $kizeoClientPrefix = explode('\\', $equipment)[0];
             $kizeoEquipmentName = explode('|', $equipment)[1];
+            $kizeoEquipmentData = explode('|', $equipment); // Tableau des données actuelles de l'équipement Kizeo
     
-            if ($kizeoClientPrefix === $clientPrefix && $kizeoEquipmentName === $equipmentName) {
-                $kizeoEquipments[$key] = $newEquipment;
+            if ($kizeoClientPrefix === $clientPrefix && $kizeoEquipmentName === $newEquipmentData[1]) { // Vérifie le client et le nom de l'équipement
+                // Met à jour les données après le "|" (pipe)
+                for ($i = 2; $i < count($newEquipmentData); $i++) { // Commence à l'indice 2 pour les données après le nom de l'équipement
+                    if (isset($kizeoEquipmentData[$i])) {
+                        $kizeoEquipmentData[$i] = $newEquipmentData[$i];
+                    } else {
+                      $kizeoEquipmentData[] = $newEquipmentData[$i];
+                    }
+                }
+                $kizeoEquipments[$key] = implode('|', $kizeoEquipmentData); // Reconstruit la ligne avec les données mises à jour
             }
         }
     }
