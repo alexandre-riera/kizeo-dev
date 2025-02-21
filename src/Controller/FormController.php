@@ -139,7 +139,7 @@ class FormController extends AbstractController
         
         
         // return new JsonResponse("Les équipements de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_api_form_update_lists_equipements'); // Remettre quand la nouvelle liste d'équipements n'écrasera plus l'ancienne sur KIZEO
+        return $this->redirectToRoute('app_api_form_update_lists_equipements_from_bdd'); // Remettre quand la nouvelle liste d'équipements n'écrasera plus l'ancienne sur KIZEO
         // return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
 
