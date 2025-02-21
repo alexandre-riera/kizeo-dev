@@ -982,30 +982,28 @@ class FormRepository extends ServiceEntityRepository
         return $updatedKizeoEquipments;
     }
     
-    // La fonction ci-dessous fonctionne mais pas sur toutes les visites, seul celle qui vient avec les nouvelles data est mise à jour
-    // private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
-    //     foreach ($kizeoEquipments as $key => $equipment) {
-    //         if (strpos($equipment, $prefixToUpdate) === 0) {
-    //             $kizeoEquipments[$key] = $newEquipment;
-    //         }
-    //     }
-    // }
+    /**
+     * Explication des modifications:
 
-    // Enregistre la ligne de la 1ère visite sur la ligne de la 2ème visite de l'équipement
-    // private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
-    //     $clientPrefix = explode('\\', $prefixToUpdate)[0]; // Extrait le préfixe du client (raison_sociale)
-    //     $equipmentName = explode('|', $newEquipment)[1]; // Extrait le nom de l'équipement
-    
-    //     foreach ($kizeoEquipments as $key => $equipment) {
-    //         $kizeoClientPrefix = explode('\\', $equipment)[0];
-    //         $kizeoEquipmentName = explode('|', $equipment)[1];
-    
-    //         if ($kizeoClientPrefix === $clientPrefix && $kizeoEquipmentName === $equipmentName) {
-    //             $kizeoEquipments[$key] = $newEquipment;
-    //         }
-    //     }
-    // }
+     * Extraction des données de l'équipement:
 
+     * $newEquipmentData = explode('|', $newEquipment); crée un tableau contenant les différentes parties de la nouvelle ligne d'équipement (avant et après chaque "|").
+     * $kizeoEquipmentData = explode('|', $equipment); crée un tableau similaire pour la ligne d'équipement Kizeo actuelle.
+     * Mise à jour des données après le "|":
+
+     * La boucle for parcourt les données de $newEquipmentData à partir de l'indice 2 (données après le nom de l'équipement).
+     * Elle met à jour les éléments correspondants dans $kizeoEquipmentData.
+     * Reconstruction de la ligne:
+
+     * implode('|', $kizeoEquipmentData) combine les éléments du tableau $kizeoEquipmentData en une seule chaîne, en utilisant "|" comme séparateur.
+     * La ligne mise à jour est ensuite stockée dans $kizeoEquipments[$key].
+     * Comment ça marche:
+
+     * La fonction extrait les données de la nouvelle ligne et de la ligne Kizeo actuelle dans des tableaux.
+     * Elle compare le préfixe du client et le nom de l'équipement pour trouver la ligne à mettre à jour.
+     * Au lieu de remplacer toute la ligne, elle met à jour uniquement les données après le "|" dans la ligne Kizeo, en utilisant les données correspondantes de la nouvelle ligne.
+     * Enfin, elle reconstruit la ligne Kizeo avec les données mises à jour.
+    */
     private function updateAllVisits(&$kizeoEquipments, $prefixToUpdate, $newEquipment) {
         $clientPrefix = explode('\\', $prefixToUpdate)[0]; // Extrait le préfixe du client (raison_sociale)
         $newEquipmentData = explode('|', $newEquipment); // Tableau des nouvelles données de l'équipement
