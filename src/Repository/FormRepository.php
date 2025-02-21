@@ -1349,9 +1349,9 @@ class FormRepository extends ServiceEntityRepository
      */
     public function savePdfInAssetsPdfFolder($cache){
 
-        // -----------------------------   Return all forms in an array | cached for 2419200 seconds 1 month
+        // -----------------------------   Return all forms in an array | cached for 900 seconds 15 minutes
         $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
-            $item->expiresAfter(2419200);
+            $item->expiresAfter(900);
             $result = FormRepository::getForms();
             return $result['forms'];
         });
