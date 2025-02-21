@@ -288,12 +288,12 @@ class FormController extends AbstractController
      * Save PDF maintenance on remote server --                                  THIRD CALL IN CRON TASK
      */
     #[Route('/api/forms/save/maintenance/pdf', name: 'app_api_form_save_maintenance_pdf', methods: ['GET'])]
-    public function savePdfInAssetsPdfFolder(FormRepository $formRepository, CacheInterface $cache) //: JsonResponse
+    public function savePdfInAssetsPdfFolder(FormRepository $formRepository, CacheInterface $cache) : JsonResponse
     {
         $formRepository->savePdfInAssetsPdfFolder($cache);
         
-        return $this->redirectToRoute('app_api_form_save_maintenance_equipments');
-        // return new JsonResponse("Les pdf de maintenance ont bien été sauvegardés + on est à jour en BDD et sur KIZEO ", Response::HTTP_OK, [], true);
+        // return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // DDécommenter et commenter  : JsonResponse pour faire une boucle fermée des 3 url pour mettre à jour si les tâches cron ne marchent pas
+        return new JsonResponse("Les pdf de maintenance ont bien été sauvegardés + on est à jour en BDD et sur KIZEO ", Response::HTTP_OK, [], true);
     }
     /**
      * 
