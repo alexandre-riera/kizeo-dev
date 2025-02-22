@@ -376,35 +376,39 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-3">
-                    <div class="card">
-                        <div class="card-body">
-                            <h4 class="card-title">Uploader un fichier</h4>
-                            <br>
-                            <br>
-                            <div class="mb-4">
-                                {# <label for="formFile" class="form-label">Attaché à ce site</label> #}
-                                <form action="{{ path('kuehne_upload_file') }}" method="POST" enctype="multipart/form-data">
-                                    <input class="form-control" style="width:85%" type="file" id="formFile" name="fileselected">
-                                    <input type="hidden" id="id_client" name="id_client" value="{{ idClientSelected }}">
-                                    <input type="hidden" id="client_name" name="client_name" value="{{ clientSelected }}">
-                                    <br>
-                                    <button type="submit"  name ="submitFile" class="btn btn-primary">Enregistrer</button>
-                                </form>
+                {% if is_granted('ROLE_KUEHNE_CC_ADMIN') %}
+                    <div class="col-sm-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Uploader un fichier</h4>
+                                <br>
+                                <br>
+                                <div class="mb-4">
+                                    {# <label for="formFile" class="form-label">Attaché à ce site</label> #}
+                                    <form action="{{ path('kuehne_upload_file') }}" method="POST" enctype="multipart/form-data">
+                                        <input class="form-control" style="width:85%" type="file" id="formFile" name="fileselected">
+                                        <input type="hidden" id="id_client" name="id_client" value="{{ idClientSelected }}">
+                                        <input type="hidden" id="client_name" name="client_name" value="{{ clientSelected }}">
+                                        <br>
+                                        <button type="submit"  name ="submitFile" class="btn btn-primary">Enregistrer</button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-sm-2">
-                    <div class="card downloadPdf">
-                        <div class="card-body">
-                            <h4 class="card-title">Vos fichiers</h4>
-                            {% for objectFile in directoriesLists %}
-                                <a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}" target="_blank">{{ objectFile }}</a>
-                            {% endfor %}
+                {% endif %}
+                {% if directoriesLists is not empty %}
+                    <div class="col-sm-2">
+                        <div class="card downloadPdf">
+                            <div class="card-body">
+                                <h4 class="card-title">Vos fichiers</h4>
+                                {% for objectFile in directoriesLists %}
+                                    <a href="{{ asset('../public/uploads/documents_cc/'~clientSelected~'/' ~ objectFile) }}" target="_blank">{{ objectFile }}</a>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             </div>
         {%endif%}
         {% endblock %}

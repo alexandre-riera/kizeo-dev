@@ -43,7 +43,7 @@ security:
     access_control:
         - { path: ^/register, roles: ROLE_ADMIN }
         # - { path: ^/, roles: [ROLE_SOMAFI] }
-        - { path: ^/kuehne, roles: ROLE_KUEHNE_CC }
+        - { path: ^/kuehne, roles: [ROLE_KUEHNE_CC_ADMIN, ROLE_KUEHNE_CC_USER] }
         # - { path: ^/login, roles: ROLE_USER }
 
 when@test:
