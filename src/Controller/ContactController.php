@@ -2,52 +2,99 @@
 
 namespace App\Controller;
 
+use App\Service\KizeoService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Serializer\SerializerInterface;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Repository\ContactRepository;
-use App\Entity\Contact;
+use Symfony\Component\Routing\Annotation\Route;
 
 class ContactController extends AbstractController
 {
-    #[Route('/api/contacts', name: 'app_contact', methods: ['GET'])]
-    public function getContacts(ContactRepository $contactRepository, SerializerInterface $serializer, EntityManagerInterface $entityManager): JsonResponse
+    private $kizeoService;
+
+    public function __construct(KizeoService $kizeoService)
     {
-        $contactList  =  $contactRepository->getContacts();
-        $jsonContactList = $serializer->serialize($contactList, 'json');
+        $this->kizeoService = $kizeoService;
+    }
 
-        // Fetch all contacts in database
-        $allContactsInDatabase = $entityManager->getRepository(Contact::class)->findAll();
-        
-        // Persist each contact in database
-        // Check before if contact exist in database
-        if (count($allContactsInDatabase) !== count($contactList)) {
-            $contactsArray = array_map(null, $contactList);
-            for ($i=0; $i < count($contactsArray) ; $i++) {
-                if (isset($contactsArray[$i]) && !in_array($contactsArray[$i],$allContactsInDatabase)) {
-                    $contact = new Contact;
-                    $contact->setNom($contactsArray[$i]['0']);
-                    $contact->setCpostalp($contactsArray[$i]['2']);
-                    $contact->setVillep($contactsArray[$i]['4']);
-                    $contact->setIdContact($contactsArray[$i]['6']);
+    /**
+     * @Route("/contact", name="contact")
+     */
+    public function index(Request $request): Response
+    {
+        $agences = [
+            'S10' => 'Group',
+            'S40' => 'St Etienne',
+            'S50' => 'Grenoble',
+            'S60' => 'Lyon',
+            'S70' => 'Bordeaux',
+            'S80' => 'Paris Nord',
+            'S100' => 'Montpellier',
+            'S120' => 'Hauts de France',
+            'S130' => 'Toulouse',
+            'S140' => 'Epinal',
+            'S150' => 'PACA',
+            'S160' => 'Rouen',
+            'S170' => 'Rennes'
+        ];
 
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                    $entityManager->persist($contact);
+        $contact = [];
+        $contactsKizeo = [];
 
-                }
-            }
-            // actually executes the queries (i.e. the INSERT query)
-            $entityManager->flush();
+        $agenceSelectionnee = $request->request->get('agence');
+        $clientId = $request->request->get('client');
+
+        if ($agenceSelectionnee) {
+            $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
         }
 
+        if ($clientId) {
+            // Récupérer le contact sélectionné depuis $contactsKizeo
+            foreach ($contactsKizeo as $contactString) {
+                $contactArray = $this->kizeoService->stringToContact($contactString);
+                if ($contactArray['id_contact'] == $clientId) {
+                    $contact = $contactArray;
+                    break;
+                }
+            }
+        }
 
-        return new JsonResponse(
-            "Contacts sur API KIZEO : " . count($contactList) .
-            " | Contacts en BDD : " . count($allContactsInDatabase) . 
-            "   \n La liste de contacts a bien été mise à jour, vous pouvez revenir en arrière"
-            , Response::HTTP_OK, [], true);
+        if ($request->isMethod('POST') && $request->request->has('submit')) {
+            $nouveauContact = [
+                'Raison_sociale' => $request->request->get('Raison_sociale'),
+                'Code_postale' => $request->request->get('Code_postale'),
+                'Ville' => $request->request->get('Ville'),
+                'id_contact' => $request->request->get('id_contact'),
+                'Agence' => $agenceSelectionnee,
+                'id_société' => $request->request->get('id_société'),
+                'Équipements' => $request->request->get('Équipements'),
+                'Équipements_complémentaires' => $request->request->get('Équipements_complémentaires'),
+            ];
+
+            // Mettre à jour ou ajouter le contact dans $contactsKizeo
+            $contactExiste = false;
+            foreach ($contactsKizeo as $key => $contactString) {
+                $contactArray = $this->kizeoService->stringToContact($contactString);
+                if ($contactArray['id_contact'] == $nouveauContact['id_contact']) {
+                    $contactsKizeo[$key] = $this->kizeoService->contactToString($nouveauContact);
+                    $contactExiste = true;
+                    break;
+                }
+            }
+            if (!$contactExiste) {
+                $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
+            }
+
+            $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
+
+            $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
+
+            return $this->redirectToRoute('contact');
+        }
+
+        return $this->render('contact/index.html.twig', [
+            'agences' => $agences,
+            'contact' => $contact,
+        ]);
     }
 }

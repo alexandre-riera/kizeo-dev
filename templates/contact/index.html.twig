@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Gestion des Contacts</h1>
+
+    <form method="post">
+        <label for="agence">Agence :</label>
+        <select name="agence" id="agence">
+            <option value="">Sélectionnez une agence</option>
+            {% for key, agence in agences %}
+                <option value="{{ key }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
+            {% endfor %}
+        </select>
+
+        {% if contact %}
+            <label for="contact">Contact :</label>
+            <select name="contact" id="contact">
+                <option value="">Sélectionnez un contact</option>
+                {% for id, nom in contact %}
+                    <option value="{{ id }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ nom }}</option>
+                {% endfor %}
+            </select>
+        {% endif %}
+
+        {% if contact %}
+            <label for="Raison_sociale">Raison sociale :</label>
+            <input type="text" >
+        {% endif %}
+    </form>
