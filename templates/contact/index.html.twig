@@ -8,7 +8,7 @@
         <select name="agence" id="agence">
             <option value="">Sélectionnez une agence</option>
             {% for key, agence in agences %}
-                <option value="{{ key }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
+                <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
             {% endfor %}
         </select>
         <br>
