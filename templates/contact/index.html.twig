@@ -14,7 +14,8 @@
         <br>
         <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
     </form>
-    {% if contact and agenceSelectionnee is not null %}
+    {% if agenceSelectionnee %}
+        <p>{{ agenceSelectionnee }}</p>
         <form>
             <label for="contact">Contact :</label>
             <select name="contact" id="contact">
