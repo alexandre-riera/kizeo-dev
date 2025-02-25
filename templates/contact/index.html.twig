@@ -23,7 +23,6 @@
 {% endblock %}
 {% block body %}
     <h1>Ajout d'un Contact</h1>
-    {% if agenceSelectionnee is null %}
     <form method="post">
         <label for="agence">Agence :</label>
         <select name="agence" id="agence">
@@ -35,8 +34,7 @@
         <br>
         <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
     </form>
-    {% endif %}
-    {% if agenceSelectionnee is not null%}
+    {% if agenceSelectionnee is not null %}
         <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
         <form>
             <label for="contact">Contact :</label>
