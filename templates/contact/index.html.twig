@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <h1>Gestion des Contacts</h1>
+    <h1>Ajout d'un Contact</h1>
 
     <form method="post">
         <label for="agence">Agence :</label>
@@ -11,8 +11,11 @@
                 <option value="{{ key }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
             {% endfor %}
         </select>
-
-        {% if contact %}
+        <br>
+        <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
+    </form>
+    {% if contact and agenceSelectionnee is not null %}
+        <form>
             <label for="contact">Contact :</label>
             <select name="contact" id="contact">
                 <option value="">Sélectionnez un contact</option>
@@ -24,7 +27,8 @@
 
         {% if contact %}
             <label for="Raison_sociale">Raison sociale :</label>
-            <input type="text" >
-        {% endif %}
-    </form>
+            <input class="form-control" style="width:85%" type="text" id="raison_sociale" name="raison_sociale">
+        </form>
+    {% endif %}
+    
 {% endblock %}

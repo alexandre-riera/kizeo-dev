@@ -42,7 +42,11 @@ class ContactController extends AbstractController
         $contact = [];
         $contactsKizeo = [];
 
-        $agenceSelectionnee = $request->request->get('agence');
+        // $agenceSelectionnee = $request->request->get('agence');
+        $agenceSelectionnee = "";
+        if (isset($_GET[''])) {
+            # code...
+        }
         $clientId = $request->request->get('client');
 
         if ($agenceSelectionnee) {
@@ -96,6 +100,7 @@ class ContactController extends AbstractController
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
+            'agenceSelectionnee' => $agenceSelectionnee,
         ]);
     }
 }
