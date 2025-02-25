@@ -9,10 +9,9 @@ class KizeoService
     private $client;
     private $kizeoApiKey; // Stockez votre clé API dans les variables d'environnement
 
-    public function __construct(HttpClientInterface $client, string $kizeoApiKey)
+    public function __construct(HttpClientInterface $client)
     {
         $this->client = $client;
-        $this->kizeoApiKey = $_ENV["KIZEO_API_TOKEN"];
     }
 
     public function getContacts(string $agence): array
