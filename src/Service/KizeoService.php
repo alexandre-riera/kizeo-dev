@@ -7,7 +7,6 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class KizeoService
 {
     private $client;
-    private $kizeoApiKey; // Stockez votre clé API dans les variables d'environnement
 
     public function __construct(HttpClientInterface $client)
     {

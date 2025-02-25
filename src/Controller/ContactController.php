@@ -18,8 +18,9 @@ class ContactController extends AbstractController
     }
 
     /**
-     * @Route("/contact", name="contact")
+     * ADD new contact in BDD and Kizeo
      */
+    #[Route('/contact/new', name: 'app_contact_new', methods: ['GET'])]
     public function index(Request $request): Response
     {
         $agences = [
@@ -89,7 +90,7 @@ class ContactController extends AbstractController
 
             $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
 
-            return $this->redirectToRoute('contact');
+            return $this->redirectToRoute('app_contact_new');
         }
 
         return $this->render('contact/index.html.twig', [
