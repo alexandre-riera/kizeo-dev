@@ -49,6 +49,12 @@ class ContactController extends AbstractController
                 $agenceSelectionnee = $_POST['agence'];
             } 
         }
+        $contactSelectionne = "";
+        if(isset($_POST['submit_contact'])){  
+            if(!empty($_POST['contact'])) {  
+                $agenceSelectionnee = $_POST['contact'];
+            } 
+        }
         
         $clientId = $request->request->get('client');
 

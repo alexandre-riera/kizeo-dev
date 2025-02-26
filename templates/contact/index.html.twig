@@ -270,19 +270,20 @@
     {% if agenceSelectionnee is not null %}
         <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
     {% endif %}
-        <form>
-            <label for="contact">Contact :</label>
-            <select class="form-control" name="contact" id="contact">
-                <option value="">Sélectionnez un contact</option>
-                {% for id, nom in contact %}
-                    <option value="{{ id }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ nom }}</option>
-                {% endfor %}
-            </select>
-
-        {% if contact %}
-            <label for="Raison_sociale">Raison sociale :</label>
-            <input class="form-control" style="width:85%" type="text" id="raison_sociale" name="raison_sociale">
-        </form>
+    <form>
+        <label for="contact">Contact :</label>
+        <select class="form-control" name="contact" id="contact">
+            <option value="">Sélectionnez un contact</option>
+            {% for id, nom in contact %}
+                <option value="{{ id }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ nom }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit"  name ="submit_contact" class="btn btn-primary">Valider</button>
+    {% if contact %}
+        <label for="Raison_sociale">Raison sociale :</label>
+        <input class="form-control" style="width:85%" type="text" id="raison_sociale" name="raison_sociale">
+    </form>
     {% endif %}
     
 {% endblock %}
