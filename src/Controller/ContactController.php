@@ -59,56 +59,57 @@ class ContactController extends AbstractController
             }
         }
         
-        $clientId = $request->request->get('client');
-        if ($clientId) {
-            // Récupérer le contact sélectionné depuis $contactsKizeo
-            foreach ($contactsKizeo as $contactString) {
-                $contactArray = $this->kizeoService->stringToContact($contactString);
-                if ($contactArray['id_contact'] == $clientId) {
-                    $contact = $contactArray;
-                    break;
-                }
-            }
-        }
+        // $clientId = $request->request->get('client');
+        // if ($clientId) {
+        //     // Récupérer le contact sélectionné depuis $contactsKizeo
+        //     foreach ($contactsKizeo as $contactString) {
+        //         $contactArray = $this->kizeoService->stringToContact($contactString);
+        //         if ($contactArray['id_contact'] == $clientId) {
+        //             $contact = $contactArray;
+        //             break;
+        //         }
+        //     }
+        // }
 
-        if ($request->isMethod('POST') && $request->request->has('submit')) {
-            $nouveauContact = [
-                'Raison_sociale' => $request->request->get('Raison_sociale'),
-                'Code_postale' => $request->request->get('Code_postale'),
-                'Ville' => $request->request->get('Ville'),
-                'id_contact' => $request->request->get('id_contact'),
-                'Agence' => $agenceSelectionnee,
-                'id_société' => $request->request->get('id_société'),
-                'Équipements' => $request->request->get('Équipements'),
-                'Équipements_complémentaires' => $request->request->get('Équipements_complémentaires'),
-            ];
+        // if ($request->isMethod('POST') && $request->request->has('submit')) {
+        //     $nouveauContact = [
+        //         'Raison_sociale' => $request->request->get('Raison_sociale'),
+        //         'Code_postale' => $request->request->get('Code_postale'),
+        //         'Ville' => $request->request->get('Ville'),
+        //         'id_contact' => $request->request->get('id_contact'),
+        //         'Agence' => $agenceSelectionnee,
+        //         'id_société' => $request->request->get('id_société'),
+        //         'Équipements' => $request->request->get('Équipements'),
+        //         'Équipements_complémentaires' => $request->request->get('Équipements_complémentaires'),
+        //     ];
 
-            // Mettre à jour ou ajouter le contact dans $contactsKizeo
-            $contactExiste = false;
-            foreach ($contactsKizeo as $key => $contactString) {
-                $contactArray = $this->kizeoService->stringToContact($contactString);
-                if ($contactArray['id_contact'] == $nouveauContact['id_contact']) {
-                    $contactsKizeo[$key] = $this->kizeoService->contactToString($nouveauContact);
-                    $contactExiste = true;
-                    break;
-                }
-            }
-            if (!$contactExiste) {
-                $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
-            }
-            $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
+        //     // Mettre à jour ou ajouter le contact dans $contactsKizeo
+        //     $contactExiste = false;
+        //     foreach ($contactsKizeo as $key => $contactString) {
+        //         $contactArray = $this->kizeoService->stringToContact($contactString);
+        //         if ($contactArray['id_contact'] == $nouveauContact['id_contact']) {
+        //             $contactsKizeo[$key] = $this->kizeoService->contactToString($nouveauContact);
+        //             $contactExiste = true;
+        //             break;
+        //         }
+        //     }
+        //     if (!$contactExiste) {
+        //         $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
+        //     }
+        //     $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
             
-            $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
+        //     $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
             
-            return $this->redirectToRoute('app_contact_new');
-        }
+        //     return $this->redirectToRoute('app_contact_new');
+        // }
         
 
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
-            'contactsFromKizeo' => $contactsFromKizeo,
+            'contactSelectionne' => $contactSelectionne,
+            'contactsFromKizeo' => $contactsFromKizeo
         ]);
     }
 }
