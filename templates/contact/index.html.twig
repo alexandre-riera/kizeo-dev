@@ -21,7 +21,7 @@
     <h1>Ajout d'un Contact</h1>
     <form method="post">
         <label for="agence">Agence :</label>
-        <select name="agence" id="agence">
+        <select class="form-control" name="agence" id="agence">
             <option value="">Sélectionnez une agence</option>
             {% for key, agence in agences %}
                 <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
@@ -35,7 +35,7 @@
     {% endif %}
         <form>
             <label for="contact">Contact :</label>
-            <select name="contact" id="contact">
+            <select class="form-control" name="contact" id="contact">
                 <option value="">Sélectionnez un contact</option>
                 {% for id, nom in contact %}
                     <option value="{{ id }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ nom }}</option>
