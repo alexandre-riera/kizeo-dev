@@ -109,7 +109,7 @@ class ContactController extends AbstractController
         //     return $this->redirectToRoute('app_contact_new');
         // }
         
-
+        dd($contactsFromKizeo);
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
