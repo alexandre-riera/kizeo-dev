@@ -98,7 +98,7 @@ class ContactController extends AbstractController
             if (!$contactExiste) {
                 $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
             }
-
+            dd($contactsKizeo);
             $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
 
             $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
