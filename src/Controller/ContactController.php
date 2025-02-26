@@ -109,7 +109,7 @@ class ContactController extends AbstractController
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
             'contactSelectionne' => $contactSelectionne,
-            'contactsFromKizeo' => $contactsFromKizeo
+            // 'contactsFromKizeo' => $contactsFromKizeo
         ]);
     }
 }
