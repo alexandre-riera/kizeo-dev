@@ -50,7 +50,7 @@ class ContactController extends AbstractController
                 $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
             } 
         }
-        dump($contactsKizeo[0]);
+        
         $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){  
             if(!empty($_POST['contact'])) {  
