@@ -62,6 +62,7 @@ class ContactController extends AbstractController
             $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
         }
         foreach ($contactsKizeo as $kizContact) {
+            dump($kizContact);
             $contactsFromKizeo [] = $kizContact;
         }
         
@@ -115,7 +116,7 @@ class ContactController extends AbstractController
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
             // 'contactSelectionne' => $contactSelectionne,
-            'contactsFromKizeo' => $contactsFromKizeo[0]
+            'contactsFromKizeo' => $contactsFromKizeo
         ]);
     }
 }
