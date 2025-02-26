@@ -270,20 +270,67 @@
     {% if agenceSelectionnee is not null %}
         <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
     {% endif %}
-    <form>
-        <label for="contact">Contact :</label>
-        <select class="form-control" name="contact" id="contact">
-            <option value="">Sélectionnez un contact</option>
-            {% for contactFromKizeoList in contactsFromKizeo %}
-                <option value="{{ contactFromKizeoList }}">{{ contactFromKizeoList }}</option>
-            {% endfor %}
+    <form action="" method="post">
+        <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
+        <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+            <option value = "" selected> Select client </option> 
+            {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %}
+                {% for client in clientsGrenoble%}
+                    <option value="{{ client }} {{ agenceSelected }}" id="client_selected_s50">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
+                {% for client in clientsMontpellier%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s100">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "ParisNord" or agenceSelected == "paris nord" or agenceSelected == "paris"  or agenceSelected == "S80"  or agenceSelected == "s80" %}
+                {% for client in clientsParisNord%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s80">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Group" or agenceSelected == "group" or agenceSelected == "grou"  or agenceSelected == "S10"   or agenceSelected == "s10"%}
+                {% for client in clientsGroup%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s10">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "St Etienne" or agenceSelected == "st etienne" or agenceSelected == "stetienne"  or agenceSelected == "S40"   or agenceSelected == "s40"%}
+                {% for client in clientsStEtienne%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s40">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Lyon" or agenceSelected == "lyon" or agenceSelected == "ly"  or agenceSelected == "S60"  or agenceSelected == "s60" %}
+                {% for client in clientsLyon%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s60">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Bordeaux" or agenceSelected == "bordeaux" or agenceSelected == "bor"  or agenceSelected == "S70"   or agenceSelected == "s70"%}
+                {% for client in clientsBordeaux%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s70">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "HautsDeFrance" or agenceSelected == "Portland" or agenceSelected == "portland" or agenceSelected == "hdf"   or agenceSelected == "S120"   or agenceSelected == "s120"%}
+                {% for client in clientsHautsDeFrance%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s120">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Toulouse" or agenceSelected == "toulouse" or agenceSelected == "tou"  or agenceSelected == "S130"   or agenceSelected == "s130"%}
+                {% for client in clientsToulouse%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s130">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "SMP" or agenceSelected == "Epinal" or agenceSelected == "epinal"  or agenceSelected == "smp"  or agenceSelected == "S140"   or agenceSelected == "s140"%}
+                {% for client in clientsEpinal%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s140">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Paca" or agenceSelected == "PACA" or agenceSelected == "brignoles" or agenceSelected == "Brignoles"   or agenceSelected == "S150"   or agenceSelected == "s150"%}
+                {% for client in clientsPaca%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s150">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Rouen" or agenceSelected == "rouen" or agenceSelected == "rou"  or agenceSelected == "S160"   or agenceSelected == "s160"%}
+                {% for client in clientsRouen%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s160">{{ client }}</option>
+                {% endfor %}
+            {% elseif agenceSelected == "Rennes" or agenceSelected == "rennes" or agenceSelected == "ren"  or agenceSelected == "S170"   or agenceSelected == "s170"%}
+                {% for client in clientsRennes%}
+                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s170">{{ client }}</option>
+                {% endfor %}
+            {% else %}
+                <option value=""></option>
+            {% endif %}
         </select>
-        <br>
-        <button type="submit"  name ="submit_contact" class="btn btn-primary">Valider</button>
-    {% if contact %}
-        <label for="Raison_sociale">Raison sociale :</label>
-        <input class="form-control" style="width:85%" type="text" id="raison_sociale" name="raison_sociale">
-    </form>
-    {% endif %}
+        <button type="submit"  name ="submitClient" class="btn btn-primary">Select Client</button>
+    </form> 
     
 {% endblock %}
