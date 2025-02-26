@@ -60,9 +60,9 @@ class ContactController extends AbstractController
 
         if ($agenceSelectionnee != "") {
             $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
-            foreach ($contactsKizeo as $kizContact) {
-                $contactsFromKizeo [] = $kizContact;
-            }
+        }
+        foreach ($contactsKizeo as $kizContact) {
+            $contactsFromKizeo [] = $kizContact;
         }
         
         // $clientId = $request->request->get('client');
