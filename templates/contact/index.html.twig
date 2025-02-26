@@ -274,9 +274,9 @@
         <label for="contact">Contact :</label>
         <select class="form-control" name="contact" id="contact">
             <option value="">Sélectionnez un contact</option>
-            {# {% for contactFromKizeoList in contactsFromKizeo %} #}
-                <option value="{{ contactSelectionne }}">{{ contactSelectionne }}</option>
-            {# {% endfor %} #}
+            {% for contactFromKizeoList in contactsFromKizeo %}
+                <option value="{{ contactFromKizeoList }}">{{ contactFromKizeoList }}</option>
+            {% endfor %}
         </select>
         <br>
         <button type="submit"  name ="submit_contact" class="btn btn-primary">Valider</button>
