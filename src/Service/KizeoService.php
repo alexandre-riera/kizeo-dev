@@ -90,7 +90,7 @@ class KizeoService
 
     public function stringToContact(string $contactString): array
     {
-        $fields = explode(':|', $contactString);
+        $fields = explode('|', $contactString);
         dd($fields);
         return [
             'Raison_sociale' => $fields[0],
