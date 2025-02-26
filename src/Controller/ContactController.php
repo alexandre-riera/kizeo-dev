@@ -50,6 +50,7 @@ class ContactController extends AbstractController
                 $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
             } 
         }
+        dump($contactsKizeo);
         $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){  
             if(!empty($_POST['contact'])) {  
@@ -58,7 +59,6 @@ class ContactController extends AbstractController
         }
         
         $clientId = $request->request->get('client');
-        dd($contactsKizeo);
         if ($clientId) {
             // Récupérer le contact sélectionné depuis $contactsKizeo
             foreach ($contactsKizeo as $contactString) {
