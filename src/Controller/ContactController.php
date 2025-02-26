@@ -63,7 +63,7 @@ class ContactController extends AbstractController
         }
         foreach ($contactsKizeo as $kizContact) {
             dump($kizContact);
-            $contactsFromKizeo [] = $kizContact;
+            array_push($contactsFromKizeo, $kizContact);
         }
         
         // $clientId = $request->request->get('client');
