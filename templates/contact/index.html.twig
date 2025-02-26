@@ -275,7 +275,7 @@
         <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
             <option value = "" selected> Select client </option> 
             {% if agenceSelectionnee == "Grenoble" or agenceSelectionnee == "grenoble" or agenceSelectionnee == "Gre"  or agenceSelectionnee == "gre"   or agenceSelectionnee == "S50"  or agenceSelectionnee == "s50" %}
-                {% for client in clientsGrenoble%}
+                {% for client in contactsFromKizeo%}
                     <option value="{{ client }} {{ agenceSelectionnee }}" id="client_selected_s50">{{ client }}</option>
                 {% endfor %}
             {% elseif agenceSelectionnee == "Montpellier" or agenceSelectionnee == "montpellier" or agenceSelectionnee == "montp"  or agenceSelectionnee == "mon"   or agenceSelectionnee == "S100"   or agenceSelectionnee == "s100"%}
