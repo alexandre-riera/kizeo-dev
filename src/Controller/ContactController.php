@@ -59,7 +59,10 @@ class ContactController extends AbstractController
         }
 
         if ($agenceSelectionnee != "") {
-            $contactsFromKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
+            $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
+            foreach ($contactsKizeo as $kizContact) {
+                $contactsFromKizeo [] = $kizContact;
+            }
         }
         
         // $clientId = $request->request->get('client');
@@ -105,9 +108,7 @@ class ContactController extends AbstractController
             
         //     return $this->redirectToRoute('app_contact_new');
         // }
-        foreach ($contactsFromKizeo as $kizContact) {
-            dump($kizContact);
-        }
+        
 
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
