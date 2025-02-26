@@ -274,8 +274,8 @@
         <label for="contact">Contact :</label>
         <select class="form-control" name="contact" id="contact">
             <option value="">Sélectionnez un contact</option>
-            {% for nom in contactsKizeo %}
-                <option value="{{ nom }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ nom }}</option>
+            {% for contactFromKizeoList in contactsFromKizeo %}
+                <option value="{{ contactFromKizeoList }}" {{ app.request.request.get('contact') == id ? 'selected' : '' }}>{{ contactFromKizeoList }}</option>
             {% endfor %}
         </select>
         <br>
