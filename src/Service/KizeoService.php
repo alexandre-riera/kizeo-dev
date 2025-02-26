@@ -79,8 +79,7 @@ class KizeoService
         $content = $response->getContent();
         $content = $response->toArray();
         array_push($contactsArrayList, $content['list']['items']);
-        dump($contactsArrayList[0]);
-        return $contactsArrayList;
+        return $contactsArrayList[0];
     }
 
     public function sendContacts(string $agence, array $contacts): void
