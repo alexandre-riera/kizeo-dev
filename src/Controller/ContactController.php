@@ -61,7 +61,7 @@ class ContactController extends AbstractController
         if ($agenceSelectionnee) {
             $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
         }
-
+        dd($contactsKizeo);
         if ($clientId) {
             // Récupérer le contact sélectionné depuis $contactsKizeo
             foreach ($contactsKizeo as $contactString) {
@@ -104,7 +104,7 @@ class ContactController extends AbstractController
             
             return $this->redirectToRoute('app_contact_new');
         }
-        dd($contactsKizeo);
+        
 
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
