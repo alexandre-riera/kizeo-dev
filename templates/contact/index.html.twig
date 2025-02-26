@@ -275,7 +275,7 @@
         <select class="form-control" name="contact" id="contact">
             <option value="">Sélectionnez un contact</option>
             {% for contactFromKizeoList in contactsFromKizeo %}
-                <option value="{{ contactFromKizeoList[0] }}">{{ contactFromKizeoList[0] }}</option>
+                <option value="">{{ contactFromKizeoList }}</option>
             {% endfor %}
         </select>
         <br>
