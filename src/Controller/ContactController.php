@@ -98,13 +98,13 @@ class ContactController extends AbstractController
             if (!$contactExiste) {
                 $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
             }
-            dd($contactsKizeo);
             $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
-
+            
             $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
-
+            
             return $this->redirectToRoute('app_contact_new');
         }
+        dd($contactsKizeo);
 
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
