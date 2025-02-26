@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use stdClass;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class KizeoService
@@ -88,26 +89,27 @@ class KizeoService
         // Utilisez $this->client->request('POST', ...)
     }
 
-    public function stringToContact(string $contactString): array
+    public function stringToContact(string $contactString)
     {
-        $fieldsSplitted = [];
-
+        
         $fields = explode('|', $contactString);
+        $fieldsSplitted = [];
         
         foreach ($fields as $contactPart) {
             $fieldsSplitted [] = explode(':', $contactPart);
         }
-        dd($fieldsSplitted);
-        return [
-            'Raison_sociale' => $fields[0],
-            'Code_postale' => $fields[2],
-            'Ville' => $fields[4],
-            'id_contact' => $fields[3],
-            'Agence' => $fields[4],
-            'id_société' => $fields[5],
-            'Équipements' => $fields[6],
-            'Équipements_complémentaires' => $fields[7],
-        ];
+        
+        foreach ($fieldsSplitted as $contactPartSplitted) {
+            $contactObject = new stdClass();
+            $contactObject -> raison_sociale = $contactPartSplitted[0];
+            $contactObject -> code_postale = $contactPartSplitted[0];
+            $contactObject -> ville = $contactPartSplitted[0];
+            $contactObject -> id_contact = $contactPartSplitted[0];
+            $contactObject -> Agence = $contactPartSplitted[0];
+            $contactObject -> id_société = $contactPartSplitted[0];
+            
+            return $contactObject; 
+        }
     }
 
     public function contactToString(array $contact): string
