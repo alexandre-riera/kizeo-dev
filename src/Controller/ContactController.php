@@ -114,7 +114,7 @@ class ContactController extends AbstractController
             'agences' => $agences,
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
-            'contactSelectionne' => $contactSelectionne,
+            // 'contactSelectionne' => $contactSelectionne,
             'contactsFromKizeo' => $contactsFromKizeo
         ]);
     }
