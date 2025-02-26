@@ -78,7 +78,7 @@ class KizeoService
         );
         $content = $response->getContent();
         $content = $response->toArray();
-        array_push($contactsArrayList, $content);
+        array_push($contactsArrayList, $content['list']['items']);
         dd($contactsArrayList);
         return $contactsArrayList;
     }
