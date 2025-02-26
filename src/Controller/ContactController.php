@@ -41,13 +41,14 @@ class ContactController extends AbstractController
 
         $contact = [];
         $contactsKizeo = [];
+        $contactsFromKizeo = [];
 
         // $agenceSelectionnee = $request->request->get('agence');
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
             if(!empty($_POST['agence'])) {  
                 $agenceSelectionnee = $_POST['agence'];
-                $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
+                $contactsFromKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
             } 
         }
         
@@ -107,7 +108,7 @@ class ContactController extends AbstractController
             'agences' => $agences,
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
-            'contactsKizeo' => $contactsKizeo,
+            'contactsFromKizeo' => $contactsFromKizeo,
         ]);
     }
 }
