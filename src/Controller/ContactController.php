@@ -105,7 +105,9 @@ class ContactController extends AbstractController
             
         //     return $this->redirectToRoute('app_contact_new');
         // }
-        dump(count($contactsFromKizeo));
+        foreach ($contactsFromKizeo as $kizContact) {
+            dump($kizContact);
+        }
 
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
