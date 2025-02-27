@@ -102,7 +102,7 @@ class ContactController extends AbstractController
         }        
 
         foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
-            $size = count(array_keys((array) $contactObject)); // Cast to array to ensure count works
+            $size = count(array_keys($contactObject)); // Cast to array to ensure count works
         
             if ($size != 7) { // Corrected condition: delete if NOT equal to 7
                 // Delete the contact object here.
