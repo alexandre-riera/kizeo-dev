@@ -77,9 +77,9 @@ class ContactController extends AbstractController
 
         if ($contactSelectionne != "") {
             $contactArrayCutted = preg_split("/|/", $contactSelectionne);
-            $contactName = $contactSelectionne[0];
-            $contactId = $contactSelectionne[1];
-            $contactAgence = $contactSelectionne[2];
+            $contactName = $contactArrayCutted[0];
+            $contactId = $contactArrayCutted[1];
+            $contactAgence = $contactArrayCutted[2];
         }
 
         // $clientId = $request->request->get('client');
