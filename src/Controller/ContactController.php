@@ -54,8 +54,8 @@ class ContactController extends AbstractController
         
         $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){  
-            if(!empty($_POST['contact'])) {  
-                $contactSelectionne = $_POST['contact'];
+            if(!empty($_POST['clientName'])) {  
+                $contactSelectionne = $_POST['clientName'];
             }
         }
 
@@ -67,14 +67,14 @@ class ContactController extends AbstractController
         }
 
         foreach ($contactsFromKizeo as $contact) {
-            $contactSplittedInObject = $this->kizeoService->StringToContact($contact);
+            $contactSplittedInObject = $this->kizeoService->StringToContactObject($contact);
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
         //     foreach ($contactsKizeo as $contactString) {
-        //         $contactArray = $this->kizeoService->stringToContact($contactString);
+        //         $contactArray = $this->kizeoService->StringToContactObject($contactString);
         //         if ($contactArray['id_contact'] == $clientId) {
         //             $contact = $contactArray;
         //             break;
@@ -97,7 +97,7 @@ class ContactController extends AbstractController
         //     // Mettre à jour ou ajouter le contact dans $contactsKizeo
         //     $contactExiste = false;
         //     foreach ($contactsKizeo as $key => $contactString) {
-        //         $contactArray = $this->kizeoService->stringToContact($contactString);
+        //         $contactArray = $this->kizeoService->StringToContactObject($contactString);
         //         if ($contactArray['id_contact'] == $nouveauContact['id_contact']) {
         //             $contactsKizeo[$key] = $this->kizeoService->contactToString($nouveauContact);
         //             $contactExiste = true;
@@ -119,7 +119,7 @@ class ContactController extends AbstractController
             'agences' => $agences,
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
-            // 'contactSelectionne' => $contactSelectionne,
+            'contactSelectionne' => $contactSelectionne,
             'contactsFromKizeo' => $contactsFromKizeo,
             'contactsFromKizeoSplittedInObject' => $contactsFromKizeoSplittedInObject,
         ]);

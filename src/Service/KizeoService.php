@@ -89,7 +89,7 @@ class KizeoService
         // Utilisez $this->client->request('POST', ...)
     }
 
-    public function stringToContact(string $contactString)
+    public function stringToContactObject(string $contactString)
     {
         
         $fields = explode('|', $contactString);
@@ -129,7 +129,6 @@ class KizeoService
                     }
                 }
             }
-            dump($contactObject);
             
             return $contactObject; 
         }
