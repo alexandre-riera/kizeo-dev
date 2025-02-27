@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Service\KizeoService;
+use stdClass;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -52,7 +53,7 @@ class ContactController extends AbstractController
             } 
         }
         
-        $contactSelectionne = null;
+        $contactSelectionne = new stdClass();
         if(isset($_POST['submit_contact'])){  
             if(!empty($_POST['clientName'])) {  
                 $contactSelectionne = $_POST['clientName'];
