@@ -102,7 +102,7 @@ class ContactController extends AbstractController
         }        
 
         foreach ($contactsFromKizeoSplittedInObject as $contactObject) {        
-            if (!$contactObject->id_societe) {
+            if (isset($contactObject->id_societe)) {
                 unset($contactObject);
             }
         }
