@@ -104,7 +104,7 @@ class ContactController extends AbstractController
         $contactsFromKizeoSplittedInObject = array_filter(
             $contactsFromKizeoSplittedInObject,
             function ($contact) {
-                return isset($contact['id_societe']) && isset($contact['equipement_supp_1']) && isset($contact['equipement_supp_2']);
+                return isset($contact->id_societe) && isset($contact->equipement_supp_1) && isset($contact->equipement_supp_2);
             }
         );
         // $clientId = $request->request->get('client');
