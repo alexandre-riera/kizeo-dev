@@ -116,12 +116,17 @@ class KizeoService
                 else{
                     $contactObject -> id_societe = "";
                 }
-                $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
-                if (count($fieldsSplitted) == 7) {
-                    $contactObject -> equipement_supp_2 = "";
+                if (count($fieldsSplitted) == 6) {
+                    return $contactObject;
                 }
                 else{
-                    $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+                    $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
+                    if (count($fieldsSplitted) == 7) {
+                        $contactObject -> equipement_supp_2 = "";
+                    }
+                    else{
+                        $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+                    }
                 }
             }
             dump($contactObject);
