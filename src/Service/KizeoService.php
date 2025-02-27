@@ -107,7 +107,11 @@ class KizeoService
             $contactObject -> ville = $fieldsSplitted[2][1];
             $contactObject -> id_contact = $fieldsSplitted[3][1];
             $contactObject -> Agence = $fieldsSplitted[4][1];
-            $contactObject -> id_societe = $fieldsSplitted[5][1];
+            if ($fieldsSplitted[5]) {
+                $contactObject -> id_societe = $fieldsSplitted[5][1];
+            }
+            $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
+            $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
             dd($contactObject);
             
             return $contactObject; 
