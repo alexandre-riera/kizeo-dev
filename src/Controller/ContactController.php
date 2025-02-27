@@ -101,7 +101,23 @@ class ContactController extends AbstractController
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }        
 
+        foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
+            $size = count(array_keys((array) $contactObject)); // Cast to array to ensure count works
         
+            if ($size != 7) { // Corrected condition: delete if NOT equal to 7
+                // Delete the contact object here.
+                // Example:
+                // unset($contactObject); // This will only unset the $contactObject within the loop scope.
+                // To remove it from the original array, you need to use the key:
+        
+                // Example to remove from $contactsFromKizeoSplittedInObject:
+                $key = array_search($contactObject, $contactsFromKizeoSplittedInObject, true); // Find the key
+                if ($key !== false) {
+                    unset($contactsFromKizeoSplittedInObject[$key]);
+                }
+        
+            }
+        }
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
