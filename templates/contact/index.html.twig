@@ -276,7 +276,7 @@
             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
                 <option value = "" selected> Select client </option> 
                 {% for contact in contactsFromKizeoSplittedInObject%}
-                    {% if contact.raison_sociale is not Autres %}
+                    {% if contact|length = 8 %}
                         <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
                     {% endif %}
                 {% endfor %}
