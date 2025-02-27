@@ -45,7 +45,6 @@ class ContactController extends AbstractController
         $contactsFromKizeo = [];
         $contactsFromKizeoSplittedInObject = [];
 
-        // $agenceSelectionnee = $request->request->get('agence');
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
             if(!empty($_POST['agence'])) {  
@@ -53,7 +52,7 @@ class ContactController extends AbstractController
             } 
         }
         
-        $contactSelectionne = 0;
+        $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){  
             if(!empty($_POST['clientName'])) {  
                 $contactSelectionne = $_POST['clientName'];
