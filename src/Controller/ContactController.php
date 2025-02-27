@@ -70,6 +70,18 @@ class ContactController extends AbstractController
             $contactSplittedInObject = $this->kizeoService->StringToContactObject($contact);
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }
+
+        $contactName = "";
+        $contactId = "";
+        $contactAgence = "";
+
+        if ($contactSelectionne != "") {
+            $contactArrayCutted = preg_split("/|/", $contactSelectionne);
+            $contactName = $contactSelectionne[0];
+            $contactId = $contactSelectionne[1];
+            $contactAgence = $contactSelectionne[2];
+        }
+
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
@@ -122,6 +134,9 @@ class ContactController extends AbstractController
             'contactSelectionne' => $contactSelectionne,
             'contactsFromKizeo' => $contactsFromKizeo,
             'contactsFromKizeoSplittedInObject' => $contactsFromKizeoSplittedInObject,
+            'contactName' => $contactName,
+            'contactId' => $contactId,
+            'contactAgence' => $contactAgence,
         ]);
     }
 }

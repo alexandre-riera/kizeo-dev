@@ -282,7 +282,23 @@
         <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
     </form> 
     {% if contactSelectionne is defined %}
-        <p>Client sélectionné : {{ contactSelectionne }}</p>
+        <p>Client sélectionné : {{ contactName }}</p>
+        <div>
+            <form method="post">
+                <div class="mb-3">
+                    <label for="ContactName" class="form-label">Contact</label>
+                    <input type="text" class="form-control" name="contactName" value"{{ contactName }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactId" class="form-label">Contact</label>
+                    <input type="text" class="form-control" name="contactId" value"{{ contactId }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactAgence" class="form-label">Contact</label>
+                    <input type="text" class="form-control" name="contactAgence" value"{{ contactAgence }}">
+                </div>
+            </form>
+        </div>
     {% endif %}
     
 {% endblock %}
