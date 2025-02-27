@@ -48,6 +48,11 @@ class ContactController extends AbstractController
         $contactName = "";
         $contactId = "";
         $contactAgence = "";
+        $contactCodePostal = "";
+        $contactVille = "";
+        $contactIdSociete = "";
+        $contactEquipSupp1 = "";
+        $contactEquipSupp2 = "";
 
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
@@ -61,10 +66,16 @@ class ContactController extends AbstractController
                 $contactSelectionne = $_POST['clientName'];
             }
             if ($contactSelectionne != "") {
+                // Explode contact string : raison_sociale|id_contact[agence|code_postal|ville|id_societe|equipement_supp_1|equipement_supp_2
                 $contactArrayCutted = explode("|", $contactSelectionne);
                 $contactName = $contactArrayCutted[0];
                 $contactId = $contactArrayCutted[1];
                 $contactAgence = $contactArrayCutted[2];
+                $contactCodePostal = $contactArrayCutted[3];
+                $contactVille = $contactArrayCutted[4];
+                $contactIdSociete = $contactArrayCutted[5];
+                $contactEquipSupp1 = $contactArrayCutted[6];
+                $contactEquipSupp2 = $contactArrayCutted[7];
             }
         }
         dump($contactSelectionne);
@@ -139,6 +150,11 @@ class ContactController extends AbstractController
             'contactName' => $contactName,
             'contactId' => $contactId,
             'contactAgence' => $contactAgence,
+            'contactCodePostal' => $contactCodePostal,
+            'contactVille' => $contactVille,
+            'contactIdSociete' => $contactIdSociete,
+            'contactEquipSupp1' => $contactEquipSupp1,
+            'contactEquipSupp2' => $contactEquipSupp2,
         ]);
     }
 }

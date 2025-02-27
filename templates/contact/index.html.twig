@@ -268,13 +268,15 @@
         <br>
         <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
     </form>
+    <br>
+    <br>
     {% if agenceSelectionnee is not empty %}
         <form action="" method="post">
             <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
                 <option value = "" selected> Select client </option> 
                 {% for contact in contactsFromKizeoSplittedInObject%}
-                    <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
+                    <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
                 {% endfor %}
             </select>
             <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
@@ -295,6 +297,27 @@
                     <label for="ContactAgence" class="form-label">Agence</label>
                     <input type="text" class="form-control" name="contactAgence"  placeholder="{{ contactAgence }}">
                 </div>
+                <div class="mb-3">
+                    <label for="ContactCodePostal" class="form-label">Code Postal</label>
+                    <input type="text" class="form-control" name="contactCodePostal"  placeholder="{{ contactCodePostal }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactVille" class="form-label">Code Postal</label>
+                    <input type="text" class="form-control" name="contactVille"  placeholder="{{ contactVille }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactIdSociete" class="form-label">Id Société</label>
+                    <input type="text" class="form-control" name="contactIdSociete"  placeholder="{{ contactIdSociete }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactEquipSupp1" class="form-label">Équipements supplémentaires 1</label>
+                    <input type="text" class="form-control" name="contactEquipSupp1"  placeholder="{{ contactEquipSupp1 }}">
+                </div>
+                <div class="mb-3">
+                    <label for="ContactEquipSupp2" class="form-label">Équipements supplémentaires 2</label>
+                    <input type="text" class="form-control" name="contactEquipSupp2"  placeholder="{{ contactEquipSupp2 }}">
+                </div>
+                <br>
                 <div class="mb-3">
                     <button type="submit"  name ="submit_update_contact" class="btn btn-primary">Update Contact</button>
                 </div>
