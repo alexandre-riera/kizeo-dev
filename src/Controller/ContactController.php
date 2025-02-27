@@ -99,6 +99,7 @@ class ContactController extends AbstractController
             $contactObject = $contactsById[$contactId];
             $contactCodePostal = $contactObject->code_postal;
             $contactVille = $contactObject->ville;
+            dump($contactObject);
             if ($contactObject->id_societe) {
                 $contactIdSociete = $contactObject->id_societe;
             }
