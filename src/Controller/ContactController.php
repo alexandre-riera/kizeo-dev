@@ -71,6 +71,11 @@ class ContactController extends AbstractController
                 $contactName = $contactArrayCutted[0];
                 $contactId = $contactArrayCutted[1];
                 $contactAgence = $contactArrayCutted[2];
+
+                $contactsById = [];
+                foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
+                    $contactsById[$contactObject->id_contact] = $contactObject;
+                }
                 foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
                     if ($contactObject->id_contact == $contactId) {
                         $contactCodePostal = $contactObject->code_postal;
