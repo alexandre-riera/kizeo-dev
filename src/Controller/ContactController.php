@@ -61,7 +61,7 @@ class ContactController extends AbstractController
                 $contactSelectionne = $_POST['clientName'];
             }
             if ($contactSelectionne != "") {
-                $contactArrayCutted = preg_split("/|/", $contactSelectionne);
+                $contactArrayCutted = explode("|", $contactSelectionne);
                 $contactName = $contactArrayCutted[0];
                 $contactId = $contactArrayCutted[1];
                 $contactAgence = $contactArrayCutted[2];
