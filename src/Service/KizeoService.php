@@ -113,11 +113,13 @@ class KizeoService
                 $contactObject -> id_societe = "";
             }
             $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
-            if ($fieldsSplitted[7]) {
-                $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+            if (!$fieldsSplitted[7]) {
+                dump($fieldsSplitted);
+                // $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
             }
             else{
-                $contactObject -> equipement_supp_2 = "";
+                $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+                // $contactObject -> equipement_supp_2 = "";
             }
             dump($contactObject);
             
