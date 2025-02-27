@@ -66,34 +66,11 @@ class ContactController extends AbstractController
                 $contactSelectionne = $_POST['clientName'];
             }
             if ($contactSelectionne != "") {
-                // Explode contact string : raison_sociale|id_contact[agence|code_postal|ville|id_societe|equipement_supp_1|equipement_supp_2
+                // Explode contact string : raison_sociale|id_contact|agence
                 $contactArrayCutted = explode("|", $contactSelectionne);
                 $contactName = $contactArrayCutted[0];
                 $contactId = $contactArrayCutted[1];
                 $contactAgence = $contactArrayCutted[2];
-                $contactCodePostal = $contactArrayCutted[3];
-                $contactVille = $contactArrayCutted[4];
-                if ($contactArrayCutted[5]) {
-                    $contactIdSociete = $contactArrayCutted[5];
-                }
-                else{
-                    $contactIdSociete = "";
-                }
-                if (count($contactArrayCutted) == 6) {
-                    die;
-                }
-                else{
-                    $contactEquipSupp1 = $contactArrayCutted[6];
-                    if (count($contactArrayCutted) == 7) {
-                        $contactEquipSupp2 = "";
-                    }
-                    else{
-                        $contactEquipSupp2 = $contactArrayCutted[7];
-                    }
-                }
-                
-                
-                
             }
         }
         dump($contactSelectionne);
@@ -113,6 +90,9 @@ class ContactController extends AbstractController
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }        
 
+        foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
+            dd($contactObject);
+        }
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
