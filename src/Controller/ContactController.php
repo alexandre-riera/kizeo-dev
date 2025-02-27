@@ -101,6 +101,17 @@ class ContactController extends AbstractController
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }        
 
+        /**
+        * 
+        *Explication :
+        *
+        *array_filter() : Cette fonction parcourt le tableau $contactsFromKizeoSplittedInObject et applique une fonction de rappel (callback) à chaque élément.
+        *Fonction de rappel (callback) :
+        *Elle prend un objet $contact du tableau comme argument.
+        *Elle utilise isset() pour vérifier si l'objet $contact a les clés 'id_societe', 'equipement_supp_1' ou 'equipement_supp_2'.
+        *Elle retourne true si au moins une de ces clés existe, et false sinon.
+        *Résultat : array_filter() retourne un nouveau tableau contenant uniquement les objets pour lesquels la fonction de rappel a retourné true
+        */
         $contactsFromKizeoSplittedInObject = array_filter(
             $contactsFromKizeoSplittedInObject,
             function ($contact) {
