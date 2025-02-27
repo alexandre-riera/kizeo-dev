@@ -42,7 +42,7 @@ class ContactController extends AbstractController
         $contact = [];
         $contactsKizeo = [];
         $contactsFromKizeo = [];
-        $contactsFromKizeoSplitted = [];
+        $contactsFromKizeoSplittedInObject = [];
 
         // $agenceSelectionnee = $request->request->get('agence');
         $agenceSelectionnee = "";
@@ -67,8 +67,8 @@ class ContactController extends AbstractController
         }
 
         foreach ($contactsFromKizeo as $contact) {
-            $contactSplitted = $this->kizeoService->StringToContact($contact);
-            array_push($contactsFromKizeoSplitted, $contactSplitted);
+            $contactSplittedInObject = $this->kizeoService->StringToContact($contact);
+            array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }
         // $clientId = $request->request->get('client');
         // if ($clientId) {
@@ -114,14 +114,14 @@ class ContactController extends AbstractController
         //     return $this->redirectToRoute('app_contact_new');
         // }
         
-        dump($contactsFromKizeoSplitted);
+        dump($contactsFromKizeoSplittedInObject);
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
             'agenceSelectionnee' => $agenceSelectionnee,
             // 'contactSelectionne' => $contactSelectionne,
             'contactsFromKizeo' => $contactsFromKizeo,
-            'contactsFromKizeoSplitted' => $contactsFromKizeoSplitted,
+            'contactsFromKizeoSplittedInObject' => $contactsFromKizeoSplittedInObject,
         ]);
     }
 }
