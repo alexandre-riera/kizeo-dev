@@ -279,7 +279,7 @@
                 <option value="{{ contact.raison_sociale }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
             {% endfor %}
         </select>
-        <button type="submit"  name ="submitClient" class="btn btn-primary">Select Client</button>
+        <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
     </form> 
     {% if contactSelectionne is defined %}
         <p>Client sélectionné : {{ contactSelectionne }}</p>
