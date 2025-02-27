@@ -268,7 +268,7 @@
         <br>
         <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
     </form>
-    {% if agenceSelectionnee is not null %}
+    {% if agenceSelectionnee is not empty %}
         <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
     {% endif %}
     <form action="" method="post">
@@ -281,7 +281,7 @@
         </select>
         <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
     </form> 
-    {% if contactSelectionne is defined %}
+    {% if contactSelectionne is not empty %}
         <p>Client sélectionné : {{ contactName }}</p>
         <div>
             <form method="post">
