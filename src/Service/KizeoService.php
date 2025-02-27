@@ -110,7 +110,9 @@ class KizeoService
                 $contactObject -> id_societe = $fieldsSplitted[5][1];
             }
             $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
-            $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+            if ($fieldsSplitted[7]) {
+                $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+            }
             dump($contactObject);
             
             return $contactObject; 
