@@ -44,6 +44,10 @@ class ContactController extends AbstractController
         $contactsKizeo = [];
         $contactsFromKizeo = [];
         $contactsFromKizeoSplittedInObject = [];
+        
+        $contactName = "";
+        $contactId = "";
+        $contactAgence = "";
 
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
@@ -55,6 +59,12 @@ class ContactController extends AbstractController
         if(isset($_POST['submit_contact'])){
             if(!empty($_POST['clientName'])) {  
                 $contactSelectionne = $_POST['clientName'];
+            }
+            if ($contactSelectionne != "") {
+                $contactArrayCutted = preg_split("/|/", $contactSelectionne);
+                $contactName = $contactArrayCutted[0];
+                $contactId = $contactArrayCutted[1];
+                $contactAgence = $contactArrayCutted[2];
             }
         }
         dump($contactSelectionne);
@@ -69,18 +79,7 @@ class ContactController extends AbstractController
         foreach ($contactsFromKizeo as $contact) {
             $contactSplittedInObject = $this->kizeoService->StringToContactObject($contact);
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
-        }
-
-        $contactName = "";
-        $contactId = "";
-        $contactAgence = "";
-
-        if ($contactSelectionne != "") {
-            $contactArrayCutted = preg_split("/|/", $contactSelectionne);
-            $contactName = $contactArrayCutted[0];
-            $contactId = $contactArrayCutted[1];
-            $contactAgence = $contactArrayCutted[2];
-        }
+        }        
 
         // $clientId = $request->request->get('client');
         // if ($clientId) {
