@@ -102,7 +102,7 @@ class KizeoService
         foreach ($fieldsSplitted as $contactPartSplitted) {
             $contactObject = new stdClass();
             $contactObject -> raison_sociale = $contactPartSplitted[0];
-            $contactObject -> code_postale = $contactPartSplitted[0];
+            $contactObject -> code_postale = $contactPartSplitted[2];
             $contactObject -> ville = $contactPartSplitted[0];
             $contactObject -> id_contact = $contactPartSplitted[0];
             $contactObject -> Agence = $contactPartSplitted[0];
