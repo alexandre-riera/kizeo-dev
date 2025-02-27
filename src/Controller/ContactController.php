@@ -68,6 +68,9 @@ class ContactController extends AbstractController
             }
         }
         dump($contactSelectionne);
+        dump($contactName);
+        dump($contactId);
+        dump($contactAgence);
 
         if ($agenceSelectionnee != "") {
             $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
