@@ -99,15 +99,16 @@ class ContactController extends AbstractController
             $contactObject = $contactsById[$contactId];
             $contactCodePostal = $contactObject->code_postal;
             $contactVille = $contactObject->ville;
-            dump($contactObject);
-            if ($contactObject->id_societe) {
-                $contactIdSociete = $contactObject->id_societe;
-            }
-            if ($contactObject->$contactObject->equipement_supp_1) {
-                $contactEquipSupp1 = $contactObject->equipement_supp_1;
-            }
-            if ($contactObject->$contactObject->equipement_supp_2) {
-                $contactEquipSupp2 = $contactObject->equipement_supp_2;
+            if (count($contactObject) != 5) {
+                if ($contactObject->id_societe) {
+                    $contactIdSociete = $contactObject->id_societe;
+                }
+                if ($contactObject->$contactObject->equipement_supp_1) {
+                    $contactEquipSupp1 = $contactObject->equipement_supp_1;
+                }
+                if ($contactObject->$contactObject->equipement_supp_2) {
+                    $contactEquipSupp2 = $contactObject->equipement_supp_2;
+                }
             }
         }
         // foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
