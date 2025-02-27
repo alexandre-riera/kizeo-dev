@@ -114,9 +114,15 @@ class ContactController extends AbstractController
             if ($contactObject->id_contact == $contactId) {
                 $contactCodePostal = $contactObject->code_postal;
                 $contactVille = $contactObject->ville;
-                $contactIdSociete = $contactObject->id_societe;
-                $contactEquipSupp1 = $contactObject->equipement_supp_1;
-                $contactEquipSupp2 = $contactObject->equipement_supp_2;
+                if (isset($contactObject->id_societe)) {
+                    $contactIdSociete = $contactObject->id_societe;
+                }
+                if (isset($contactObject->equipement_supp_1)) {
+                    $contactEquipSupp1 = $contactObject->equipement_supp_1;
+                }
+                if (isset($contactObject->equipement_supp_2)) {
+                    $contactEquipSupp2 = $contactObject->equipement_supp_2;
+                }
                 break; // Sortir de la boucle
             }
         }
