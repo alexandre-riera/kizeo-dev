@@ -73,9 +73,27 @@ class ContactController extends AbstractController
                 $contactAgence = $contactArrayCutted[2];
                 $contactCodePostal = $contactArrayCutted[3];
                 $contactVille = $contactArrayCutted[4];
-                $contactIdSociete = $contactArrayCutted[5];
-                $contactEquipSupp1 = $contactArrayCutted[6];
-                $contactEquipSupp2 = $contactArrayCutted[7];
+                if ($contactArrayCutted[5]) {
+                    $contactIdSociete = $contactArrayCutted[5];
+                }
+                else{
+                    $contactIdSociete = "";
+                }
+                if (count($contactArrayCutted) == 6) {
+                    die;
+                }
+                else{
+                    $contactEquipSupp1 = $contactArrayCutted[6];
+                    if (count($contactArrayCutted) == 7) {
+                        $contactEquipSupp2 = "";
+                    }
+                    else{
+                        $contactEquipSupp2 = $contactArrayCutted[7];
+                    }
+                }
+                
+                
+                
             }
         }
         dump($contactSelectionne);
@@ -139,7 +157,6 @@ class ContactController extends AbstractController
         //     return $this->redirectToRoute('app_contact_new');
         // }
         
-        dump($contactsFromKizeoSplittedInObject);
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
