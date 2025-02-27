@@ -71,6 +71,22 @@ class ContactController extends AbstractController
                 $contactName = $contactArrayCutted[0];
                 $contactId = $contactArrayCutted[1];
                 $contactAgence = $contactArrayCutted[2];
+                foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
+                    if ($contactObject->id_contact == $contactId) {
+                        $contactCodePostal = $contactObject->code_postal;
+                        $contactVille = $contactObject->ville;
+                        if (isset($contactObject->id_societe)) {
+                            $contactIdSociete = $contactObject->id_societe;
+                        }
+                        if (isset($contactObject->equipement_supp_1)) {
+                            $contactEquipSupp1 = $contactObject->equipement_supp_1;
+                        }
+                        if (isset($contactObject->equipement_supp_2)) {
+                            $contactEquipSupp2 = $contactObject->equipement_supp_2;
+                        }
+                        break; // Sortir de la boucle
+                    }
+                }
             }
         }
         dump($contactSelectionne);
@@ -110,22 +126,22 @@ class ContactController extends AbstractController
         //         $contactEquipSupp2 = $contactObject->equipement_supp_2;
         //     }
         // }
-        foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
-            if ($contactObject->id_contact == $contactId) {
-                $contactCodePostal = $contactObject->code_postal;
-                $contactVille = $contactObject->ville;
-                if (isset($contactObject->id_societe)) {
-                    $contactIdSociete = $contactObject->id_societe;
-                }
-                if (isset($contactObject->equipement_supp_1)) {
-                    $contactEquipSupp1 = $contactObject->equipement_supp_1;
-                }
-                if (isset($contactObject->equipement_supp_2)) {
-                    $contactEquipSupp2 = $contactObject->equipement_supp_2;
-                }
-                break; // Sortir de la boucle
-            }
-        }
+        // foreach ($contactsFromKizeoSplittedInObject as $contactObject) {
+        //     if ($contactObject->id_contact == $contactId) {
+        //         $contactCodePostal = $contactObject->code_postal;
+        //         $contactVille = $contactObject->ville;
+        //         if (isset($contactObject->id_societe)) {
+        //             $contactIdSociete = $contactObject->id_societe;
+        //         }
+        //         if (isset($contactObject->equipement_supp_1)) {
+        //             $contactEquipSupp1 = $contactObject->equipement_supp_1;
+        //         }
+        //         if (isset($contactObject->equipement_supp_2)) {
+        //             $contactEquipSupp2 = $contactObject->equipement_supp_2;
+        //         }
+        //         break; // Sortir de la boucle
+        //     }
+        // }
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
