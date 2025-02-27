@@ -270,17 +270,17 @@
     </form>
     {% if agenceSelectionnee is not empty %}
         <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
+        <form action="" method="post">
+            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
+            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+                <option value = "" selected> Select client </option> 
+                {% for contact in contactsFromKizeoSplittedInObject%}
+                    <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
+        </form> 
     {% endif %}
-    <form action="" method="post">
-        <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-        <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
-            <option value = "" selected> Select client </option> 
-            {% for contact in contactsFromKizeoSplittedInObject%}
-                <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
-            {% endfor %}
-        </select>
-        <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
-    </form> 
     {% if contactSelectionne is not empty %}
         <p>Client sélectionné : {{ contactName }}</p>
         <div>
