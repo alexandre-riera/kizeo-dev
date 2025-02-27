@@ -19,9 +19,9 @@ class ContactController extends AbstractController
     }
 
     /**
-     * ADD new contact in BDD and Kizeo
+     * UPDATE contact in BDD and Kizeo
      */
-    #[Route('/contact/new', name: 'app_contact_new', methods: ['GET', 'POST'])]
+    #[Route('/contact/update', name: 'app_contact_update', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
         $agences = [
