@@ -105,7 +105,7 @@ class KizeoService
             $contactObject -> code_postal = $fieldsSplitted[1][1];
             $contactObject -> ville = $fieldsSplitted[2][1];
             $contactObject -> id_contact = $fieldsSplitted[3][1];
-            $contactObject -> Agence = $fieldsSplitted[4][1];
+            $contactObject -> agence = $fieldsSplitted[4][1];
             if ($fieldsSplitted[5]) {
                 $contactObject -> id_societe = $fieldsSplitted[5][1];
             }
@@ -113,14 +113,15 @@ class KizeoService
                 $contactObject -> id_societe = "";
             }
             $contactObject -> equipement_supp_1 = $fieldsSplitted[6][1];
-            if (!$fieldsSplitted[7]) {
-                dump($fieldsSplitted);
-                // $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
-            }
-            else{
-                $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
-                // $contactObject -> equipement_supp_2 = "";
-            }
+            dd(count($fieldsSplitted));
+            // if (!$fieldsSplitted[7]) {
+            //     dump($fieldsSplitted);
+            //     // $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+            // }
+            // else{
+            //     $contactObject -> equipement_supp_2 = $fieldsSplitted[7][1];
+            //     // $contactObject -> equipement_supp_2 = "";
+            // }
             dump($contactObject);
             
             return $contactObject; 
