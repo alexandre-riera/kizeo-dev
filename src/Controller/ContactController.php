@@ -101,11 +101,12 @@ class ContactController extends AbstractController
             array_push($contactsFromKizeoSplittedInObject, $contactSplittedInObject);
         }        
 
-        foreach ($contactsFromKizeoSplittedInObject as $contactObject) {        
-            if (isset($contactObject->id_societe)) {
-                unset($contactObject);
+        $contactsFromKizeoSplittedInObject = array_filter(
+            $contactsFromKizeoSplittedInObject,
+            function ($contact) {
+                return isset($contact['id_societe']) && isset($contact['equipement_supp_1']) && isset($contact['equipement_supp_2']);
             }
-        }
+        );
         // $clientId = $request->request->get('client');
         // if ($clientId) {
         //     // Récupérer le contact sélectionné depuis $contactsKizeo
