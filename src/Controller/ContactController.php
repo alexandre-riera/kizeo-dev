@@ -54,7 +54,8 @@ class ContactController extends AbstractController
         $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){
             if(!empty($_POST['clientName'])) {  
-                $contactSelectionne = $_POST['clientName'];
+                $contact = $_POST['clientName'];
+                $contactSelectionne = $contact->raison_sociale;
             }
         }
         dump($contactSelectionne);
