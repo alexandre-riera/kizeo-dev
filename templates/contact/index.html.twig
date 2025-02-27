@@ -269,7 +269,6 @@
         <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
     </form>
     {% if agenceSelectionnee is not empty %}
-        <p>Agence sélectionnée : {{ agenceSelectionnee }}</p>
         <form action="" method="post">
             <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
@@ -282,7 +281,6 @@
         </form> 
     {% endif %}
     {% if contactSelectionne is not empty %}
-        <p>Client sélectionné : {{ contactName }}</p>
         <div>
             <form method="post">
                 <div class="mb-3">
