@@ -195,7 +195,7 @@ class KizeoService
         $replaced = false;
 
         foreach ($oldContactsKizeoList as $oldContact) {
-            if (strpos(explode('|', $oldContact)[0], $updateContactName) === 0) {
+            if (explode('|', $oldContact)[0] == $updateContactName) {
                 $newListUpdatedToUpload[] = $contactStringToUpload;
                 $replaced = true;
             } else {
