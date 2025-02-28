@@ -188,43 +188,40 @@ class KizeoService
         return implode('|', $contact);
     }
 
-    public function updateListContactOnKizeo(string $idListContact, string $contactStringToUpload, array $oldContactsKizeoList): void
+    public function updateListContactOnKizeo(string $idListContact, string $updateContactName, string $contactStringToUpload, array $oldContactsKizeoList): void
     {
-        // Si une des lignes de $oldContactsKizeoList commence par le début de la ligne contactStringToUpload, je la remplace et renvoi $newListUpdatedToUpload
+        // Si une des lignes de $oldContactsKizeoList commence par le début de la valeur de $updateContactName, je la remplace par $contactStringToUpload
         $newListUpdatedToUpload = [];
+        $replaced = false;
 
-        if (isset($idListContact) && isset($contactStringToUpload)) {
-            // Logique de remplacement
-            $replaced = false;
-            foreach ($oldContactsKizeoList as $oldContact) {
-                if (strpos($contactStringToUpload, substr($oldContact, 0, strlen(explode("|", $oldContact)[0]))) === 0) {
-                    $newListUpdatedToUpload[] = $contactStringToUpload;
-                    $replaced = true;
-                } else {
-                    $newListUpdatedToUpload[] = $oldContact;
-                }
-            }
-
-            // Si aucune ligne n'a été remplacée, ajouter la nouvelle ligne
-            if (!$replaced) {
+        foreach ($oldContactsKizeoList as $oldContact) {
+            if (strpos(explode('|', $oldContact)[0], $updateContactName) === 0) {
                 $newListUpdatedToUpload[] = $contactStringToUpload;
+                $replaced = true;
+            } else {
+                $newListUpdatedToUpload[] = $oldContact;
             }
-
-            // Envoi de la requête PUT à Kizeo
-            Request::enableHttpMethodParameterOverride();
-            $response = $this->client->request(
-                'PUT',
-                'https://forms.kizeo.com/rest/v3/lists/' . $idListContact,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => [
-                        'items' => $newListUpdatedToUpload,
-                    ],
-                ]
-            );
         }
+
+        // Si aucune ligne n'a été remplacée, ajouter la nouvelle ligne
+        if (!$replaced) {
+            $newListUpdatedToUpload[] = $contactStringToUpload;
+        }
+
+        // Envoi de la requête PUT à Kizeo
+        Request::enableHttpMethodParameterOverride();
+        $response = $this->client->request(
+            'PUT',
+            'https://forms.kizeo.com/rest/v3/lists/' . $idListContact,
+            [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'json' => [
+                    'items' => $newListUpdatedToUpload,
+                ],
+            ]
+        );
     }
 }
