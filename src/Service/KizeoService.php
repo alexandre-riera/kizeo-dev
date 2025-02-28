@@ -138,4 +138,9 @@ class KizeoService
     {
         return implode('|', $contact);
     }
+
+    public function updateListContactOnKizeo($idListContact): void
+    {
+
+    }
 }

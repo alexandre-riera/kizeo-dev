@@ -54,6 +54,9 @@ class ContactController extends AbstractController
         $contactEquipSupp1 = "";
         $contactEquipSupp2 = "";
 
+        // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
+        $idListContact = "";
+
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
             if(!empty($_POST['agence'])) {  
@@ -118,49 +121,25 @@ class ContactController extends AbstractController
                 return isset($contact->id_societe) && isset($contact->equipement_supp_1) && isset($contact->equipement_supp_2);
             }
         );
-        // $clientId = $request->request->get('client');
-        // if ($clientId) {
-        //     // Récupérer le contact sélectionné depuis $contactsKizeo
-        //     foreach ($contactsKizeo as $contactString) {
-        //         $contactArray = $this->kizeoService->StringToContactObject($contactString);
-        //         if ($contactArray['id_contact'] == $clientId) {
-        //             $contact = $contactArray;
-        //             break;
-        //         }
-        //     }
-        // }
+        
+        //      ------------------------------                    UPDATE CONTACT ON KIZEO
+        //      GETTING NEW CONTACT DATA IF THEY'RE NOT EMPTY, NOT UPDATED
+        $dataContact = [];
+        $contactStringToUpload = "";
+        if(isset($_POST['submit_update_contact'])){
+            $updateContactName = !empty($_POST['updateContactName']) ? $_POST['updateContactName'] : $contactName;
+            $updateContactId = !empty($_POST['updateContactId']) ? $_POST['updateContactId'] : $contactId;
+            $updateContactAgence = !empty($_POST['updateContactAgence']) ? $_POST['updateContactAgence'] : $contactAgence;
+            $updateContactCodePostal = !empty($_POST['updateContactCodePostal']) ? $_POST['updateContactCodePostal'] : $contactCodePostal;
+            $updateContactVille = !empty($_POST['updateContactVille']) ? $_POST['updateContactVille'] : $contactVille;
+            $updateContactIdSociete = !empty($_POST['updateContactIdSociete']) ? $_POST['updateContactIdSociete'] : $contactIdSociete;
+            $updateContactEquipSupp1 = !empty($_POST['updateContactEquipSupp1']) ? $_POST['updateContactEquipSupp1'] : $contactEquipSupp1;
+            $updateContactEquipSupp2 = !empty($_POST['updateContactEquipSupp2']) ? $_POST['updateContactEquipSupp2'] : $contactEquipSupp2;
+            array_push($dataContact, $updateContactName, $updateContactId, $updateContactAgence, $updateContactCodePostal, $updateContactVille, $updateContactIdSociete, $updateContactEquipSupp1, $updateContactEquipSupp2);
 
-        // if ($request->isMethod('POST') && $request->request->has('submit')) {
-        //     $nouveauContact = [
-        //         'Raison_sociale' => $request->request->get('Raison_sociale'),
-        //         'Code_postale' => $request->request->get('Code_postale'),
-        //         'Ville' => $request->request->get('Ville'),
-        //         'id_contact' => $request->request->get('id_contact'),
-        //         'Agence' => $agenceSelectionnee,
-        //         'id_société' => $request->request->get('id_société'),
-        //         'Équipements' => $request->request->get('Équipements'),
-        //         'Équipements_complémentaires' => $request->request->get('Équipements_complémentaires'),
-        //     ];
-
-        //     // Mettre à jour ou ajouter le contact dans $contactsKizeo
-        //     $contactExiste = false;
-        //     foreach ($contactsKizeo as $key => $contactString) {
-        //         $contactArray = $this->kizeoService->StringToContactObject($contactString);
-        //         if ($contactArray['id_contact'] == $nouveauContact['id_contact']) {
-        //             $contactsKizeo[$key] = $this->kizeoService->contactToString($nouveauContact);
-        //             $contactExiste = true;
-        //             break;
-        //         }
-        //     }
-        //     if (!$contactExiste) {
-        //         $contactsKizeo[] = $this->kizeoService->contactToString($nouveauContact);
-        //     }
-        //     $this->kizeoService->sendContacts($agenceSelectionnee, $contactsKizeo);
-            
-        //     $this->addFlash('success', 'Contact mis à jour/créé avec succès !');
-            
-        //     return $this->redirectToRoute('app_contact_new');
-        // }
+            $contactStringToUpload = $this->kizeoService->contactToString($dataContact);
+            dd($contactStringToUpload);
+        }
         
         return $this->render('contact/index.html.twig', [
             'agences' => $agences,
