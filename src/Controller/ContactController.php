@@ -135,7 +135,7 @@ class ContactController extends AbstractController
             $updateContactIdSociete = !empty($_POST['updateContactIdSociete']) ? $_POST['updateContactIdSociete'] : $contactIdSociete;
             $updateContactEquipSupp1 = !empty($_POST['updateContactEquipSupp1']) ? $_POST['updateContactEquipSupp1'] : $contactEquipSupp1;
             $updateContactEquipSupp2 = !empty($_POST['updateContactEquipSupp2']) ? $_POST['updateContactEquipSupp2'] : $contactEquipSupp2;
-            array_push($dataContact, $updateContactName, $updateContactId, $updateContactAgence, $updateContactCodePostal, $updateContactVille, $updateContactIdSociete, $updateContactEquipSupp1, $updateContactEquipSupp2);
+            array_push($dataContact, $updateContactName, $updateContactCodePostal, $updateContactVille, $updateContactId, $updateContactAgence, $updateContactIdSociete, $updateContactEquipSupp1, $updateContactEquipSupp2);
 
             $contactStringToUpload = $this->kizeoService->contactToString($dataContact);
             dd($contactStringToUpload);
