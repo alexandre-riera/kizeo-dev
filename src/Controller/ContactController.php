@@ -134,7 +134,7 @@ class ContactController extends AbstractController
             array_push($dataContact, $updateContactName, $updateContactCodePostal, $updateContactVille, $updateContactId, $updateContactAgence, $updateContactIdSociete, $updateContactEquipSupp1, $updateContactEquipSupp2);
 
             $contactStringToUpload = $this->kizeoService->contactToString($dataContact);
-            $idListContact = $this->kizeoService->getIdListContact($agenceSelectionnee);
+            $idListContact = $this->kizeoService->getIdListContact($updateContactAgence);
             $this->kizeoService->updateListContactOnKizeo($idListContact, $contactStringToUpload, $contactsKizeo);
         }
         

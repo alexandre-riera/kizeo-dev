@@ -90,43 +90,43 @@ class KizeoService
         $listId = "";
 
         switch ($agence) {
-            case 'Group':
+            case 'S10':
                 $listId = $_ENV['TEST_CLIENTS_GROUP'];
                 break;
-            case 'St Etienne':
+            case 'S40':
                 $listId = $_ENV['TEST_CLIENTS_ST_ETIENNE'];
                 break;
-            case 'Grenoble':
+            case 'S50':
                 $listId = $_ENV['TEST_CLIENTS_GRENOBLE'];
                 break;
-            case 'Lyon':
+            case 'S60':
                 $listId = $_ENV['TEST_CLIENTS_LYON'];
                 break;
-            case 'Bordeaux':
+            case 'S70':
                 $listId = $_ENV['TEST_CLIENTS_BORDEAUX'];
                 break;
-            case 'Paris Nord':
+            case 'S80':
                 $listId = $_ENV['TEST_CLIENTS_PARIS_NORD'];
                 break;
-            case 'Montpellier':
+            case 'S100':
                 $listId = $_ENV['TEST_CLIENTS_MONTPELLIER'];
                 break;
-            case 'Hauts de France':
+            case 'S120':
                 $listId = $_ENV['TEST_CLIENTS_HAUTS_DE_FRANCE'];
                 break;
-            case 'Toulouse':
+            case 'S130':
                 $listId = $_ENV['TEST_CLIENTS_TOULOUSE'];
                 break;
-            case 'Epinal':
+            case 'S140':
                 $listId = $_ENV['TEST_CLIENTS_EPINAL'];
                 break;
-            case 'PACA':
+            case 'S150':
                 $listId = $_ENV['TEST_CLIENTS_PACA'];
                 break;
-            case 'Rouen':
+            case 'S160':
                 $listId = $_ENV['TEST_CLIENTS_ROUEN'];
                 break;
-            case 'Rennes':
+            case 'S170':
                 $listId = $_ENV['TEST_CLIENTS_RENNES'];
                 break;
             
