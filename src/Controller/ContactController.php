@@ -87,10 +87,6 @@ class ContactController extends AbstractController
                 }
             }
         }
-        dump($contactSelectionne);
-        dump($contactName);
-        dump($contactId);
-        dump($contactAgence);
 
         if ($agenceSelectionnee != "") {
             $contactsKizeo = $this->kizeoService->getContacts($agenceSelectionnee);
@@ -138,7 +134,8 @@ class ContactController extends AbstractController
             array_push($dataContact, $updateContactName, $updateContactCodePostal, $updateContactVille, $updateContactId, $updateContactAgence, $updateContactIdSociete, $updateContactEquipSupp1, $updateContactEquipSupp2);
 
             $contactStringToUpload = $this->kizeoService->contactToString($dataContact);
-            dd($contactStringToUpload);
+            $idListContact = $this->kizeoService->getIdListContact($agenceSelectionnee);
+            $this->kizeoService->updateListContactOnKizeo($idListContact, $contactStringToUpload, $contactsKizeo);
         }
         
         return $this->render('contact/index.html.twig', [

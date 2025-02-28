@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use stdClass;
+use Exception;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class KizeoService
@@ -83,10 +85,57 @@ class KizeoService
         return $contactsArrayList[0];
     }
 
-    public function sendContacts(string $agence, array $contacts): void
+    public function getIdListContact($agence):string
     {
-        // Implémentez la logique pour envoyer les contacts mis à jour à Kizeo Forms via l'API
-        // Utilisez $this->client->request('POST', ...)
+        $listId = "";
+
+        switch ($agence) {
+            case 'Group':
+                $listId = $_ENV['TEST_CLIENTS_GROUP'];
+                break;
+            case 'St Etienne':
+                $listId = $_ENV['TEST_CLIENTS_ST_ETIENNE'];
+                break;
+            case 'Grenoble':
+                $listId = $_ENV['TEST_CLIENTS_GRENOBLE'];
+                break;
+            case 'Lyon':
+                $listId = $_ENV['TEST_CLIENTS_LYON'];
+                break;
+            case 'Bordeaux':
+                $listId = $_ENV['TEST_CLIENTS_BORDEAUX'];
+                break;
+            case 'Paris Nord':
+                $listId = $_ENV['TEST_CLIENTS_PARIS_NORD'];
+                break;
+            case 'Montpellier':
+                $listId = $_ENV['TEST_CLIENTS_MONTPELLIER'];
+                break;
+            case 'Hauts de France':
+                $listId = $_ENV['TEST_CLIENTS_HAUTS_DE_FRANCE'];
+                break;
+            case 'Toulouse':
+                $listId = $_ENV['TEST_CLIENTS_TOULOUSE'];
+                break;
+            case 'Epinal':
+                $listId = $_ENV['TEST_CLIENTS_EPINAL'];
+                break;
+            case 'PACA':
+                $listId = $_ENV['TEST_CLIENTS_PACA'];
+                break;
+            case 'Rouen':
+                $listId = $_ENV['TEST_CLIENTS_ROUEN'];
+                break;
+            case 'Rennes':
+                $listId = $_ENV['TEST_CLIENTS_RENNES'];
+                break;
+            
+            default:
+                return new Exception("L'agence sélectionnée n'appartient pas à SOMAFI. Voir la fonction getIdListContact ligne 87 du service KizeoService");
+                break;
+        }
+
+        return $listId;
     }
 
     public function stringToContactObject(string $contactString)
@@ -139,8 +188,43 @@ class KizeoService
         return implode('|', $contact);
     }
 
-    public function updateListContactOnKizeo($idListContact): void
+    public function updateListContactOnKizeo(string $idListContact, string $contactStringToUpload, array $oldContactsKizeoList): void
     {
+        // Si une des lignes de $oldContactsKizeoList commence par le début de la ligne contactStringToUpload, je la remplace et renvoi $newListUpdatedToUpload
+        $newListUpdatedToUpload = [];
 
+        if (isset($idListContact) && isset($contactStringToUpload)) {
+            // Logique de remplacement
+            $replaced = false;
+            foreach ($oldContactsKizeoList as $oldContact) {
+                if (strpos($contactStringToUpload, substr($oldContact, 0, strlen(explode("|", $oldContact)[0]))) === 0) {
+                    $newListUpdatedToUpload[] = $contactStringToUpload;
+                    $replaced = true;
+                } else {
+                    $newListUpdatedToUpload[] = $oldContact;
+                }
+            }
+
+            // Si aucune ligne n'a été remplacée, ajouter la nouvelle ligne
+            if (!$replaced) {
+                $newListUpdatedToUpload[] = $contactStringToUpload;
+            }
+
+            // Envoi de la requête PUT à Kizeo
+            Request::enableHttpMethodParameterOverride();
+            $response = $this->client->request(
+                'PUT',
+                'https://forms.kizeo.com/rest/v3/lists/' . $idListContact,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        'items' => $newListUpdatedToUpload,
+                    ],
+                ]
+            );
+        }
     }
 }

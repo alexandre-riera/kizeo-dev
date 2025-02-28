@@ -256,7 +256,7 @@
     }
 
 </style>
-    <h1>Update d'un Contact</h1>
+    <h1>Création ou mise à jour d'un Contact</h1>
     <form method="post">
         <label for="agence">Agence :</label>
         <select class="form-control" name="agence" id="agence">
@@ -282,47 +282,45 @@
             <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
         </form> 
     {% endif %}
-    {% if contactSelectionne is not empty %}
-        <div>
-            <form method="post">
-                <div class="mb-3">
-                    <label for="updateContactName" class="form-label">Contact</label>
-                    <input type="text" class="form-control" name="updateContactName" value="{{ contactName }}" placeholder="{{ contactName }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactId" class="form-label">ID Contact</label>
-                    <input type="text" class="form-control" name="updateContactId" value="{{ contactId }}" placeholder="{{ contactId }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactAgence" class="form-label">Agence</label>
-                    <input type="text" class="form-control" name="updateContactAgence" value="{{ contactAgence }}" placeholder="{{ contactAgence }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactCodePostal" class="form-label">Code Postal</label>
-                    <input type="text" class="form-control" name="updateContactCodePostal" value="{{ contactCodePostal }}" placeholder="{{ contactCodePostal }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactVille" class="form-label">Ville</label>
-                    <input type="text" class="form-control" name="updateContactVille" value="{{ contactVille }}" placeholder="{{ contactVille }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactIdSociete" class="form-label">Id Société</label>
-                    <input type="text" class="form-control" name="updateContactIdSociete" value="{{ contactIdSociete }}" placeholder="{{ contactIdSociete }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactEquipSupp1" class="form-label">Équipements supplémentaires 1</label>
-                    <input type="text" class="form-control" name="updateContactEquipSupp1" value="{{ contactEquipSupp1 }}" placeholder="{{ contactEquipSupp1 }}">
-                </div>
-                <div class="mb-3">
-                    <label for="updateContactEquipSupp2" class="form-label">Équipements supplémentaires 2</label>
-                    <input type="text" class="form-control" name="updateContactEquipSupp2" value="{{ contactEquipSupp2 }}" placeholder="{{ contactEquipSupp2 }}">
-                </div>
-                <br>
-                <div class="mb-3">
-                    <button type="submit"  name ="submit_update_contact" class="btn btn-primary">Update Contact</button>
-                </div>
-            </form>
-        </div>
-    {% endif %}
+    <div>
+        <form method="post">
+            <div class="mb-3">
+                <label for="updateContactName" class="form-label">Contact</label>
+                <input type="text" class="form-control" name="updateContactName" value="{{ contactName }}" placeholder="{{ contactName }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactId" class="form-label">ID Contact</label>
+                <input type="text" class="form-control" name="updateContactId" value="{{ contactId }}" placeholder="{{ contactId }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactAgence" class="form-label">Agence</label>
+                <input type="text" class="form-control" name="updateContactAgence" value="{{ contactAgence }}" placeholder="{{ contactAgence }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactCodePostal" class="form-label">Code Postal</label>
+                <input type="text" class="form-control" name="updateContactCodePostal" value="{{ contactCodePostal }}" placeholder="{{ contactCodePostal }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactVille" class="form-label">Ville</label>
+                <input type="text" class="form-control" name="updateContactVille" value="{{ contactVille }}" placeholder="{{ contactVille }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactIdSociete" class="form-label">Id Société</label>
+                <input type="text" class="form-control" name="updateContactIdSociete" value="{{ contactIdSociete }}" placeholder="{{ contactIdSociete }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactEquipSupp1" class="form-label">Équipements supplémentaires 1</label>
+                <input type="text" class="form-control" name="updateContactEquipSupp1" value="{{ contactEquipSupp1 }}" placeholder="{{ contactEquipSupp1 }}">
+            </div>
+            <div class="mb-3">
+                <label for="updateContactEquipSupp2" class="form-label">Équipements supplémentaires 2</label>
+                <input type="text" class="form-control" name="updateContactEquipSupp2" value="{{ contactEquipSupp2 }}" placeholder="{{ contactEquipSupp2 }}">
+            </div>
+            <br>
+            <div class="mb-3">
+                <button type="submit"  name ="submit_update_contact" class="btn btn-primary">Create/Update Contact</button>
+            </div>
+        </form>
+    </div>
     
 {% endblock %}
