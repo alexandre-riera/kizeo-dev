@@ -198,6 +198,8 @@ class KizeoService
         $replaced = false;
 
         foreach ($currentKizeoList as $oldContact) {
+            // On est obligé de faire 2 fois un explode sur le résultat de kizeo car après le 1er (|), 
+            // on obtient "nom:nom" donc on explode à nouveau avec un : pour obtenir "nom"
             if (explode('|', explode(':', $oldContact)[0])[0] == explode('|', $contactStringToUpload)[0]) {
                 $newListUpdatedToUpload[] = $contactStringToUpload;
                 $replaced = true;
