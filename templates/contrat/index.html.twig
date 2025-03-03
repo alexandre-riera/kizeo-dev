@@ -1,0 +1,285 @@
+{% extends 'base.html.twig' %}
+{% block title %}
+    Ajout d'un nouveau contact
+{% endblock %}
+{% block stylesheets %}
+    <!-- our project just needs Font Awesome Solid + Brands it's FREE icons-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+{% endblock %}
+{% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
+        <script src="/public/js/filterFunction.js"></script>
+
+{% endblock %}
+{% block body %}
+<style>
+    body{
+        background-color: rgb(6, 22, 37);
+        color: white;
+        padding: 80px;
+        /* background-color: #96C2DB;
+        color: rgb(43, 46, 45); */
+    }
+    header{
+        font-size: 24px;
+        text-align: center;
+        margin-top: -30px;
+    }
+    nav{
+        margin-top: 30px;
+        margin-bottom: 30px;
+        width: 92vw;
+    }
+    .navbar-brand i {
+        margin: 10px;
+        font-size: xx-large;
+    }
+    /*Sélection agence et client*/
+    .selections-container{
+        width: 94vw;
+        margin-left: 30px;
+        margin-bottom: 30px;
+    }
+    .form-control {
+        display: block;
+        width: 75%;
+    }
+    input.form-control-client {
+        width: 20%;
+    }
+    /* CLIENTS */
+    .selection-client{
+        margin-bottom: 30px;
+    }
+    .selection-client-container{
+        width: 100vw;
+        margin-left: 30px;
+    }
+    .selection-client-label{
+        margin-right: 30px;
+        font-size: 18px;
+    }
+    #client-sous-contrat-select, #agence-somafi{
+        width: 385px;
+        margin-top: 12px;
+        margin-bottom: 15px;
+    }
+
+    /* AGENCES */
+    .selection-agence{
+        margin-bottom: 20px;
+    }
+    .selection-agence-label{
+        margin-right: 30px;
+        font-size: 18px;
+    }
+    #agence-sous-contrat-select{
+        width: 250px;
+        margin-left: 36px;
+    }
+    
+    /*Infos client*/
+    .client-infos{
+        margin-top: 20px;
+        margin-bottom: 30px;
+    }
+    .entete-client-infos{
+        height: 25%;
+        display: flex;
+    }
+    .infos-nombre-equipements h3, .infos-contrat h3{
+        text-align: center;
+    }
+    .client-infos-nombre{
+        font-size: 30px;
+        text-align: center;
+    }
+    .card-body{
+        height: 219px;
+    }
+    .card-title{
+        text-align: center;
+    }
+    span{
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+
+    .btn i{
+        margin: 5px;
+    }
+
+    /*Table équipements client*/
+    th{
+        font-size: 22px;
+        text-align: center;
+        margin-bottom: 3px;
+    }
+    thead th{
+        position: sticky;
+        top: 0;
+        background-color: rgb(6, 22, 37);
+    }
+    td{
+        border: 1px solid black;
+        width: 20rem;
+        height: 2rem;
+        margin: 5px;
+        text-align: center;
+        font-size: 20px;
+        color: black;
+    }
+    .bootstrap-table .fixed-table-container .table tfoot th .th-inner, .bootstrap-table .fixed-table-container .table thead th .th-inner {
+        padding: .20rem;
+    }
+    .bootstrap-table .fixed-table-container .table tfoot th, .bootstrap-table .fixed-table-container .table thead th {
+        vertical-align: top;
+    }
+    /* Couleurs des td selon statut de maintenance */
+    .bkg_vert{
+        width: 4rem;
+        background-color: green;
+        color: white;
+        font-weight: bold;
+    }
+    .bkg_orange{
+        width: 4rem;
+        background-color: orange;
+        color: white;
+        font-weight: bold;
+    }
+    .bkg_rouge{
+        width: 4rem;
+        background-color: red;
+        color: white;
+        font-weight: bold;
+    }
+    .bkg_arret{
+        width: 4rem;
+        background-color: black;
+        color: white;
+        font-weight: bold;
+    }
+    .bkg_inaccessible{
+        width: 4rem;
+        background-color: yellow;
+        font-weight: bold;
+    }
+    /* Couleurs des TR selon la visite */
+    .bkg_row_visite_1{
+        background-color: lightgray;
+    }
+    .bkg_row_visite_2{
+        background-color: lightblue;
+    }
+    .bkg_row_visite_3{
+        background-color: lightseagreen;
+    }
+    .bkg_row_visite_4{
+        background-color: lightsalmon;
+    }
+    .bkg_row_visite_A{
+        background-color: lightyellow;
+    }
+
+    /*Filtres de la table*/
+    .filters-table{
+        display: flex;
+        width: 60%;
+        justify-content: space-around;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.8);
+        margin: auto;
+        margin-bottom: 30px;
+        margin-top: 35px;
+        border: 2px solid grey;
+    }
+    .filters-table h3{
+        margin-top: 70px;
+        font-size: 30px;
+        color: black;
+    }
+    #filtre-trigramme, #filtre-visite, #filtre-statutdemaintenance{
+        display: flex;
+        flex-direction: column;
+        width: 150px;
+        align-items: center;
+        background-color: rgba(63, 58, 58, 0.6);
+        padding: 10px;
+        border: 4px solid black;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+
+    #filtre-trigramme label, #filtre-visite label, #filtre-statutdemaintenance label{
+        font-size: 20px;
+        color: black;
+    }
+    .select_libelle, .select_visite, .select_statutdemaintenance{
+        width: 100px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+    }
+    #filtre-visite .btn.btn-danger, #filtre-statutdemaintenance .btn.btn-danger, #filtre-trigramme .btn.btn-danger {
+        font-size: 10px;
+        margin-left: 110px;
+        margin-top: -10px;
+    }
+    #statutdemaintenance-dropdown{
+        width: 110px;
+    }
+
+    /* MODAL */
+    .modal{
+        color: black;
+        --bs-modal-width: 30%;
+    }
+    .modal label{
+        margin-top: 15px;
+    }
+    textarea {
+        resize: none;
+        height: 100px;
+    }
+    .modal .form_control{
+        width: 75%;
+    }
+    .modal .btn-primary{
+        margin-top: 30px;
+    }
+
+</style>
+    <h1>Création d'un Contrat</h1>
+    <form method="post">
+        <label for="agence">Agence :</label>
+        <select class="form-control" name="agence" id="agence">
+            <option value="">Sélectionnez une agence</option>
+            {% for key, agence in agences %}
+                <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
+    </form>
+    <br>
+    <br>
+    {% if agenceSelectionnee is not empty %}
+        <form action="" method="post">
+            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
+            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+                <option value = "" selected> Select client </option> 
+                {% for contact in contactsFromKizeoSplittedInObject%}
+                    <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
+        </form> 
+    {% endif %}
+{% endblock %}
