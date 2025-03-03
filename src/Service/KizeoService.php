@@ -235,6 +235,8 @@ class KizeoService
 
     private function getKizeoList(string $idListContact): array
     {
+        $contactsArrayList = [];
+        
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/' .  $idListContact, [
