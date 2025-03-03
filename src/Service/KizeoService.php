@@ -190,11 +190,19 @@ class KizeoService
 
     public function updateListContactOnKizeo(string $idListContact, string $updateContactName, string $contactStringToUpload, array $oldContactsKizeoList): void
     {
-        // Si une des lignes de $oldContactsKizeoList commence par le début de la valeur de $updateContactName, je la remplace par $contactStringToUpload
+        // Récupérer la liste actuelle depuis Kizeo
+        $currentKizeoList = $this->getKizeoList($idListContact);
+
+        // Si la récupération échoue, utiliser la liste locale fournie
+        if (empty($currentKizeoList)) {
+            $currentKizeoList = $oldContactsKizeoList;
+        }
+
+        // Si une des lignes de $currentKizeoList commence par le début de la valeur de $updateContactName, je la remplace par $contactStringToUpload
         $newListUpdatedToUpload = [];
         $replaced = false;
 
-        foreach ($oldContactsKizeoList as $oldContact) {
+        foreach ($currentKizeoList as $oldContact) {
             if (explode('|', $oldContact)[0] == $updateContactName) {
                 $newListUpdatedToUpload[] = $contactStringToUpload;
                 $replaced = true;
@@ -223,5 +231,22 @@ class KizeoService
                 ],
             ]
         );
+    }
+
+    private function getKizeoList(string $idListContact): array
+    {
+        $response = $this->client->request(
+            'GET',
+            'https://forms.kizeo.com/rest/v3/lists/' .  $idListContact, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+            ]
+        );
+        $content = $response->getContent();
+        $content = $response->toArray();
+        array_push($contactsArrayList, $content['list']['items']);
+        return $contactsArrayList[0];
     }
 }
