@@ -135,7 +135,7 @@ class ContactController extends AbstractController
 
             $contactStringToUpload = $this->kizeoService->contactToString($dataContact);
             $idListContact = $this->kizeoService->getIdListContact($updateContactAgence);
-            $this->kizeoService->updateListContactOnKizeo($idListContact, $updateContactName, $contactStringToUpload, $contactsKizeo);
+            $this->kizeoService->updateListContactOnKizeo($idListContact, $updateContactName, $contactStringToUpload);
         }
         
         return $this->render('contact/index.html.twig', [

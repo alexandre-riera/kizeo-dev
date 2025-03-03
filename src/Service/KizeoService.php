@@ -188,15 +188,10 @@ class KizeoService
         return implode('|', $contact);
     }
 
-    public function updateListContactOnKizeo(string $idListContact, string $updateContactName, string $contactStringToUpload, array $oldContactsKizeoList): void
+    public function updateListContactOnKizeo(string $idListContact, string $updateContactName, string $contactStringToUpload): void
     {
         // Récupérer la liste actuelle depuis Kizeo
         $currentKizeoList = $this->getKizeoList($idListContact);
-
-        // Si la récupération échoue, utiliser la liste locale fournie
-        if (empty($currentKizeoList)) {
-            $currentKizeoList = $oldContactsKizeoList;
-        }
 
         // Si une des lignes de $currentKizeoList commence par le début de la valeur de $updateContactName, je la remplace par $contactStringToUpload
         $newListUpdatedToUpload = [];
