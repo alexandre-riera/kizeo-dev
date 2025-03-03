@@ -204,13 +204,14 @@ class KizeoService
 
         foreach ($currentKizeoList as $oldContact) {
             if (explode('|', $oldContact)[0] == $updateContactName) {
+                dump(explode('|', $oldContact)[0]);
+                dump($updateContactName);
                 $newListUpdatedToUpload[] = $contactStringToUpload;
                 $replaced = true;
             } else {
                 $newListUpdatedToUpload[] = $oldContact;
             }
         }
-
         // Si aucune ligne n'a été remplacée, ajouter la nouvelle ligne
         if (!$replaced) {
             $newListUpdatedToUpload[] = $contactStringToUpload;
@@ -236,7 +237,7 @@ class KizeoService
     private function getKizeoList(string $idListContact): array
     {
         $contactsArrayList = [];
-        
+
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/' .  $idListContact, [
