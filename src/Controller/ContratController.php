@@ -17,7 +17,7 @@ class ContratController extends AbstractController
         $this->kizeoService = $kizeoService;
     }
 
-    #[Route('/contrat/new', name: 'app_contrat', methods: ['GET'])]
+    #[Route('/contrat/new', name: 'app_contrat', methods: ['GET', 'POST'])]
     public function index(Request $request): Response
     {
         $agences = [
