@@ -198,9 +198,9 @@ class KizeoService
         $replaced = false;
 
         foreach ($currentKizeoList as $oldContact) {
+            dump(explode('|', $oldContact)[0]);
+            dump(explode('|', $contactStringToUpload)[0]);
             if (explode('|', $oldContact)[0] == explode('|', $contactStringToUpload)[0]) {
-                dump(explode('|', $oldContact)[0]);
-                dump(explode('|', $contactStringToUpload)[0]);
                 $newListUpdatedToUpload[] = $contactStringToUpload;
                 $replaced = true;
             } else {
