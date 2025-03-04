@@ -2,7 +2,21 @@
 
 namespace App\Controller;
 
+use App\Entity\ContactS10;
+use App\Entity\ContactS40;
+use App\Entity\ContactS50;
+use App\Entity\ContactS60;
+use App\Entity\ContactS70;
+use App\Entity\ContactS80;
+use App\Entity\ContactS100;
+use App\Entity\ContactS120;
+use App\Entity\ContactS130;
+use App\Entity\ContactS140;
+use App\Entity\ContactS150;
+use App\Entity\ContactS160;
+use App\Entity\ContactS170;
 use App\Service\KizeoService;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -18,7 +32,7 @@ class ContratController extends AbstractController
     }
 
     #[Route('/contrat/new', name: 'app_contrat', methods: ['GET', 'POST'])]
-    public function index(Request $request): Response
+    public function index(Request $request, EntityManagerInterface $entityManager): Response
     {
         $agences = [
             'S10' => 'Group',
@@ -114,6 +128,121 @@ class ContratController extends AbstractController
             }
         );
 
+        $clientSelectedInformations = "";
+
+        if ($contactSelectionne != NULL) {
+            switch ($agenceSelectionnee) {
+                case 'S10':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S10':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S40':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $contactId]);
+                   
+                    break;
+                case ' S40':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S50':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S50':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S60':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S60':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S70':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S70':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S80':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S80':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S100':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S100':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S120':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S120':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S130':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S130':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S140':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S140':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S150':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S150':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S160':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S160':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case 'S170':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                case ' S170':
+                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $contactId]);
+                    
+                    break;
+                
+                default:
+                    
+                    break;
+            }
+        }
+
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
@@ -129,6 +258,7 @@ class ContratController extends AbstractController
             'contactIdSociete' => $contactIdSociete,
             'contactEquipSupp1' => $contactEquipSupp1,
             'contactEquipSupp2' => $contactEquipSupp2,
+            'clientSelectedInformations' => $clientSelectedInformations,
         ]);
     }
 }
