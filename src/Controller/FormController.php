@@ -276,16 +276,17 @@ class FormController extends AbstractController
      * This route is going to replace the route above to update equipments list on Kizeo Forms
      */
     #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
-    public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager)//: JsonResponse
+    public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager): JsonResponse
     {
         $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
 
-        // return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
+        return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
+        // return $this->redirectToRoute('app_api_form_save_maintenance_pdf');
     }
     /**
      * 
      * Save PDF maintenance on remote server --                                  THIRD CALL IN CRON TASK
+     * LA MISE A JOUR DES PDF A ETE ENLEVEE CAR KIZEO GERE LE FTP DES PDF EN DIRECT A CHAQUE UPLOAD SUR KIZEO
      */
     #[Route('/api/forms/save/maintenance/pdf', name: 'app_api_form_save_maintenance_pdf', methods: ['GET'])]
     public function savePdfInAssetsPdfFolder(FormRepository $formRepository, CacheInterface $cache) : JsonResponse
