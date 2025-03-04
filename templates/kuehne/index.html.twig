@@ -353,7 +353,7 @@
                             <span class="card-text"><b>Id société</b> : {{ clientSelectedInformations.getIdSociete() }}</span><br>
                             <span class="card-text"><b>Agence</b> : {{ agenceSelected }}</span><br>
                             <span class="card-text"><b>Téléphone</b> : {{ clientSelectedInformations.getTelephone() }} </span><br>
-                            {% if clientSelectedEquipmentsFiltered is not null %}
+                            {% if clientSelectedEquipmentsFiltered is not empty %}
                                 <span class="card-text"><b>Date de dernière visite</b> : {{ clientSelectedEquipmentsFiltered[0].getDerniereVisite()|date("d/m/Y", false) }} </span>
                             {% endif %}
                         </div>
