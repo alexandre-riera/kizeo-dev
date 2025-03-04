@@ -2082,7 +2082,7 @@ class FormRepository extends ServiceEntityRepository
                     break;
                 
                 case 'S40':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS40);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS40);
                     break;
                 
                 case 'S50':
@@ -2091,17 +2091,17 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S60':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS60);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS60);
                     break;
                 
                 
                 case 'S70':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS70);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS70);
                     break;
                 
                 
                 case 'S80':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS80);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS80);
                     break;
                 
                 
@@ -2111,12 +2111,12 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S120':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS120);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS120);
                     break;
                 
                 
                 case 'S130':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS130);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS130);
                     break;
                 
                 
@@ -2126,12 +2126,12 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S150':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS150);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS150);
                     break;
                 
                 
                 case 'S160':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS160);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS160);
                     break;
                 
                 
