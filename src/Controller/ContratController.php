@@ -127,11 +127,12 @@ class ContratController extends AbstractController
                 return isset($contact->id_societe) && isset($contact->equipement_supp_1) && isset($contact->equipement_supp_2);
             }
         );
-        dump($agenceSelectionnee);
+        dump($contactId);
+        dump($contactAgence);
         $clientSelectedInformations = "";
 
         if ($contactId != "") {
-            switch ($agenceSelectionnee) {
+            switch ($contactAgence) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
                     
