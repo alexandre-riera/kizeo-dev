@@ -242,6 +242,7 @@ class ContratController extends AbstractController
                     break;
             }
         // }
+        dd($clientSelectedInformations);
 
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
