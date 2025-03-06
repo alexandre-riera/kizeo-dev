@@ -130,7 +130,7 @@ class KizeoService
                 break;
             
             default:
-                return new Exception("L'agence sélectionnée n'appartient pas à SOMAFI. Voir la fonction getIdListContact ligne 87 du service KizeoService");
+                return "L'agence sélectionnée n'appartient pas à SOMAFI. Voir la fonction getIdListContact ligne 87 du service KizeoService";
                 break;
         }
 
