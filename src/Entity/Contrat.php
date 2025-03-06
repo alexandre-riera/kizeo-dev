@@ -53,6 +53,9 @@ class Contrat
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $date_effective_2 = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $id_contact = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -210,6 +213,18 @@ class Contrat
     public function setDateEffective2(?string $date_effective_2): static
     {
         $this->date_effective_2 = $date_effective_2;
+
+        return $this;
+    }
+
+    public function getIdContact(): ?string
+    {
+        return $this->id_contact;
+    }
+
+    public function setIdContact(?string $id_contact): static
+    {
+        $this->id_contact = $id_contact;
 
         return $this;
     }
