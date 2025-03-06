@@ -130,7 +130,7 @@ class ContratController extends AbstractController
 
         $clientSelectedInformations = "";
 
-        if ($contactSelectionne != NULL) {
+        if (!empty($_POST['clientName'])) {
             switch ($agenceSelectionnee) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
