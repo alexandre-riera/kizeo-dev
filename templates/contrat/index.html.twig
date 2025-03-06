@@ -282,7 +282,7 @@
             <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
         </form> 
     {% endif %}
-    {% if clientSelectedInformations != NULL  %}
+    {% if clientSelectedInformations is not empty  %}
         <div class="row">
             <div class="col-sm-3 mb-3 mb-sm-0">
                 <div class="card">

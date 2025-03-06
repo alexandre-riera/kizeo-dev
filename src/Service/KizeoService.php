@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use stdClass;
-use Exception;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
