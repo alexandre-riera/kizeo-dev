@@ -130,7 +130,7 @@ class ContratController extends AbstractController
 
         $clientSelectedInformations = "";
 
-        if ($contactSelectionne != "") {
+        // if ($contactSelectionne != "") {
             switch ($agenceSelectionnee) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
@@ -241,7 +241,7 @@ class ContratController extends AbstractController
                     
                     break;
             }
-        }
+        // }
 
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
