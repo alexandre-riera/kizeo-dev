@@ -342,10 +342,131 @@
                     </div>
                 </div>
             </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date de signature</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_signature }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Durée du contrat</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.duree }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Tacite reconduction</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.tacite_reconduction }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Valorisation</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.valorisation }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Nombre d'équipements</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_equipement }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Nombre de visite(s)</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_visite }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date de résiliation</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_resiliation }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Statut</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.statut }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date prévisionnelle 1</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_1 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date prévisionnelle 2</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_2 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date effective 2</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Date effective 2</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <form>
+                <label for="equipements">Ajout équipements au contrat en lot par type :</label>
+            </form>
         {% endif %}
-        {# <form>
-            <label for="equipements">Ajout équipements au contrat en lot par type :</label>
-        </form> #}
     {%endif%}
 {# FIN DU BLOC BODY #}
 {% endblock %}
