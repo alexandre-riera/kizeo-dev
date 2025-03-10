@@ -36,4 +36,41 @@ class ContratRepository extends ServiceEntityRepository
         $contrat = $this->findOneBy(array('id_contact' => $idContact));
         return $contrat; 
    }
+   public function getTypesEquipements()
+   {
+        $types = [
+            "Barrière levante",
+            "Bloc roue",
+            "Mini-pont",
+            "Niveleur",
+            "Plaque de quai",
+            "Portail",
+            "Porte accordéon",
+            "Porte coulissante",
+            "Porte coupe-feu",
+            "Porte frigorifique",
+            "Porte piétonne",
+            "Porte rapide",
+            "Porte sectionnelle",
+            "Protection",
+            "Rideau métallique",
+            "SAS",
+            "Table élévatrice",
+            "Tourniquet",
+            "Volet roulant",
+        ];
+        return $types; 
+   }
+   public function getModesFonctionnement()
+   {
+        $modes = [
+            "Manuel",
+            "Motorisé",
+            "Mixte",
+            "Impulsion",
+            "Automatique",
+            "Hydrolique"
+        ];
+        return $modes; 
+   }
 }

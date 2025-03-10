@@ -65,6 +65,9 @@ class ContratController extends AbstractController
         $contactEquipSupp1 = "";
         $contactEquipSupp2 = "";
 
+        $typesEquipements = $contratRepository->getTypesEquipements();
+        $modesFonctionnement = $contratRepository->getModesFonctionnement();
+
         // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
         $idListContact = "";
 
