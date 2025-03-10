@@ -328,6 +328,23 @@
                 </div>
             </div> #}
         </div>
+        <br />
+        <br />
+        {% if theAssociatedContract is not empty %}
+            <div class="col-sm-2">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Numéro de contrat</h4>
+                        <br>
+                        <br>
+                        <p class="contrat-infos-nombre">{{ theAssociatedContract.numero_contrat }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+        {# <form>
+            <label for="equipements">Ajout équipements au contrat en lot par type :</label>
+        </form> #}
     {%endif%}
 {# FIN DU BLOC BODY #}
 {% endblock %}

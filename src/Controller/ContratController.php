@@ -15,6 +15,7 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
+use App\Repository\ContratRepository;
 use App\Service\KizeoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -32,7 +33,7 @@ class ContratController extends AbstractController
     }
 
     #[Route('/contrat/new', name: 'app_contrat', methods: ['GET', 'POST'])]
-    public function index(Request $request, EntityManagerInterface $entityManager): Response
+    public function index(Request $request, EntityManagerInterface $entityManager, ContratRepository $contratRepository): Response
     {
         $agences = [
             'S10' => 'Group',
@@ -130,7 +131,7 @@ class ContratController extends AbstractController
         dump($contactId);
         dump($contactAgence);
         $clientSelectedInformations = "";
-
+        $theAssociatedContract = "";
         if ($contactId != "") {
             switch ($contactAgence) {
                 case 'S10':
@@ -242,6 +243,9 @@ class ContratController extends AbstractController
                     
                     break;
             }
+
+            // GET Contrat informations
+            $theAssociatedContract = $contratRepository->findContratByIdContact($contactId);
         }
         dump($clientSelectedInformations);
 
@@ -261,6 +265,7 @@ class ContratController extends AbstractController
             'contactEquipSupp1' => $contactEquipSupp1,
             'contactEquipSupp2' => $contactEquipSupp2,
             'clientSelectedInformations' => $clientSelectedInformations,
+            'theAssociatedContract' => $theAssociatedContract,
         ]);
     }
 }

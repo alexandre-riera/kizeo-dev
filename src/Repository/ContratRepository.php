@@ -31,13 +31,9 @@ class ContratRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-//    public function findOneBySomeField($value): ?Contrat
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
+   public function findContratByIdContact($idContact): ?Contrat
+   {
+        $contrat = $this->findOneBy(array('id_contact' => $idContact));
+        return $contrat; 
+   }
 }
