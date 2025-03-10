@@ -269,6 +269,8 @@ class ContratController extends AbstractController
             'contactEquipSupp2' => $contactEquipSupp2,
             'clientSelectedInformations' => $clientSelectedInformations,
             'theAssociatedContract' => $theAssociatedContract,
+            'typesEquipements' => $typesEquipements,
+            'modesFonctionnement' => $modesFonctionnement,
         ]);
     }
 }
