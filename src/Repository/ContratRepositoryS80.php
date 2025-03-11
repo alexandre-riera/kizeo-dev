@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\Contrat;
+use App\Entity\ContratS80;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Contrat>
+ * @extends ServiceEntityRepository<ContratS80>
  */
-class ContratRepository extends ServiceEntityRepository
+class ContratRepositoryS80 extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, Contrat::class);
+        parent::__construct($registry, ContratS80::class);
     }
 
 //    /**
-//     * @return Contrat[] Returns an array of Contrat objects
+//     * @return ContratS80[] Returns an array of ContratS80 objects
 //     */
 //    public function findByExampleField($value): array
 //    {
@@ -31,7 +31,7 @@ class ContratRepository extends ServiceEntityRepository
 //        ;
 //    }
 
-   public function findContratByIdContact($idContact): ?Contrat
+   public function findContratByIdContact($idContact): ?ContratS80
    {
         $contrat = $this->findOneBy(array('id_contact' => $idContact));
         return $contrat; 
@@ -72,5 +72,15 @@ class ContratRepository extends ServiceEntityRepository
             "Hydrolique"
         ];
         return $modes; 
+   }
+   public function getVisites()
+   {
+        $visites = [
+            "CE1",
+            "CE2",
+            "CE3",
+            "CE4",
+        ];
+        return $visites; 
    }
 }

@@ -2,12 +2,12 @@
 
 namespace App\Entity;
 
-use App\Repository\ContratRepository;
+use App\Repository\ContratRepositoryS10;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: ContratRepository::class)]
-class Contrat
+#[ORM\Entity(repositoryClass: ContratRepositoryS10::class)]
+class ContratS10
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]

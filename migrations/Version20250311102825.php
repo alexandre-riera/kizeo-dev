@@ -1,0 +1,57 @@
+<?php
+
+declare(strict_types=1);
+
+namespace DoctrineMigrations;
+
+use Doctrine\DBAL\Schema\Schema;
+use Doctrine\Migrations\AbstractMigration;
+
+/**
+ * Auto-generated Migration: Please modify to your needs!
+ */
+final class Version20250311102825 extends AbstractMigration
+{
+    public function getDescription(): string
+    {
+        return '';
+    }
+
+    public function up(Schema $schema): void
+    {
+        // this up() migration is auto-generated, please modify it to your needs
+        $this->addSql('CREATE TABLE contrat_s10 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s100 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s120 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s130 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s140 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s150 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s160 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s170 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s40 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s50 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s60 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s70 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('CREATE TABLE contrat_s80 (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) NOT NULL, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) NOT NULL, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) NOT NULL, date_previsionnelle_1 VARCHAR(255) DEFAULT NULL, date_previsionnelle_2 VARCHAR(255) DEFAULT NULL, date_effective_1 VARCHAR(255) DEFAULT NULL, date_effective_2 VARCHAR(255) DEFAULT NULL, id_contact VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB');
+        $this->addSql('DROP TABLE contrat');
+    }
+
+    public function down(Schema $schema): void
+    {
+        // this down() migration is auto-generated, please modify it to your needs
+        $this->addSql('CREATE TABLE contrat (id INT AUTO_INCREMENT NOT NULL, numero_contrat INT NOT NULL, date_signature DATE NOT NULL, duree VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, tacite_reconduction TINYINT(1) NOT NULL, valorisation VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, nombre_equipement INT NOT NULL, nombre_visite INT NOT NULL, date_resiliation DATE DEFAULT NULL, statut VARCHAR(255) CHARACTER SET utf8mb4 NOT NULL COLLATE `utf8mb4_unicode_ci`, date_previsionnelle_1 VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, date_previsionnelle_2 VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, date_effective_1 VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, date_effective_2 VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, id_contact VARCHAR(255) CHARACTER SET utf8mb4 DEFAULT NULL COLLATE `utf8mb4_unicode_ci`, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB COMMENT = \'\' ');
+        $this->addSql('DROP TABLE contrat_s10');
+        $this->addSql('DROP TABLE contrat_s100');
+        $this->addSql('DROP TABLE contrat_s120');
+        $this->addSql('DROP TABLE contrat_s130');
+        $this->addSql('DROP TABLE contrat_s140');
+        $this->addSql('DROP TABLE contrat_s150');
+        $this->addSql('DROP TABLE contrat_s160');
+        $this->addSql('DROP TABLE contrat_s170');
+        $this->addSql('DROP TABLE contrat_s40');
+        $this->addSql('DROP TABLE contrat_s50');
+        $this->addSql('DROP TABLE contrat_s60');
+        $this->addSql('DROP TABLE contrat_s70');
+        $this->addSql('DROP TABLE contrat_s80');
+    }
+}

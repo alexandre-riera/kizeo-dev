@@ -15,7 +15,7 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
-use App\Repository\ContratRepository;
+use App\Repository\ContratRepositoryS10;
 use App\Service\KizeoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +33,7 @@ class ContratController extends AbstractController
     }
 
     #[Route('/contrat/new', name: 'app_contrat', methods: ['GET', 'POST'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, ContratRepository $contratRepository): Response
+    public function index(Request $request, EntityManagerInterface $entityManager, ContratRepositoryS10 $contratRepositoryS10): Response
     {
         $agences = [
             'S10' => 'Group',
@@ -65,8 +65,9 @@ class ContratController extends AbstractController
         $contactEquipSupp1 = "";
         $contactEquipSupp2 = "";
 
-        $typesEquipements = $contratRepository->getTypesEquipements();
-        $modesFonctionnement = $contratRepository->getModesFonctionnement();
+        $typesEquipements = $contratRepositoryS10->getTypesEquipements();
+        $modesFonctionnement = $contratRepositoryS10->getModesFonctionnement();
+        $visites = $contratRepositoryS10->getVisites();
 
         // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
         $idListContact = "";
@@ -248,7 +249,7 @@ class ContratController extends AbstractController
             }
 
             // GET Contrat informations
-            $theAssociatedContract = $contratRepository->findContratByIdContact($contactId);
+            $theAssociatedContract = $contratRepositoryS10->findContratByIdContact($contactId);
         }
         dump($clientSelectedInformations);
 
@@ -271,6 +272,7 @@ class ContratController extends AbstractController
             'theAssociatedContract' => $theAssociatedContract,
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
+            'visites' => $visites,
         ]);
     }
 }
