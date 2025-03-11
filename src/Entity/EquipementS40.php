@@ -110,6 +110,9 @@ class EquipementS40
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $visite = null;
 
+    #[ORM\ManyToOne(inversedBy: 'equipements')]
+    private ?ContratS40 $contratS40 = null;
+
 
     public function getId(): ?int
     {
@@ -496,6 +499,18 @@ class EquipementS40
     public function setVisite(string $visite): static
     {
         $this->visite = $visite;
+
+        return $this;
+    }
+
+    public function getContratS40(): ?ContratS40
+    {
+        return $this->contratS40;
+    }
+
+    public function setContratS40(?ContratS40 $contratS40): static
+    {
+        $this->contratS40 = $contratS40;
 
         return $this;
     }

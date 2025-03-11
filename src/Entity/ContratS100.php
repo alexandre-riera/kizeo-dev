@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ContratRepositoryS100;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -55,6 +57,17 @@ class ContratS100
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $id_contact = null;
+
+    /**
+     * @var Collection<int, EquipementS100>
+     */
+    #[ORM\OneToMany(targetEntity: EquipementS100::class, mappedBy: 'contratS100')]
+    private Collection $equipements;
+
+    public function __construct()
+    {
+        $this->equipements = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -225,6 +238,36 @@ class ContratS100
     public function setIdContact(?string $id_contact): static
     {
         $this->id_contact = $id_contact;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, EquipementS100>
+     */
+    public function getEquipements(): Collection
+    {
+        return $this->equipements;
+    }
+
+    public function addEquipement(EquipementS100 $equipement): static
+    {
+        if (!$this->equipements->contains($equipement)) {
+            $this->equipements->add($equipement);
+            $equipement->setContratS100($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEquipement(EquipementS100 $equipement): static
+    {
+        if ($this->equipements->removeElement($equipement)) {
+            // set the owning side to null (unless already changed)
+            if ($equipement->getContratS100() === $this) {
+                $equipement->setContratS100(null);
+            }
+        }
 
         return $this;
     }
