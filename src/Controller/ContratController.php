@@ -69,6 +69,9 @@ class ContratController extends AbstractController
         $modesFonctionnement = $contratRepositoryS10->getModesFonctionnement();
         $visites = $contratRepositoryS10->getVisites();
 
+        dump($typesEquipements);
+        dump($modesFonctionnement);
+        dump($visites);
         // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
         $idListContact = "";
 
