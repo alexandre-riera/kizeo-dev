@@ -69,7 +69,7 @@ class ContratRepositoryS140 extends ServiceEntityRepository
             "Mixte",
             "Impulsion",
             "Automatique",
-            "Hydrolique"
+            "Hydraulique"
         ];
         return $modes; 
    }
