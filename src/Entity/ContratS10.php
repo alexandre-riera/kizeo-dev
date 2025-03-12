@@ -64,6 +64,9 @@ class ContratS10
     #[ORM\OneToMany(targetEntity: EquipementS10::class, mappedBy: 'contratS10')]
     private Collection $equipements;
 
+    #[ORM\ManyToOne(inversedBy: 'contratS10s')]
+    private ?ContactS10 $contact = null;
+
     public function __construct()
     {
         $this->equipements = new ArrayCollection();
@@ -268,6 +271,18 @@ class ContratS10
                 $equipement->setContratS10(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getContact(): ?ContactS10
+    {
+        return $this->contact;
+    }
+
+    public function setContact(?ContactS10 $contact): static
+    {
+        $this->contact = $contact;
 
         return $this;
     }

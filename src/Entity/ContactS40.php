@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ContactS40Repository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ContactS40Repository::class)]
@@ -48,6 +50,17 @@ class ContactS40
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $id_societe = null;
+
+    /**
+     * @var Collection<int, ContratS40>
+     */
+    #[ORM\OneToMany(targetEntity: ContratS40::class, mappedBy: 'contact')]
+    private Collection $contratS40s;
+
+    public function __construct()
+    {
+        $this->contratS40s = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -194,6 +207,36 @@ class ContactS40
     public function setIdSociete(?string $id_societe): static
     {
         $this->id_societe = $id_societe;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, ContratS40>
+     */
+    public function getContratS40s(): Collection
+    {
+        return $this->contratS40s;
+    }
+
+    public function addContratS40(ContratS40 $contratS40): static
+    {
+        if (!$this->contratS40s->contains($contratS40)) {
+            $this->contratS40s->add($contratS40);
+            $contratS40->setContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeContratS40(ContratS40 $contratS40): static
+    {
+        if ($this->contratS40s->removeElement($contratS40)) {
+            // set the owning side to null (unless already changed)
+            if ($contratS40->getContact() === $this) {
+                $contratS40->setContact(null);
+            }
+        }
 
         return $this;
     }

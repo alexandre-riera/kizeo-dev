@@ -32,7 +32,7 @@ class ContratController extends AbstractController
         $this->kizeoService = $kizeoService;
     }
 
-    #[Route('/contrat/new', name: 'app_contrat', methods: ['GET', 'POST'])]
+    #[Route('/contrat/new', name: 'app_contrat_new', methods: ['GET', 'POST'])]
     public function index(Request $request, EntityManagerInterface $entityManager, ContratRepositoryS10 $contratRepositoryS10): Response
     {
         $agences = [
@@ -69,18 +69,21 @@ class ContratController extends AbstractController
         $modesFonctionnement = $contratRepositoryS10->getModesFonctionnement();
         $visites = $contratRepositoryS10->getVisites();
 
-        dump($typesEquipements);
-        dump($modesFonctionnement);
-        dump($visites);
+        // dump($typesEquipements);
+        // dump($modesFonctionnement);
+        // dump($visites);
         // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
         $idListContact = "";
 
+        // HANDLE AGENCY SELECTION
         $agenceSelectionnee = "";
         if(isset($_POST['submit_agence'])){  
             if(!empty($_POST['agence'])) {  
                 $agenceSelectionnee = $_POST['agence'];
             } 
         }
+
+        // HANDLE CONTACT SELECTION
         $contactSelectionne = "";
         if(isset($_POST['submit_contact'])){
             if(!empty($_POST['clientName'])) {  
@@ -138,7 +141,11 @@ class ContratController extends AbstractController
         dump($contactId);
         dump($contactAgence);
         $clientSelectedInformations = "";
+
+        // PUT THE LOGIC IN THE "SWITCH" IF CONTACTAGENCE EQUAL S50, SEARCH CONTRACT IN ENTITY CONTRATS50 WITH HIS CONTACTID
         $theAssociatedContract = "";
+
+        // GET CLIENT SELECTED INFORMATIONS ACCORDING TO HIS CONTACTID
         if ($contactId != "") {
             switch ($contactAgence) {
                 case 'S10':
@@ -251,7 +258,7 @@ class ContratController extends AbstractController
                     break;
             }
 
-            // GET Contrat informations
+            // GET Contrat informations ---- PUT THIS CALL IN EVERY CASES ADDING HIS PROPER CONTACTAGENCE
             $theAssociatedContract = $contratRepositoryS10->findContratByIdContact($contactId);
         }
         dump($clientSelectedInformations);
