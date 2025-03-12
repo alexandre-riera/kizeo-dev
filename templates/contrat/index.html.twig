@@ -256,257 +256,298 @@
     }
 
 </style>
-    <h1>Création d'un Contrat</h1>
-    <form method="post">
-        <label for="agence">Agence :</label>
-        <select class="form-control" name="agence" id="agence">
-            <option value="">Sélectionnez une agence</option>
-            {% for key, agence in agences %}
-                <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
-            {% endfor %}
-        </select>
-        <br>
-        <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
-    </form>
-    <br>
-    <br>
-    {% if agenceSelectionnee is not empty %}
-        <form action="" method="post">
-            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
-                <option value = "" selected> Select client </option> 
-                {% for contact in contactsFromKizeoSplittedInObject%}
-                    <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
+{% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
+    {% if app.user %}
+        {% block header %}
+            <header class="header">
+                <h1>Parc Équipements Clients Somafi</h1>
+                <h2>Bonjour {{ app.user.firstName }}</h2>
+            </header>
+        {% endblock %}
+        <nav class="navbar bg-body-tertiary">
+            <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fa-solid fa-house"> </i>Accueil
+            </a>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a href="{{ path('app_contrat_new') }}" class="navbar-brand" >Nouveau contrat</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a href="{{ path('app_logout') }}" class="navbar-brand" >
+                        <i class="fa-solid fa-user"></i>Se déconnecter
+                    </a>
+                </li>
+                {#
+                <li class="nav-item dropdown" style="margin-right: 75px;">
+                    <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <img class="nav-profile-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="#">Profile</a>
+                        <a class="dropdown-item" href="#">Create Post</a>
+                        <a class="dropdown-item" href="#">Logout</a>
+                    </div>
+                </li>
+                #}
+            </ul>
+            </div>
+        </nav>
+        <h1>Création d'un Contrat</h1>
+        <form method="post">
+            <label for="agence">Agence :</label>
+            <select class="form-control" name="agence" id="agence">
+                <option value="">Sélectionnez une agence</option>
+                {% for key, agence in agences %}
+                    <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
                 {% endfor %}
             </select>
-            <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
-        </form> 
-    {% endif %}
-    {% if clientSelectedInformations is not empty  %}
-        <div class="row">
-            <div class="col-sm-3 mb-3 mb-sm-0">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Adresse</h4>
-                        <span></span>
-                        <span class="card-text"><b>{{ clientSelectedInformations.getRaisonSociale() }}</b></span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getAdressep1() }} </span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getAdressep2() }} </span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getCpostalp() }} </span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getVillep() }} </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Infos client</h4>
-                        <span class="card-text"><b>Id client</b> : {{ clientSelectedInformations.getIdContact() }} </span><br>
-                        <span class="card-text"><b>Id société</b> : {{ clientSelectedInformations.getIdSociete() }}</span><br>
-                        <span class="card-text"><b>Agence</b> : {{ contactAgence }}</span><br>
-                        <span class="card-text"><b>Téléphone</b> : {{ clientSelectedInformations.getTelephone() }} </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date de fin de contrat</h4>
-                        <br>
-                        <br>
-                        <p class="client-infos-nombre">N/C</p>
-                    </div>
-                </div>
-            </div>
-            {# <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Nombre d'équipements</h4>
-                        <br>
-                        <br>
-                        <p class="client-infos-nombre">{{ totalClientSelectedEquipmentsFiltered }}</p>
-                    </div>
-                </div>
-            </div> #}
-        </div>
-        <br />
-        <br />
-        {% if theAssociatedContract is not empty %}
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Numéro de contrat</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.numero_contrat }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date de signature</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_signature }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Durée du contrat</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.duree }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Tacite reconduction</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.tacite_reconduction }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Valorisation</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.valorisation }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Nombre d'équipements</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_equipement }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Nombre de visite(s)</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_visite }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date de résiliation</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_resiliation }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Statut</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.statut }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date prévisionnelle 1</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_1 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date prévisionnelle 2</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_2 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date effective 2</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Date effective 2</h4>
-                        <br>
-                        <br>
-                        <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
-                    </div>
-                </div>
-            </div>
-        {% else %}
-                <h4>Ajout équipements au contrat en lot par type :</h4>
-            <form action="" method="POST">
-                <label for="numeroContrat">Numéro de contrat :</label>
-                <input type="text" class="form-control" name="numeroContrat">
-                <label for="dateSignature">Date de signature :</label>
-                <input type="text" class="form-control" name="dateSignature">
-                <label for="duree">Durée :</label>
-                <input type="text" class="form-control" name="duree">
-                <fieldset>
-                    <legend>Tacite reconduction :</legend>
-                    <div>
-                        <label for="taciteReconduction">Oui</label>
-                        <input type="checkbox" class="form-control" name="taciteReconduction" checked />
-                    </div>
-                    <div>
-                        <label for="taciteReconduction">Non</label>
-                        <input type="checkbox" class="form-control" name="taciteReconduction" />
-                    </div>
-                </fieldset>
-                <label for="valorisation">Valorisation :</label>
-                <input type="text" class="form-control" name="valorisation">
-                <label for="nombres">Nombre d'équipements au contrat :</label>
-                <input type="text" class="form-control" name="nombreEquipement">
-                <label for="nombreVisite">Nombre de Visite(s) :</label>
-                <input type="text" class="form-control" name="nombreVisite">
-                <label for="datePrevisionnelle">Date prévisionnelle :</label>
-                <input type="date" class="form-control" name="datePrevisionnelle">
-                <select class="form-control" name="typeEquipement">
-                    <option value = "" selected> Type </option> 
-                    {% for type in typesEquipements %}
-                        <option value="{{ type }}"</option>
+            <br>
+            <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
+        </form>
+        <br>
+        <br>
+        {% if agenceSelectionnee is not empty %}
+            <form action="" method="post">
+                <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
+                <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+                    <option value = "" selected> Select client </option> 
+                    {% for contact in contactsFromKizeoSplittedInObject%}
+                        <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
                     {% endfor %}
                 </select>
-                <select class="form-control" name="typeEquipement">
-                    <option value = "" selected> Mode de fonctionnement </option> 
-                    {% for mode in modesFonctionnement %}
-                        <option value="{{ mode }}"</option>
-                    {% endfor %}
-                </select>
-                <br />
-                <br />
-                <button type="submit"  name ="submit_contrat" class="btn btn-primary">Sauvegarder le contrat</button>
-            </form>
+                <button type="submit"  name ="submit_contact" class="btn btn-primary">Select Client</button>
+            </form> 
         {% endif %}
-    {%endif%}
+        {% if clientSelectedInformations is not empty  %}
+            <div class="row">
+                <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Adresse</h4>
+                            <span></span>
+                            <span class="card-text"><b>{{ clientSelectedInformations.getRaisonSociale() }}</b></span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getAdressep1() }} </span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getAdressep2() }} </span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getCpostalp() }} </span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getVillep() }} </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Infos client</h4>
+                            <span class="card-text"><b>Id client</b> : {{ clientSelectedInformations.getIdContact() }} </span><br>
+                            <span class="card-text"><b>Id société</b> : {{ clientSelectedInformations.getIdSociete() }}</span><br>
+                            <span class="card-text"><b>Agence</b> : {{ contactAgence }}</span><br>
+                            <span class="card-text"><b>Téléphone</b> : {{ clientSelectedInformations.getTelephone() }} </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date de fin de contrat</h4>
+                            <br>
+                            <br>
+                            <p class="client-infos-nombre">N/C</p>
+                        </div>
+                    </div>
+                </div>
+                {# <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Nombre d'équipements</h4>
+                            <br>
+                            <br>
+                            <p class="client-infos-nombre">{{ totalClientSelectedEquipmentsFiltered }}</p>
+                        </div>
+                    </div>
+                </div> #}
+            </div>
+            <br />
+            <br />
+            {% if theAssociatedContract is not empty %}
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Numéro de contrat</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.numero_contrat }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date de signature</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_signature }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Durée du contrat</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.duree }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Tacite reconduction</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.tacite_reconduction }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Valorisation</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.valorisation }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Nombre d'équipements</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_equipement }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Nombre de visite(s)</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.nombre_visite }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date de résiliation</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_resiliation }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Statut</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.statut }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date prévisionnelle 1</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_1 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date prévisionnelle 2</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_previsionnelle_2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date effective 2</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Date effective 2</h4>
+                            <br>
+                            <br>
+                            <p class="contrat-infos-nombre">{{ theAssociatedContract.date_effective_2 }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                    <h4>Ajout équipements au contrat en lot par type :</h4>
+                <form action="" method="POST">
+                    <label for="numeroContrat">Numéro de contrat :</label>
+                    <input type="text" class="form-control" name="numeroContrat">
+                    <label for="dateSignature">Date de signature :</label>
+                    <input type="text" class="form-control" name="dateSignature">
+                    <label for="duree">Durée :</label>
+                    <input type="text" class="form-control" name="duree">
+                    <fieldset>
+                        <legend>Tacite reconduction :</legend>
+                        <div>
+                            <label for="taciteReconduction">Oui</label>
+                            <input type="checkbox" class="form-control" name="taciteReconduction" checked />
+                        </div>
+                        <div>
+                            <label for="taciteReconduction">Non</label>
+                            <input type="checkbox" class="form-control" name="taciteReconduction" />
+                        </div>
+                    </fieldset>
+                    <label for="valorisation">Valorisation :</label>
+                    <input type="text" class="form-control" name="valorisation">
+                    <label for="nombres">Nombre d'équipements au contrat :</label>
+                    <input type="text" class="form-control" name="nombreEquipement">
+                    <label for="nombreVisite">Nombre de Visite(s) :</label>
+                    <input type="text" class="form-control" name="nombreVisite">
+                    <label for="datePrevisionnelle">Date prévisionnelle :</label>
+                    <input type="date" class="form-control" name="datePrevisionnelle">
+                    <select class="form-control" name="typeEquipement">
+                        <option value = "" selected> Type </option> 
+                        {% for type in typesEquipements %}
+                            <option value="{{ type }}"</option>
+                        {% endfor %}
+                    </select>
+                    <select class="form-control" name="typeEquipement">
+                        <option value = "" selected> Mode de fonctionnement </option> 
+                        {% for mode in modesFonctionnement %}
+                            <option value="{{ mode }}"</option>
+                        {% endfor %}
+                    </select>
+                    <br />
+                    <br />
+                    <button type="submit"  name ="submit_contrat" class="btn btn-primary">Sauvegarder le contrat</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    {% endif %}
+{% endif %}
 {# FIN DU BLOC BODY #}
 {% endblock %}
