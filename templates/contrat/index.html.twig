@@ -258,41 +258,23 @@
 </style>
 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
     {% if app.user %}
-        {% block header %}
-            <header class="header">
-                <h1>Parc Équipements Clients Somafi</h1>
-                <h2>Bonjour {{ app.user.firstName }}</h2>
-            </header>
-        {% endblock %}
         <nav class="navbar bg-body-tertiary">
             <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fa-solid fa-house"> </i>Accueil
-            </a>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="{{ path('app_contrat_new') }}" class="navbar-brand" >Nouveau contrat</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="{{ path('app_logout') }}" class="navbar-brand" >
-                        <i class="fa-solid fa-user"></i>Se déconnecter
-                    </a>
-                </li>
-                {#
-                <li class="nav-item dropdown" style="margin-right: 75px;">
-                    <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <img class="nav-profile-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="#">Profile</a>
-                        <a class="dropdown-item" href="#">Create Post</a>
-                        <a class="dropdown-item" href="#">Logout</a>
-                    </div>
-                </li>
-                #}
-            </ul>
+                <a class="navbar-brand" href="/">
+                    <i class="fa-solid fa-house"> </i>Accueil
+                </a>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a href="{{ path('app_contrat_new') }}" class="navbar-brand" >Nouveau contrat</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a href="{{ path('app_logout') }}" class="navbar-brand" >
+                            <i class="fa-solid fa-user"> </i>Se déconnecter
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
         <h1>Création d'un Contrat</h1>
