@@ -265,7 +265,7 @@ class ContratController extends AbstractController
             $theAssociatedContract = $contratRepositoryS10->findContratByIdContact($contactId);
         }
         dump($clientSelectedInformations);
-
+        dump($formS50);
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
