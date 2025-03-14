@@ -505,13 +505,13 @@
                             <select class="form-control" name="type_equipement">
                                 <option value = "" selected> Type </option> 
                                 {% for type in typesEquipements %}
-                                    <option style="color:black;" value="{{ type }}"</option>
+                                    <option value="{{ type }}">{{ type }}</option>
                                 {% endfor %}
                             </select>
                             <select class="form-control" name="mode_fonctionnement">
                                 <option value = "" selected> Mode fonctionnement </option> 
                                 {% for mode in modesFonctionnement %}
-                                    <option style="color:black;" value="{{ mode }}"</option>
+                                    <option value="{{ mode }}">{{ mode }}</option>
                                 {% endfor %}
                             </select>
                         </form>
