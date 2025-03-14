@@ -6,6 +6,7 @@ use App\Entity\ContratS50;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 
 class ContratS50Type extends AbstractType
 {
@@ -30,6 +31,14 @@ class ContratS50Type extends AbstractType
             ->add('date_effective_1')
             ->add('date_effective_2')
             ->add('id_contact')
+            ->add('equipements', CollectionType::class, [
+                'entry_type' => EquipementS50Type::class,
+                'allow_add' => true,
+                'by_reference' => false,
+                'allow_delete' => true,
+                'prototype' => true,
+                'label' => false,
+            ])
         ;
     }
 

@@ -30,6 +30,7 @@ class ContratS10Type extends AbstractType
             ->add('date_effective_1')
             ->add('date_effective_2')
             ->add('id_contact')
+            
         ;
     }
 
