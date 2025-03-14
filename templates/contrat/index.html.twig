@@ -519,7 +519,7 @@
                             </form>
                         </div>
                         <br>
-                    {{ form_row(formContrat.submit, { 'label': 'Enregistrer' }) }}
+                        <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ contactSelectionne }}</button>
                     {{ form_end(formContrat) }}
                 </div>
             {% endif %}
