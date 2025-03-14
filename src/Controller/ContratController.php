@@ -150,6 +150,7 @@ class ContratController extends AbstractController
         $theAssociatedContract = "";
 
         $formContrat = "";
+        $formEquipement = "";
         // GET CLIENT SELECTED INFORMATIONS ACCORDING TO HIS CONTACTID
         if ($contactId != "") {
             switch ($contactAgence) {
