@@ -156,130 +156,107 @@ class ContratController extends AbstractController
             switch ($contactAgence) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
+                    $formContrat = $this->newContract($request, $contactAgence);
                     break;
                 case ' S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S40':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                   
+                    $formContrat = $this->newContract($request, $contactAgence);                   
                     break;
                 case ' S40':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
+                    $formContrat = $this->newContract($request, $contactAgence);
                     break;
                 case ' S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
+                    $formContrat = $this->newContract($request, $contactAgence);
                     break;
                 case 'S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S70':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S70':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S80':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S80':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S100':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S100':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S120':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S120':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S130':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S130':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S140':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S140':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S150':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S150':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S160':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S160':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case 'S170':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 case ' S170':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $contactId]);
-                    $formContrat = $this->newContract($request, $contactAgence)[0];
-                    
+                    $formContrat = $this->newContract($request, $contactAgence);                    
                     break;
                 
                 default:
