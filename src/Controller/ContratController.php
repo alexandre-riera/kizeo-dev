@@ -148,7 +148,7 @@ class ContratController extends AbstractController
         // PUT THE LOGIC IN THE "SWITCH" IF CONTACTAGENCE EQUAL S50, SEARCH CONTRACT IN ENTITY CONTRATS50 WITH HIS CONTACTID
         $theAssociatedContract = "";
 
-        $formS50 = "";
+        $formContrat = "";
         // GET CLIENT SELECTED INFORMATIONS ACCORDING TO HIS CONTACTID
         if ($contactId != "") {
             switch ($contactAgence) {
@@ -169,11 +169,11 @@ class ContratController extends AbstractController
                     break;
                 case 'S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
-                    $formS50 = $this->newContract($request, $contactAgence);
+                    $formContrat = $this->newContract($request, $contactAgence);
                     break;
                 case ' S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
-                    $formS50 = $this->newContract($request, $contactAgence);
+                    $formContrat = $this->newContract($request, $contactAgence);
                     break;
                 case 'S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
@@ -265,7 +265,7 @@ class ContratController extends AbstractController
             $theAssociatedContract = $contratRepositoryS10->findContratByIdContact($contactId);
         }
         dump($clientSelectedInformations);
-        dump($formS50);
+        dump($formContrat);
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,
@@ -286,7 +286,7 @@ class ContratController extends AbstractController
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
             'visites' => $visites,
-            'formS50' => $formS50,
+            'formContrat' => $formContrat,
         ]);
     }
 
