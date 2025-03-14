@@ -493,11 +493,14 @@
                         <div class="col" id="id_contact">
                             {{ form_row(formContrat.id_contact) }}
                         </div>
+                        <div>
+                            <h4>Création des équipements :</h4>
+                            <form method="POST">
+                            </form>
+                        </div>
+                        <br>
+                        <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
                     {{ form_end(formContrat) }}
-                </div>
-                <div>
-                    <h4>Création des équipements :</h4>
-                    {{ form(formEquipement) }}
                 </div>
             {% endif %}
         {% endif %}
