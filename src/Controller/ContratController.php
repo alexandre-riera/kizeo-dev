@@ -16,8 +16,10 @@ use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
 use App\Entity\ContratS10;
-use App\Repository\ContratRepositoryS10;
+use App\Entity\ContratS50;
+use App\Form\ContratS50Type;
 use App\Service\KizeoService;
+use App\Repository\ContratRepositoryS10;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -170,7 +172,7 @@ class ContratController extends AbstractController
                     break;
                 case ' S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $contactId]);
-                    
+                    $formS50 = $this->newContract($request, $contactAgence);
                     break;
                 case 'S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $contactId]);
@@ -283,29 +285,35 @@ class ContratController extends AbstractController
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
             'visites' => $visites,
+            'formS50' => $formS50,
         ]);
     }
 
-    public function newContract(Request $request, $contractEntity, $contractForm) : Response 
+    public function newContract(Request $request, $contactAgence)
     {
         // just set up a fresh $task object (remove the example data)
-        $contrat = new $contractEntity;
-
-        $form = $this->createForm($contractForm::class, $contrat);
+        switch ($contactAgence) {
+            case 'S50':
+                $contrat = new ContratS50();
+                $form = $this->createForm(ContratS50Type::class, $contrat);
+                break;
+            
+            default:
+                # code...
+                break;
+        }
 
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             // $form->getData() holds the submitted values
             // but, the original `$contrat` variable has also been updated
             $contrat = $form->getData();
-
+            dd($contrat);
             // ... perform some action, such as saving the contrat to the database
 
-            return $this->redirectToRoute('contrat');
+            return new Response('success');
         }
 
-        return $this->render('contrat/new.html.twig', [
-            'form' => $form,
-        ]);
+        return $form;
     }
 }
