@@ -500,20 +500,26 @@
                     <div>
                         <h4>Création des équipements :</h4>
                         <form method="POST">
-                            <label for="agence">Nombre d'équipements :</label>
-                            <input type="text" class="form-control" name="nombre_equipements">
-                            <select class="form-control" name="type_equipement">
-                                <option value = "" selected> Type </option> 
-                                {% for type in typesEquipements %}
-                                    <option value="{{ type }}">{{ type }}</option>
-                                {% endfor %}
-                            </select>
-                            <select class="form-control" name="mode_fonctionnement">
-                                <option value = "" selected> Mode fonctionnement </option> 
-                                {% for mode in modesFonctionnement %}
-                                    <option value="{{ mode }}">{{ mode }}</option>
-                                {% endfor %}
-                            </select>
+                            <div class="col-sm-2">
+                                <label for="agence">Nombre d'équipements :</label>
+                                <input type="text" class="form-control" name="nombre_equipements">
+                            </div>
+                            <div class="col-sm-2">
+                                <select class="form-control" name="type_equipement">
+                                    <option value = "" selected> Type </option> 
+                                    {% for type in typesEquipements %}
+                                        <option value="{{ type }}">{{ type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <select class="form-control" name="mode_fonctionnement">
+                                    <option value = "" selected> Mode fonctionnement </option> 
+                                    {% for mode in modesFonctionnement %}
+                                        <option value="{{ mode }}">{{ mode }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </form>
                     </div>
                     <br>
