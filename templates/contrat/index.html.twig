@@ -494,6 +494,9 @@
                             {{ form_row(formContrat.id_contact) }}
                         </div>
                     {{ form_end(formContrat) }}
+                    <br>
+                    <br>
+                    <br>
                     <div>
                         <h4>Création des équipements :</h4>
                         <form method="POST">
@@ -509,12 +512,6 @@
                                 <option value = "" selected> Mode fonctionnement </option> 
                                 {% for mode in modesFonctionnement %}
                                     <option value="{{ mode }}"</option>
-                                {% endfor %}
-                            </select>
-                            <select class="form-control" name="visite_equipement">
-                                <option value = "" selected> Mode fonctionnement </option> 
-                                {% for visite in visites %}
-                                    <option value="{{ visite }}"</option>
                                 {% endfor %}
                             </select>
                         </form>
