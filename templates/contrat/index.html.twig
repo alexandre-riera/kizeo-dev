@@ -496,10 +496,30 @@
                         <div>
                             <h4>Création des équipements :</h4>
                             <form method="POST">
+                                <label for="agence">Nombre d'équipements :</label>
+                                <input type="text" class="form-control" name="nombre_equipements">
+                                <select class="form-control" name="type_equipement">
+                                    <option value = "" selected> Type </option> 
+                                    {% for type in typesEquipements %}
+                                        <option value="{{ type }}"</option>
+                                    {% endfor %}
+                                </select>
+                                <select class="form-control" name="mode_fonctionnement">
+                                    <option value = "" selected> Mode fonctionnement </option> 
+                                    {% for mode in modesFonctionnement %}
+                                        <option value="{{ mode }}"</option>
+                                    {% endfor %}
+                                </select>
+                                <select class="form-control" name="visite_equipement">
+                                    <option value = "" selected> Mode fonctionnement </option> 
+                                    {% for visite in visites %}
+                                        <option value="{{ visite }}"</option>
+                                    {% endfor %}
+                                </select>
                             </form>
                         </div>
                         <br>
-                        <button type="submit"  name ="submit_agence" class="btn btn-primary">Valider</button>
+                    {{ form_row(form.submit, { 'label': 'Enregistrer' }) }}
                     {{ form_end(formContrat) }}
                 </div>
             {% endif %}
