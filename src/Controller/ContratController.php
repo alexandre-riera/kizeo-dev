@@ -148,6 +148,7 @@ class ContratController extends AbstractController
         // PUT THE LOGIC IN THE "SWITCH" IF CONTACTAGENCE EQUAL S50, SEARCH CONTRACT IN ENTITY CONTRATS50 WITH HIS CONTACTID
         $theAssociatedContract = "";
 
+        $formS50 = null;
         // GET CLIENT SELECTED INFORMATIONS ACCORDING TO HIS CONTACTID
         if ($contactId != "") {
             switch ($contactAgence) {
