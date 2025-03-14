@@ -484,16 +484,21 @@
                     </div>
                 </div>
             {% else %}
-                <h4>Création du contrat :</h4>
-                {{ form_start(formContrat) }}
-                    <div class="my-custom-class-for-errors">
-                        {{ form_errors(formContrat) }}
-                    </div>
-                    <div class="col" id="id_contact">
-                        {{ form_row(formContrat.id_contact) }}
-                    </div>
-                {{ form_end(formContrat) }}
-                {{ form(formEquipement) }}
+                <div>
+                    <h4>Création du contrat :</h4>
+                    {{ form_start(formContrat) }}
+                        <div class="my-custom-class-for-errors">
+                            {{ form_errors(formContrat) }}
+                        </div>
+                        <div class="col" id="id_contact">
+                            {{ form_row(formContrat.id_contact) }}
+                        </div>
+                    {{ form_end(formContrat) }}
+                </div>
+                <div>
+                    <h4>Création des équipements :</h4>
+                    {{ form(formEquipement) }}
+                </div>
             {% endif %}
         {% endif %}
     {% endif %}
