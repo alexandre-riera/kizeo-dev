@@ -485,52 +485,12 @@
                 </div>
             {% else %}
                 <h4>Création du contrat :</h4>
-                {{ form(formContrat) }}
-                <br />
-                <br />
-                <h4>Ajout équipements au contrat en lot par type :</h4>
-                <form action="" method="POST">
-                    <label for="numeroContrat">Numéro de contrat :</label>
-                    <input type="text" class="form-control" name="numeroContrat">
-                    <label for="dateSignature">Date de signature :</label>
-                    <input type="text" class="form-control" name="dateSignature">
-                    <label for="duree">Durée :</label>
-                    <input type="text" class="form-control" name="duree">
-                    <fieldset>
-                        <legend>Tacite reconduction :</legend>
-                        <div>
-                            <label for="taciteReconduction">Oui</label>
-                            <input type="checkbox" class="form-control" name="taciteReconduction" checked />
-                        </div>
-                        <div>
-                            <label for="taciteReconduction">Non</label>
-                            <input type="checkbox" class="form-control" name="taciteReconduction" />
-                        </div>
-                    </fieldset>
-                    <label for="valorisation">Valorisation :</label>
-                    <input type="text" class="form-control" name="valorisation">
-                    <label for="nombres">Nombre d'équipements au contrat :</label>
-                    <input type="text" class="form-control" name="nombreEquipement">
-                    <label for="nombreVisite">Nombre de Visite(s) :</label>
-                    <input type="text" class="form-control" name="nombreVisite">
-                    <label for="datePrevisionnelle">Date prévisionnelle :</label>
-                    <input type="date" class="form-control" name="datePrevisionnelle">
-                    <select class="form-control" name="typeEquipement">
-                        <option value = "" selected> Type </option> 
-                        {% for type in typesEquipements %}
-                            <option value="{{ type }}"</option>
-                        {% endfor %}
-                    </select>
-                    <select class="form-control" name="typeEquipement">
-                        <option value = "" selected> Mode de fonctionnement </option> 
-                        {% for mode in modesFonctionnement %}
-                            <option value="{{ mode }}"</option>
-                        {% endfor %}
-                    </select>
-                    <br />
-                    <br />
-                    <button type="submit"  name ="submit_contrat" class="btn btn-primary">Sauvegarder le contrat</button>
-                </form>
+                {{ form_start(form) }}
+                    <div class="my-custom-class-for-errors">
+                        {{ form_errors(form) }}
+                    </div>
+
+                {{ form_end(form) }}
             {% endif %}
         {% endif %}
     {% endif %}
