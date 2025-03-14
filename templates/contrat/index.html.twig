@@ -485,12 +485,12 @@
                 </div>
             {% else %}
                 <h4>Création du contrat :</h4>
-                {{ form_start(form) }}
+                {{ form_start(formContrat) }}
                     <div class="my-custom-class-for-errors">
-                        {{ form_errors(form) }}
+                        {{ form_errors(formContrat) }}
                     </div>
 
-                {{ form_end(form) }}
+                {{ form_end(formContrat) }}
             {% endif %}
         {% endif %}
     {% endif %}
