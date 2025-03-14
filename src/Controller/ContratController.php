@@ -17,6 +17,7 @@ use App\Entity\ContactS160;
 use App\Entity\ContactS170;
 use App\Entity\ContratS10;
 use App\Entity\ContratS50;
+use App\Entity\EquipementS50;
 use App\Form\ContratS50Type;
 use App\Form\EquipementS50Type;
 use App\Service\KizeoService;
@@ -349,8 +350,9 @@ class ContratController extends AbstractController
         switch ($contactAgence) {
             case 'S50':
                 $contrat = new ContratS50();
+                $equipement = new EquipementS50();
                 $formContrat = $this->createForm(ContratS50Type::class, $contrat);
-                $formEquipement = $this->createForm(EquipementS50Type::class, $contrat);
+                $formEquipement = $this->createForm(EquipementS50Type::class, $equipement);
                 break;
             
             default:
