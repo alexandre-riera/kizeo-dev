@@ -15,6 +15,7 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
+use App\Entity\ContratS10;
 use App\Repository\ContratRepositoryS10;
 use App\Service\KizeoService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -150,7 +151,6 @@ class ContratController extends AbstractController
             switch ($contactAgence) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
-                    
                     break;
                 case ' S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $contactId]);
@@ -283,6 +283,29 @@ class ContratController extends AbstractController
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
             'visites' => $visites,
+        ]);
+    }
+
+    public function newContract(Request $request, $contractEntity, $contractForm) : Response 
+    {
+        // just set up a fresh $task object (remove the example data)
+        $contrat = new $contractEntity;
+
+        $form = $this->createForm($contractForm::class, $contrat);
+
+        $form->handleRequest($request);
+        if ($form->isSubmitted() && $form->isValid()) {
+            // $form->getData() holds the submitted values
+            // but, the original `$contrat` variable has also been updated
+            $contrat = $form->getData();
+
+            // ... perform some action, such as saving the contrat to the database
+
+            return $this->redirectToRoute('contrat');
+        }
+
+        return $this->render('contrat/new.html.twig', [
+            'form' => $form,
         ]);
     }
 }
