@@ -498,36 +498,67 @@
                 </div>
             {% else %}
                 <div>
-                    <h4>Création du contrat :</h4>
                     <form action="" method="POST">
-                        <div>
-                            <h4>Création des équipements :</h4>
-                            <div id="equipements-container">
-                                <div class="equipement-ligne">
-                                    <div class="col-sm-2">
-                                        <label for="agence">Nombre d'équipements :</label>
-                                        <input type="text" class="form-control" name="nombre_equipements[]">
-                                    </div>
-                                    <div class="col-sm-2">
-                                        <select class="form-control" name="type_equipement[]">
-                                            <option value="" selected>Type</option>
-                                            {% for type in typesEquipements %}
-                                                <option value="{{ type }}">{{ type }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <div class="col-sm-2">
-                                        <select class="form-control" name="mode_fonctionnement[]">
-                                            <option value="" selected>Mode fonctionnement</option>
-                                            {% for mode in modesFonctionnement %}
-                                                <option value="{{ mode }}">{{ mode }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
+                        <h4>Création du contrat :</h4>
+                        <div class="contrat-container">
+                            <div class="col-sm-2">
+                                <label for="numero_contrat">Numéro du contrat :</label>
+                                <input type="text" class="form-control" name="numero_contrat">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="date_signature">Date de signature :</label>
+                                <input type="date" class="form-control" name="date_signature">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="duree">Durée de contrat :</label>
+                                <input type="text" class="form-control" name="duree">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="tacite_reconduction">Tacite reconduction ? :</label>
+                                <input type="radio" class="form-control" name="tacite_reconduction">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="nombre_equipements">Nombre d'équipements total :</label>
+                                <input type="text" class="form-control" name="nombre_equipements">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="nombre_visite">Nombre de visites à l'année :</label>
+                                <input type="text" class="form-control" name="nombre_visite">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="date_previsionnelle">Date prévisionnelle :</label>
+                                <input type="date" class="form-control" name="date_previsionnelle">
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                        <br />
+                        <h4>Création des équipements :</h4>
+                        <div id="equipements-container">
+                            <div class="equipement-ligne">
+                                <div class="col-sm-2">
+                                    <label for="agence">Nombre d'équipements :</label>
+                                    <input type="text" class="form-control" name="nombre_equipements[]">
+                                </div>
+                                <div class="col-sm-2">
+                                    <select class="form-control" name="type_equipement[]">
+                                        <option value="" selected>Type</option>
+                                        {% for type in typesEquipements %}
+                                            <option value="{{ type }}">{{ type }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <select class="form-control" name="mode_fonctionnement[]">
+                                        <option value="" selected>Mode fonctionnement</option>
+                                        {% for mode in modesFonctionnement %}
+                                            <option value="{{ mode }}">{{ mode }}</option>
+                                        {% endfor %}
+                                    </select>
                                 </div>
                             </div>
-                            <button type="button" id="ajouter-equipement">+</button>
                         </div>
+                        <button type="button" id="ajouter-equipement">+</button>
                         <br>
                         <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ clientSelectedInformations.getRaisonSociale() }}</button>
                     </form>
