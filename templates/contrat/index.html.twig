@@ -510,8 +510,14 @@
                             value="{{ clientSelectedInformations.getIdContact() }}"
                             placeholder="{{ clientSelectedInformations.getIdContact() }}"
                         >
-                        <label for="id_contact">Numéro de contrat :</label>
-                        {{ form_row(formContrat.numero_contrat) }}
+                        <br />
+                        <label for="numero_contrat">Numéro de contrat :</label>
+                        <input class="col" id="id_contact"
+                            name="{{ field_name(formContrat.numero_contrat) }}"
+                            class="form-control"
+                            value="{{ form_value(formContrat.numero_contrat) }}"
+                            placeholder="{{ form_label(formContrat.numero_contrat) }}"
+                        >
                     {{ form_end(formContrat) }}
                     <br>
                     <br>
