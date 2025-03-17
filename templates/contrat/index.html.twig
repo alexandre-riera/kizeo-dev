@@ -517,6 +517,13 @@
                             class="form-control"
                             value="{{ field_value(formContrat.numero_contrat) }}"
                         >
+                        <br />
+                        <label for="date_signature">Date de signature :</label>
+                        <input class="col" id="date_signature"
+                            name="{{ field_name(formContrat.date_signature) }}"
+                            class="form-control"
+                            value="{{ field_value(formContrat.date_signature) }}"
+                        >
                     {{ form_end(formContrat) }}
                     <br>
                     <br>
