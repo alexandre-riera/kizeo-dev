@@ -510,6 +510,8 @@
                             value="{{ clientSelectedInformations.getIdContact() }}"
                             placeholder="{{ clientSelectedInformations.getIdContact() }}"
                         >
+                        <label for="id_contact">Numéro de contrat :</label>
+                        {{ form_row(formContrat.numero_contrat) }}
                     {{ form_end(formContrat) }}
                     <br>
                     <br>
