@@ -1,9 +1,10 @@
-<div class="equipement-ligne">
+<div style="display:flex;" class="equipement-ligne">
     <div class="col-sm-2">
         <label for="agence">Nombre d'équipements :</label>
         <input type="text" class="form-control" name="nombre_equipements[]">
     </div>
     <div class="col-sm-2">
+        <label for="type_equipements">Type d'équipements :</label>
         <select class="form-control" name="type_equipement[]">
             <option value="" selected>Type</option>
             {% for type in typesEquipements %}
@@ -12,6 +13,7 @@
         </select>
     </div>
     <div class="col-sm-2">
+        <label for="mode_fonctionnement">Mode de fonctionnement :</label>
         <select class="form-control" name="mode_fonctionnement[]">
             <option value="" selected>Mode fonctionnement</option>
             {% for mode in modesFonctionnement %}
