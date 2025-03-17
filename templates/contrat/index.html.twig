@@ -499,45 +499,9 @@
             {% else %}
                 <div>
                     <h4>Création du contrat :</h4>
-                    {{ form_start(formContrat) }}
-                        <div class="my-custom-class-for-errors">
-                            {{ form_errors(formContrat) }}
-                        </div>
-                        <label for="id_contact">Id contact :</label>
-                        <input class="col" id="id_contact"
-                            name="{{ field_name(formContrat.id_contact) }}"
-                            class="form-control"
-                            value="{{ clientSelectedInformations.getIdContact() }}"
-                            placeholder="{{ clientSelectedInformations.getIdContact() }}"
-                        >
-                        <br />
-                        <label for="numero_contrat">Numéro de contrat :</label>
-                        <input class="col" id="numero_contrat"
-                            name="{{ field_name(formContrat.numero_contrat) }}"
-                            class="form-control"
-                            value="{{ field_value(formContrat.numero_contrat) }}"
-                        >
-                        <br />
-                        <label for="date_signature">Date de signature :</label>
-                        <input class="col" id="date_signature"
-                            name="{{ field_name(formContrat.date_signature) }}"
-                            class="form-control"
-                            value="{{ field_value(formContrat.date_signature) }}"
-                        >
-                        <br />
-                        <label for="duree">Durée du contrat:</label>
-                        <input class="col" id="duree"
-                            name="{{ field_name(formContrat.duree) }}"
-                            class="form-control"
-                            value="{{ field_value(formContrat.duree) }}"
-                        >
-                    {{ form_end(formContrat) }}
-                    <br>
-                    <br>
-                    <br>
-                    <div>
-                        <h4>Création des équipements :</h4>
-                        <form method="POST">
+                    <form action="" method="POST">
+                        <div>
+                            <h4>Création des équipements :</h4>
                             <div id="equipements-container">
                                 <div class="equipement-ligne">
                                     <div class="col-sm-2">
@@ -563,10 +527,10 @@
                                 </div>
                             </div>
                             <button type="button" id="ajouter-equipement">+</button>
-                        </form>
-                    </div>
-                    <br>
-                    <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ clientSelectedInformations.getRaisonSociale() }}</button>
+                        </div>
+                        <br>
+                        <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ clientSelectedInformations.getRaisonSociale() }}</button>
+                    </form>
                 </div>
             {% endif %}
         {% endif %}
