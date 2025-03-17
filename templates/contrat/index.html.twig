@@ -16,7 +16,20 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
         <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
         <script src="/public/js/filterFunction.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const container = document.getElementById('equipements-container');
+                const addButton = document.getElementById('ajouter-equipement');
 
+                addButton.addEventListener('click', function() {
+                    fetch('{{ path('app_equipement_new_line') }}') // Remplacez par votre route
+                        .then(response => response.text())
+                        .then(html => {
+                            container.insertAdjacentHTML('beforeend', html);
+                        });
+                });
+            });
+        </script>
 {% endblock %}
 {% block body %}
 <style>
@@ -500,26 +513,31 @@
                     <div>
                         <h4>Création des équipements :</h4>
                         <form method="POST">
-                            <div class="col-sm-2">
-                                <label for="agence">Nombre d'équipements :</label>
-                                <input type="text" class="form-control" name="nombre_equipements">
+                            <div id="equipements-container">
+                                <div class="equipement-ligne">
+                                    <div class="col-sm-2">
+                                        <label for="agence">Nombre d'équipements :</label>
+                                        <input type="text" class="form-control" name="nombre_equipements[]">
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" name="type_equipement[]">
+                                            <option value="" selected>Type</option>
+                                            {% for type in typesEquipements %}
+                                                <option value="{{ type }}">{{ type }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <select class="form-control" name="mode_fonctionnement[]">
+                                            <option value="" selected>Mode fonctionnement</option>
+                                            {% for mode in modesFonctionnement %}
+                                                <option value="{{ mode }}">{{ mode }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="col-sm-2">
-                                <select class="form-control" name="type_equipement">
-                                    <option value = "" selected> Type </option> 
-                                    {% for type in typesEquipements %}
-                                        <option value="{{ type }}">{{ type }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-sm-2">
-                                <select class="form-control" name="mode_fonctionnement">
-                                    <option value = "" selected> Mode fonctionnement </option> 
-                                    {% for mode in modesFonctionnement %}
-                                        <option value="{{ mode }}">{{ mode }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+                            <button type="button" id="ajouter-equipement">+</button>
                         </form>
                     </div>
                     <br>

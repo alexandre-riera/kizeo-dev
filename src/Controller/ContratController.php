@@ -320,4 +320,13 @@ class ContratController extends AbstractController
 
         return $formContrat;
     }
+
+    /**
+     * @return equipment new line template used by fetch API for + button
+     */
+    #[Route('/equipements/new-line', name: 'app_equipement_new_line', methods: ['GET'])]
+    public function newLine(): Response
+    {
+        return $this->render('equipement/_new_line.html.twig');
+    }
 }
