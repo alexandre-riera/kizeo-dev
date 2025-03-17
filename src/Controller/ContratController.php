@@ -327,6 +327,40 @@ class ContratController extends AbstractController
     #[Route('/equipements/new-line', name: 'app_equipement_new_line', methods: ['GET'])]
     public function newLine(): Response
     {
-        return $this->render('equipement/_new_line.html.twig');
+        
+        $typesEquipements = [
+            "Barrière levante",
+            "Bloc roue",
+            "Mini-pont",
+            "Niveleur",
+            "Plaque de quai",
+            "Portail",
+            "Porte accordéon",
+            "Porte coulissante",
+            "Porte coupe-feu",
+            "Porte frigorifique",
+            "Porte piétonne",
+            "Porte rapide",
+            "Porte sectionnelle",
+            "Protection",
+            "Rideau métallique",
+            "SAS",
+            "Table élévatrice",
+            "Tourniquet",
+            "Volet roulant",
+        ];
+        $modesFonctionnement = [
+            "Manuel",
+            "Motorisé",
+            "Mixte",
+            "Impulsion",
+            "Automatique",
+            "Hydraulique"
+        ];
+
+        return $this->render('equipement/_new_line.html.twig', [
+            'typesEquipements' => $typesEquipements,
+            'modesFonctionnement' => $modesFonctionnement,
+        ]);
     }
 }
