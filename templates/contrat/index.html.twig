@@ -523,7 +523,13 @@
                             name="{{ field_name(formContrat.date_signature) }}"
                             class="form-control"
                             value="{{ field_value(formContrat.date_signature) }}"
-                            placeholder="Date de signature du contrat"
+                        >
+                        <br />
+                        <label for="duree">Durée du contrat:</label>
+                        <input class="col" id="duree"
+                            name="{{ field_name(formContrat.duree) }}"
+                            class="form-control"
+                            value="{{ field_value(formContrat.duree) }}"
                         >
                     {{ form_end(formContrat) }}
                     <br>
