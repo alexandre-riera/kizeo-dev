@@ -506,8 +506,8 @@
                         <input class="col" id="id_contact"
                             name="{{ field_name(formContrat.id_contact) }}"
                             class="form-control"
-                            value="{{formContrat.id_contact}}"
-                            placeholder="{{formContrat.id_contact}}"
+                            value="{{ clientSelectedInformations.getIdContact() }}"
+                            placeholder="{{ clientSelectedInformations.getIdContact() }}"
                         >
                     {{ form_end(formContrat) }}
                     <br>
