@@ -385,13 +385,13 @@ class ContratController extends AbstractController
                 $visites[] = 'CEA';
                 break;
             case '2':
-                array_push($visites ,['CE1', 'CE2']);
+                array_push($visites ,'CE1', 'CE2');
                 break;
             case '3':
-                array_push($visites ,['CE1', 'CE2', 'CE3']);
+                array_push($visites ,'CE1', 'CE2', 'CE3');
                 break;
             case '4':
-                array_push($visites ,['CE1', 'CE2', 'CE3', 'CE4']);
+                array_push($visites ,'CE1', 'CE2', 'CE3', 'CE4');
                 break;
             
             default:
