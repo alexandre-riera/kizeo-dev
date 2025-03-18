@@ -518,6 +518,15 @@
                                  <label for="tacite_reconduction_oui"><input type="checkbox" name="tacite_reconduction_oui" value="oui">Oui</label>
                                  <label for="tacite_reconduction_non"><input type="checkbox" name="tacite_reconduction_non" value="non">Non</label>
                             </div>
+                            <div class="col-sm-2">
+                                    <label for="type_valorisation">Type de valorisation :</label>
+                                    <select class="form-control" name="type_valorisation[]">
+                                        <option value="" selected>---------</option>
+                                        {% for valorisation in typesValorisation %}
+                                            <option value="{{ valorisation }}">{{ valo }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             <div class="col-sm-2 mt-2">
                                 <label for="nombre_equipements">Nombre d'équipements total :</label>
                                 <input type="text" class="form-control" name="nombre_equipements">

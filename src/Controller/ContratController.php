@@ -72,6 +72,7 @@ class ContratController extends AbstractController
 
         $typesEquipements = $contratRepositoryS10->getTypesEquipements();
         $modesFonctionnement = $contratRepositoryS10->getModesFonctionnement();
+        $typesValorisation = $contratRepositoryS10->getTypesValorisation();
         $visites = $contratRepositoryS10->getVisites();
 
         // dump($typesEquipements);
@@ -290,6 +291,7 @@ class ContratController extends AbstractController
             'modesFonctionnement' => $modesFonctionnement,
             'visites' => $visites,
             'formContrat' => $formContrat,
+            'typesValorisation' => $typesValorisation,
         ]);
     }
 

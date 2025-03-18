@@ -73,6 +73,17 @@ class ContratRepositoryS150 extends ServiceEntityRepository
         ];
         return $modes; 
    }
+   public function getTypesValorisation()
+   {
+        $modes = [
+            "1%",
+            "2%",
+            "2,5%",
+            "3%",
+            "3,5%"
+        ];
+        return $modes; 
+   }
    public function getVisites()
    {
         $visites = [
