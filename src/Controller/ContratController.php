@@ -8,6 +8,8 @@ use App\Entity\ContactS50;
 use App\Entity\ContactS60;
 use App\Entity\ContactS70;
 use App\Entity\ContactS80;
+use App\Entity\ContratS10;
+use App\Entity\ContratS50;
 use App\Entity\ContactS100;
 use App\Entity\ContactS120;
 use App\Entity\ContactS130;
@@ -15,17 +17,16 @@ use App\Entity\ContactS140;
 use App\Entity\ContactS150;
 use App\Entity\ContactS160;
 use App\Entity\ContactS170;
-use App\Entity\ContratS10;
-use App\Entity\ContratS50;
-use App\Entity\EquipementS50;
 use App\Form\ContratS50Type;
-use App\Form\EquipementS50Type;
+use App\Entity\EquipementS50;
 use App\Service\KizeoService;
+use App\Form\EquipementS50Type;
 use App\Repository\ContratRepositoryS10;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class ContratController extends AbstractController
@@ -364,5 +365,39 @@ class ContratController extends AbstractController
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
         ]);
+    }
+    /**
+     * @return visites available for equipments and contract form
+     */
+    #[Route('/get_visites/{nombreVisites}', name: 'get_visites', methods: ['GET'])]
+    public function getVisites(int $nombreVisites): JsonResponse
+    {
+        $visites = [
+            "CEA",
+            "CE1",
+            "CE2",
+            "CE3",
+            "CE4"
+        ];
+        $visites = [];
+        switch ($nombreVisites) {
+            case '1':
+                $visites[] = 'CEA';
+                break;
+            case '2':
+                array_push($visites ,['CE1', 'CE2']);
+                break;
+            case '3':
+                array_push($visites ,['CE1', 'CE2', 'CE3']);
+                break;
+            case '4':
+                array_push($visites ,['CE1', 'CE2', 'CE3', 'CE4']);
+                break;
+            
+            default:
+                break;
+        }
+
+        return new JsonResponse($visites);
     }
 }

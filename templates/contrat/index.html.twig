@@ -30,6 +30,34 @@
                 });
             });
         </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                document.getElementById('nbr_visites').addEventListener('focusout', function() {
+                    var nombreVisites = this.value;
+                    var selectVisites = document.getElementById('choix_visites');
+
+                    // Efface les options existantes (sauf l'option par défaut)
+                    while (selectVisites.options.length > 1) {
+                        selectVisites.remove(1);
+                    }
+
+                    // Si un nombre de visites est saisi, génère les nouvelles options
+                    if (nombreVisites) {
+                        // Envoie une requête AJAX à votre contrôleur Symfony
+                        fetch('/get_visites/' + nombreVisites)
+                            .then(response => response.json())
+                            .then(data => {
+                                data.forEach(visite => {
+                                    var option = document.createElement('option');
+                                    option.value = visite;
+                                    option.text = visite;
+                                    selectVisites.add(option);
+                                });
+                            });
+                    }
+                });
+            });
+        </script>
 {% endblock %}
 {% block body %}
 <style>
@@ -532,8 +560,8 @@
                                 <input type="text" class="form-control" name="nombre_equipements">
                             </div>
                             <div class="col-sm-2 mt-2">
-                                <label for="nombre_visite">Nombre de visites à l'année :</label>
-                                <input type="text" class="form-control" name="nombre_visite" onchange="alert('onchange')">
+                                <label for="nombre_visite">Nombre de visites à l'année entre 1 et 4 :</label>
+                                <input type="text" class="form-control" name="nombre_visite" id="nbr_visites" min="1" max="4">
                             </div>
                             <div class="col-sm-2 mt-2">
                                 <label for="date_previsionnelle">Date prévisionnelle :</label>
@@ -570,7 +598,7 @@
                                 </div>
                                 <div class="col-sm-2">
                                     <label for="visite_equipement">Visite(s) :</label>
-                                    <select class="form-control" name="visite_equipement[]">
+                                    <select class="form-control" name="visite_equipement[]" id="choix_visites">
                                         <option value="" selected>---------</option>
                                         {% for visite in visites %}
                                             <option value="{{ visite }}">{{ visite }}</option>
