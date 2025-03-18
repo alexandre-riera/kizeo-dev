@@ -392,10 +392,17 @@ class ContratController extends AbstractController
             "Automatique",
             "Hydraulique"
         ];
+        $visites = [
+            "CE1",
+            "CE2",
+            "CE3",
+            "CE4",
+        ];
 
         return $this->render('equipement/_new_line.html.twig', [
             'typesEquipements' => $typesEquipements,
             'modesFonctionnement' => $modesFonctionnement,
+            'visites' => $visites,
         ]);
     }
     /**
