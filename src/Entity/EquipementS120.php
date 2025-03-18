@@ -113,6 +113,12 @@ class EquipementS120
     #[ORM\ManyToOne(inversedBy: 'equipements')]
     private ?ContratS120 $contratS120 = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $remplace_par = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $numero_identification = null;
+
 
     public function getId(): ?int
     {
@@ -511,6 +517,30 @@ class EquipementS120
     public function setContratS120(?ContratS120 $contratS120): static
     {
         $this->contratS120 = $contratS120;
+
+        return $this;
+    }
+
+    public function getRemplacePar(): ?string
+    {
+        return $this->remplace_par;
+    }
+
+    public function setRemplacePar(?string $remplace_par): static
+    {
+        $this->remplace_par = $remplace_par;
+
+        return $this;
+    }
+
+    public function getNumeroIdentification(): ?string
+    {
+        return $this->numero_identification;
+    }
+
+    public function setNumeroIdentification(?string $numero_identification): static
+    {
+        $this->numero_identification = $numero_identification;
 
         return $this;
     }
