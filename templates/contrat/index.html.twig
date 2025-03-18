@@ -568,6 +568,15 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                                <div class="col-sm-2">
+                                    <label for="visite_equipement">Visite(s) :</label>
+                                    <select class="form-control" name="visite_equipement[]">
+                                        <option value="" selected>---------</option>
+                                        {% for visite in visites %}
+                                            <option value="{{ visite }}">{{ visite }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         <br>
