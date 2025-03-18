@@ -393,10 +393,10 @@ class ContratController extends AbstractController
             "Hydraulique"
         ];
         $visites = [
-            "1 visite par an",
-            "2 visite par an",
-            "3 visite par an",
-            "4 visite par an",
+            "Nécessite 1 visite par an",
+            "Nécessite 2 visites par an",
+            "Nécessite 3 visites par an",
+            "Nécessite 4 visites par an",
         ];
 
         return $this->render('equipement/_new_line.html.twig', [
@@ -414,16 +414,16 @@ class ContratController extends AbstractController
         $visites = [];
         switch ($nombreVisites) {
             case '1':
-                $visites[] = '1 visite par an';
+                $visites[] = 'Nécessite 1 visite par an';
                 break;
             case '2':
-                array_push($visites ,'2 visites par an');
+                array_push($visites ,'Nécessite 1 visite par an', 'Nécessite 2 visites par an');
                 break;
             case '3':
-                array_push($visites ,'3 visites par an');
+                array_push($visites ,'Nécessite 1 visite par an', 'Nécessite 2 visites par an', 'Nécessite 3 visites par an');
                 break;
             case '4':
-                array_push($visites ,'4 visites par an');
+                array_push($visites ,'Nécessite 1 visite par an', 'Nécessite 2 visites par an', 'Nécessite 3 visites par an', 'Nécessite 4 visites par an');
                 break;
             
             default:
