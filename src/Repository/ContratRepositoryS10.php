@@ -87,10 +87,10 @@ class ContratRepositoryS10 extends ServiceEntityRepository
    public function getVisites()
    {
         $visites = [
-            "CE1",
-            "CE2",
-            "CE3",
-            "CE4",
+            "1 visite par an",
+            "2 visite par an",
+            "3 visite par an",
+            "4 visite par an",
         ];
         return $visites; 
    }

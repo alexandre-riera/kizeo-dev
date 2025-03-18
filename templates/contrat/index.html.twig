@@ -22,7 +22,7 @@
                 const addButton = document.getElementById('ajouter-equipement');
 
                 addButton.addEventListener('click', function() {
-                    fetch('{{ path('app_equipement_new_line') }}') // Remplacez par votre route
+                    fetch('{{ path('app_equipement_new_line') }}')
                         .then(response => response.text())
                         .then(html => {
                             container.insertAdjacentHTML('beforeend', html);

@@ -393,10 +393,10 @@ class ContratController extends AbstractController
             "Hydraulique"
         ];
         $visites = [
-            "CE1",
-            "CE2",
-            "CE3",
-            "CE4",
+            "1 visite par an",
+            "2 visite par an",
+            "3 visite par an",
+            "4 visite par an",
         ];
 
         return $this->render('equipement/_new_line.html.twig', [
@@ -411,26 +411,19 @@ class ContratController extends AbstractController
     #[Route('/get_visites/{nombreVisites}', name: 'get_visites', methods: ['GET'])]
     public function getVisites(int $nombreVisites): JsonResponse
     {
-        $visites = [
-            "CEA",
-            "CE1",
-            "CE2",
-            "CE3",
-            "CE4"
-        ];
         $visites = [];
         switch ($nombreVisites) {
             case '1':
-                $visites[] = 'CEA';
+                $visites[] = '1 visite par an';
                 break;
             case '2':
-                array_push($visites ,'CE1', 'CE2');
+                array_push($visites ,'2 visites par an');
                 break;
             case '3':
-                array_push($visites ,'CE1', 'CE2', 'CE3');
+                array_push($visites ,'3 visites par an');
                 break;
             case '4':
-                array_push($visites ,'CE1', 'CE2', 'CE3', 'CE4');
+                array_push($visites ,'4 visites par an');
                 break;
             
             default:
