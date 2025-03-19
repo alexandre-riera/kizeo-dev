@@ -321,7 +321,7 @@
         <h1>Création d'un Contrat</h1>
         <form method="post">
             <label for="agence">Agence :</label>
-            <select class="form-control" name="agence" id="agence">
+            <select style="width: 20%;" class="form-control" name="agence" id="agence">
                 <option value="">Sélectionnez une agence</option>
                 {% for key, agence in agences %}
                     <option value="{{ agence }}" {{ app.request.request.get('agence') == key ? 'selected' : '' }}>{{ agence }}</option>
@@ -335,7 +335,7 @@
         {% if agenceSelectionnee is not empty %}
             <form action="" method="post">
                 <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-                <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+                <select style="width: 20%;" class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
                     <option value = "" selected> Select client </option> 
                     {% for contact in contactsFromKizeoSplittedInObject%}
                         <option value="{{ contact.raison_sociale }}|{{ contact.id_contact }}|{{ contact.agence }}|{{ contact.code_postal }}|{{ contact.ville }}|{{ contact.id_societe }}|{{ contact.equipement_supp_1 }}|{{ contact.equipement_supp_2 }}" id="contact_selected">{{ contact.raison_sociale }}  {{ contact.ville }}</option>
