@@ -296,6 +296,34 @@
         margin-top: 30px;
     }
 
+    /* Checkbox du formulaire contratet équipements */
+     input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-color: #e0e0e0;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    input[type="checkbox"]:checked {
+        background-color: #4CAF50;
+        border: 1px solid #4CAF50;
+    }
+
+    input[type="checkbox"]:checked::after {
+        content: "";
+        position: absolute;
+        left: 5px;
+        top: 1px;
+        width: 6px;
+        height: 12px;
+        border-width: 0 3px 3px 0;
+        transform: rotate(45deg);
+    }
 </style>
 {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
     {% if app.user %}
