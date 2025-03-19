@@ -354,7 +354,7 @@ class ContratController extends AbstractController
         $contrat->setNombreVisite($_POST['nombre_visite']);
         $contrat->setDatePrevisionnelle1($_POST['date_previsionnelle']);
 
-        $equipement->
+        $equipement->setNombreEquipement(2);
 
 
         // array(11) { 
