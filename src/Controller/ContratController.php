@@ -352,7 +352,7 @@ class ContratController extends AbstractController
         $contrat->setIdContact($_POST['contact_id']);
         $contrat->setDateSignature($_POST['date_signature']);
         $contrat->setValorisation($_POST['type_valorisation'][0]);
-        $contrat->setNombreEquipement($_POST['nombre_equipements'][0]);
+        $contrat->setNombreEquipement($_POST['nombre_equipements_total']);
         $contrat->setNombreVisite($_POST['nombre_visite']);
         $contrat->setDatePrevisionnelle1($_POST['date_previsionnelle']);
         // tell Doctrine you want to (eventually) save the Product (no queries yet)
