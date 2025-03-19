@@ -525,96 +525,90 @@
                     </div>
                 </div>
             {% else %}
-                <div>
-                    <form action="" method="POST">
-                        <h4>Création du contrat :</h4>
-                        <div class="contrat-container">
-                            <div class="col-sm-2 mt-2">
-                                <label for="numero_contrat">Numéro du contrat :</label>
-                                <input type="text" class="form-control" name="numero_contrat">
-                            </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="date_signature">Date de signature :</label>
-                                <input type="date" class="form-control" name="date_signature">
-                            </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="duree">Durée de contrat en année(s):</label>
-                                <input type="text" class="form-control" name="duree">
-                            </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="tacite_reconduction">Tacite reconduction ? :</label>
-                                 <label for="tacite_reconduction_oui"><input type="checkbox" name="tacite_reconduction_oui" value="oui"> Oui</label>
-                                 <label for="tacite_reconduction_non"><input type="checkbox" name="tacite_reconduction_non" value="non"> Non</label>
-                            </div>
-                            <div class="col-sm-2">
-                                    <label for="type_valorisation">Type de valorisation :</label>
-                                    <select class="form-control" name="type_valorisation[]">
-                                        <option value="" selected>---------</option>
-                                        {% for valorisation in typesValorisation %}
-                                            <option value="{{ valorisation }}">{{ valorisation }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="nombre_equipements">Nombre d'équipements total :</label>
-                                <input type="text" class="form-control" name="nombre_equipements">
-                            </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="nombre_visite">Nombre de visites à l'année entre 1 et 4 :</label>
-                                <input type="text" class="form-control" name="nombre_visite" id="nbr_visites" min="1" max="4">
-                            </div>
-                            <div class="col-sm-2 mt-2">
-                                <label for="date_previsionnelle">Date prévisionnelle :</label>
-                                <input type="date" class="form-control" name="date_previsionnelle">
-                            </div>
+                <form method="post">
+                    <h4>Création du contrat :</h4>
+                    <div class="col-sm-2 mt-2">
+                        <label for="numero_contrat">Numéro du contrat :</label>
+                        <input type="text" class="form-control" name="numero_contrat">
+                    </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="date_signature">Date de signature :</label>
+                        <input type="date" class="form-control" name="date_signature">
+                    </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="duree">Durée de contrat en année(s):</label>
+                        <input type="text" class="form-control" name="duree">
+                    </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="tacite_reconduction">Tacite reconduction ? :</label>
+                            <label for="tacite_reconduction_oui"><input type="checkbox" name="tacite_reconduction_oui" value="oui"> Oui</label>
+                            <label for="tacite_reconduction_non"><input type="checkbox" name="tacite_reconduction_non" value="non"> Non</label>
+                    </div>
+                    <div class="col-sm-2">
+                            <label for="type_valorisation">Type de valorisation :</label>
+                            <select class="form-control" name="type_valorisation[]">
+                                <option value="" selected>---------</option>
+                                {% for valorisation in typesValorisation %}
+                                    <option value="{{ valorisation }}">{{ valorisation }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        <br />
-                        <br />
-                        <br />
-                        <h4>Création des équipements (1 type d'équipement par ligne) :</h4>
-                        <div id="equipements-container">
-                            <div style="display:flex;" class="equipement-ligne">
-                                <div class="col-sm-2">
-                                    <label for="nombre_equipements">Nombre d'équipements :</label>
-                                    <input type="text" class="form-control" name="nombre_equipements[]">
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="type_equipements">Type d'équipements :</label>
-                                    <select class="form-control" name="type_equipement[]">
-                                        <option value="" selected>---------</option>
-                                        {% for type in typesEquipements %}
-                                            <option value="{{ type }}">{{ type }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="mode_fonctionnement">Mode de fonctionnement :</label>
-                                    <select class="form-control" name="mode_fonctionnement[]">
-                                        <option value="" selected>---------</option>
-                                        {% for mode in modesFonctionnement %}
-                                            <option value="{{ mode }}">{{ mode }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-sm-2">
-                                    <label for="visite_equipement">Visite(s) :</label>
-                                    <select class="form-control" name="visite_equipement[]" id="choix_visites">
-                                        <option value="" selected>---------</option>
-                                        {% for visite in visites %}
-                                            <option value="{{ visite }}">{{ visite }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="nombre_equipements">Nombre d'équipements total :</label>
+                        <input type="text" class="form-control" name="nombre_equipements">
+                    </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="nombre_visite">Nombre de visites à l'année entre 1 et 4 :</label>
+                        <input type="text" class="form-control" name="nombre_visite" id="nbr_visites" min="1" max="4">
+                    </div>
+                    <div class="col-sm-2 mt-2">
+                        <label for="date_previsionnelle">Date prévisionnelle :</label>
+                        <input type="date" class="form-control" name="date_previsionnelle">
+                    </div>
+                    <br />
+                    <br />
+                    <br />
+                    <h4>Création des équipements (1 type d'équipement par ligne) :</h4>
+                    <div style="display:flex;" class="equipement-ligne">
+                        <div class="col-sm-2">
+                            <label for="nombre_equipements">Nombre d'équipements :</label>
+                            <input type="text" class="form-control" name="nombre_equipements[]">
                         </div>
-                        <br>
-                        <button type="button" id="ajouter-equipement">+</button>
-                        <br>
-                        <br>
-                        <br>
-                        <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ clientSelectedInformations.getRaisonSociale() }}</button>
-                    </form>
-                </div>
+                        <div class="col-sm-2">
+                            <label for="type_equipements">Type d'équipements :</label>
+                            <select class="form-control" name="type_equipement[]">
+                                <option value="" selected>---------</option>
+                                {% for type in typesEquipements %}
+                                    <option value="{{ type }}">{{ type }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="mode_fonctionnement">Mode de fonctionnement :</label>
+                            <select class="form-control" name="mode_fonctionnement[]">
+                                <option value="" selected>---------</option>
+                                {% for mode in modesFonctionnement %}
+                                    <option value="{{ mode }}">{{ mode }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-sm-2">
+                            <label for="visite_equipement">Visite(s) :</label>
+                            <select class="form-control" name="visite_equipement[]" id="choix_visites">
+                                <option value="" selected>---------</option>
+                                {% for visite in visites %}
+                                    <option value="{{ visite }}">{{ visite }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <br>
+                    <button type="button" id="ajouter-equipement">+</button>
+                    <br>
+                    <br>
+                    <br>
+                    <button type="submit"  name ="submit_contrat" class="btn btn-primary">Enregistrer le contrat de {{ clientSelectedInformations.getRaisonSociale() }}</button>
+                </form>
             {% endif %}
         {% endif %}
     {% endif %}
