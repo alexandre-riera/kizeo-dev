@@ -271,43 +271,43 @@ class ContratController extends AbstractController
             var_dump($_POST);
             switch ($contactAgence) {
                 case 'S10':
-                    $this->newContract(ContratS10::class, EquipementS10::class, $_POST);
+                    $this->newContract(ContratS10::class, EquipementS10::class, $entityManager);
                     break;
                 case 'S40':
-                    $this->newContract(ContratS40::class, EquipementS40::class, $_POST);                    
+                    $this->newContract(ContratS40::class, EquipementS40::class, $entityManager);                    
                     break;
                 case 'S50':
-                    $this->newContract(ContratS50::class, EquipementS50::class, $_POST);
+                    $this->newContract(ContratS50::class, EquipementS50::class, $entityManager);
                     break;
                 case 'S60':
-                    $this->newContract(ContratS60::class, EquipementS60::class, $_POST);                    
+                    $this->newContract(ContratS60::class, EquipementS60::class, $entityManager);                    
                     break;
                 case 'S70':
-                    $this->newContract(ContratS70::class, EquipementS70::class, $_POST);                    
+                    $this->newContract(ContratS70::class, EquipementS70::class, $entityManager);                    
                     break;
                 case 'S80':
-                    $this->newContract(ContratS80::class, EquipementS80::class, $_POST);                    
+                    $this->newContract(ContratS80::class, EquipementS80::class, $entityManager);                    
                     break;
                 case 'S100':
-                    $this->newContract(ContratS100::class, EquipementS100::class, $_POST);                    
+                    $this->newContract(ContratS100::class, EquipementS100::class, $entityManager);                    
                     break;
                 case 'S120':
-                    $this->newContract(ContratS120::class, EquipementS120::class, $_POST);                    
+                    $this->newContract(ContratS120::class, EquipementS120::class, $entityManager);                    
                     break;
                 case 'S130':
-                    $this->newContract(ContratS130::class, EquipementS130::class, $_POST);                   
+                    $this->newContract(ContratS130::class, EquipementS130::class, $entityManager);                   
                     break;
                 case 'S140':
-                    $this->newContract(ContratS140::class, EquipementS140::class, $_POST);                    
+                    $this->newContract(ContratS140::class, EquipementS140::class, $entityManager);                    
                     break;
                 case 'S150':
-                    $this->newContract(ContratS150::class, EquipementS150::class, $_POST);                    
+                    $this->newContract(ContratS150::class, EquipementS150::class, $entityManager);                    
                     break;
                 case 'S160':
-                    $this->newContract(ContratS160::class, EquipementS160::class, $_POST);                    
+                    $this->newContract(ContratS160::class, EquipementS160::class, $entityManager);                    
                     break;
                 case 'S170':
-                    $this->newContract(ContratS170::class, EquipementS170::class, $_POST);                   
+                    $this->newContract(ContratS170::class, EquipementS170::class, $entityManager);                   
                     break;
                 
                 default:
@@ -342,36 +342,128 @@ class ContratController extends AbstractController
         ]);
     }
 
-    public function newContract($entityContrat, $entityEquipement, $formulaireContratEquipement)
+    public function newContract($entityContrat, $entityEquipement, $entityManager)
     {
         $contrat = new $entityContrat;
-        $equipement = new $entityEquipement;
+        
 
         $contrat->setNumeroContrat($_POST['numero_contrat']);
+        $contrat->setContactId($_POST['contact_id']);
+        $contrat->setIdContact($_POST['contact_id']);
         $contrat->setDateSignature($_POST['date_signature']);
         $contrat->setValorisation($_POST['type_valorisation'][0]);
         $contrat->setNombreEquipement($_POST['nombre_equipements'][0]);
         $contrat->setNombreVisite($_POST['nombre_visite']);
         $contrat->setDatePrevisionnelle1($_POST['date_previsionnelle']);
+        // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        // $entityManager->persist($contrat);
+        // // actually executes the queries (i.e. the INSERT query)
+        // $entityManager->flush();
 
-        $equipement->setNombreEquipement(2);
-
-
-        // array(11) { 
-            
-        //     ["numero_contrat"]=> string(4) "6521" 
-        //     ["date_signature"]=> string(10) "2025-03-19" 
-        //     ["duree"]=> string(1) "2" 
-        //     ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
-        //     ["nombre_equipements"]=> array(1) { [0]=> string(2) "22" } 
-        //     ["nombre_visite"]=> string(1) "2" 
-        //     ["date_previsionnelle"]=> string(10) "2025-03-21" 
-        //     ["type_equipement"]=> array(1) { [0]=> string(10) "Tourniquet" } 
-        //     ["mode_fonctionnement"]=> array(1) { [0]=> string(11) "Hydraulique" } 
-        //     ["visite_equipement"]=> array(1) { [0]=> string(26) "Nécessite 1 visite par an" } 
-        //     ["submit_contrat"]=> string(0) "" 
+        // switch ($_POST['visite_equipement']) {
+        //     case 'Nécessite 1 visite par an':
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) { 
+        //             $equipement = new $entityEquipement;
+        //             $equipement->setIdContact($_POST['contact_id']);
+        //             $equipement->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipement->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             if ($_POST['nombre_visite'] == 1) {
+        //                 $equipement->setVisite('CEA');
+        //             }
+        //             else{
+        //                 $equipement->setVisite('CE1');
+        //             }
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipement);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         break;
+        //     case 'Nécessite 2 visites par an':
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
+        //             //Création de la CE1 
+        //             $equipementCE1 = new $entityEquipement;
+        //             $equipementCE1->setIdContact($_POST['contact_id']);
+        //             $equipementCE1->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             $equipementCE1->setVisite('CE1');
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipementCE1);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
+        //             //Création de la CE2 
+        //             $equipementCE2 = new $entityEquipement;
+        //             $equipementCE2->setIdContact($_POST['contact_id']);
+        //             $equipementCE2->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             $equipementCE2->setVisite('CE1');
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipementCE2);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         break;
+        //     case 'Nécessite 3 visites par an':
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
+        //             //Création de la CE1 
+        //             $equipementCE1 = new $entityEquipement;
+        //             $equipementCE1->setIdContact($_POST['contact_id']);
+        //             $equipementCE1->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             $equipementCE1->setVisite('CE1');
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipementCE1);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
+        //             //Création de la CE2 
+        //             $equipementCE2 = new $entityEquipement;
+        //             $equipementCE2->setIdContact($_POST['contact_id']);
+        //             $equipementCE2->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             $equipementCE2->setVisite('CE1');
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipementCE2);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
+        //             //Création de la CE3 
+        //             $equipementCE3 = new $entityEquipement;
+        //             $equipementCE3->setIdContact($_POST['contact_id']);
+        //             $equipementCE3->setLibelleEquipement($_POST['type_equipement']);
+        //             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement']);
+        //             $equipementCE3->setVisite('CE1');
+        //             // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //             $entityManager->persist($equipementCE3);
+        //             // actually executes the queries (i.e. the INSERT query)
+        //             $entityManager->flush();
+        //         }
+        //         break;
+        //     default:
+        //         # code...
+        //         break;
         // }
 
+
+        // Contrat
+        // ["numero_contrat"]=> string(7) "1597845" 
+        // ["date_signature"]=> string(10) "2025-03-20" 
+        // ["duree"]=> string(1) "2" 
+        // ["tacite_reconduction_non"]=> string(3) "non" 
+        // ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
+        // ["nombre_equipements"]=> array(1) { [0]=> string(2) "25" } 
+        // ["nombre_visite"]=> string(1) "2" 
+        // ["date_previsionnelle"]=> string(10) "2025-03-27" 
+
+        // Equipement
+        // ["type_equipement"]=> array(1) { [0]=> string(18) "Rideau métallique" } 
+        // ["mode_fonctionnement"]=> array(1) { [0]=> string(9) "Motorisé" } 
+        // ["visite_equipement"]=> array(1) { [0]=> string(27) "Nécessite 2 visites par an" } 
+        // ["submit_contrat"]=> string(0) ""
 
         return $contrat;
     }

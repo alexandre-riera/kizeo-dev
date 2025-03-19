@@ -528,6 +528,10 @@
                 <form method="post">
                     <h4>Création du contrat :</h4>
                     <div class="col-sm-2 mt-2">
+                        <label for="contact_id">Id du contact :</label>
+                        <input type="text" class="form-control" name="contact_id" readonly>
+                    </div>
+                    <div class="col-sm-2 mt-2">
                         <label for="numero_contrat">Numéro du contrat :</label>
                         <input type="text" class="form-control" name="numero_contrat">
                     </div>
@@ -569,37 +573,39 @@
                     <br />
                     <br />
                     <h4>Création des équipements (1 type d'équipement par ligne) :</h4>
-                    <div style="display:flex;" class="equipement-ligne">
-                        <div class="col-sm-2">
-                            <label for="nombre_equipements">Nombre d'équipements :</label>
-                            <input type="text" class="form-control" name="nombre_equipements[]">
-                        </div>
-                        <div class="col-sm-2">
-                            <label for="type_equipements">Type d'équipements :</label>
-                            <select class="form-control" name="type_equipement[]">
-                                <option value="" selected>---------</option>
-                                {% for type in typesEquipements %}
-                                    <option value="{{ type }}">{{ type }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-sm-2">
-                            <label for="mode_fonctionnement">Mode de fonctionnement :</label>
-                            <select class="form-control" name="mode_fonctionnement[]">
-                                <option value="" selected>---------</option>
-                                {% for mode in modesFonctionnement %}
-                                    <option value="{{ mode }}">{{ mode }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-sm-2">
-                            <label for="visite_equipement">Visite(s) :</label>
-                            <select class="form-control" name="visite_equipement[]" id="choix_visites">
-                                <option value="" selected>---------</option>
-                                {% for visite in visites %}
-                                    <option value="{{ visite }}">{{ visite }}</option>
-                                {% endfor %}
-                            </select>
+                    <div id="equipements-container">
+                        <div style="display:flex;" class="equipement-ligne">
+                            <div class="col-sm-2">
+                                <label for="nombre_equipements">Nombre d'équipements :</label>
+                                <input type="text" class="form-control" name="nombre_equipements[]">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="type_equipements">Type d'équipements :</label>
+                                <select class="form-control" name="type_equipement[]">
+                                    <option value="" selected>---------</option>
+                                    {% for type in typesEquipements %}
+                                        <option value="{{ type }}">{{ type }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="mode_fonctionnement">Mode de fonctionnement :</label>
+                                <select class="form-control" name="mode_fonctionnement[]">
+                                    <option value="" selected>---------</option>
+                                    {% for mode in modesFonctionnement %}
+                                        <option value="{{ mode }}">{{ mode }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="visite_equipement">Visite(s) :</label>
+                                <select class="form-control" name="visite_equipement[]" id="choix_visites">
+                                    <option value="" selected>---------</option>
+                                    {% for visite in visites %}
+                                        <option value="{{ visite }}">{{ visite }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
                     <br>
