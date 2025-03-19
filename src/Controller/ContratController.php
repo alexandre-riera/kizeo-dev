@@ -357,20 +357,20 @@ class ContratController extends AbstractController
         $equipement->
 
 
-        array(11) { 
+        // array(11) { 
             
-            ["numero_contrat"]=> string(4) "6521" 
-            ["date_signature"]=> string(10) "2025-03-19" 
-            ["duree"]=> string(1) "2" 
-            ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
-            ["nombre_equipements"]=> array(1) { [0]=> string(2) "22" } 
-            ["nombre_visite"]=> string(1) "2" 
-            ["date_previsionnelle"]=> string(10) "2025-03-21" 
-            ["type_equipement"]=> array(1) { [0]=> string(10) "Tourniquet" } 
-            ["mode_fonctionnement"]=> array(1) { [0]=> string(11) "Hydraulique" } 
-            ["visite_equipement"]=> array(1) { [0]=> string(26) "Nécessite 1 visite par an" } 
-            ["submit_contrat"]=> string(0) "" 
-        }
+        //     ["numero_contrat"]=> string(4) "6521" 
+        //     ["date_signature"]=> string(10) "2025-03-19" 
+        //     ["duree"]=> string(1) "2" 
+        //     ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
+        //     ["nombre_equipements"]=> array(1) { [0]=> string(2) "22" } 
+        //     ["nombre_visite"]=> string(1) "2" 
+        //     ["date_previsionnelle"]=> string(10) "2025-03-21" 
+        //     ["type_equipement"]=> array(1) { [0]=> string(10) "Tourniquet" } 
+        //     ["mode_fonctionnement"]=> array(1) { [0]=> string(11) "Hydraulique" } 
+        //     ["visite_equipement"]=> array(1) { [0]=> string(26) "Nécessite 1 visite par an" } 
+        //     ["submit_contrat"]=> string(0) "" 
+        // }
 
 
         return $contrat;
