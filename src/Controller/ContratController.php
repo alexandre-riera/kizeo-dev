@@ -267,48 +267,47 @@ class ContratController extends AbstractController
             $theAssociatedContract = $contratRepositoryS10->findContratByIdContact($contactId);
         }
 
-        if(isset($_POST['submit_contrat'])){
-            $formulaireContratEquipement = $_POST['submit_contrat'];
+        if(isset($_POST['numero_contrat'])){
             var_dump($_POST);
             switch ($contactAgence) {
                 case 'S10':
-                    $this->newContract(ContratS10::class, EquipementS10::class, $formulaireContratEquipement);
+                    $this->newContract(ContratS10::class, EquipementS10::class, $_POST);
                     break;
                 case 'S40':
-                    $this->newContract(ContratS40::class, EquipementS40::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS40::class, EquipementS40::class, $_POST);                    
                     break;
                 case 'S50':
-                    $this->newContract(ContratS50::class, EquipementS50::class, $formulaireContratEquipement);
+                    $this->newContract(ContratS50::class, EquipementS50::class, $_POST);
                     break;
                 case 'S60':
-                    $this->newContract(ContratS60::class, EquipementS60::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS60::class, EquipementS60::class, $_POST);                    
                     break;
                 case 'S70':
-                    $this->newContract(ContratS70::class, EquipementS70::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS70::class, EquipementS70::class, $_POST);                    
                     break;
                 case 'S80':
-                    $this->newContract(ContratS80::class, EquipementS80::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS80::class, EquipementS80::class, $_POST);                    
                     break;
                 case 'S100':
-                    $this->newContract(ContratS100::class, EquipementS100::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS100::class, EquipementS100::class, $_POST);                    
                     break;
                 case 'S120':
-                    $this->newContract(ContratS120::class, EquipementS120::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS120::class, EquipementS120::class, $_POST);                    
                     break;
                 case 'S130':
-                    $this->newContract(ContratS130::class, EquipementS130::class, $formulaireContratEquipement);                   
+                    $this->newContract(ContratS130::class, EquipementS130::class, $_POST);                   
                     break;
                 case 'S140':
-                    $this->newContract(ContratS140::class, EquipementS140::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS140::class, EquipementS140::class, $_POST);                    
                     break;
                 case 'S150':
-                    $this->newContract(ContratS150::class, EquipementS150::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS150::class, EquipementS150::class, $_POST);                    
                     break;
                 case 'S160':
-                    $this->newContract(ContratS160::class, EquipementS160::class, $formulaireContratEquipement);                    
+                    $this->newContract(ContratS160::class, EquipementS160::class, $_POST);                    
                     break;
                 case 'S170':
-                    $this->newContract(ContratS170::class, EquipementS170::class, $formulaireContratEquipement);                   
+                    $this->newContract(ContratS170::class, EquipementS170::class, $_POST);                   
                     break;
                 
                 default:
@@ -349,7 +348,30 @@ class ContratController extends AbstractController
         $equipement = new $entityEquipement;
 
         $contrat->setNumeroContrat($_POST['numero_contrat']);
-        dd($contrat);
+        $contrat->setDateSignature($_POST['date_signature']);
+        $contrat->setValorisation($_POST['type_valorisation'][0]);
+        $contrat->setNombreEquipement($_POST['nombre_equipements'][0]);
+        $contrat->setNombreVisite($_POST['nombre_visite']);
+        $contrat->setDatePrevisionnelle1($_POST['date_previsionnelle']);
+
+        $equipement->
+
+
+        array(11) { 
+            
+            ["numero_contrat"]=> string(4) "6521" 
+            ["date_signature"]=> string(10) "2025-03-19" 
+            ["duree"]=> string(1) "2" 
+            ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
+            ["nombre_equipements"]=> array(1) { [0]=> string(2) "22" } 
+            ["nombre_visite"]=> string(1) "2" 
+            ["date_previsionnelle"]=> string(10) "2025-03-21" 
+            ["type_equipement"]=> array(1) { [0]=> string(10) "Tourniquet" } 
+            ["mode_fonctionnement"]=> array(1) { [0]=> string(11) "Hydraulique" } 
+            ["visite_equipement"]=> array(1) { [0]=> string(26) "Nécessite 1 visite par an" } 
+            ["submit_contrat"]=> string(0) "" 
+        }
+
 
         return $contrat;
     }
