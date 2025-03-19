@@ -269,7 +269,7 @@ class ContratController extends AbstractController
 
         if(isset($_POST['submit_contrat'])){
             $formulaireContratEquipement = $_POST['submit_contrat'];
-            dd($_POST['submit_contrat']);
+            var_dump($_POST);
             switch ($contactAgence) {
                 case 'S10':
                     $this->newContract(ContratS10::class, EquipementS10::class, $formulaireContratEquipement);
