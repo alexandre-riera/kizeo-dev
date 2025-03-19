@@ -345,12 +345,11 @@ class ContratController extends AbstractController
 
     public function newContract($entityContrat, $entityEquipement, $formulaireContratEquipement)
     {
-        dd($formulaireContratEquipement);
         $contrat = new $entityContrat;
         $equipement = new $entityEquipement;
 
-        $contrat->setNumeroContrat();
-
+        $contrat->setNumeroContrat($_POST['numero_contrat']);
+        dd($contrat);
 
         return $contrat;
     }
