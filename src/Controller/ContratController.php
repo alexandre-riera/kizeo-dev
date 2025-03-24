@@ -273,43 +273,43 @@ class ContratController extends AbstractController
             var_dump($contactAgence);
             switch ($contactAgence) {
                 case 'S10':
-                    $this->newContract(ContratS10::class, EquipementS10::class, $entityManager);
+                    $this->newContract(ContratS10::class, EquipementS10::class, $entityManager, $contactAgence);
                     break;
                 case 'S40':
-                    $this->newContract(ContratS40::class, EquipementS40::class, $entityManager);                    
+                    $this->newContract(ContratS40::class, EquipementS40::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S50':
-                    $this->newContract(ContratS50::class, EquipementS50::class, $entityManager);
+                    $this->newContract(ContratS50::class, EquipementS50::class, $entityManager, $contactAgence);
                     break;
                 case 'S60':
-                    $this->newContract(ContratS60::class, EquipementS60::class, $entityManager);                    
+                    $this->newContract(ContratS60::class, EquipementS60::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S70':
-                    $this->newContract(ContratS70::class, EquipementS70::class, $entityManager);                    
+                    $this->newContract(ContratS70::class, EquipementS70::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S80':
-                    $this->newContract(ContratS80::class, EquipementS80::class, $entityManager);                    
+                    $this->newContract(ContratS80::class, EquipementS80::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S100':
-                    $this->newContract(ContratS100::class, EquipementS100::class, $entityManager);                    
+                    $this->newContract(ContratS100::class, EquipementS100::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S120':
-                    $this->newContract(ContratS120::class, EquipementS120::class, $entityManager);                    
+                    $this->newContract(ContratS120::class, EquipementS120::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S130':
-                    $this->newContract(ContratS130::class, EquipementS130::class, $entityManager);                   
+                    $this->newContract(ContratS130::class, EquipementS130::class, $entityManager, $contactAgence);                   
                     break;
                 case 'S140':
-                    $this->newContract(ContratS140::class, EquipementS140::class, $entityManager);                    
+                    $this->newContract(ContratS140::class, EquipementS140::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S150':
-                    $this->newContract(ContratS150::class, EquipementS150::class, $entityManager);                    
+                    $this->newContract(ContratS150::class, EquipementS150::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S160':
-                    $this->newContract(ContratS160::class, EquipementS160::class, $entityManager);                    
+                    $this->newContract(ContratS160::class, EquipementS160::class, $entityManager, $contactAgence);                    
                     break;
                 case 'S170':
-                    $this->newContract(ContratS170::class, EquipementS170::class, $entityManager);                   
+                    $this->newContract(ContratS170::class, EquipementS170::class, $entityManager, $contactAgence);                   
                     break;
                 
                 default:
@@ -344,12 +344,57 @@ class ContratController extends AbstractController
         ]);
     }
 
-    public function newContract($entityContrat, $entityEquipement, $entityManager)
+    public function newContract($entityContrat, $entityEquipement, $entityManager, $contactAgence)
     {
         $contrat = new $entityContrat;
+        $contact = null;
+        switch($contactAgence){
+            case 'S10':
+                $contact = $entityManager->getRepository(ContactS10::class)->find($_POST['contact_id']);
+            break;
+            case 'S40':
+                $contact = $entityManager->getRepository(ContactS40::class)->find($_POST['contact_id']);
+            break;
+            case 'S50':
+                $contact = $entityManager->getRepository(ContactS50::class)->find($_POST['contact_id']);
+            break;
+            case 'S60':
+                $contact = $entityManager->getRepository(ContactS60::class)->find($_POST['contact_id']);
+            break;
+            case 'S70':
+                $contact = $entityManager->getRepository(ContactS70::class)->find($_POST['contact_id']);
+            break;
+            case 'S80':
+                $contact = $entityManager->getRepository(ContactS80::class)->find($_POST['contact_id']);
+            break;
+            case 'S100':
+                $contact = $entityManager->getRepository(ContactS100::class)->find($_POST['contact_id']);
+            break;
+            case 'S120':
+                $contact = $entityManager->getRepository(ContactS120::class)->find($_POST['contact_id']);
+            break;
+            case 'S130':
+                $contact = $entityManager->getRepository(ContactS130::class)->find($_POST['contact_id']);
+            break;
+            case 'S140':
+                $contact = $entityManager->getRepository(ContactS140::class)->find($_POST['contact_id']);
+            break;
+            case 'S150':
+                $contact = $entityManager->getRepository(ContactS150::class)->find($_POST['contact_id']);
+            break;
+            case 'S160':
+                $contact = $entityManager->getRepository(ContactS160::class)->find($_POST['contact_id']);
+            break;
+            case 'S170':
+                $contact = $entityManager->getRepository(ContactS170::class)->find($_POST['contact_id']);
+            break;
+            default:
+            break;
+        }
 
+       
         $contrat->setNumeroContrat($_POST['numero_contrat']);
-        $contrat->setContactId($_POST['contact_id']);
+        $contrat->setContact($contact);
         $contrat->setIdContact($_POST['contact_id']);
         $contrat->setDateSignature($_POST['date_signature']);
         $contrat->setValorisation($_POST['type_valorisation'][0]);
@@ -367,98 +412,155 @@ class ContratController extends AbstractController
         $entityManager->persist($contrat);
         $entityManager->flush();
 
+
+        // Get new created Contract to save his equipments
+        $contratForEquipementSave = null;
+        switch($contactAgence){
+            case 'S10':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS10::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S40':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS40::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S50':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS50::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S60':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS60::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S70':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS70::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S80':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS80::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S100':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS100::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S120':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS120::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S130':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS130::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S140':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS140::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S150':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS150::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S160':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS160::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            case 'S170':
+                $contratForEquipementSave = $entityManager->getRepository(ContratS170::class)->findOneBy('numero_contrat', $_POST['numero_contrat']);
+            break;
+            default:
+            break;
+        }
         var_dump($_POST['visite_equipement'][0]);
 
         $nombreEquipements = $_POST['nombre_equipements'][0];
-
-        switch ($_POST['visite_equipement'][0]) { // Accès à l'élément [0]
-            case 'Nécessite 1 visite par an':
-                for ($i = 0; $i < $nombreEquipements; $i++) {
-                    $equipement = new $entityEquipement;
-                    $equipement->setIdContact($_POST['contact_id']);
-                    $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
-
-                    $entityManager->persist($equipement);
+        switch($entityEquipement){
+            case EquipementS10::class :
+                switch ($_POST['visite_equipement'][0]) { // Accès à l'élément [0]
+                    case 'Nécessite 1 visite par an':
+                        for ($i = 0; $i < $nombreEquipements; $i++) {
+                            $equipement = new $entityEquipement;
+                            $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
+                            $equipement->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipement);
+                        }
+                        break;
+                    case 'Nécessite 2 visites par an':
+                        for ($i = 0; $i < $nombreEquipements; $i++) {
+                            $equipementCE1 = new $entityEquipement;
+                            $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE1->setVisite('CE1');
+                            $equipementCE1->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE1);
+    
+                            $equipementCE2 = new $entityEquipement;
+                            $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE2->setVisite('CE2');
+                            $equipementCE2->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE2);
+                        }
+                        break;
+                    case 'Nécessite 3 visites par an':
+                        for ($i = 0; $i < $nombreEquipements; $i++) {
+                            $equipementCE1 = new $entityEquipement;
+                            $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE1->setVisite('CE1');
+                            $equipementCE1->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE1);
+    
+                            $equipementCE2 = new $entityEquipement;
+                            $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE2->setVisite('CE2');
+                            $equipementCE2->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE2);
+    
+                            $equipementCE3 = new $entityEquipement;
+                            $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE3->setVisite('CE3');
+                            $equipementCE3->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE3);
+                        }
+                        break;
+                    case 'Nécessite 4 visites par an':
+                        for ($i = 0; $i < $nombreEquipements; $i++) {
+                            $equipementCE1 = new $entityEquipement;
+                            $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE1->setVisite('CE1');
+                            $equipementCE1->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE1);
+    
+                            $equipementCE2 = new $entityEquipement;
+                            $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE2->setVisite('CE2');
+                            $equipementCE2->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE2);
+    
+                            $equipementCE3 = new $entityEquipement;
+                            $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE3->setVisite('CE3');
+                            $equipementCE3->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE3);
+    
+                            $equipementCE4 = new $entityEquipement;
+                            $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
+                            $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                            $equipementCE4->setVisite('CE4');
+                            $equipementCE4->setContratS10($contratForEquipementSave);
+                            $entityManager->persist($equipementCE4);
+                        }
+                        break;
+                    default:
+                        break;
                 }
-                break;
-            case 'Nécessite 2 visites par an':
-                for ($i = 0; $i < $nombreEquipements; $i++) {
-                    $equipementCE1 = new $entityEquipement;
-                    $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE1->setVisite('CE1');
-                    $entityManager->persist($equipementCE1);
-
-                    $equipementCE2 = new $entityEquipement;
-                    $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE2->setVisite('CE2');
-                    $entityManager->persist($equipementCE2);
-                }
-                break;
-            case 'Nécessite 3 visites par an':
-                for ($i = 0; $i < $nombreEquipements; $i++) {
-                    $equipementCE1 = new $entityEquipement;
-                    $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE1->setVisite('CE1');
-                    $entityManager->persist($equipementCE1);
-
-                    $equipementCE2 = new $entityEquipement;
-                    $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE2->setVisite('CE2');
-                    $entityManager->persist($equipementCE2);
-
-                    $equipementCE3 = new $entityEquipement;
-                    $equipementCE3->setIdContact($_POST['contact_id']);
-                    $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE3->setVisite('CE3');
-                    $entityManager->persist($equipementCE3);
-                }
-                break;
-            case 'Nécessite 4 visites par an':
-                for ($i = 0; $i < $nombreEquipements; $i++) {
-                    $equipementCE1 = new $entityEquipement;
-                    $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE1->setVisite('CE1');
-                    $entityManager->persist($equipementCE1);
-
-                    $equipementCE2 = new $entityEquipement;
-                    $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE2->setVisite('CE2');
-                    $entityManager->persist($equipementCE2);
-
-                    $equipementCE3 = new $entityEquipement;
-                    $equipementCE3->setIdContact($_POST['contact_id']);
-                    $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE3->setVisite('CE3');
-                    $entityManager->persist($equipementCE3);
-
-                    $equipementCE4 = new $entityEquipement;
-                    $equipementCE4->setIdContact($_POST['contact_id']);
-                    $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
-                    $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
-                    $equipementCE4->setVisite('CE4');
-                    $entityManager->persist($equipementCE4);
-                }
-                break;
-            default:
-                break;
-        }
-
+            break;
+        } 
         $entityManager->flush();
     }
 
