@@ -423,43 +423,43 @@ class ContratController extends AbstractController
         $contratForEquipementSave = null;
         switch($contactAgence){
             case 'S10':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS10::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS10::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S40':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS40::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS40::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S50':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS50::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS50::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S60':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS60::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS60::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S70':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS70::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS70::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S80':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS80::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS80::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S100':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS100::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS100::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S120':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS120::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS120::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S130':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS130::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS130::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S140':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS140::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS140::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S150':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS150::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS150::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S160':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS160::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS160::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             case 'S170':
-                $contratForEquipementSave = $entityManager->getRepository(ContratS170::class)->findBy(array('numero_contrat', $_POST['numero_contrat']));
+                $contratForEquipementSave = $entityManager->getRepository(ContratS170::class)->findBy(array('numero_contrat' => $_POST['numero_contrat']));
             break;
             default:
             break;
