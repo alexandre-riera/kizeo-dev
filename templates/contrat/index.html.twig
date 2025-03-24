@@ -556,6 +556,10 @@
                 <form method="post">
                     <h4>Création du contrat :</h4>
                     <div class="col-sm-2 mt-2">
+                        <label for="contact_raison_sociale">Raison sociale :</label>
+                        <input type="text" class="form-control" name="contact_raison_sociale" value="{{ clientSelectedInformations.getRaisonSociale() }}" placeholder="{{ clientSelectedInformations.getRaisonSociale() }}"  readonly>
+                    </div>
+                    <div class="col-sm-2 mt-2">
                         <label for="contact_id">Id du contact :</label>
                         <input type="text" class="form-control" name="contact_id" value="{{ contactId }}" placeholder="{{ contactId }}"  readonly>
                     </div>

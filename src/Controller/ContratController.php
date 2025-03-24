@@ -271,46 +271,47 @@ class ContratController extends AbstractController
         if(isset($_POST['numero_contrat'])){
             // var_dump($_POST);
             $contactAgence = $_POST['contact_agence'];
-            var_dump($contactAgence);
+            $contactRaisonSociale = $_POST['contact_raison_sociale'];
+
             switch ($contactAgence) {
                 case 'S10':
-                    $this->newContract(ContratS10::class, EquipementS10::class, $entityManager, $contactAgence);
+                    $this->newContract(ContratS10::class, EquipementS10::class, $entityManager, $contactAgence, $contactRaisonSociale);
                     break;
                 case 'S40':
-                    $this->newContract(ContratS40::class, EquipementS40::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS40::class, EquipementS40::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S50':
-                    $this->newContract(ContratS50::class, EquipementS50::class, $entityManager, $contactAgence);
+                    $this->newContract(ContratS50::class, EquipementS50::class, $entityManager, $contactAgence, $contactRaisonSociale);
                     break;
                 case 'S60':
-                    $this->newContract(ContratS60::class, EquipementS60::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS60::class, EquipementS60::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S70':
-                    $this->newContract(ContratS70::class, EquipementS70::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS70::class, EquipementS70::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S80':
-                    $this->newContract(ContratS80::class, EquipementS80::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS80::class, EquipementS80::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S100':
-                    $this->newContract(ContratS100::class, EquipementS100::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS100::class, EquipementS100::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S120':
-                    $this->newContract(ContratS120::class, EquipementS120::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS120::class, EquipementS120::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S130':
-                    $this->newContract(ContratS130::class, EquipementS130::class, $entityManager, $contactAgence);                   
+                    $this->newContract(ContratS130::class, EquipementS130::class, $entityManager, $contactAgence, $contactRaisonSociale);                   
                     break;
                 case 'S140':
-                    $this->newContract(ContratS140::class, EquipementS140::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS140::class, EquipementS140::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S150':
-                    $this->newContract(ContratS150::class, EquipementS150::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS150::class, EquipementS150::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S160':
-                    $this->newContract(ContratS160::class, EquipementS160::class, $entityManager, $contactAgence);                    
+                    $this->newContract(ContratS160::class, EquipementS160::class, $entityManager, $contactAgence, $contactRaisonSociale);                    
                     break;
                 case 'S170':
-                    $this->newContract(ContratS170::class, EquipementS170::class, $entityManager, $contactAgence);                   
+                    $this->newContract(ContratS170::class, EquipementS170::class, $entityManager, $contactAgence, $contactRaisonSociale);                   
                     break;
                 
                 default:
@@ -345,7 +346,7 @@ class ContratController extends AbstractController
         ]);
     }
 
-    public function newContract($entityContrat, $entityEquipement, $entityManager, $contactAgence)
+    public function newContract($entityContrat, $entityEquipement, $entityManager, $contactAgence, $contactRaisonSociale)
     {
         $contrat = new $entityContrat;
         $contact = null;
@@ -464,7 +465,6 @@ class ContratController extends AbstractController
             default:
             break;
         }
-        var_dump($_POST['visite_equipement'][0]);
 
         $nombreEquipements = $_POST['nombre_equipements'][0];
         switch($entityEquipement){
@@ -474,6 +474,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -485,6 +486,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -493,6 +495,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -504,6 +507,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -512,6 +516,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -520,6 +525,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -531,6 +537,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -539,6 +546,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -547,6 +555,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -555,6 +564,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -572,6 +582,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -583,6 +594,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -591,6 +603,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -602,6 +615,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -610,6 +624,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -618,6 +633,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -629,6 +645,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -637,6 +654,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -645,6 +663,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -653,6 +672,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -670,6 +690,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -681,6 +702,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -689,6 +711,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -700,6 +723,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -708,6 +732,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -716,6 +741,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -727,6 +753,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -735,6 +762,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -743,6 +771,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -751,6 +780,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -768,6 +798,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -779,6 +810,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -787,6 +819,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -798,6 +831,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -806,6 +840,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -814,6 +849,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -825,6 +861,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -833,6 +870,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -841,6 +879,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -849,6 +888,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -866,6 +906,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -877,6 +918,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -885,6 +927,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -896,6 +939,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -904,6 +948,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -912,6 +957,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -923,6 +969,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -931,6 +978,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -939,6 +987,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -947,6 +996,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -964,6 +1014,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -975,6 +1026,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -983,6 +1035,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -994,6 +1047,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1002,6 +1056,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1010,6 +1065,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1021,6 +1077,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1029,6 +1086,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1037,6 +1095,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1045,6 +1104,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1062,6 +1122,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1073,6 +1134,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1081,6 +1143,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1092,6 +1155,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1100,6 +1164,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1108,6 +1173,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1119,6 +1185,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1127,6 +1194,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1135,6 +1203,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1143,6 +1212,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1160,6 +1230,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1171,6 +1242,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1179,6 +1251,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1190,6 +1263,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1198,6 +1272,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1206,6 +1281,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1217,6 +1293,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1225,6 +1302,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1233,6 +1311,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1241,6 +1320,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1258,6 +1338,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1269,6 +1350,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1277,6 +1359,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1288,6 +1371,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1296,6 +1380,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1304,6 +1389,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1315,6 +1401,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1323,6 +1410,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1331,6 +1419,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1339,6 +1428,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1356,6 +1446,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1367,6 +1458,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1375,6 +1467,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1386,6 +1479,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1394,6 +1488,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1402,6 +1497,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1413,6 +1509,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1421,6 +1518,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1429,6 +1527,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1437,6 +1536,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1454,6 +1554,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1465,6 +1566,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1473,6 +1575,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1484,6 +1587,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1492,6 +1596,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1500,6 +1605,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1511,6 +1617,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1519,6 +1626,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1527,6 +1635,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1535,6 +1644,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1552,6 +1662,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1563,6 +1674,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1571,6 +1683,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1582,6 +1695,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1590,6 +1704,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1598,6 +1713,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1609,6 +1725,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1617,6 +1734,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1625,6 +1743,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1633,6 +1752,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
@@ -1650,6 +1770,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipement = new $entityEquipement;
                             $equipement->setIdContact($_POST['contact_id']);
+                            $equipement->setRaisonSociale($contactRaisonSociale);
                             $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
@@ -1661,6 +1782,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1669,6 +1791,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1680,6 +1803,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1688,6 +1812,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1696,6 +1821,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1707,6 +1833,7 @@ class ContratController extends AbstractController
                         for ($i = 0; $i < $nombreEquipements; $i++) {
                             $equipementCE1 = new $entityEquipement;
                             $equipementCE1->setIdContact($_POST['contact_id']);
+                            $equipementCE1->setRaisonSociale($contactRaisonSociale);
                             $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE1->setVisite('CE1');
@@ -1715,6 +1842,7 @@ class ContratController extends AbstractController
     
                             $equipementCE2 = new $entityEquipement;
                             $equipementCE2->setIdContact($_POST['contact_id']);
+                            $equipementCE2->setRaisonSociale($contactRaisonSociale);
                             $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE2->setVisite('CE2');
@@ -1723,6 +1851,7 @@ class ContratController extends AbstractController
     
                             $equipementCE3 = new $entityEquipement;
                             $equipementCE3->setIdContact($_POST['contact_id']);
+                            $equipementCE3->setRaisonSociale($contactRaisonSociale);
                             $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE3->setVisite('CE3');
@@ -1731,6 +1860,7 @@ class ContratController extends AbstractController
     
                             $equipementCE4 = new $entityEquipement;
                             $equipementCE4->setIdContact($_POST['contact_id']);
+                            $equipementCE4->setRaisonSociale($contactRaisonSociale);
                             $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
                             $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                             $equipementCE4->setVisite('CE4');
