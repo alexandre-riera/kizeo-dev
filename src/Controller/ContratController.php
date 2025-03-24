@@ -414,6 +414,11 @@ class ContratController extends AbstractController
         if(!empty($_POST['duree'])){
         $contrat->setDuree($_POST['duree']);
         }
+        if(!empty($_POST['date_resiliation'])){
+        $contrat->setStatut($_POST['Contrat en cours']);
+        }else{
+            $contrat->setStatut('Contrat résoilié le ' . $_POST['date_resiliation']);
+        }
         $entityManager->persist($contrat);
         $entityManager->flush();
 
