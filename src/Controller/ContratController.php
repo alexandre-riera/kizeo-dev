@@ -405,11 +405,7 @@ class ContratController extends AbstractController
         if(isset($_POST['tacite_reconduction_oui'])){
             $contrat->setTaciteReconduction($_POST['tacite_reconduction_oui']);
         }
-        if(isset($_POST['date_resiliation'])){
-            $contrat->setdateResiliation($_POST['date_resiliation']);
-        }else{
-            $contrat->setdateResiliation("Contrat en cours");
-        }
+        $contrat->setdateResiliation("Contrat en cours");
         //gestion de la durée.
         if(!empty($_POST['duree'])){
         $contrat->setDuree($_POST['duree']);
