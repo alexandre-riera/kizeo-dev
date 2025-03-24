@@ -268,7 +268,8 @@ class ContratController extends AbstractController
         }
 
         if(isset($_POST['numero_contrat'])){
-            var_dump($_POST);
+            // var_dump($_POST);
+            var_dump($contactAgence);
             switch ($contactAgence) {
                 case 'S10':
                     $this->newContract(ContratS10::class, EquipementS10::class, $entityManager);
