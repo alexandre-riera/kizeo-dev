@@ -359,7 +359,10 @@ class ContratController extends AbstractController
         $entityManager->persist($contrat);
         // actually executes the queries (i.e. the INSERT query)
         $entityManager->flush();
-
+        var_dump($_POST['visite_equipement']);
+        var_dump($_POST['visite_equipement']);
+        var_dump($_POST['visite_equipement']);
+        var_dump($_POST['visite_equipement']);
         // Enregistrement des équipements en lot
         switch ($_POST['visite_equipement']) {
             case 'Nécessite 1 visite par an':
