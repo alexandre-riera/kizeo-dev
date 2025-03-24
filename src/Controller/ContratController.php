@@ -269,6 +269,7 @@ class ContratController extends AbstractController
 
         if(isset($_POST['numero_contrat'])){
             // var_dump($_POST);
+            $contactAgence = $_POST['contact_agence'];
             var_dump($contactAgence);
             switch ($contactAgence) {
                 case 'S10':
