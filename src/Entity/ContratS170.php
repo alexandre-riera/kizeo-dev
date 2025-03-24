@@ -89,12 +89,12 @@ class ContratS170
         return $this;
     }
 
-    public function getDateSignature(): ?\DateTimeInterface
+    public function getDateSignature(): ?string
     {
         return $this->date_signature;
     }
 
-    public function setDateSignature(\DateTimeInterface $date_signature): static
+    public function setDateSignature(string $date_signature): static
     {
         $this->date_signature = $date_signature;
 
@@ -161,12 +161,12 @@ class ContratS170
         return $this;
     }
 
-    public function getDateResiliation(): ?\DateTimeInterface
+    public function getDateResiliation(): ?string
     {
         return $this->date_resiliation;
     }
 
-    public function setDateResiliation(?\DateTimeInterface $date_resiliation): static
+    public function setDateResiliation(?string $date_resiliation): static
     {
         $this->date_resiliation = $date_resiliation;
 

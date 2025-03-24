@@ -396,8 +396,7 @@ class ContratController extends AbstractController
         $contrat->setNumeroContrat($_POST['numero_contrat']);
         $contrat->setContact($contact);
         $contrat->setIdContact($_POST['contact_id']);
-        $date = new DateTimeImmutable($_POST['date_signature']);
-        $contrat->setDateSignature($date->format('Y-m-d H:i:s'));
+        $contrat->setDateSignature($_POST['date_signature']);
         $contrat->setValorisation($_POST['type_valorisation'][0]);
         $contrat->setNombreEquipement($_POST['nombre_equipements_total']);
         $contrat->setNombreVisite($_POST['nombre_visite']);
