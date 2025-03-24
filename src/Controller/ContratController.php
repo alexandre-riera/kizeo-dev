@@ -392,11 +392,10 @@ class ContratController extends AbstractController
             break;
         }
 
-       dd($_POST['date_signature']);
         $contrat->setNumeroContrat($_POST['numero_contrat']);
         $contrat->setContact($contact);
         $contrat->setIdContact($_POST['contact_id']);
-        $contrat->setDateSignature($_POST['date_signature']);
+        $contrat->setDateSignature(date_format($_POST['date_signature'], 'Y-m-d H:i:s'));
         $contrat->setValorisation($_POST['type_valorisation'][0]);
         $contrat->setNombreEquipement($_POST['nombre_equipements_total']);
         $contrat->setNombreVisite($_POST['nombre_visite']);
