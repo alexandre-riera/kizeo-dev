@@ -365,7 +365,7 @@ class ContratController extends AbstractController
         $entityManager->persist($contrat);
         $entityManager->flush();
 
-        var_dump($_POST['visite_equipement']);
+        var_dump($_POST['visite_equipement'][0]);
 
         $nombreEquipements = $_POST['nombre_equipements'][0];
 
