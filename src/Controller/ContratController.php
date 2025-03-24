@@ -373,6 +373,7 @@ class ContratController extends AbstractController
                     }
                     else{
                         $equipement->setVisite('CE1');
+                        var_dump($equipement);
                     }
                     // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipement);
