@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 // ENTITY CONTACT
+use DateTimeImmutable;
 use App\Entity\ContactS10;
 use App\Entity\ContactS40;
 use App\Entity\ContactS50;
@@ -15,8 +16,8 @@ use App\Entity\ContratS50;
 use App\Entity\ContratS60;
 use App\Entity\ContratS70;
 use App\Entity\ContratS80;
-use App\Entity\ContactS100;
 // ENTITY CONTRAT
+use App\Entity\ContactS100;
 use App\Entity\ContactS120;
 use App\Entity\ContactS130;
 use App\Entity\ContactS140;
@@ -29,8 +30,8 @@ use App\Entity\ContratS130;
 use App\Entity\ContratS140;
 use App\Entity\ContratS150;
 use App\Entity\ContratS160;
-use App\Entity\ContratS170;
 
+use App\Entity\ContratS170;
 use App\Entity\EquipementS10;
 use App\Entity\EquipementS40;
 use App\Entity\EquipementS50;
@@ -395,7 +396,8 @@ class ContratController extends AbstractController
         $contrat->setNumeroContrat($_POST['numero_contrat']);
         $contrat->setContact($contact);
         $contrat->setIdContact($_POST['contact_id']);
-        $contrat->setDateSignature(date_format($_POST['date_signature'], 'Y-m-d H:i:s'));
+        $date = new DateTimeImmutable($_POST['date_signature']);
+        $contrat->setDateSignature($date->format('Y-m-d H:i:s'));
         $contrat->setValorisation($_POST['type_valorisation'][0]);
         $contrat->setNombreEquipement($_POST['nombre_equipements_total']);
         $contrat->setNombreVisite($_POST['nombre_visite']);
