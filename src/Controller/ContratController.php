@@ -345,7 +345,6 @@ class ContratController extends AbstractController
     public function newContract($entityContrat, $entityEquipement, $entityManager)
     {
         $contrat = new $entityContrat;
-        
 
         $contrat->setNumeroContrat($_POST['numero_contrat']);
         $contrat->setContactId($_POST['contact_id']);
@@ -355,172 +354,110 @@ class ContratController extends AbstractController
         $contrat->setNombreEquipement($_POST['nombre_equipements_total']);
         $contrat->setNombreVisite($_POST['nombre_visite']);
         $contrat->setDatePrevisionnelle1($_POST['date_previsionnelle']);
-        // tell Doctrine you want to (eventually) save the Product (no queries yet)
+        //Gestion de tacite reconduction
+        if(isset($_POST['tacite_reconduction_oui'])){
+            $contrat->setTaciteReconduction($_POST['tacite_reconduction_oui']);
+        }
+        //gestion de la durée.
+        if(!empty($_POST['duree'])){
+        $contrat->setDuree($_POST['duree']);
+        }
         $entityManager->persist($contrat);
-        // actually executes the queries (i.e. the INSERT query)
         $entityManager->flush();
+
         var_dump($_POST['visite_equipement']);
-        var_dump($_POST['visite_equipement']);
-        var_dump($_POST['visite_equipement']);
-        var_dump($_POST['visite_equipement']);
-        // Enregistrement des équipements en lot
-        switch ($_POST['visite_equipement']) {
+
+        $nombreEquipements = $_POST['nombre_equipements'][0];
+
+        switch ($_POST['visite_equipement'][0]) { // Accès à l'élément [0]
             case 'Nécessite 1 visite par an':
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) { 
+                for ($i = 0; $i < $nombreEquipements; $i++) {
                     $equipement = new $entityEquipement;
                     $equipement->setIdContact($_POST['contact_id']);
-                    $equipement->setLibelleEquipement($_POST['type_equipement']);
-                    $equipement->setModeFonctionnement($_POST['mode_fonctionnement']);
-                    if ($_POST['nombre_visite'] == 1) {
-                        $equipement->setVisite('CEA');
-                    }
-                    else{
-                        $equipement->setVisite('CE1');
-                        var_dump($equipement);
-                    }
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                    $equipement->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipement->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
+                    $equipement->setVisite($_POST['nombre_visite'] == 1 ? 'CEA' : 'CE1');
+
                     $entityManager->persist($equipement);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
                 }
                 break;
             case 'Nécessite 2 visites par an':
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE1 
+                for ($i = 0; $i < $nombreEquipements; $i++) {
                     $equipementCE1 = new $entityEquipement;
                     $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE1->setVisite('CE1');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE1);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE2 
+
                     $equipementCE2 = new $entityEquipement;
                     $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE2->setVisite('CE2');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE2);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
                 }
                 break;
             case 'Nécessite 3 visites par an':
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE1 
+                for ($i = 0; $i < $nombreEquipements; $i++) {
                     $equipementCE1 = new $entityEquipement;
                     $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE1->setVisite('CE1');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE1);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE2 
+
                     $equipementCE2 = new $entityEquipement;
                     $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE2->setVisite('CE2');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE2);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE3 
+
                     $equipementCE3 = new $entityEquipement;
                     $equipementCE3->setIdContact($_POST['contact_id']);
-                    $equipementCE3->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE3->setVisite('CE3');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE3);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
                 }
                 break;
             case 'Nécessite 4 visites par an':
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE1 
+                for ($i = 0; $i < $nombreEquipements; $i++) {
                     $equipementCE1 = new $entityEquipement;
                     $equipementCE1->setIdContact($_POST['contact_id']);
-                    $equipementCE1->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE1->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE1->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE1->setVisite('CE1');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE1);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE2 
+
                     $equipementCE2 = new $entityEquipement;
                     $equipementCE2->setIdContact($_POST['contact_id']);
-                    $equipementCE2->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE2->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE2->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE2->setVisite('CE2');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE2);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE3 
+
                     $equipementCE3 = new $entityEquipement;
                     $equipementCE3->setIdContact($_POST['contact_id']);
-                    $equipementCE3->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE3->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE3->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE3->setVisite('CE3');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE3);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
-                }
-                for ($i=0; $i < $_POST['nombre_equipements'] ; $i++) {
-                    //Création de la CE4 
+
                     $equipementCE4 = new $entityEquipement;
                     $equipementCE4->setIdContact($_POST['contact_id']);
-                    $equipementCE4->setLibelleEquipement($_POST['type_equipement']);
-                    $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement']);
+                    $equipementCE4->setLibelleEquipement($_POST['type_equipement'][0]);
+                    $equipementCE4->setModeFonctionnement($_POST['mode_fonctionnement'][0]);
                     $equipementCE4->setVisite('CE4');
-                    // tell Doctrine you want to (eventually) save the Product (no queries yet)
                     $entityManager->persist($equipementCE4);
-                    // actually executes the queries (i.e. the INSERT query)
-                    $entityManager->flush();
                 }
                 break;
             default:
-                # code...
                 break;
         }
 
-
-        // Contrat
-        // ["numero_contrat"]=> string(7) "1597845" 
-        // ["date_signature"]=> string(10) "2025-03-20" 
-        // ["duree"]=> string(1) "2" 
-        // ["tacite_reconduction_non"]=> string(3) "non" 
-        // ["type_valorisation"]=> array(1) { [0]=> string(4) "2,5%" } 
-        // ["nombre_equipements"]=> array(1) { [0]=> string(2) "25" } 
-        // ["nombre_visite"]=> string(1) "2" 
-        // ["date_previsionnelle"]=> string(10) "2025-03-27" 
-
-        // Equipement
-        // ["type_equipement"]=> array(1) { [0]=> string(18) "Rideau métallique" } 
-        // ["mode_fonctionnement"]=> array(1) { [0]=> string(9) "Motorisé" } 
-        // ["visite_equipement"]=> array(1) { [0]=> string(27) "Nécessite 2 visites par an" } 
-        // ["submit_contrat"]=> string(0) ""
-
-        return $contrat;
+        $entityManager->flush();
     }
 
     /**
