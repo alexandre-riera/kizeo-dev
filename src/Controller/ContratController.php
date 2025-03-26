@@ -466,6 +466,8 @@ class ContratController extends AbstractController
             break;
         }
 
+        var_dump($_POST);
+        die;
         $nombreEquipements = $_POST['nombre_equipements'][0];
         switch($entityEquipement){
             case EquipementS10::class :
