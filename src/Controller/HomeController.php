@@ -74,6 +74,7 @@ class HomeController extends AbstractController
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_LYON"]);
             return $clients;
         });
+        // Problème avec le cache qui sert toujours les entité de Contact Bordeaux à la place de la liste Kizeo
         $clientsBordeaux = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_BORDEAUX"]);
         // $clientsBordeaux  =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($homeRepository)  {
         //     $item->expiresAfter(900); // 15 minutes in cache
@@ -90,26 +91,32 @@ class HomeController extends AbstractController
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_MONTPELLIER"]);
             return $clients;
         });
-        $clientsHautsDeFrance =  $cache->get('client_hauts_de_france', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_HAUTS_DE_FRANCE"]);
-            return $clients;
-        });
-        $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_TOULOUSE"]);
-            return $clients;
-        });
+        // Problème avec le cache qui sert toujours les entité de Contact clientsHautsDeFrance à la place de la liste Kizeo
+        $clientsHautsDeFrance = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_HAUTS_DE_FRANCE"]);
+        // $clientsHautsDeFrance =  $cache->get('client_hauts_de_france', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_HAUTS_DE_FRANCE"]);
+        //     return $clients;
+        // });
+        // Problème avec le cache qui sert toujours les entité de Contact Bordeaux à la place de la liste Kizeo
+        $clientsToulouse = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_TOULOUSE"]);
+        // $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_TOULOUSE"]);
+        //     return $clients;
+        // });
         $clientsEpinal =  $cache->get('client_epinal', function (ItemInterface $item) use ($homeRepository)  {
             $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_EPINAL"]);
             return $clients;
         });
-        $clientsPaca =  $cache->get('client_paca', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PACA"]);
-            return $clients;
-        });
+        // Problème avec le cache qui sert toujours les entité de Contact Bordeaux à la place de la liste Kizeo
+        $clientsPaca = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PACA"]);
+        // $clientsPaca =  $cache->get('client_paca', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PACA"]);
+        //     return $clients;
+        // });
         $clientsRouen =  $cache->get('client_rouen', function (ItemInterface $item) use ($homeRepository)  {
             $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ROUEN"]);
