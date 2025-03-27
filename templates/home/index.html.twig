@@ -612,16 +612,22 @@
                                 <td>{{ equipment.getDateEnregistrement() }}</td>
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
+                                    <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "B" %}
                                         <td>Travaux préventifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "C" %}
                                         <td>Travaux curatifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "E" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
@@ -694,16 +700,22 @@
                                 <td>{{ equipment.getDateEnregistrement() }}</td>
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
+                                    <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "B" %}
                                         <td>Travaux préventifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "C" %}
                                         <td>Travaux curatifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "E" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
@@ -776,16 +788,22 @@
                                 <td>{{ equipment.getDateEnregistrement() }}</td>
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
+                                    <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "B" %}
                                         <td>Travaux préventifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "C" %}
                                         <td>Travaux curatifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "E" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
@@ -858,16 +876,22 @@
                                 <td>{{ equipment.getDateEnregistrement() }}</td>
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
+                                    <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "B" %}
                                         <td>Travaux préventifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "C" %}
                                         <td>Travaux curatifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "E" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
@@ -940,16 +964,22 @@
                                 <td>{{ equipment.getDateEnregistrement() }}</td>
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
+                                    <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "B" %}
                                         <td>Travaux préventifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "C" %}
                                         <td>Travaux curatifs</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "E" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
