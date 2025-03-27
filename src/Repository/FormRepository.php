@@ -895,7 +895,7 @@ class FormRepository extends ServiceEntityRepository
             case EquipementS150::class:
                 return 440276; // ID de test liste Kizeo SOGEFI          : 437976         ID liste en prod  : 440276
             case EquipementS160::class:
-                return 437978; // ID de test liste Kizeo Rouen           : 437978         ID liste en prod  : NON EN PRODUCTION 
+                return 441758; // ID de test liste Kizeo Rouen           : 437978         ID liste en prod  : 441758 
             case EquipementS170::class:
                 return 437979; // ID de test liste Kizeo Rennes          : 437979         ID liste en prod  : NON EN PRODUCTION 
             default:
@@ -1411,7 +1411,7 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S140':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS140);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS140);
                     break;
                 
                 
