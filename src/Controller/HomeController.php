@@ -54,11 +54,13 @@ class HomeController extends AbstractController
     {
         // GET CONTACTS KIZEO BY AGENCY
         
-        $clientsGroup  =  $cache->get('client_group', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_GROUP"]);
-            return $clients;
-        });
+        // Problème avec le cache qui sert toujours les entité de Contact Group à la place de la liste Kizeo
+        $clientsGroup = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_GROUP"]);
+        // $clientsGroup  =  $cache->get('client_group', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_GROUP"]);
+        //     return $clients;
+        // });
         $clientsStEtienne  =  $cache->get('client_st_etienne', function (ItemInterface $item) use ($homeRepository)  {
             $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ST_ETIENNE"]);
@@ -122,11 +124,13 @@ class HomeController extends AbstractController
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ROUEN"]);
             return $clients;
         });
-        $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_RENNES"]);
-            return $clients;
-        });
+        // Problème avec le cache qui sert toujours les entité de Contact Rennes à la place de la liste Kizeo
+        $clientsRennes = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_RENNES"]);
+        // $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_RENNES"]);
+        //     return $clients;
+        // });
         
         // GET AGENCIES FROM DATABASE
         $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
