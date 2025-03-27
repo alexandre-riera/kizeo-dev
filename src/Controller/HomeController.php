@@ -74,11 +74,12 @@ class HomeController extends AbstractController
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_LYON"]);
             return $clients;
         });
-        $clientsBordeaux  =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_BORDEAUX"]);
-            return $clients;
-        });
+        $clientsBordeaux  =  $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_BORDEAUX"]);
+        // $clientsBordeaux  =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($homeRepository)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_BORDEAUX"]);
+        //     return $clients;
+        // });
         dd($clientsBordeaux);
         $clientsParisNord  =  $cache->get('client_paris_nord', function (ItemInterface $item) use ($homeRepository)  {
             $item->expiresAfter(900); // 15 minutes in cache
