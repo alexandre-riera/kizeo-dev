@@ -55,87 +55,88 @@ class HomeController extends AbstractController
         // GET CONTACTS KIZEO BY AGENCY
         
         // $clientsGroup  =  $cache->get('client_group', function (ItemInterface $item) use ($homeRepository)  {
-        //     $item->expiresAfter(900); // 1 month in cache
+        //     $item->expiresAfter(900); // 15 minutes in cache
         //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_GROUP"]);
         //     return $clients;
         // });
         $clientsStEtienne  =  $cache->get('client_st_etienne', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ST_ETIENNE"]);
             return $clients;
         });
         $clientsGrenoble  =  $cache->get('client_grenoble', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_GRENOBLE"]);
             return $clients;
         });
         $clientsLyon  =  $cache->get('client_lyon', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_LYON"]);
             return $clients;
         });
         $clientsBordeaux  =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_BORDEAUX"]);
             return $clients;
         });
+        dd($clientsBordeaux);
         $clientsParisNord  =  $cache->get('client_paris_nord', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PARIS_NORD"]);
             return $clients;
         });
         $clientsMontpellier =  $cache->get('client_montpellier', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_MONTPELLIER"]);
             return $clients;
         });
         $clientsHautsDeFrance =  $cache->get('client_hauts_de_france', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_HAUTS_DE_FRANCE"]);
             return $clients;
         });
         $clientsToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_TOULOUSE"]);
             return $clients;
         });
         $clientsEpinal =  $cache->get('client_epinal', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_EPINAL"]);
             return $clients;
         });
         $clientsPaca =  $cache->get('client_paca', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PACA"]);
             return $clients;
         });
         $clientsRouen =  $cache->get('client_rouen', function (ItemInterface $item) use ($homeRepository)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ROUEN"]);
             return $clients;
         });
         // $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($homeRepository)  {
-        //     $item->expiresAfter(900); // 1 month in cache
+        //     $item->expiresAfter(900); // 15 minutes in cache
         //     $clients = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_RENNES"]);
         //     return $clients;
         // });
         
         // GET CONTACTS GESTAN BY AGENCY
         $clientsGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS10::class)->findAll();
             return $clients;
         });
         
         $clientsRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $clients = $entityManager->getRepository(ContactS170::class)->findAll();
             return $clients;
         });
         
         // GET AGENCIES FROM DATABASE
         $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900); // 1 month in cache
+            $item->expiresAfter(900); // 15 minutes in cache
             $agencies = $entityManager->getRepository(Agency::class)->findAll();
             return $agencies;
         });
