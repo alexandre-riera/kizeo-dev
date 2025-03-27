@@ -530,6 +530,7 @@ class HomeController extends AbstractController
             }
         }
         $agenceSelected = trim($agenceSelected);
+        dump($clientSelectedEquipmentsFiltered);
         return $this->render('home/index.html.twig', [
             'clientsGroup' => $clientsGroup,  // Array of Contacts
             'clientsStEtienne' => $clientsStEtienne,  // Array of Contacts
