@@ -467,8 +467,8 @@ class ContratController extends AbstractController
 
         // -----------------------------------------      REPRENDRE ICI POUR LE TRAITEMENT DES EQUIPEMENTS AVEC LA FONCTION saveContractEquipments ---------------------------------------
         // -----------------------------------------      Traitement des lignes équipement du contrat ---------------------------------------
-        // foreach ($_POST['type_equipement'] as $key => $ligneEquipement) {
-        //     $this->saveContractEquipments($entityEquipement,$entityManager,$contratForEquipementSave,$key, $contactRaisonSociale, $ligneEquipement);
+        //  foreach ($_POST['type_equipement'] as $key => $ligneEquipement) {
+        //      $this->saveContractEquipments($entityEquipement,$entityManager,$contratForEquipementSave,$key, $contactRaisonSociale, $ligneEquipement);
         // }
     }
 
