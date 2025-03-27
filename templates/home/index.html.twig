@@ -624,6 +624,8 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
+                                    {% else %}
+                                        <td>{{ equipment.getEtat() }}</td>
                                 {% endif %}
                                 {%if equipment.statutDeMaintenance == "Vert" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -635,6 +637,10 @@
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
+                                    {% elseif equipment.statutDeMaintenance == "NC" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
+                                    {% elseif equipment.statutDeMaintenance == "Non présent" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
                                 <button onclick="editEquipement(
@@ -700,6 +706,8 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
+                                    {% else %}
+                                        <td>{{ equipment.getEtat() }}</td>
                                 {% endif %}
                                 {%if equipment.statutDeMaintenance == "Vert" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -711,9 +719,13 @@
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
+                                    {% elseif equipment.statutDeMaintenance == "NC" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
+                                    {% elseif equipment.statutDeMaintenance == "Non présent" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
-                                {# <button onclick="editEquipement(
+                                <button onclick="editEquipement(
                                     '{{ equipment.getId() }}',
                                     '{{ equipment.getLibelleEquipement() }}',
                                     '{{ equipment.getVisite() }}',
@@ -743,7 +755,7 @@
                                     '{{ equipment.getPresenceCarnetEntretien() }}',
                                     '{{ equipment.getStatutConformite() }}'
                                 )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                                </button> #}
+                                </button>
                                 <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a>
                                 </td>
                                 
@@ -776,6 +788,8 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
+                                    {% else %}
+                                        <td>{{ equipment.getEtat() }}</td>
                                 {% endif %}
                                 {%if equipment.statutDeMaintenance == "Vert" %}
                                 <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -787,6 +801,10 @@
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
+                                    {% elseif equipment.statutDeMaintenance == "NC" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
+                                    {% elseif equipment.statutDeMaintenance == "Non présent" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
                                 <button onclick="editEquipement(
@@ -852,6 +870,8 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
+                                    {% else %}
+                                        <td>{{ equipment.getEtat() }}</td>
                                 {% endif %}
                                 {%if equipment.statutDeMaintenance == "Vert" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -863,6 +883,10 @@
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
+                                    {% elseif equipment.statutDeMaintenance == "NC" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
+                                    {% elseif equipment.statutDeMaintenance == "Non présent" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
                                 <button onclick="editEquipement(
@@ -928,6 +952,8 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                     {% elseif equipment.etat == "G" %}
                                         <td>Equipement non présent sur site</td>
+                                    {% else %}
+                                        <td>{{ equipment.getEtat() }}</td>
                                 {% endif %}
                                 {%if equipment.statutDeMaintenance == "Vert" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -939,6 +965,10 @@
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                     <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
+                                    {% elseif equipment.statutDeMaintenance == "NC" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
+                                    {% elseif equipment.statutDeMaintenance == "Non présent" %}
+                                    <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
                                 <button onclick="editEquipement(
