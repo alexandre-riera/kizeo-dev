@@ -454,6 +454,10 @@
                         </div>
                     </div>
                 </div>
+                {% else %}
+                <div>
+                    <h2>Aucune information pour {{clientSelected}} avec l'id {{idClientSelected}} trouvée en base de donnée, merci de refaire l'export Contact Gestan de l'agence {{agenceSelected}}</h2>
+                </div>
             {%endif%}
             {% endblock %}
             
@@ -577,7 +581,7 @@
             {% endblock %}
 
             {% block clientEquipements %}
-            {% if clientSelectedInformations != NULL and clientSelectedEquipmentsFiltered != NULL  %}
+            {% if clientSelectedEquipmentsFiltered != NULL  %}
             <div>
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
                     <thead>

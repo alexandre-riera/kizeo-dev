@@ -1254,8 +1254,6 @@ class FormRepository extends ServiceEntityRepository
             return $result['forms'];
         });
 
-        // $allFormsMaintenanceArray = []; // All forms with class "MAINTENANCE
-        // $unreadFormCounter = 0;
         $formMaintenanceUnread = [];
         $dataOfFormMaintenanceUnread = [];
         $allFormsKeyId = [];
