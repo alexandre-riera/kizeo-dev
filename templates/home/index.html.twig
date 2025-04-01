@@ -322,7 +322,7 @@
                         </div>
                     {% endif %}
                     <!-- N'apparait que si l'agence est sélectionnée -->
-                    {% if agenceSelected and clientSelectedInformations == NULL %}
+                    {% if agenceSelected and clientSelected is empty %}
                         <div>
                             <h2><span class="number"> 2 - </span>Sélectionnez maintenant votre client</h2>
                             <h3>Agence de rattachement : {{ agenceSelected }}</h3>
