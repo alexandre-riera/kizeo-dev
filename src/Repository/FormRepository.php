@@ -1363,7 +1363,7 @@ class FormRepository extends ServiceEntityRepository
                 // Passer à la fonction createAndSaveInDatabaseByAgency()
                 // les variables $equipements avec les nouveaux équipements des formulaires de maintenance, le tableau des résumés de l'agence et son entité ex: $entiteEquipementS10
                 case 'S10':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
                     break;
                 
                 case 'S40':
@@ -1421,7 +1421,7 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S170':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
                     break;
                 
                 default:
