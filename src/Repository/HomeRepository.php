@@ -81,10 +81,10 @@ class HomeRepository{
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
-        
+        $year = date("Y");
         $results = [];
         
-        foreach ($yearsArray as $year) {
+        // foreach ($yearsArray as $year) {
             $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
             if ($remotePath) {
         
@@ -106,7 +106,7 @@ class HomeRepository{
                     }
                 }
             }
-        }
+        // }
     
         return $results;
     }
