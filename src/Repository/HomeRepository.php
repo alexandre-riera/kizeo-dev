@@ -56,23 +56,48 @@ class HomeRepository{
         }
 
         if (ftp_login($conn_id, $ftp_user_name, $ftp_user_pass)) {
+            // foreach ($yearsArray as $year) {
+            //     $remotePath = $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+            //     if (ftp_chdir($conn_id, $remotePath)) {
+            //         $files = ftp_nlist($conn_id, ".");
+            //         foreach ($files as $file) {
+            //             if (preg_match("#\.(pdf)$#i", $file)) {
+            //                 $myFile = new stdClass;
+            //                 $myFile->path = $file;
+            //                 $myFile->annee = $year;
+            //                 if (!in_array($myFile, $results)) {
+            //                     array_push($results, $myFile);
+            //                 }
+            //             }
+            //         }
+            //     } else {
+            //         echo "Dossier distant non trouvé pour l'année " . $year . " : " . $remotePath;
+            //         continue;
+            //     }
+            // }
             foreach ($yearsArray as $year) {
-                $remotePath = $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-        
-                // Get file list using ftp_nlist
-                $files = ftp_nlist($conn_id, $remotePath);
-        
-                if ($files !== false) {
+                $directoryPath = "/{$agenceSelected}/{$clientSelected}/{$year}/{$visite}";
+    
+                // Changer de répertoire sur le serveur FTP
+                if (ftp_chdir($conn_id, $directoryPath)) {
+                    // Récupérer la liste des fichiers PDF
+                    $files = ftp_nlist($conn_id, '.');
+    
                     foreach ($files as $file) {
                         if (preg_match("#\.(pdf)$#i", $file)) {
                             $myFile = new stdClass;
-                            $myFile->path = $file;
+                            $myFile->path = $directoryPath . '/' . $file; // Donne le chemin complet du fichier
                             $myFile->annee = $year;
+    
                             if (!in_array($myFile, $results)) {
                                 array_push($results, $myFile);
                             }
                         }
                     }
+                } else {
+                    // Optionnel : journaliser ou gérer le fait que le répertoire n'existe pas
+                    // Vous pouvez ajouter une ligne ici pour loguer la tentative d'accès à un répertoire inexistant
+                    // error_log("Directory does not exist: " . $directoryPath);
                 }
             }
             ftp_close($conn_id);
