@@ -99,7 +99,12 @@ class HomeRepository{
     private function getPdfFiles($path)
     {
         $pdfFiles = [];
-        $contents = $this->directoryContents($path);
+        // $contents = $this->directoryContents($path);
+        $contents = file_get_contents($path);
+        dd($contents);
+        if ($contents === false) {
+            return $pdfFiles;
+        }
         foreach ($contents as $item) {
             if (substr($item, -4) === '.pdf') {
                 $pdfFiles[] = $item;
