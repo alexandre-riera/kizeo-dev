@@ -86,8 +86,15 @@ class HomeRepository{
         $results = [];
         $baseDir = "https://www.pdf.somafi-group.fr/";
         foreach ($yearsArray as $year) {
-            $remotePath = $baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-            // if ($remotePath) {
+            if (file_get_contents($baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year) !== false) {
+                // dump($year);
+                // Check if the directory exists on the remote server
+                // $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+                // dump($remotePath);
+                // $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+                // dump($remotePath);
+                // Check if the directory exists on the remote server
+                $remotePath = $baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
         
                 // Use file_get_contents to get the directory listing from the remote server
                 $contents = file_get_contents($remotePath);
@@ -106,7 +113,7 @@ class HomeRepository{
                         }
                     }
                 }
-            // }
+            }
         }
     
         return $results;
