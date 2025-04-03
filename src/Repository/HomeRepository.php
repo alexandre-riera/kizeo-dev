@@ -100,7 +100,6 @@ class HomeRepository{
     {
         $pdfFiles = [];
         $contents = $this->directoryContents($path);
-        dd($contents);
         foreach ($contents as $item) {
             if (substr($item, -4) === '.pdf') {
                 $pdfFiles[] = $item;
