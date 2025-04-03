@@ -164,6 +164,7 @@ class HomeController extends AbstractController
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
                 $agenceSelected = substr($clientSelected, -4);
+                $agenceSelected = trim($agenceSelected);
             } else {  
                 echo 'Please select the value.';
             }  
