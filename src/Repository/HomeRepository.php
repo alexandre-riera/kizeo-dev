@@ -82,7 +82,10 @@ class HomeRepository{
                 if ($directoryPath) {
                     // Récupérer la liste des fichiers PDF
                     $files = ftp_nlist($conn_id, '.');
-    
+                    if ($files === false) {
+                        echo "Erreur lors de la récupération de la liste des fichiers dans le répertoire : " . $directoryPath;
+                        continue; // Passer à l'itération suivante si la liste des fichiers ne peut pas être récupérée
+                    }
                     foreach ($files as $file) {
                         if (preg_match("#\.(pdf)$#i", $file)) {
                             $myFile = new stdClass;
@@ -95,7 +98,6 @@ class HomeRepository{
                         }
                     }
                 } else {
-                    continue; // Si le répertoire n'existe pas, on continue avec le prochain
                     // Optionnel : journaliser ou gérer le fait que le répertoire n'existe pas
                     // Vous pouvez ajouter une ligne ici pour loguer la tentative d'accès à un répertoire inexistant
                     // error_log("Directory does not exist: " . $directoryPath);
