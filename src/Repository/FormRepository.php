@@ -486,9 +486,7 @@ class FormRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
             
             // }
-        }
-        // Mettre la fonction SAVE PDF
-        // FormRepository::exportAndSavePdfInRootFolder($formUnread, $dataOfFormMaintenanceUnread);
+        };
         
     }
 
@@ -656,7 +654,7 @@ class FormRepository extends ServiceEntityRepository
              \NIV28|Niveleur|A RENSEIGNER|A RENSEIGNER|A RENSEIGNER|2200|2400||6257|5947|S50
             */
             $theEquipment = $equipment['equipement']['path'] . "\\" . $columnsUpdate; 
-            dd('Équipement remonté avant la mise à jour de la liste : ' . $theEquipment);
+            // dd('Équipement remonté avant la mise à jour de la liste : ' . $theEquipment);
             if (in_array($equipment['equipement']['path'], $agencyEquipments, true)) {
                 $keyEquipment = array_search($equipment['equipement']['path'], $agencyEquipments);
                 unset($agencyEquipments[$keyEquipment]);
@@ -731,9 +729,6 @@ class FormRepository extends ServiceEntityRepository
             // Comparer et mettre à jour la liste Kizeo
             $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo);
             
-            // dump($kizeoEquipments);
-            // // Envoyer la liste d'équipements mise à jour à Kizeo
-            // $this->envoyerListeKizeo($kizeoEquipments, $idListeKizeo); 
         }
     }
 
@@ -984,7 +979,7 @@ class FormRepository extends ServiceEntityRepository
 
     /**
      * ------------------------------------------------------------------------------------------------------------------------
-     * --------------------------------------------------- EXPORT PDF AND SAVE IN ASSETS/PDF FOLDER ------------------------------
+     * --------------------------------------------------- EXPORT PDF AND SAVE IN ASSETS/PDF FOLDER -- N'EST PLUS UTILISE----------------------------
      * --------------------------------------------------------------------------------------------------------------------------
      */
     public function savePdfInAssetsPdfFolder($cache){
@@ -1259,8 +1254,6 @@ class FormRepository extends ServiceEntityRepository
             return $result['forms'];
         });
 
-        // $allFormsMaintenanceArray = []; // All forms with class "MAINTENANCE
-        // $unreadFormCounter = 0;
         $formMaintenanceUnread = [];
         $dataOfFormMaintenanceUnread = [];
         $allFormsKeyId = [];
@@ -1368,7 +1361,7 @@ class FormRepository extends ServiceEntityRepository
                 // Passer à la fonction createAndSaveInDatabaseByAgency()
                 // les variables $equipements avec les nouveaux équipements des formulaires de maintenance, le tableau des résumés de l'agence et son entité ex: $entiteEquipementS10
                 case 'S10':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
                     break;
                 
                 case 'S40':
@@ -1426,7 +1419,7 @@ class FormRepository extends ServiceEntityRepository
                 
                 
                 case 'S170':
-                    // FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
+                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
                     break;
                 
                 default:
