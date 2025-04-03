@@ -82,15 +82,11 @@ class HomeRepository{
                 if ($directoryPath) {
                     // Récupérer la liste des fichiers PDF
                     $files = ftp_nlist($conn_id, '.');
-                    if ($files === false) {
-                        echo "Erreur lors de la récupération de la liste des fichiers dans le répertoire : " . $directoryPath;
-                        continue; // Passer à l'itération suivante si la liste des fichiers ne peut pas être récupérée
-                    }
                     foreach ($files as $file) {
                         if (preg_match("#\.(pdf)$#i", $file)) {
                             $myFile = new stdClass;
                             $myFile->path = $directoryPath . '/' . $file; // Donne le chemin complet du fichier
-                            $myFile->annee = $year;
+                            $myFile->annee = 2025;
     
                             if (!in_array($myFile, $results)) {
                                 array_push($results, $myFile);
