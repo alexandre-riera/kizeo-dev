@@ -75,7 +75,7 @@ class HomeRepository{
             //         continue;
             //     }
             // }
-            foreach ($yearsArray as $year) {
+            // foreach ($yearsArray as $year) {
                 $directoryPath = "/{$agenceSelected}/{$clientSelected}/2025/{$visite}";
     
                 // Changer de répertoire sur le serveur FTP
@@ -102,7 +102,7 @@ class HomeRepository{
                     // Vous pouvez ajouter une ligne ici pour loguer la tentative d'accès à un répertoire inexistant
                     // error_log("Directory does not exist: " . $directoryPath);
                 }
-            }
+            // }
             ftp_close($conn_id);
         } else {
             echo "Impossible de se connecter au serveur FTP avec les identifiants fournis";
