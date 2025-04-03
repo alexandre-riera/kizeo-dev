@@ -48,6 +48,11 @@ class HomeRepository{
 
         // Parcourir les années et les visites
         foreach ($yearDirs as $year) {
+            dump($baseDir);
+            dump($clientSelected);
+            dump($year);
+            dump($visite);
+            dump($agenceSelected);
             $visitDir = $baseDir . '/' . $year . '/' . $visite;
             if ($this->directoryExists($visitDir)) {
                 $pdfFiles = $this->getPdfFiles($visitDir);
