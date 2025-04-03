@@ -43,10 +43,11 @@ class HomeRepository{
         // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
+        $clientSelected = str_replace(" ", "_", $clientSelected);
         $results = [];
         foreach ($yearsArray as $year) {
-            if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
-                $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
+            if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite)){
+                $directoriesLists = scandir( "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite );
                 foreach($directoriesLists as $fichier){
 
                     if(preg_match("#\.(pdf)$#i", $fichier)){
