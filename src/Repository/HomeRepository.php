@@ -81,12 +81,12 @@ class HomeRepository{
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
-        $year = date("Y");
-        dump($year);
+        // $year = date("Y");
+        // dump($year);
         $results = [];
-        
-        // foreach ($yearsArray as $year) {
-            $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+        $baseDir = "https://www.pdf.somafi-group.fr/";
+        foreach ($yearsArray as $year) {
+            $remotePath = $baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
             // if ($remotePath) {
         
                 // Use file_get_contents to get the directory listing from the remote server
@@ -107,7 +107,7 @@ class HomeRepository{
                     }
                 }
             // }
-        // }
+        }
     
         return $results;
     }
