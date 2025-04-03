@@ -52,14 +52,17 @@ class HomeRepository{
         $clientSelected = str_replace(" ", "_", $clientSelected);
         $results = [];
         foreach ($yearsArray as $year) {
-            if (file_exists($url . '/' . $agenceSelected . '/' . $clientSelected)){
-                if (file_exists($url . '/' . $agenceSelected . '/' . $clientSelected) . '/' . $year){
-                    if (file_exists($url . '/' . $agenceSelected . '/' . $clientSelected) . '/' . $year. '/' . $visite){
+            if ($url . '/' . $agenceSelected . '/' . $clientSelected){
+                if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year){
+                    if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite){
                         $contents = file_get_contents( $url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite );
                         // $contents = file_get_contents( $url . "/");
                         dump($contents);
+                    }else{
+                        dump("Pas de visite pour cette année");
                     }
-                    continue;
+                }else{
+                    dump("Pas d'année  pour ce contact");
                 }
             }
             // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
