@@ -37,59 +37,73 @@ class HomeRepository{
         }
         return $listClientsFiltered;
     }
-    public function getListOfPdf($clientSelected, $visite, $agenceSelected){
-        // TRYING THIS BEFORE GOING
-        $url = 'https://www.pdf.somafi-group.fr';
-
-        // Pull in the external HTML contents
-        // $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $visite . $year );
-        // dump($contents);
-
-        // I add 2024 in the url cause we are in 2025 and there is not 2025 folder yet
-        // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
-        $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
-        $agenceSelected = trim($agenceSelected);
-        $clientSelected = str_replace(" ", "_", $clientSelected);
+    
+    public function getListOfPdf($clientSelected, $visite, $agenceSelected)
+    {
+        $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
-        foreach ($yearsArray as $year) {
-            if ($url . '/' . $agenceSelected . '/' . $clientSelected){
-                if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year){
-                    if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite){
-                        $contents = file_get_contents( $url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite );
-                        // $contents = file_get_contents( $url . "/");
-                        dump($contents);
-                    }else{
-                        dump("Pas de visite pour cette année");
-                    }
-                }else{
-                    dump("Pas d'année  pour ce contact");
+
+        // Récupérer la liste des années disponibles
+        $yearDirs = $this->getYearDirectories($baseDir);
+
+        // Parcourir les années et les visites
+        foreach ($yearDirs as $year) {
+            $visitDir = $baseDir . '/' . $year . '/' . $visite;
+            if ($this->directoryExists($visitDir)) {
+                $pdfFiles = $this->getPdfFiles($visitDir);
+                foreach ($pdfFiles as $pdfFile) {
+                    $results[] = [
+                        'year' => $year,
+                        'visit' => $visite,
+                        'file' => $pdfFile
+                    ];
                 }
             }
-            // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
-            //     $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
-            //     foreach($directoriesLists as $fichier){
-
-            //         if(preg_match("#\.(pdf)$#i", $fichier)){
-                        
-            //             $myFile = new stdClass;
-            //             $myFile->path = $fichier;
-            //             $myFile->annee = $year;
-            //             //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
-                        
-            //             //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
-                        
-            //             //"|" parenthèses avec des barres obliques dit "ou" (plusieurs possibilités : jpg ou jpeg ou png...)
-                        
-            //             //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
-                        
-            //             if (!in_array($myFile, $results)) {
-            //                 array_push($results, $myFile);
-            //             }
-            //         }
-            //     }
-            // }
         }
-        
+
         return $results;
     }
+
+    private function getYearDirectories($baseDir)
+    {
+        $yearDirs = [];
+        foreach (range(date('Y'), date('Y') + 10) as $year) {
+            if ($this->directoryExists($baseDir . '/' . $year)) {
+                $yearDirs[] = $year;
+            }
+        }
+        return $yearDirs;
+    }
+
+    private function directoryExists($path)
+    {
+        try {
+            $contents = file_get_contents($path);
+            return $contents !== false;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    private function getPdfFiles($path)
+    {
+        $pdfFiles = [];
+        $contents = $this->directoryContents($path);
+        foreach ($contents as $item) {
+            if (substr($item, -4) === '.pdf') {
+                $pdfFiles[] = $item;
+            }
+        }
+        return $pdfFiles;
+    }
+
+    private function directoryContents($path)
+    {
+        try {
+            return scandir($path);
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
 }
