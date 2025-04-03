@@ -100,9 +100,11 @@ class HomeRepository{
     {
         $pdfFiles = [];
         $contents = $this->directoryContents($path);
-        foreach ($contents as $item) {
-            if (substr($item, -4) === '.pdf') {
-                $pdfFiles[] = $item;
+        if (is_array($contents)) {
+            foreach ($contents as $item) {
+                if (substr($item, -4) === '.pdf') {
+                    $pdfFiles[] = $item;
+                }
             }
         }
         return $pdfFiles;
@@ -121,10 +123,10 @@ class HomeRepository{
                 ftp_close($ftpConnection);
                 return $contents;
             } else {
-                return [];
+                return false;
             }
         } catch (\Exception $e) {
-            return [];
+            return false;
         }
     }
 
