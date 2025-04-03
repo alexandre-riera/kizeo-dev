@@ -71,7 +71,8 @@ class HomeRepository{
                         }
                     }
                 } else {
-                    echo "Dossier distant non trouvé : ". $remotePath;
+                    echo "Dossier distant non trouvé pour l'année " . $year . " : " . $remotePath;
+                    continue;
                 }
             }
             ftp_close($conn_id);
