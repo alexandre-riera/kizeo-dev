@@ -38,11 +38,21 @@ class HomeRepository{
         return $listClientsFiltered;
     }
     
-    public function getListOfPdf($clientSelected, $visite, $agenceSelected, $dateEnregistrementEquipement)
+    public function getListOfPdf($clientSelected, $visitArray, $agenceSelected, $dateEnregistrementEquipement)
     {
+        $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
-        dd($clientSelected, $visite, $agenceSelected, date("d-m-Y" , strtotime($dateEnregistrementEquipement)));
-
+        foreach ($visitArray as $visite) {
+            $file = str_replace(" ", "_", $clientSelected) . '-' . date("d-m-Y" , strtotime($dateEnregistrementEquipement)) . '-' . $visite . '.pdf';
+            $myFile = new stdClass;
+            $myFile->path = $baseDir . '/' . date("Y", strtotime($dateEnregistrementEquipement)) . '/' . $visite . '/' . $file;
+            $myFile->annee = date("Y", strtotime($dateEnregistrementEquipement));
+            
+            if (!in_array($myFile, $results)) {
+                array_push($results, $myFile);
+            }
+        }
+        dump($results);
         // $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         // $results = [];
 
