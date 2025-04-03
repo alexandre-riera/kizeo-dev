@@ -54,7 +54,8 @@ class HomeRepository{
         foreach ($yearsArray as $year) {
             if (is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){ {
                 # code...
-                $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $year . '/' . $visite  );
+                // $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $year . '/' . $visite  );
+                $contents = file_get_contents( $url . "/");
                 dump($contents);
             }
             // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
