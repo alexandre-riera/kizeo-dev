@@ -53,10 +53,13 @@ class HomeRepository{
         $results = [];
         foreach ($yearsArray as $year) {
             if ($url . '/' . $agenceSelected . '/' . $clientSelected){ {
-                # code...
-                $contents = file_get_contents( $url . '/' . $agenceSelected . '/' . $clientSelected );
-                // $contents = file_get_contents( $url . "/");
-                dump($contents);
+                if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year){ {
+                    if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite){ {
+                        $contents = file_get_contents( $url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year. '/' . $visite );
+                        // $contents = file_get_contents( $url . "/");
+                        dump($contents);
+                    }
+                }
             }
             // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
             //     $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
