@@ -79,7 +79,7 @@ class HomeRepository{
                 $directoryPath = "/{$agenceSelected}/{$clientSelected}/{$year}/{$visite}";
     
                 // Changer de répertoire sur le serveur FTP
-                if (ftp_chdir($conn_id, $directoryPath)) {
+                if ($directoryPath) {
                     // Récupérer la liste des fichiers PDF
                     $files = ftp_nlist($conn_id, '.');
     
