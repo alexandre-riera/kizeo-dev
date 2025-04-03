@@ -37,62 +37,29 @@ class HomeRepository{
         }
         return $listClientsFiltered;
     }
-
-    // public function getListOfPdf($clientSelected, $visite, $agenceSelected){
-    //     // I add 2024 in the url cause we are in 2025 and there is not 2025 folder yet
-    //     // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
-    //     $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
-    //     $agenceSelected = trim($agenceSelected);
-    //     $clientSelected = str_replace(" ", "_", $clientSelected);
-    //     dump($clientSelected);
-    //     dump($agenceSelected);
-    //     dump($visite);
-    //     $results = [];
-    //     foreach ($yearsArray as $year) {
-    //         // dump($year);
-    //         if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite)){
-    //             $directoriesLists = scandir( "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite );
-    //             foreach($directoriesLists as $fichier){
-
-    //                 if(preg_match("#\.(pdf)$#i", $fichier)){
-                        
-    //                     $myFile = new stdClass;
-    //                     $myFile->path = $fichier;
-    //                     $myFile->annee = $year;
-    //                     //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
-                        
-    //                     //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
-                        
-    //                     //"|" parenthèses avec des barres obliques dit "ou" (plusieurs possibilités : jpg ou jpeg ou png...)
-                        
-    //                     //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
-                        
-    //                     if (!in_array($myFile, $results)) {
-    //                         array_push($results, $myFile);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-        
-    //     return $results;
-    // }
-    public function getListOfPdf($clientSelected, $visite, $agenceSelected){
-        $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
+    public function getListOfPdf($clientSelected, $visite, $agenceSelected)
+    {
+        $yearsArray = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
         $results = [];
-        $baseDir = $_ENV['FTP_BASE_DIR'];
-        foreach ($yearsArray as $year) {
-            if (is_dir($baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year. "/" . $visite)) {
-                $remotePath = $baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-        
-                // Use file_get_contents to get the directory listing from the remote server
-                $contents = file_get_contents($remotePath);
-        
-                if ($contents !== false) {
-                    // Explode the contents by newline to get individual files/folders
-                    $files = explode("\n", $contents);
+
+        // Connexion FTP
+        $ftp_server = $_ENV['FTP_SERVER'];
+        $ftp_user_name = $_ENV['FTP_USERNAME'];
+        $ftp_user_pass = $_ENV['FTP_PASSWORD'];
+
+        $conn_id = ftp_connect($ftp_server);
+        if ($conn_id === false) {
+            echo "Impossible de se connecter au serveur FTP";
+            return $results;
+        }
+
+        if (ftp_login($conn_id, $ftp_user_name, $ftp_user_pass)) {
+            foreach ($yearsArray as $year) {
+                $remotePath = $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+                if (ftp_chdir($conn_id, $remotePath)) {
+                    $files = ftp_nlist($conn_id, ".");
                     foreach ($files as $file) {
                         if (preg_match("#\.(pdf)$#i", $file)) {
                             $myFile = new stdClass;
@@ -103,10 +70,15 @@ class HomeRepository{
                             }
                         }
                     }
+                } else {
+                    echo "Dossier distant non trouvé : ". $remotePath;
                 }
             }
+            ftp_close($conn_id);
+        } else {
+            echo "Impossible de se connecter au serveur FTP avec les identifiants fournis";
         }
-    
+
         return $results;
     }
 }
