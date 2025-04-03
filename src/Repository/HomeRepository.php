@@ -44,6 +44,8 @@ class HomeRepository{
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
+        dump($clientSelected);
+        dump($agenceSelected);
         $results = [];
         foreach ($yearsArray as $year) {
             if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite)){
