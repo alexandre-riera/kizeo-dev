@@ -111,7 +111,7 @@ class HomeRepository{
     private function directoryContents($path)
     {
         try {
-            return scandir($path . '/');
+            return scandir($path);
         } catch (\Exception $e) {
             return [];
         }
