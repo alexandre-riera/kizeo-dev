@@ -38,39 +38,42 @@ class HomeRepository{
         return $listClientsFiltered;
     }
     
-    public function getListOfPdf($clientSelected, $visite, $agenceSelected)
+    public function getListOfPdf($clientSelected, $visite, $agenceSelected, $dateEnregistrementEquipement)
     {
-        $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
+        dd($clientSelected, $visite, $agenceSelected, $dateEnregistrementEquipement);
 
-        // Récupérer la liste des années disponibles
-        $yearDirs = $this->getYearDirectories($baseDir);
+        // $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
+        // $results = [];
 
-        // Parcourir les années et les visites
-        foreach ($yearDirs as $year) {
-            dump($baseDir);
-            dump($clientSelected);
-            dump($year);
-            dump($visite);
-            dump($agenceSelected);
-            $visitDir = $baseDir . '/' . $year . '/' . $visite;
-            dump($visitDir);
-            // Vérifier si le répertoire de la visite existe
-            if ($this->directoryExists($visitDir)) {
-                dump("Hello I'm HERE !");
-                // Récupérer les fichiers PDF dans le répertoire de la visite
-                $pdfFiles = $this->getPdfFiles($visitDir);
-                dump($pdfFiles);
-                // Ajouter les fichiers PDF à la liste des résultats
-                foreach ($pdfFiles as $pdfFile) {
-                    $results[] = [
-                        'year' => $year,
-                        'visit' => $visite,
-                        'file' => $pdfFile
-                    ];
-                }
-            }
-        }
+        // // Récupérer la liste des années disponibles
+        // $yearDirs = $this->getYearDirectories($baseDir);
+
+        // // Parcourir les années et les visites
+        // foreach ($yearDirs as $year) {
+        //     dump($baseDir);
+        //     dump($clientSelected);
+        //     dump($year);
+        //     dump($visite);
+        //     dump($agenceSelected);
+        //     $visitDir = $baseDir . '/' . $year . '/' . $visite;
+        //     dump($visitDir);
+        //     // Vérifier si le répertoire de la visite existe
+        //     if ($this->directoryExists($visitDir)) {
+        //         dump("Hello I'm HERE !");
+        //         // Récupérer les fichiers PDF dans le répertoire de la visite
+        //         $pdfFiles = $this->getPdfFiles($visitDir);
+        //         dump($pdfFiles);
+        //         // Ajouter les fichiers PDF à la liste des résultats
+        //         foreach ($pdfFiles as $pdfFile) {
+        //             $results[] = [
+        //                 'year' => $year,
+        //                 'visit' => $visite,
+        //                 'file' => $pdfFile
+        //             ];
+        //         }
+        //     }
+        // }
 
         return $results;
     }
