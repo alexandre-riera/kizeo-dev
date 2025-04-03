@@ -54,6 +54,8 @@ class HomeRepository{
             dump($visite);
             dump($agenceSelected);
             $visitDir = $baseDir . '/' . $year . '/' . $visite;
+            dump($visitDir);
+            // Vérifier si le répertoire de la visite existe
             if ($this->directoryExists($visitDir)) {
                 $pdfFiles = $this->getPdfFiles($visitDir);
                 foreach ($pdfFiles as $pdfFile) {
