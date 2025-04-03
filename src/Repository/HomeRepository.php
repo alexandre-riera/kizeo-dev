@@ -79,7 +79,7 @@ class HomeRepository{
                 $directoryPath = "/{$agenceSelected}/{$clientSelected}/{$year}/{$visite}";
     
                 // Changer de répertoire sur le serveur FTP
-                if (!ftp_chdir($conn_id, $directoryPath)) {
+                if (ftp_chdir($conn_id, $directoryPath)) {
                     // Récupérer la liste des fichiers PDF
                     $files = ftp_nlist($conn_id, '.');
     
@@ -95,6 +95,7 @@ class HomeRepository{
                         }
                     }
                 } else {
+                    continue; // Si le répertoire n'existe pas, on continue avec le prochain
                     // Optionnel : journaliser ou gérer le fait que le répertoire n'existe pas
                     // Vous pouvez ajouter une ligne ici pour loguer la tentative d'accès à un répertoire inexistant
                     // error_log("Directory does not exist: " . $directoryPath);
