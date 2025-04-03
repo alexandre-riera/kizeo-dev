@@ -84,9 +84,9 @@ class HomeRepository{
         // $year = date("Y");
         // dump($year);
         $results = [];
-        $baseDir = "https://www.pdf.somafi-group.fr/";
+        $baseDir = 'ftp://divi4480:S0m1f2ugkTL9ss@pdf.somafi-group.fr/';
         foreach ($yearsArray as $year) {
-            if (is_dir('ftp://divi4480:S0m1f2ugkTL9ss@pdf.somafi-group.fr/' . $agenceSelected . "/" . $clientSelected . "/" . $year)) {
+            if (is_dir($baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year. "/" . $visite)) {
                 // dump($year);
                 // Check if the directory exists on the remote server
                 // $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
