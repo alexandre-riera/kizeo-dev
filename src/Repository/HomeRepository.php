@@ -82,6 +82,7 @@ class HomeRepository{
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
         $year = date("Y");
+        dump($year);
         $results = [];
         
         // foreach ($yearsArray as $year) {
