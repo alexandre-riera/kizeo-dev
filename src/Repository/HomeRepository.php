@@ -42,8 +42,8 @@ class HomeRepository{
         $url = 'https://www.pdf.somafi-group.fr';
 
         // Pull in the external HTML contents
-        $contents = file_get_contents( $url );
-        dump($contents);
+        // $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $visite . $year );
+        // dump($contents);
 
         // I add 2024 in the url cause we are in 2025 and there is not 2025 folder yet
         // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
@@ -51,29 +51,31 @@ class HomeRepository{
         $agenceSelected = trim($agenceSelected);
         $results = [];
         foreach ($yearsArray as $year) {
-            if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
-                $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
-                foreach($directoriesLists as $fichier){
+            $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $year . '/' . $visite  );
+            dump($contents);
+            // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
+            //     $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
+            //     foreach($directoriesLists as $fichier){
 
-                    if(preg_match("#\.(pdf)$#i", $fichier)){
+            //         if(preg_match("#\.(pdf)$#i", $fichier)){
                         
-                        $myFile = new stdClass;
-                        $myFile->path = $fichier;
-                        $myFile->annee = $year;
-                        //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
+            //             $myFile = new stdClass;
+            //             $myFile->path = $fichier;
+            //             $myFile->annee = $year;
+            //             //la preg_match définie : \.(jpg|jpeg|png|gif|bmp|tif)$
                         
-                        //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
+            //             //Elle commence par un point "." (doit être échappé avec anti-slash \ car le point veut dire "tous les caractères" sinon)
                         
-                        //"|" parenthèses avec des barres obliques dit "ou" (plusieurs possibilités : jpg ou jpeg ou png...)
+            //             //"|" parenthèses avec des barres obliques dit "ou" (plusieurs possibilités : jpg ou jpeg ou png...)
                         
-                        //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
+            //             //La condition "$" signifie que le nom du fichier doit se terminer par la chaîne spécifiée. Par exemple, un fichier nommé 'monFichier.jpg.php' ne sera pas accepté, car il ne se termine pas par '.jpg', '.jpeg', '.png' ou toute autre extension souhaitée.
                         
-                        if (!in_array($myFile, $results)) {
-                            array_push($results, $myFile);
-                        }
-                    }
-                }
-            }
+            //             if (!in_array($myFile, $results)) {
+            //                 array_push($results, $myFile);
+            //             }
+            //         }
+            //     }
+            // }
         }
         
         return $results;
