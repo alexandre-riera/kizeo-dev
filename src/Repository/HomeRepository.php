@@ -38,6 +38,13 @@ class HomeRepository{
         return $listClientsFiltered;
     }
     public function getListOfPdf($clientSelected, $visite, $agenceSelected){
+        // TRYING THIS BEFORE GOING
+        $url = 'https://www.pdf.somafi-group.fr';
+
+        // Pull in the external HTML contents
+        $contents = file_get_contents( $url );
+        dump($contents);
+
         // I add 2024 in the url cause we are in 2025 and there is not 2025 folder yet
         // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
