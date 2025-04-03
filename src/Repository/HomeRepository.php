@@ -81,19 +81,10 @@ class HomeRepository{
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
         $clientSelected = str_replace(" ", "_", $clientSelected);
-        // $year = date("Y");
-        // dump($year);
         $results = [];
-        $baseDir = 'ftp://divi4480:S0m1f2ugkTL9ss@pdf.somafi-group.fr/';
+        $baseDir = $_ENV['FTP_BASE_DIR'];
         foreach ($yearsArray as $year) {
             if (is_dir($baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year. "/" . $visite)) {
-                // dump($year);
-                // Check if the directory exists on the remote server
-                // $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-                // dump($remotePath);
-                // $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-                // dump($remotePath);
-                // Check if the directory exists on the remote server
                 $remotePath = $baseDir . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
         
                 // Use file_get_contents to get the directory listing from the remote server
