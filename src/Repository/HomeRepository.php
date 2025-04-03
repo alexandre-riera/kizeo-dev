@@ -59,6 +59,7 @@ class HomeRepository{
                         // $contents = file_get_contents( $url . "/");
                         dump($contents);
                     }
+                    continue;
                 }
             }
             // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
