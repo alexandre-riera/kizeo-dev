@@ -100,7 +100,7 @@ class HomeRepository{
     {
         $pdfFiles = [];
         // $contents = $this->directoryContents($path);
-        $contents = file_get_contents($path);
+        $contents = scandir($path);
         dd($contents);
         if ($contents === false) {
             return $pdfFiles;
