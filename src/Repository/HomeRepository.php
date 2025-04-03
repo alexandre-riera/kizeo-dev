@@ -85,8 +85,8 @@ class HomeRepository{
         $results = [];
         
         foreach ($yearsArray as $year) {
-            if (file_exists("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite)) {
-                $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+            $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+            if ($remotePath) {
         
                 // Use file_get_contents to get the directory listing from the remote server
                 $contents = file_get_contents($remotePath);
