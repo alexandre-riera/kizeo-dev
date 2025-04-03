@@ -57,7 +57,11 @@ class HomeRepository{
             dump($visitDir);
             // Vérifier si le répertoire de la visite existe
             if ($this->directoryExists($visitDir)) {
+                dump("Hello I'm HERE !");
+                // Récupérer les fichiers PDF dans le répertoire de la visite
                 $pdfFiles = $this->getPdfFiles($visitDir);
+                dump($pdfFiles);
+                // Ajouter les fichiers PDF à la liste des résultats
                 foreach ($pdfFiles as $pdfFile) {
                     $results[] = [
                         'year' => $year,
