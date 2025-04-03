@@ -169,8 +169,6 @@ class HomeController extends AbstractController
                 echo 'Please select the value.';
             }  
         }
-        // Mettre des dump ici pour agence selectionnée et client selectionné si besoin
-        dump($agenceSelected);
         
         // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
         $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
@@ -180,8 +178,6 @@ class HomeController extends AbstractController
             $clientSelected = $key;
         }
         $idClientSelected = rtrim($idClientSelected, "\ ");
-        dump($idClientSelected);
-        dump($clientSelected);
         $visiteDuClient = "";
         if ($clientSelected != NULL) {
             switch ($agenceSelected) {
