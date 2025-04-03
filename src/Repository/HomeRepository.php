@@ -50,7 +50,7 @@ class HomeRepository{
         $results = [];
         foreach ($yearsArray as $year) {
             dump($year);
-            if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite)){
+            if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year )){
                 $directoriesLists = scandir( "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite );
                 foreach($directoriesLists as $fichier){
 
