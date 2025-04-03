@@ -49,8 +49,8 @@ class HomeRepository{
         dump($visite);
         $results = [];
         foreach ($yearsArray as $year) {
-            dump($year);
-            if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year )){
+            // dump($year);
+            // if(is_dir("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite)){
                 $directoriesLists = scandir( "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" .$visite );
                 foreach($directoriesLists as $fichier){
 
@@ -72,7 +72,7 @@ class HomeRepository{
                         }
                     }
                 }
-            }
+            // }
         }
         
         return $results;
