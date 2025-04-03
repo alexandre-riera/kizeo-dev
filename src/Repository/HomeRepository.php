@@ -87,7 +87,7 @@ class HomeRepository{
         
         // foreach ($yearsArray as $year) {
             $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-            if ($remotePath) {
+            // if ($remotePath) {
         
                 // Use file_get_contents to get the directory listing from the remote server
                 $contents = file_get_contents($remotePath);
@@ -106,7 +106,7 @@ class HomeRepository{
                         }
                     }
                 }
-            }
+            // }
         // }
     
         return $results;
