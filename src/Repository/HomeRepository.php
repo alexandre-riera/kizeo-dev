@@ -110,8 +110,19 @@ class HomeRepository{
 
     private function directoryContents($path)
     {
+        $ftpServer = $_ENV['FTP_SERVER'];
+        $ftpUsername = $_ENV['FTP_USERNAME'];
+        $ftpPassword = $_ENV['FTP_PASSWORD'];
+
         try {
-            return scandir($path);
+            $ftpConnection = ftp_connect($ftpServer);
+            if ($ftpConnection && ftp_login($ftpConnection, $ftpUsername, $ftpPassword)) {
+                $contents = ftp_nlist($ftpConnection, $path);
+                ftp_close($ftpConnection);
+                return $contents;
+            } else {
+                return [];
+            }
         } catch (\Exception $e) {
             return [];
         }
