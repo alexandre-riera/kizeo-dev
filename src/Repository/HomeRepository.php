@@ -49,10 +49,14 @@ class HomeRepository{
         // MUST COMPLETE THIS WITH 2024 AND 2025 TO LIST PDF FILES IN FOLDER
         $yearsArray = [2024, 2025, 2026, 2027, 2028,2029, 2030];
         $agenceSelected = trim($agenceSelected);
+        $clientSelected = str_replace(" ", "_", $clientSelected);
         $results = [];
         foreach ($yearsArray as $year) {
-            $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $year . '/' . $visite  );
-            dump($contents);
+            if (is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){ {
+                # code...
+                $contents = file_get_contents( $url . "/" . $clientSelected . "/" . $year . '/' . $visite  );
+                dump($contents);
+            }
             // if(is_dir("../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite")){
             //     $directoriesLists = scandir( "../pdf/maintenance/$agenceSelected/$clientSelected/$year/$visite" );
             //     foreach($directoriesLists as $fichier){
