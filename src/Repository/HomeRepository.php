@@ -41,7 +41,7 @@ class HomeRepository{
     public function getListOfPdf($clientSelected, $visite, $agenceSelected, $dateEnregistrementEquipement)
     {
         $results = [];
-        dd($clientSelected, $visite, $agenceSelected, date("d-m-Y" , $dateEnregistrementEquipement));
+        dd($clientSelected, $visite, $agenceSelected, date("d-m-Y" , strtotime($dateEnregistrementEquipement)));
 
         // $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         // $results = [];
