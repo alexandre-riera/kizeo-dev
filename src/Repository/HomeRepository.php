@@ -85,21 +85,23 @@ class HomeRepository{
         $results = [];
         
         foreach ($yearsArray as $year) {
-            $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-    
-            // Use file_get_contents to get the directory listing from the remote server
-            $contents = file_get_contents($remotePath);
-    
-            if ($contents !== false) {
-                // Explode the contents by newline to get individual files/folders
-                $files = explode("\n", $contents);
-                foreach ($files as $file) {
-                    if (preg_match("#\.(pdf)$#i", $file)) {
-                        $myFile = new stdClass;
-                        $myFile->path = $file;
-                        $myFile->annee = $year;
-                        if (!in_array($myFile, $results)) {
-                            array_push($results, $myFile);
+            if (file_exists("https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite)) {
+                $remotePath = "https://www.pdf.somafi-group.fr/" . $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
+        
+                // Use file_get_contents to get the directory listing from the remote server
+                $contents = file_get_contents($remotePath);
+        
+                if ($contents !== false) {
+                    // Explode the contents by newline to get individual files/folders
+                    $files = explode("\n", $contents);
+                    foreach ($files as $file) {
+                        if (preg_match("#\.(pdf)$#i", $file)) {
+                            $myFile = new stdClass;
+                            $myFile->path = $file;
+                            $myFile->annee = $year;
+                            if (!in_array($myFile, $results)) {
+                                array_push($results, $myFile);
+                            }
                         }
                     }
                 }
