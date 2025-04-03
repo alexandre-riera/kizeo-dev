@@ -76,7 +76,7 @@ class HomeRepository{
             //     }
             // }
             foreach ($yearsArray as $year) {
-                $directoryPath = "/{$agenceSelected}/{$clientSelected}/{$year}/{$visite}";
+                $directoryPath = "/{$agenceSelected}/{$clientSelected}/2025/{$visite}";
     
                 // Changer de répertoire sur le serveur FTP
                 if ($directoryPath) {
