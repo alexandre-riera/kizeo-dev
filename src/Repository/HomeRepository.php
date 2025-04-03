@@ -52,7 +52,7 @@ class HomeRepository{
         $clientSelected = str_replace(" ", "_", $clientSelected);
         $results = [];
         foreach ($yearsArray as $year) {
-            if (is_dir($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year . '/' . $visite)){ {
+            if ($url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year . '/' . $visite){ {
                 # code...
                 $contents = file_get_contents( $url . '/' . $agenceSelected . '/' . $clientSelected . '/' . $year . '/' . $visite );
                 // $contents = file_get_contents( $url . "/");
