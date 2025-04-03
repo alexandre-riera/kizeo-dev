@@ -58,8 +58,11 @@ class HomeRepository{
         if (ftp_login($conn_id, $ftp_user_name, $ftp_user_pass)) {
             foreach ($yearsArray as $year) {
                 $remotePath = $agenceSelected . "/" . $clientSelected . "/" . $year . "/" . $visite;
-                if (ftp_chdir($conn_id, $remotePath)) {
-                    $files = ftp_nlist($conn_id, ".");
+        
+                // Get file list using ftp_nlist
+                $files = ftp_nlist($conn_id, $remotePath);
+        
+                if ($files !== false) {
                     foreach ($files as $file) {
                         if (preg_match("#\.(pdf)$#i", $file)) {
                             $myFile = new stdClass;
@@ -70,9 +73,6 @@ class HomeRepository{
                             }
                         }
                     }
-                } else {
-                    echo "Dossier distant non trouvé pour l'année " . $year . " : " . $remotePath;
-                    continue;
                 }
             }
             ftp_close($conn_id);
