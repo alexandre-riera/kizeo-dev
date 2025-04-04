@@ -446,7 +446,7 @@
                                     {% for objectFile in directoriesLists %}
                                         {% if  objectFile.path %}
                                             <span>{{ objectFile.annee }}</span>
-                                            <li><a href="{{ objectFile.path }}" target="_blank">{{ objectFile.path }}</a></li>
+                                            <li><a href="{{ objectFile.path }}" target="_blank">CR de la {{ objectFile.visite }}</a></li>
                                         {% endif %}
                                     {% endfor %}
                                 </ul>

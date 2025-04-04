@@ -48,6 +48,7 @@ class HomeRepository{
                 $file = str_replace(" ", "_", $clientSelected) . '-' . date("d-m-Y" , strtotime($dateDeVisite)) . '-' . $visite . '.pdf';
                 $myFile = new stdClass;
                 $myFile->path = $baseDir . '/' . date("Y", strtotime($dateDeVisite)) . '/' . $visite . '/' . $file;
+                $myFile->visite = $visite;
                 $myFile->annee = date("Y", strtotime($dateDeVisite));
                 
                 if (!in_array($myFile, $results)) {
