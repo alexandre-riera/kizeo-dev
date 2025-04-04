@@ -163,6 +163,7 @@ class HomeController extends AbstractController
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
+                dd($clientSelected);
                 $agenceSelected = substr($clientSelected, -4);
                 $agenceSelected = trim($agenceSelected);
             } else {  
