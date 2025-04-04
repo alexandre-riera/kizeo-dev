@@ -186,7 +186,7 @@ class HomeController extends AbstractController
         // }
         dump($clientSelected);
         $idClientSelected = rtrim($idClientSelected, "\ ");
-        dd($idClientSelected);
+        dump($idClientSelected);
         $visiteDuClient = "";
         if ($clientSelected != NULL) {
             switch ($agenceSelected) {
