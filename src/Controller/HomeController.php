@@ -184,6 +184,7 @@ class HomeController extends AbstractController
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -200,6 +201,7 @@ class HomeController extends AbstractController
                 case ' S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
 
                     
                     
@@ -217,6 +219,7 @@ class HomeController extends AbstractController
                 case 'S40':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -233,6 +236,7 @@ class HomeController extends AbstractController
                 case ' S40':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -249,6 +253,7 @@ class HomeController extends AbstractController
                 case 'S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -265,6 +270,7 @@ class HomeController extends AbstractController
                 case ' S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -313,7 +319,7 @@ class HomeController extends AbstractController
                 case 'S70':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
+                    $visitArray = [];
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
@@ -329,7 +335,7 @@ class HomeController extends AbstractController
                 case ' S70':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
+                    $visitArray = [];
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
@@ -345,7 +351,7 @@ class HomeController extends AbstractController
                 case 'S80':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
+                    $visitArray = [];
                     
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() != NULL) {
@@ -361,6 +367,7 @@ class HomeController extends AbstractController
                 case ' S80':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -377,6 +384,7 @@ class HomeController extends AbstractController
                 case 'S100':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -393,6 +401,7 @@ class HomeController extends AbstractController
                 case ' S100':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -409,6 +418,7 @@ class HomeController extends AbstractController
                 case 'S120':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -425,6 +435,7 @@ class HomeController extends AbstractController
                 case ' S120':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -441,6 +452,7 @@ class HomeController extends AbstractController
                 case 'S130':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -457,6 +469,7 @@ class HomeController extends AbstractController
                 case ' S130':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -473,6 +486,7 @@ class HomeController extends AbstractController
                 case 'S140':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -489,6 +503,7 @@ class HomeController extends AbstractController
                 case ' S140':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -505,6 +520,7 @@ class HomeController extends AbstractController
                 case 'S150':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -521,6 +537,7 @@ class HomeController extends AbstractController
                 case ' S150':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -537,6 +554,7 @@ class HomeController extends AbstractController
                 case 'S160':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -553,6 +571,7 @@ class HomeController extends AbstractController
                 case ' S160':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -569,6 +588,7 @@ class HomeController extends AbstractController
                 case 'S170':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
@@ -585,6 +605,7 @@ class HomeController extends AbstractController
                 case ' S170':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                    $visitArray = [];
                     
                     
                     foreach ($clientSelectedEquipments as $equipment) {
