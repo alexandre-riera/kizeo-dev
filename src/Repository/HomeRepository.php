@@ -49,6 +49,7 @@ class HomeRepository{
                 $myFile = new stdClass;
                 $myFile->path = $baseDir . '/' . date("Y", strtotime($dateDeVisite)) . '/' . $visite . '/' . $file;
                 $myFile->visite = $visite;
+                $myFile->date = date("d-m-Y" , strtotime($dateDeVisite));
                 $myFile->annee = date("Y", strtotime($dateDeVisite));
                 
                 if (!in_array($myFile, $results)) {
