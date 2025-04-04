@@ -180,9 +180,10 @@ class HomeController extends AbstractController
         $clientSelectedSplitted = preg_split("/[-]/",$clientSelected);
         dump($clientSelectedSplitted);
         $idClientSelected = $clientSelectedSplitted[0];
-        foreach ($clientSelectedSplitted as $key) {
-            $clientSelected = $key;
-        }
+        $clientSelected = $clientSelectedSplitted[1];
+        // foreach ($clientSelectedSplitted as $key) {
+        //     $clientSelected = $key;
+        // }
         dump($clientSelected);
         $idClientSelected = rtrim($idClientSelected, "\ ");
         dd($idClientSelected);
