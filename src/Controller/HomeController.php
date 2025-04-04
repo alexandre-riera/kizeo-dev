@@ -174,9 +174,10 @@ class HomeController extends AbstractController
         }
         
         // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
-        $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
-        dump($clientSelectedRTrimmed); // "5113-XPO VEMAR"
-        $clientSelectedSplitted = preg_split("/[-]/",$clientSelectedRTrimmed);
+        // $clientSelectedRTrimmed = rtrim($clientSelected, "\S10\S40\S50\S60\S70\S80\S100\S120\S130\S140\S150\S160\S170\ \-");
+        // dump($clientSelectedRTrimmed); // "5113-XPO VEMAR"
+        // $clientSelectedSplitted = preg_split("/[-]/",$clientSelectedRTrimmed);
+        $clientSelectedSplitted = preg_split("/[-]/",$clientSelected);
         dump($clientSelectedSplitted);
         $idClientSelected = $clientSelectedSplitted[0];
         foreach ($clientSelectedSplitted as $key) {
