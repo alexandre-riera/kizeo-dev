@@ -185,7 +185,7 @@ class HomeController extends AbstractController
             $idClientSelected = rtrim($idClientSelected, "\ ");
             dump($idClientSelected);
         }
-        $visiteDuClient = "";
+        $visiteDuClient = [];
         if ($clientSelected != NULL) {
             switch ($agenceSelected) {
                 case 'S10':
@@ -201,7 +201,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -219,7 +218,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -236,7 +234,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -253,7 +250,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -270,7 +266,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -287,7 +282,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -303,7 +297,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -319,7 +312,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -335,7 +327,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -351,7 +342,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -367,7 +357,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -384,7 +373,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -401,7 +389,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -418,7 +405,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -435,7 +421,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -452,7 +437,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -469,7 +453,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -486,7 +469,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -503,7 +485,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -520,7 +501,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -537,7 +517,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -554,7 +533,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -571,7 +549,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -588,7 +565,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -605,7 +581,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
@@ -622,7 +597,6 @@ class HomeController extends AbstractController
                                 $visitArray[] = $equipment->getVisite();
                             }
                             $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $equipment->getDateEnregistrement(), $equipment->getDateEnregistrement());
-                            $visiteDuClient =  $equipment->getVisite();
                         }
                     }
                     break;
