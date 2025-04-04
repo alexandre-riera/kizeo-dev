@@ -174,9 +174,10 @@ class HomeController extends AbstractController
         }
         
         // ENLEVER LE NOM DE L'AGENCE ET L'ESPACE A LA FIN DU NOM DU CLIENT SÉLECTIONNÉ
-        $clientSelectedSplitted = preg_split("/[-]/",$clientSelected);
-        dump($clientSelectedSplitted);
+        $clientSelectedSplitted = [];
         if (isset($clientSelectedSplitted)) {
+            $clientSelectedSplitted = preg_split("/[-]/",$clientSelected);
+            dump($clientSelectedSplitted);
             $idClientSelected = $clientSelectedSplitted[0];
             $clientSelected = trim($clientSelectedSplitted[1]);
             dump($clientSelected);
