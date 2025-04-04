@@ -40,6 +40,7 @@ class HomeRepository{
     
     public function getListOfPdf($clientSelected, $visitArray, $agenceSelected, $dateArray)
     {
+        dump($dateArray);
         $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
         foreach ($dateArray as $dateDeVisite) {
