@@ -161,9 +161,10 @@ class HomeController extends AbstractController
         }
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
+            dump($clientSelected);
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
-                dump($clientSelected); // "5113-XPO VEMARS - S80 S80"
+                dump($clientSelected);
                 $agenceSelected = substr($clientSelected, -4);
                 dump($agenceSelected); // " S80"
                 $agenceSelected = trim($agenceSelected);
