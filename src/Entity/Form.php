@@ -131,7 +131,7 @@ class Form
     public ?string $raison_sociale_visite = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_etiquette_somafi = null;
+    public ?string $photo_etiquette_somafi = null;
 
     public function getId(): ?int
     {
