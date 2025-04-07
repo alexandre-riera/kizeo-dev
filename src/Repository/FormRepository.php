@@ -1635,6 +1635,7 @@ class FormRepository extends ServiceEntityRepository
             
             $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
             $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
+            $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
             $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
             $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
             $equipement->setPhotoPanneauIntermediaireI($additionalEquipment['photo_panneau_intermediaire_i']['value']);
