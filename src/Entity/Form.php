@@ -130,6 +130,9 @@ class Form
     #[ORM\Column(length: 255, nullable: true)]
     public ?string $raison_sociale_visite = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_etiquette_somafi = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -587,6 +590,18 @@ class Form
     public function setRaisonSocialeVisite(?string $raison_sociale_visite): static
     {
         $this->raison_sociale_visite = $raison_sociale_visite;
+
+        return $this;
+    }
+
+    public function getPhotoEtiquetteSomafi(): ?string
+    {
+        return $this->photo_etiquette_somafi;
+    }
+
+    public function setPhotoEtiquetteSomafi(?string $photo_etiquette_somafi): static
+    {
+        $this->photo_etiquette_somafi = $photo_etiquette_somafi;
 
         return $this;
     }
