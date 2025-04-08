@@ -423,11 +423,17 @@
                             <div class="card-body">
                                 <h4 class="card-title">Filtres</h4>
                                 <form action="" method"POST">
-                                    <select style="margin-bottom: 10px; margin-top:10px;" class="form-control" id="client-annee-filter-select" name="clientAnneeFilter">
+                                    <select style="margin-bottom: 10px; margin-top:20px;" class="form-control" id="client-annee-filter-select" name="clientAnneeFilter">
                                         <option value = "" selected> Année </option>
+                                        {% for annee in clientAnneeFilterArray%}
+                                            <option  value="{{ annee }}" id="client_annee_filter">{{ annee }}</option>
+                                        {% endfor %}
                                     </select>
                                     <select style="margin-bottom: 10px" class="form-control" id="client-visite-filter-select" name="clientVisiteFilter">
                                         <option value = "" selected> Visite </option>
+                                        {% for visite in clientVisiteFilterArray%}
+                                            <option  value="{{ visite }}" id="client_visite_filter">{{ visite }}</option>
+                                        {% endfor %}
                                     </select>
                                     <button type="submit"  name ="submitFilters" class="btn btn-primary">Valider</button>
                                 </form>
