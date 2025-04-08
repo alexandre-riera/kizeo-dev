@@ -1634,6 +1634,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setUpdateTime($equipements['update_time']);
             
             $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
+            // $equipement->setEquipmentId($additionalEquipment['equipement']['value']);
             $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
             if (isset($additionalEquipment['photo_etiquette_somafi']['value'])) {
                 $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
