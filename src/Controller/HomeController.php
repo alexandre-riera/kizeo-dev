@@ -689,31 +689,43 @@ class HomeController extends AbstractController
         }
         $agenceSelected = trim($agenceSelected);
 
-        $clientAnneeFilterArray = []; // Je récupère les données du client en BDD
-        $clientVisiteFilterArray = []; // Je récupère les données du client en BDD
+        $clientAnneeFilterArray = []; // Je filtre les résultats
+        foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+            $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+            if (!in_array($date_equipment, $clientAnneeFilterArray)) {
+                $clientAnneeFilterArray [] = $date_equipment;
+            }
+        }
+        $clientVisiteFilterArray = []; // Je filtre les résultats
+        foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+            $visite_equipment = $equipment->getVisite();
+            if (!in_array($visite_equipment, $clientVisiteFilterArray)) {
+                $clientVisiteFilterArray [] = $visite_equipment;
+            }
+        }
         $clientAnneeFilter = "";
         $clientVisiteFilter = "";
         // Récupération de l'année et de la visite dans le formulaire "Filtres" en front
         if(isset($_POST['submitFilters'])){  
             if(!empty($_POST['clientAnneeFilter'])) {
                 $clientAnneeFilter = $_POST['clientAnneeFilter'];
-                foreach ($clientSelectedEquipmentsFiltered as $equipment) {
-                    $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
-                    if (!in_array($date_equipment, $clientAnneeFilterArray)) {
-                        $clientAnneeFilterArray [] = $date_equipment;
-                    }
-                }
+                // foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+                //     $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+                //     if (!in_array($date_equipment, $clientAnneeFilterArray)) {
+                //         $clientAnneeFilterArray [] = $date_equipment;
+                //     }
+                // }
             } else {  
                 echo 'Sélectionnez l\'année.';
             }  
             if(!empty($_POST['clientVisiteFilter'])) {
                 $clientVisiteFilter = $_POST['clientVisiteFilter'];
-                foreach ($clientSelectedEquipmentsFiltered as $equipment) {
-                    $visite_equipment = $equipment->getVisite();
-                    if (!in_array($visite_equipment, $clientVisiteFilterArray)) {
-                        $clientVisiteFilterArray [] = $visite_equipment;
-                    }
-                }
+                // foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+                //     $visite_equipment = $equipment->getVisite();
+                //     if (!in_array($visite_equipment, $clientVisiteFilterArray)) {
+                //         $clientVisiteFilterArray [] = $visite_equipment;
+                //     }
+                // }
             } else {  
                 echo 'Sélectionnez la visite.';
             }  
