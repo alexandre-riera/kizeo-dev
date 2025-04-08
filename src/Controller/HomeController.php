@@ -692,6 +692,7 @@ class HomeController extends AbstractController
         $clientAnneeFilterArray = []; // Je filtre les résultats
         foreach ($clientSelectedEquipmentsFiltered as $equipment) {
             $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+            // $date_equipment = $equipment->getDateEnregistrement();
             if (!in_array($date_equipment, $clientAnneeFilterArray)) {
                 $clientAnneeFilterArray [] = $date_equipment;
             }
@@ -709,23 +710,22 @@ class HomeController extends AbstractController
         if(isset($_POST['submitFilters'])){  
             if(!empty($_POST['clientAnneeFilter'])) {
                 $clientAnneeFilter = $_POST['clientAnneeFilter'];
-                // foreach ($clientSelectedEquipmentsFiltered as $equipment) {
-                //     $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
-                //     if (!in_array($date_equipment, $clientAnneeFilterArray)) {
-                //         $clientAnneeFilterArray [] = $date_equipment;
-                //     }
-                // }
+                // On réinitialise le tableau des équipements à 0 !
+                $clientSelectedEquipmentsFiltered = [];
             } else {  
                 echo 'Sélectionnez l\'année.';
             }  
             if(!empty($_POST['clientVisiteFilter'])) {
                 $clientVisiteFilter = $_POST['clientVisiteFilter'];
-                // foreach ($clientSelectedEquipmentsFiltered as $equipment) {
-                //     $visite_equipment = $equipment->getVisite();
-                //     if (!in_array($visite_equipment, $clientVisiteFilterArray)) {
-                //         $clientVisiteFilterArray [] = $visite_equipment;
-                //     }
-                // }
+                // On réinitialise le tableau des équipements à 0 !
+                $clientSelectedEquipmentsFiltered = [];
+                foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+                    // Si l'année de la visite et le nom de la visite est pareil que l'équipement retourné par la base de données, je le rajoute au tableau des équipements
+                    if ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter) {
+                        $clientSelectedEquipmentsFiltered [] = $equipment;
+                    }
+                }
             } else {  
                 echo 'Sélectionnez la visite.';
             }  
