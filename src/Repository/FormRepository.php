@@ -1463,16 +1463,16 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Function to mark maintenance forms as UNREAD 
      */
-    public function markMaintenanceFormsAsUnread($cache){
+    public function markMaintenanceFormsAsUnread(){
         // Récupérer les fichiers PDF dans un tableau
         // Filtrer uniquement les formulaires de maintenance
         $allFormsArray = FormRepository::getFormsMaintenance();
         // Consolider les ids des formulaires à marquer comme non lus
         $formIdsToMarkAsUnread = [];
         
-        foreach ($allFormsArray as $form) {
+        foreach ($allFormsArray as $formulaire) {
             $response = $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/advanced', [
+                'https://forms.kizeo.com/rest/v3/forms/' . $formulaire['id'] . '/data/advanced', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
@@ -1481,22 +1481,24 @@ class FormRepository extends ServiceEntityRepository
             );
 
             $content = $response->toArray();  // On récupère directement un tableau
-            foreach ($content['data'] as $data) {
-                // Effectuer une action de marquage de tous les formulaires en une seule requête
-                // if (!empty($formIdsToMarkAsUnread)) {
-                    $this->client->request('POST', 
-                        'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                            'json' => [
-                                "data_ids" => intval($data['_id']) // Convertir à int
-                            ]
+            dd($content);
+        }
+        
+        foreach ($content['data'] as $data) {
+            // Effectuer une action de marquage de tous les formulaires en une seule requête
+            // if (!empty($formIdsToMarkAsUnread)) {
+                $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'json' => [
+                            "data_ids" => intval($data['_id']) // Convertir à int
                         ]
-                    );
-                // }
-            }
+                    ]
+                );
+            // }
         }
 
         
