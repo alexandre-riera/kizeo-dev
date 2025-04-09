@@ -1484,9 +1484,9 @@ class FormRepository extends ServiceEntityRepository
             );
 
             $content = $response->toArray();  // On récupère directement un tableau
+            dd($content);
             foreach ($content['data'] as $data) {
-                dd($data);
-                $formIdsToMarkAsUnread[] = $data['_id'];
+                $formIdsToMarkAsUnread[] = $data['_id']; // Id correspondant à data_id
             }
         }
 
