@@ -1437,54 +1437,50 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Function to mark maintenance forms as UNREAD 
      */
-    public function markMaintenanceFormsAsUnread(){
+    public function markMaintenanceFormsAsUnread($cache){
         // Récupérer les fichiers PDF dans un tableau
-        // -----------------------------   Return all forms in an array
-        $allFormsArray = FormRepository::getForms();  // All forms on Kizeo
-        $allFormsArray = $allFormsArray['forms'];
-        $allFormsMaintenanceArray = []; // All forms with class "MAINTENANCE
+        $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item) {
+            $item->expiresAfter(900); // 15 minutes
+            return FormRepository::getForms()['forms'];
+        });
 
-        // ----------------------------- DÉBUT Return all forms with class "MAINTENANCE"
-        foreach ($allFormsArray as $key => $value) {
-            if ($allFormsArray[$key]['class'] === 'MAINTENANCE') {
-                $response = $this->client->request(
-                    'POST',
-                    'https://forms.kizeo.com/rest/v3/forms/' . $allFormsArray[$key]['id'] . '/data/advanced', [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]
-                );
-                $content = $response->getContent();
-                $content = $response->toArray();
-                foreach ($content['data'] as $key => $value) {
-                    array_push($allFormsMaintenanceArray, $value);
-                }
+        // Filtrer uniquement les formulaires de maintenance
+        $allFormsMaintenanceArray = array_filter($allFormsArray, function($form) {
+            return $form['class'] === 'MAINTENANCE';
+        });
+
+        // Consolider les ids des formulaires à marquer comme non lus
+        $formIdsToMarkAsUnread = [];
+        
+        foreach ($allFormsMaintenanceArray as $form) {
+            $response = $this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/advanced', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $content = $response->toArray();  // On récupère directement un tableau
+            foreach ($content['data'] as $data) {
+                $formIdsToMarkAsUnread[] = $data['_id'];
             }
         }
-        // -----------------------------  FIN Return all forms with class "MAINTENANCE"
 
-        foreach ($allFormsMaintenanceArray as $formMaintenance) {
-            // -------------------------------------------            MARK FORM AS UNREAD !!!
-            // ------------------------------------------------------------------------------
-            $response = $this->client->request(
-                'POST',
-                'https://forms.kizeo.com/rest/v3/forms/' .  $formMaintenance['_form_id'] . '/markasunreadbyaction/read', [
+        // Effectuer une action de marquage de tous les formulaires en une seule requête
+        if (!empty($formIdsToMarkAsUnread)) {
+            $this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $form['_form_id'] . '/markasunreadbyaction/read', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ],
                     'json' => [
-                        "data_ids" => [intval($formMaintenance['_id'])]
+                        "data_ids" => array_map('intval', $formIdsToMarkAsUnread) // Convertir à int
                     ]
                 ]
             );
-            $dataOfResponse = $response->getContent();
-            
-            // -------------------------------------------            MARKED FORM AS UNREAD !!!
-            // ------------------------------------------------------------------------------
-            
         }
     }
 
