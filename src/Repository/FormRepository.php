@@ -75,7 +75,7 @@ class FormRepository extends ServiceEntityRepository
             );
             $content = $response->getContent();
             $content = $response->toArray();
-
+            dd($content);
             return $content;
     }
     
