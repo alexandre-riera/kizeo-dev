@@ -27,6 +27,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use stdClass;
 
 /**
  * @extends ServiceEntityRepository<ApiForm>
@@ -1468,7 +1469,7 @@ class FormRepository extends ServiceEntityRepository
         // Filtrer uniquement les formulaires de maintenance
         $allFormsArray = FormRepository::getFormsMaintenance();
         // Consolider les ids des formulaires à marquer comme non lus
-        $formIdsToMarkAsUnread = [];
+        $formToUnreadArray = [];
         
         foreach ($allFormsArray as $formulaire) {
             $response = $this->client->request('POST', 
@@ -1481,10 +1482,15 @@ class FormRepository extends ServiceEntityRepository
             );
 
             $content = $response->toArray();  // On récupère directement un tableau
-            dd($content);
+            foreach ($content['data'] as $data) {
+                $formToMarkAsUnread = new stdClass;
+                $formToMarkAsUnread -> formId = $data['_form_id'];
+                $formToMarkAsUnread -> dataId = $data['_id'];
+                $formToUnreadArray[] = $formToMarkAsUnread;
+            }
         }
-        
-        foreach ($content['data'] as $data) {
+        dd($formToUnreadArray);
+        foreach ($formToUnreadArray as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             // if (!empty($formIdsToMarkAsUnread)) {
                 $this->client->request('POST', 
