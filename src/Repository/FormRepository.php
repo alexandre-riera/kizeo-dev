@@ -81,28 +81,27 @@ class FormRepository extends ServiceEntityRepository
     /**
         * @return Form[] Returns an array of forms from Kizeo
         */
-    public function getFormsMaintenance(): array
+    public function getFormsMaintenance(): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
     {
         $formMaintenanceArray = [];
-            $response = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-            $content = $response->getContent();
-            $content = $response->toArray();
+        $response = $this->client->request(
+            'GET',
+            'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+            ]
+        );
+        $content = $response->getContent();
+        $content = $response->toArray();
 
-            foreach ($content['forms'] as $form) {
-                if ($form['class'] == "MAINTENANCE") {
-                    $formMaintenanceArray [] = $form;
-                }
+        foreach ($content['forms'] as $form) {
+            if ($form['class'] == "MAINTENANCE") {
+                $formMaintenanceArray [] = $form;
             }
-            dd($formMaintenanceArray);
-            return $formMaintenanceArray;
+        }
+        return $formMaintenanceArray;
     }
     
     //      ----------------------------------------------------------------------------------------------------------------------
@@ -1486,6 +1485,7 @@ class FormRepository extends ServiceEntityRepository
 
             $content = $response->toArray();  // On récupère directement un tableau
             foreach ($content['data'] as $data) {
+                dd($data);
                 $formIdsToMarkAsUnread[] = $data['_id'];
             }
         }
