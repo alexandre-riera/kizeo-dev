@@ -1467,7 +1467,6 @@ class FormRepository extends ServiceEntityRepository
         // Récupérer les fichiers PDF dans un tableau
         // Filtrer uniquement les formulaires de maintenance
         $allFormsArray = FormRepository::getFormsMaintenance();
-        dd($allFormsArray);
         // Consolider les ids des formulaires à marquer comme non lus
         $formIdsToMarkAsUnread = [];
         
