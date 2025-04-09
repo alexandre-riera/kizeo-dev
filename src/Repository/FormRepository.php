@@ -1481,26 +1481,25 @@ class FormRepository extends ServiceEntityRepository
             );
 
             $content = $response->toArray();  // On récupère directement un tableau
-            dd($content);
             foreach ($content['data'] as $data) {
-                $formIdsToMarkAsUnread[] = $data['_id']; // Id correspondant à data_id
+                // Effectuer une action de marquage de tous les formulaires en une seule requête
+                // if (!empty($formIdsToMarkAsUnread)) {
+                    $this->client->request('POST', 
+                        'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'json' => [
+                                "data_ids" => intval($data['_id']) // Convertir à int
+                            ]
+                        ]
+                    );
+                // }
             }
         }
 
-        // Effectuer une action de marquage de tous les formulaires en une seule requête
-        if (!empty($formIdsToMarkAsUnread)) {
-            $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $form['_form_id'] . '/markasunreadbyaction/read', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => [
-                        "data_ids" => array_map('intval', $formIdsToMarkAsUnread) // Convertir à int
-                    ]
-                ]
-            );
-        }
+        
     }
 
     /**
