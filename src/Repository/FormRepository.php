@@ -1490,7 +1490,7 @@ class FormRepository extends ServiceEntityRepository
         // Consolider les ids des formulaires à marquer comme non lus
         $formToUnreadArray = [];
         
-        foreach ($allFormsArray as $data) {{
+        foreach ($allFormsArray as $data) {
             $formToMarkAsUnread = new stdClass;
             $formToMarkAsUnread -> formId = $data['_form_id'];
             $formToMarkAsUnread -> dataId = $data['_id'];
