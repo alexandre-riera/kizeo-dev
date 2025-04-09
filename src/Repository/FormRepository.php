@@ -85,6 +85,7 @@ class FormRepository extends ServiceEntityRepository
     public function getFormsMaintenance(): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
     {
         $formMaintenanceArray = [];
+        $resultToReturn = [];
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/forms', [
@@ -102,8 +103,21 @@ class FormRepository extends ServiceEntityRepository
                 $formMaintenanceArray [] = $form;
             }
         }
+
+        foreach ($formMaintenanceArray as $formMaintenance) {
+            $response = $this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+            $content = $response->toArray();  // On récupère directement un tableau
+            $resultToReturn[] = $content['data'];
+        }
         
-        return $formMaintenanceArray;
+        return $resultToReturn;
     }
     
     //      ----------------------------------------------------------------------------------------------------------------------
@@ -1464,30 +1478,23 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Function to mark maintenance forms as UNREAD 
      */
-    public function markMaintenanceFormsAsUnread(){
+    public function markMaintenanceFormsAsUnread($cache){
         // Récupérer les fichiers PDF dans un tableau
         // Filtrer uniquement les formulaires de maintenance
-        $allFormsArray = FormRepository::getFormsMaintenance();
+        $allFormsArray = $cache->get('forms_maintenance', function(ItemInterface $item){ // $allFormsData = $content['data'] from getFormsMaintenance()
+            $item->expiresAfter(1800); // Cache pour 30 minutes
+            $results = FormRepository::getFormsMaintenance();
+            return $results;
+        });
+        
         // Consolider les ids des formulaires à marquer comme non lus
         $formToUnreadArray = [];
         
-        foreach ($allFormsArray as $formulaire) {
-            $response = $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $formulaire['id'] . '/data/advanced', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $content = $response->toArray();  // On récupère directement un tableau
-            foreach ($content['data'] as $data) {
-                $formToMarkAsUnread = new stdClass;
-                $formToMarkAsUnread -> formId = $data['_form_id'];
-                $formToMarkAsUnread -> dataId = $data['_id'];
-                $formToUnreadArray[] = $formToMarkAsUnread;
-            }
+        foreach ($allFormsArray as $data) {{
+            $formToMarkAsUnread = new stdClass;
+            $formToMarkAsUnread -> formId = $data['_form_id'];
+            $formToMarkAsUnread -> dataId = $data['_id'];
+            $formToUnreadArray[] = $formToMarkAsUnread;
         }
         dd($formToUnreadArray);
         foreach ($formToUnreadArray as $data) {
