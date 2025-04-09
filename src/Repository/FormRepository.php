@@ -1465,11 +1465,8 @@ class FormRepository extends ServiceEntityRepository
     public function markMaintenanceFormsAsUnread($cache){
         // Récupérer les fichiers PDF dans un tableau
         // Filtrer uniquement les formulaires de maintenance
-        $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item) {
-            $item->expiresAfter(900); // 15 minutes
-            return FormRepository::getFormsMaintenance();
-        });
-
+        $allFormsArray = FormRepository::getFormsMaintenance();
+        dd($allFormsArray);
         // Consolider les ids des formulaires à marquer comme non lus
         $formIdsToMarkAsUnread = [];
         
