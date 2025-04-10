@@ -104,17 +104,26 @@ class FormRepository extends ServiceEntityRepository
             }
         }
         foreach ($formMaintenanceArray as $formMaintenance) {
-            dd($formMaintenance);
+            // dd($formMaintenance);
             $response = $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
+                'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'], [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ],
                 ]
             );
+            // $response = $this->client->request('POST', 
+            //     'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
+            //         'headers' => [
+            //             'Accept' => 'application/json',
+            //             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+            //         ],
+            //     ]
+            // );
             $content = $response->getContent();
             $content = $response->toArray();  // On récupère directement un tableau
+            dd($content);
             $resultToReturn[] = $content['data'];
         }
         
