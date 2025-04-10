@@ -450,7 +450,21 @@
                             </div>
                         </div>
                     </div>
-                    {% elseif agenceSelected is not empty and clientSelected is not empty %}
+                    <div class="col-sm-2">
+                        <div class="card downloadPdf">
+                            <div class="card-body">
+                                <h4 class="card-title">Compte-rendu</h4>
+                                <ul style="list-style-type:none;">
+                                    {% for objectFile in directoriesLists %}
+                                        {% if  objectFile.path %}
+                                            <li style="margin-bottom:10px;"><a href="{{ objectFile.path }}" target="_blank">{{ objectFile.visite }} du {{ objectFile.date }}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    {% elseif directoriesLists is not empty %}
                     <div class="col-sm-2">
                         <div class="card downloadPdf">
                             <div class="card-body">
