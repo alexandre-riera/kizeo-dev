@@ -84,8 +84,7 @@ class FormRepository extends ServiceEntityRepository
         */
     public function getFormsMaintenance($cache): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
     {
-        
-        $formMaintenanceArray = [];
+        $formMaintenanceArrayOfObject = [];
         $results = [];
         $response = $this->client->request(
             'GET',
@@ -122,18 +121,18 @@ class FormRepository extends ServiceEntityRepository
             $content = $response->getContent();
             $content = $response->toArray();
             dd($content);
+            $content = $content['data'];
             // On crée un objet pour chaque formulaire avec son id et son form_id
-            $allFormsDataIds = new stdClass;
-            $allFormsDataIds->data_id = $content['id'];
-            $allFormsDataIds->form_id = $content['form_id'];
-            $formMaintenanceArray[] = $allFormsDataIds;
+            foreach ($content as $data) {
+                $formIds = new stdClass;
+                $formIds->form_id = $data['_form_id'];
+                $formIds->data_id = $data['_id'];
+                $formMaintenanceArrayOfObject[] = $formIds;
+            }
         }
-        
-
-        dump($allFormsIds);
-        dump($formMaintenanceArray);
+        dump($formMaintenanceArrayOfObject);
         die;
-        return $resultToReturn;
+        return $formMaintenanceArrayOfObject;
     }
     
     //      ----------------------------------------------------------------------------------------------------------------------
