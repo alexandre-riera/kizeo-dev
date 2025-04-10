@@ -104,8 +104,11 @@ class FormRepository extends ServiceEntityRepository
                 $results [] = $form;
             }
         }
-        dd($results);
-        $allFormsIds = array_map(null, $results['id']);
+
+        $allFormsIds = [];
+        foreach ($results as $form) {
+            $allFormsIds[] = $results['id'];
+        }
 
         foreach ($allFormsIds as $formId) {
             $response = $this->client->request('POST', 
@@ -117,7 +120,8 @@ class FormRepository extends ServiceEntityRepository
                 ]
             );
             $content = $response->getContent();
-            $content = $response->toArray();  // On récupère directement un tableau
+            $content = $response->toArray();
+            // On crée un objet pour chaque formulaire avec son id et son form_id
             $allFormsDataIds = new stdClass;
             $allFormsDataIds->data_id = $content['id'];
             $allFormsDataIds->form_id = $content['form_id'];
