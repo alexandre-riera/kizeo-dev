@@ -82,50 +82,62 @@ class FormRepository extends ServiceEntityRepository
     /**
         * @return Form[] Returns an array of forms from Kizeo
         */
-    public function getFormsMaintenance(): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
+    public function getFormsMaintenance($cache): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
     {
-        $formMaintenanceArray = [];
-        $resultToReturn = [];
-        $response = $this->client->request(
-            'GET',
-            'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]
-        );
-        $content = $response->getContent();
-        $content = $response->toArray();
-
-        foreach ($content['forms'] as $form) {
-            if ($form['class'] == "MAINTENANCE") {
-                $formMaintenanceArray [] = $form;
-            }
-        }
-        foreach ($formMaintenanceArray as $formMaintenance) {
-            // dd($formMaintenance);
-            $response = $this->client->request('GET', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'], [
+        
+        $formMaintenanceArray = $cache->get('forms_maintenance_ids', function(ItemInterface $item){ // $allFormsData = $content['data'] from getFormsMaintenance()
+            $item->expiresAfter(1800); // Cache pour 30 minutes
+            $results = [];
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ],
                 ]
             );
-            // $response = $this->client->request('POST', 
-            //     'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
-            //         'headers' => [
-            //             'Accept' => 'application/json',
-            //             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-            //         ],
-            //     ]
-            // );
             $content = $response->getContent();
-            $content = $response->toArray();  // On récupère directement un tableau
-            dump($content['form']);
-            // $resultToReturn[] = $content['data'];
-        }
+            $content = $response->toArray();
+    
+            foreach ($content['forms'] as $form) {
+                if ($form['class'] == "MAINTENANCE") {
+                    $results [] = $form;
+                }
+            }
+            return $results;
+        ;
+
+        $allFormsMaintenanceIdsArray = $cache->get('forms_maintenance_ids', function(ItemInterface $item, $formMaintenanceArray){ // $allFormsData = $content['data'] from getFormsMaintenance()
+            $item->expiresAfter(1800); // Cache pour 30 minutes
+            $results = [];
+            foreach ($formMaintenanceArray as $formMaintenance) {
+                // dd($formMaintenance);
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'], [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                    ]
+                );
+                // $response = $this->client->request('POST', 
+                //     'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
+                //         'headers' => [
+                //             'Accept' => 'application/json',
+                //             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                //         ],
+                //     ]
+                // );
+                $content = $response->getContent();
+                $content = $response->toArray();  // On récupère directement un tableau
+                $results[] = $content['form']['id'];
+                // dump($content['form']);
+                // $resultToReturn[] = $content['data'];
+            }
+            dd($allFormsMaintenanceIdsArray);
+            return $allFormsMaintenanceIdsArray;
+        });
         die;
         return $resultToReturn;
     }
@@ -1494,7 +1506,7 @@ class FormRepository extends ServiceEntityRepository
         // Filtrer uniquement les formulaires de maintenance
         $allFormsArray = $cache->get('forms_maintenance', function(ItemInterface $item){ // $allFormsData = $content['data'] from getFormsMaintenance()
             $item->expiresAfter(1800); // Cache pour 30 minutes
-            $results = FormRepository::getFormsMaintenance();
+            $results = FormRepository::getFormsMaintenance($cache);
             return $results;
         });
         
