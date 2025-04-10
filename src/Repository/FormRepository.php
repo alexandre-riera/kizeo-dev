@@ -120,7 +120,6 @@ class FormRepository extends ServiceEntityRepository
             );
             $content = $response->getContent();
             $content = $response->toArray();
-            dd($content);
             $content = $content['data'];
             // On crée un objet pour chaque formulaire avec son id et son form_id
             foreach ($content as $data) {
