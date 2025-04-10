@@ -103,7 +103,7 @@ class FormRepository extends ServiceEntityRepository
                 $formMaintenanceArray [] = $form;
             }
         }
-
+        dd($formMaintenanceArray);
         foreach ($formMaintenanceArray as $formMaintenance) {
             $response = $this->client->request('POST', 
                 'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'] . '/data/advanced', [
