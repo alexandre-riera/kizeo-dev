@@ -104,7 +104,7 @@ class FormRepository extends ServiceEntityRepository
                 $results [] = $form;
             }
         }
-        dump($results);
+        dd($results);
         $allFormsIds = array_map(null, $results['id']);
 
         foreach ($allFormsIds as $formId) {
