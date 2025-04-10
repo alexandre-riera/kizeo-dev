@@ -113,6 +113,7 @@ class FormRepository extends ServiceEntityRepository
                     ],
                 ]
             );
+            $content = $response->getContent();
             $content = $response->toArray();  // On récupère directement un tableau
             $resultToReturn[] = $content['data'];
         }
@@ -1497,7 +1498,7 @@ class FormRepository extends ServiceEntityRepository
             $formToMarkAsUnread -> dataId = $data['_id'];
             $formToUnreadArray[] = $formToMarkAsUnread;
         }
-        dd($formToUnreadArray);
+        // dd($formToUnreadArray);
         foreach ($formToUnreadArray as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             // if (!empty($formIdsToMarkAsUnread)) {
