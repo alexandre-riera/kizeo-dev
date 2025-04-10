@@ -105,7 +105,7 @@ class FormRepository extends ServiceEntityRepository
         }
         foreach ($formMaintenanceArray as $formMaintenance) {
             // dd($formMaintenance);
-            $response = $this->client->request('POST', 
+            $response = $this->client->request('GET', 
                 'https://forms.kizeo.com/rest/v3/forms/' . $formMaintenance['id'], [
                     'headers' => [
                         'Accept' => 'application/json',
