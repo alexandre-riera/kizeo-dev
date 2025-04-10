@@ -1286,6 +1286,7 @@ class FormRepository extends ServiceEntityRepository
     *
     * Function to save PDF with pictures for maintenance equipements in directories on O2switch  -------------- LOCAL FUNCTIONNAL -------
     * Implementation du cache symfony pour améliorer la performance en remote
+    * -------------------------------------- CALL BY 1ST CRON TASK
     */
     public function saveEquipmentsInDatabase($cache){
         // -----------------------------   Return all forms in an array | cached for 900 seconds 15 minutes
