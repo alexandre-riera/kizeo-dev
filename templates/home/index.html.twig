@@ -450,6 +450,7 @@
                             </div>
                         </div>
                     </div>
+                    {% elseif agenceSelected is not empty and clientSelected is not empty %}
                     <div class="col-sm-2">
                         <div class="card downloadPdf">
                             <div class="card-body">
@@ -465,7 +466,6 @@
                         </div>
                     </div>
                 </div>
-                {% elseif agenceSelected is not empty and clientSelected is not empty %}
                 <div>
                     <h2>Aucune information pour {{clientSelected}} avec l'id {{idClientSelected}} trouvée en base de donnée, merci de refaire l'export Contact Gestan de l'agence {{agenceSelected}}</h2>
                 </div>
