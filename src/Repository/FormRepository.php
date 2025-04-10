@@ -107,7 +107,7 @@ class FormRepository extends ServiceEntityRepository
 
         $allFormsIds = [];
         foreach ($results as $form) {
-            $allFormsIds[] = $results['id'];
+            $allFormsIds[] = $form['id'];
         }
 
         foreach ($allFormsIds as $formId) {
