@@ -123,7 +123,7 @@ class FormRepository extends ServiceEntityRepository
             // );
             $content = $response->getContent();
             $content = $response->toArray();  // On récupère directement un tableau
-            dump($content['form']['currentUserRights']['can_modify_data']);
+            dump($content['form']);
             // $resultToReturn[] = $content['data'];
         }
         die;
