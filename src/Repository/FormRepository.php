@@ -106,11 +106,11 @@ class FormRepository extends ServiceEntityRepository
                 }
             }
             return $results;
-        ;
+        });
 
         $allFormsMaintenanceIdsArray = $cache->get('forms_maintenance_ids', function(ItemInterface $item, $formMaintenanceArray){ // $allFormsData = $content['data'] from getFormsMaintenance()
             $item->expiresAfter(1800); // Cache pour 30 minutes
-            $results = [];
+            $formsIds = [];
             foreach ($formMaintenanceArray as $formMaintenance) {
                 // dd($formMaintenance);
                 $response = $this->client->request('GET', 
@@ -131,13 +131,13 @@ class FormRepository extends ServiceEntityRepository
                 // );
                 $content = $response->getContent();
                 $content = $response->toArray();  // On récupère directement un tableau
-                $results[] = $content['form']['id'];
+                $formsIds[] = $content['form']['id'];
                 // dump($content['form']);
                 // $resultToReturn[] = $content['data'];
             }
-            dd($allFormsMaintenanceIdsArray);
-            return $allFormsMaintenanceIdsArray;
+            return $formsIds;
         });
+        dd($allFormsMaintenanceIdsArray);
         die;
         return $resultToReturn;
     }
