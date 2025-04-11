@@ -133,6 +133,24 @@ class Form
     #[ORM\Column(length: 255, nullable: true)]
     public ?string $photo_etiquette_somafi = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_choc_tablier_porte = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_choc_tablier = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_axe = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_serrure = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_serrure1 = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_feux = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -602,6 +620,78 @@ class Form
     public function setPhotoEtiquetteSomafi(?string $photo_etiquette_somafi): static
     {
         $this->photo_etiquette_somafi = $photo_etiquette_somafi;
+
+        return $this;
+    }
+
+    public function getPhotoChocTablierPorte(): ?string
+    {
+        return $this->photo_choc_tablier_porte;
+    }
+
+    public function setPhotoChocTablierPorte(?string $photo_choc_tablier_porte): static
+    {
+        $this->photo_choc_tablier_porte = $photo_choc_tablier_porte;
+
+        return $this;
+    }
+
+    public function getPhotoChocTablier(): ?string
+    {
+        return $this->photo_choc_tablier;
+    }
+
+    public function setPhotoChocTablier(?string $photo_choc_tablier): static
+    {
+        $this->photo_choc_tablier = $photo_choc_tablier;
+
+        return $this;
+    }
+
+    public function getPhotoAxe(): ?string
+    {
+        return $this->photo_axe;
+    }
+
+    public function setPhotoAxe(?string $photo_axe): static
+    {
+        $this->photo_axe = $photo_axe;
+
+        return $this;
+    }
+
+    public function getPhotoSerrure(): ?string
+    {
+        return $this->photo_serrure;
+    }
+
+    public function setPhotoSerrure(?string $photo_serrure): static
+    {
+        $this->photo_serrure = $photo_serrure;
+
+        return $this;
+    }
+
+    public function getPhotoSerrure1(): ?string
+    {
+        return $this->photo_serrure1;
+    }
+
+    public function setPhotoSerrure1(?string $photo_serrure1): static
+    {
+        $this->photo_serrure1 = $photo_serrure1;
+
+        return $this;
+    }
+
+    public function getPhotoFeux(): ?string
+    {
+        return $this->photo_feux;
+    }
+
+    public function setPhotoFeux(?string $photo_feux): static
+    {
+        $this->photo_feux = $photo_feux;
 
         return $this;
     }
