@@ -113,6 +113,7 @@ class FormRepository extends ServiceEntityRepository
             // Clé de cache unique pour chaque formulaire
             $dataCacheKey = 'maintenance_form_data_' . $formId;
             
+            $cachedFormData = [];
             $cachedFormData = $cache->get($dataCacheKey, function(ItemInterface $item) use ($formId) {
                 $item->expiresAfter(1800); // Cache valide 30 minutes
                 
@@ -127,24 +128,23 @@ class FormRepository extends ServiceEntityRepository
                 $content = $response->toArray();
                 return $content['data'];
             });
-    
-            // Créer les objets à partir des données mises en cache
-            foreach ($cachedFormData as $data) {
-                // Effectuer une action de marquage de tous les formulaires en une seule requête
-                $response2 =$this->client->request('POST', 
-                    'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'json' => [
-                            "data_ids" => intval($data['_id']) // Convertir à int
-                        ]
-                    ]
-                );
-                return $response2->toArray();
-            }
         }
+        foreach ($cachedFormData as $data) {
+            // Effectuer une action de marquage de tous les formulaires en une seule requête
+            $response2 =$this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        "data_ids" => intval($data['_id']) // Convertir à int
+                    ]
+                ]
+            );
+            return $response2->toArray();
+        }
+        
         
         return $formMaintenanceArrayOfObject;
     }
