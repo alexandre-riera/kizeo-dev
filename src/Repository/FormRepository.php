@@ -137,7 +137,7 @@ class FormRepository extends ServiceEntityRepository
             $formattedData = [];
             foreach ($cachedFormData as $item) {
                 $formId = $item['_form_id'];
-                $dataId = $item['_id'];
+                $dataId = intval($item['_id']); // Convertir à int
 
                 if (!isset($formattedData[$formId])) {
                     $formattedData[$formId] = [];
@@ -149,10 +149,19 @@ class FormRepository extends ServiceEntityRepository
             return $formattedData;
         });
         dd($formattedData);
-        foreach ($formattedData as $data) {
+        // array:1 [▼
+        //     1034808 => array:5 [▼
+        //         0 => "212851512"
+        //         1 => "213145512"
+        //         2 => "213435284"
+        //         3 => "213762192"
+        //         4 => "213933129"
+        //     ]
+        // ]
+        foreach ($formattedData as $theFormId => $dataIds) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
-            $response2 =$this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
+            $this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $theFormId . '/markasunreadbyaction/read', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
@@ -162,7 +171,6 @@ class FormRepository extends ServiceEntityRepository
                     ]
                 ]
             );
-            return $response2->toArray();
         }
         
         
