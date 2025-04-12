@@ -130,12 +130,8 @@ class FormRepository extends ServiceEntityRepository
     
             // Créer les objets à partir des données mises en cache
             foreach ($cachedFormData as $data) {
-                // $formIds = new \stdClass();
-                // $formIds->form_id = $data['_form_id'];
-                // $formIds->data_id = $data['_id'];
                 // Effectuer une action de marquage de tous les formulaires en une seule requête
-                // Request::enableHttpMethodParameterOverride(); // <-- add this line
-                $query = $this->client->request('POST', 
+                $response2 =$this->client->request('POST', 
                     'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
                         'headers' => [
                             'Accept' => 'application/json',
@@ -146,9 +142,9 @@ class FormRepository extends ServiceEntityRepository
                         ]
                     ]
                 );
-                $content = $query->getContent();
-                $content = $query->toArray();
-                // $formMaintenanceArrayOfObject[] = $formIds;
+                $content2 = $response2->getContent();
+                $content2 = $response2->toArray();
+                return $content2;
             }
         }
         
