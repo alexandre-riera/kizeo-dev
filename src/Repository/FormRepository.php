@@ -159,6 +159,9 @@ class FormRepository extends ServiceEntityRepository
         //     ]
         // ]
         foreach ($formattedData as $theFormId => $dataIds) {
+            dump($theFormId);
+            dump($dataIds);
+            die;
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             $this->client->request('POST', 
                 'https://forms.kizeo.com/rest/v3/forms/' . $theFormId . '/markasunreadbyaction/read', [
