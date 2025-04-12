@@ -1523,13 +1523,13 @@ class FormRepository extends ServiceEntityRepository
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             // if (!empty($formIdsToMarkAsUnread)) {
                 $this->client->request('POST', 
-                    'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
+                    'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
                         'headers' => [
                             'Accept' => 'application/json',
                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                         ],
                         'json' => [
-                            "data_ids" => intval($data['_id']) // Convertir à int
+                            "data_ids" => intval($data->data_id) // Convertir à int
                         ]
                     ]
                 );
