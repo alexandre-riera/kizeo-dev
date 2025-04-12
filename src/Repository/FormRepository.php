@@ -1508,31 +1508,19 @@ class FormRepository extends ServiceEntityRepository
             $results = FormRepository::getFormsMaintenance($cache);
             return $results;
         });
-        // // Consolider les ids des formulaires à marquer comme non lus
-        // $formToUnreadArray = [];
-        
-        // foreach ($allFormsArray as $data) {
-        //     $formToMarkAsUnread = new stdClass;
-        //     $formToMarkAsUnread -> formId = $data['_form_id'];
-        //     $formToMarkAsUnread -> dataId = $data['_id'];
-        //     $formToUnreadArray[] = $formToMarkAsUnread;
-        // }
-        // // dd($formToUnreadArray);
         foreach ($allFormsArray as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
-            // if (!empty($formIdsToMarkAsUnread)) {
-                $this->client->request('POST', 
-                    'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'json' => [
-                            "data_ids" => intval($data->data_id) // Convertir à int
-                        ]
+            $this->client->request('POST', 
+                'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        "data_ids" => intval($data->data_id) // Convertir à int
                     ]
-                );
-            // }
+                ]
+            );
         }
 
         
