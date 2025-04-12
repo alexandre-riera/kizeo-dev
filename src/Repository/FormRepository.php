@@ -131,7 +131,7 @@ class FormRepository extends ServiceEntityRepository
         }
 
         // Mettre en cache avec expiration (par exemple 24 heures)
-        $formattedData = $this->cache->get('all_form_id_with_their_data_id', function (ItemInterface $item) use ($cachedFormData) {
+        $formattedData = $this->$cache->get('all_form_id_with_their_data_id', function (ItemInterface $item) use ($cachedFormData) {
             $item->expiresAfter(3600); // 1 heure
 
             $formattedData = [];
