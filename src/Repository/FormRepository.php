@@ -133,10 +133,39 @@ class FormRepository extends ServiceEntityRepository
                 $formIds = new \stdClass();
                 $formIds->form_id = $data['_form_id'];
                 $formIds->data_id = $data['_id'];
-                $formMaintenanceArrayOfObject[] = $formIds;
+                // Effectuer une action de marquage de tous les formulaires en une seule requête
+                Request::enableHttpMethodParameterOverride(); // <-- add this line
+                $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'json' => [
+                            "data_ids" => intval($data->data_id) // Convertir à int
+                        ]
+                    ]
+                );
+                // $formMaintenanceArrayOfObject[] = $formIds;
             }
         }
-    
+        
+        // // MARK AS READ
+        // foreach ($allFormsArray as $data) {
+        //     // Effectuer une action de marquage de tous les formulaires en une seule requête
+        //     Request::enableHttpMethodParameterOverride(); // <-- add this line
+        //     $this->client->request('POST', 
+        //         'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
+        //             'headers' => [
+        //                 'Accept' => 'application/json',
+        //                 'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+        //             ],
+        //             'json' => [
+        //                 "data_ids" => intval($data->data_id) // Convertir à int
+        //             ]
+        //         ]
+        //     );
+        // }
         return $formMaintenanceArrayOfObject;
     }
         

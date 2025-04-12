@@ -176,7 +176,8 @@ class FormController extends AbstractController
     public function markMaintenanceFormsAsUnread(FormRepository $formRepository, CacheInterface $cache): JsonResponse
     {
         // $formRepository->saveEquipementPdfInPublicFolder();
-        $formRepository->markMaintenanceFormsAsUnread($cache);
+        $formRepository->getFormsMaintenance($cache);
+        // $formRepository->markMaintenanceFormsAsUnread($cache);
         
         return new JsonResponse("Les pdf de maintenance ont bien été mis en non lu ", Response::HTTP_OK, [], true);
     }
