@@ -107,13 +107,12 @@ class FormRepository extends ServiceEntityRepository
     
         $formMaintenanceArrayOfObject = [];
         $allFormsIds = array_column($cachedForms, 'id');
-    
+        
+        $cachedFormData = [];
         // Cache pour chaque formulaire
         foreach ($allFormsIds as $formId) {
             // Clé de cache unique pour chaque formulaire
             $dataCacheKey = 'maintenance_form_data_' . $formId;
-            
-            $cachedFormData = [];
             $cachedFormData = $cache->get($dataCacheKey, function(ItemInterface $item) use ($formId) {
                 $item->expiresAfter(1800); // Cache valide 30 minutes
                 
@@ -125,6 +124,7 @@ class FormRepository extends ServiceEntityRepository
                         ],
                     ]
                 );
+                $content = $response->getContent();
                 $content = $response->toArray();
                 return $content['data'];
             });
