@@ -1510,6 +1510,7 @@ class FormRepository extends ServiceEntityRepository
         });
         foreach ($allFormsArray as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
+            Request::enableHttpMethodParameterOverride(); // <-- add this line
             $this->client->request('POST', 
                 'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
                     'headers' => [
