@@ -1353,7 +1353,7 @@ class FormRepository extends ServiceEntityRepository
     public function saveEquipmentsInDatabase($cache){
         // -----------------------------   Return all forms in an array | cached for 900 seconds 15 minutes
         $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
-            $item->expiresAfter(900); // 15 minutes
+            $item->expiresAfter(3600); // 1 hour
             $result = FormRepository::getForms();
             return $result['forms'];
         });
@@ -1393,7 +1393,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($allFormsKeyId as $key) {
             $responseUnread = $this->client->request(
                 'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' .  $key . '/data/unread/read/5', [
+                'https://forms.kizeo.com/rest/v3/forms/' .  $key . '/data/unread/lu/5', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
@@ -1432,7 +1432,7 @@ class FormRepository extends ServiceEntityRepository
                 // ------------------------------------------------------------------------------
                 $response = $this->client->request(
                     'POST',
-                    'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/markasreadbyaction/read', [
+                    'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/markasreadbyaction/lu', [
                         'headers' => [
                             'Accept' => 'application/json',
                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
