@@ -1508,7 +1508,6 @@ class FormRepository extends ServiceEntityRepository
             $results = FormRepository::getFormsMaintenance($cache);
             return $results;
         });
-        dd($allFormsArray);
         // // Consolider les ids des formulaires à marquer comme non lus
         // $formToUnreadArray = [];
         
