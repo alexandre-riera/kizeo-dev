@@ -1722,7 +1722,7 @@ class FormRepository extends ServiceEntityRepository
             }
             $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
             $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
-            $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
+            // $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
             $equipement->setPhotoChocTablier($additionalEquipment['photo_choc_tablier']['value']);
             $equipement->setPhotoAxe($additionalEquipment['photo_axe']['value']);
             $equipement->setPhotoSerrure($additionalEquipment['photo_serrure']['value']);
