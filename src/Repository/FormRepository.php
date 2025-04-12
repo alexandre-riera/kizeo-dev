@@ -129,7 +129,27 @@ class FormRepository extends ServiceEntityRepository
                 return $content['data'];
             });
         }
-        foreach ($cachedFormData as $data) {
+
+        // Mettre en cache avec expiration (par exemple 24 heures)
+        $formattedData = $this->cache->get('all_form_id_with_their_data_id', function (ItemInterface $item) use ($cachedFormData) {
+            $item->expiresAfter(3600); // 1 heure
+
+            $formattedData = [];
+            foreach ($cachedFormData as $item) {
+                $formId = $item['_form_id'];
+                $dataId = $item['_id'];
+
+                if (!isset($formattedData[$formId])) {
+                    $formattedData[$formId] = [];
+                }
+
+                $formattedData[$formId][] = $dataId;
+            }
+
+            return $formattedData;
+        });
+        dd($formattedData);
+        foreach ($formattedData as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             $response2 =$this->client->request('POST', 
                 'https://forms.kizeo.com/rest/v3/forms/' . $data['_form_id'] . '/markasunreadbyaction/read', [
