@@ -1508,18 +1508,18 @@ class FormRepository extends ServiceEntityRepository
             $results = FormRepository::getFormsMaintenance($cache);
             return $results;
         });
+        dd($allFormsArray);
+        // // Consolider les ids des formulaires à marquer comme non lus
+        // $formToUnreadArray = [];
         
-        // Consolider les ids des formulaires à marquer comme non lus
-        $formToUnreadArray = [];
-        
+        // foreach ($allFormsArray as $data) {
+        //     $formToMarkAsUnread = new stdClass;
+        //     $formToMarkAsUnread -> formId = $data['_form_id'];
+        //     $formToMarkAsUnread -> dataId = $data['_id'];
+        //     $formToUnreadArray[] = $formToMarkAsUnread;
+        // }
+        // // dd($formToUnreadArray);
         foreach ($allFormsArray as $data) {
-            $formToMarkAsUnread = new stdClass;
-            $formToMarkAsUnread -> formId = $data['_form_id'];
-            $formToMarkAsUnread -> dataId = $data['_id'];
-            $formToUnreadArray[] = $formToMarkAsUnread;
-        }
-        // dd($formToUnreadArray);
-        foreach ($formToUnreadArray as $data) {
             // Effectuer une action de marquage de tous les formulaires en une seule requête
             // if (!empty($formIdsToMarkAsUnread)) {
                 $this->client->request('POST', 
