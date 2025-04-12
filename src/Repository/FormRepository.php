@@ -1718,6 +1718,12 @@ class FormRepository extends ServiceEntityRepository
             }
             $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
             $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
+            $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
+            $equipement->setPhotoChocTablier($additionalEquipment['photo_choc_tablier']['value']);
+            $equipement->setPhotoAxe($additionalEquipment['photo_axe']['value']);
+            $equipement->setPhotoSerrure($additionalEquipment['photo_serrure']['value']);
+            $equipement->setPhotoSerrure1($additionalEquipment['photo_serrure1']['value']);
+            $equipement->setPhotoFeux($additionalEquipment['photo_feux']['value']);
             $equipement->setPhotoPanneauIntermediaireI($additionalEquipment['photo_panneau_intermediaire_i']['value']);
             $equipement->setPhotoPanneauBasInterExt($additionalEquipment['photo_panneau_bas_inter_ext']['value']);
             $equipement->setPhotoLameBasseIntExt($additionalEquipment['photo_lame_basse_int_ext']['value']);
