@@ -1503,7 +1503,7 @@ class FormRepository extends ServiceEntityRepository
     public function markMaintenanceFormsAsUnread($cache){
         // Récupérer les fichiers PDF dans un tableau
         // Filtrer uniquement les formulaires de maintenance
-        $allFormsArray = $cache->get('forms_maintenance', function(ItemInterface $item, $cache){ // $allFormsData = $content['data'] from getFormsMaintenance()
+        $allFormsArray = $cache->get('forms_maintenance', function(ItemInterface $item) use ($cache){ // $allFormsData = $content['data'] from getFormsMaintenance()
             $item->expiresAfter(1800); // Cache pour 30 minutes
             $results = FormRepository::getFormsMaintenance($cache);
             return $results;
