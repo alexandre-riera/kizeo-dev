@@ -164,17 +164,20 @@ class FormRepository extends ServiceEntityRepository
                 $idDesDatas[] = intval($dataId); // Convertir à int
             }
             // Effectuer une action de marquage de tous les formulaires en une seule requête
-            $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $theFormId . '/markasunreadbyaction/read', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => [
-                        "data_ids" => $idDesDatas
+            foreach ($idDesDatas as $data) {
+                
+                $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $theFormId . '/markasunreadbyaction/read', [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'json' => [
+                            "data_ids" => $data
+                        ]
                     ]
-                ]
-            );
+                );
+            }
         }
         
         
