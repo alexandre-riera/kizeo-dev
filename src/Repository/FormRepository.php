@@ -80,60 +80,66 @@ class FormRepository extends ServiceEntityRepository
             return $content;
     }
     /**
-        * @return Form[] Returns an array of forms from Kizeo
-        */
-    public function getFormsMaintenance($cache): array  // La fonction renvoie bien les formulaires avec la class MAINTENANCE
+    * @return Form[] Returns an array of forms from Kizeo
+    */
+    public function getFormsMaintenance($cache): array 
     {
-        $formMaintenanceArrayOfObject = [];
-        $results = [];
-        $response = $this->client->request(
-            'GET',
-            'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]
-        );
-        $content = $response->getContent();
-        $content = $response->toArray();
-
-        foreach ($content['forms'] as $form) {
-            if ($form['class'] == "MAINTENANCE") {
-                $results [] = $form;
-            }
-        }
-
-        $allFormsIds = [];
-        foreach ($results as $form) {
-            $allFormsIds[] = $form['id'];
-        }
-
-        // A FAIRE DEMAIN METTRE EN CACHE CETTE REQUête et Après la traiter pour mettre en objet
-        foreach ($allFormsIds as $formId) {
-            $response = $this->client->request('POST', 
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', [
+        // Cache pour les formulaires MAINTENANCE
+        $formsCacheKey = 'maintenance_forms_list';
+        $cachedForms = $cache->get($formsCacheKey, function(ItemInterface $item) {
+            $item->expiresAfter(3600); // Cache valide 1 heure
+            
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ],
                 ]
             );
-            $content = $response->getContent();
             $content = $response->toArray();
-            $content = $content['data'];
-            // On crée un objet pour chaque formulaire avec son id et son form_id
-            foreach ($content as $data) {
-                $formIds = new stdClass;
+    
+            return array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+        });
+    
+        $formMaintenanceArrayOfObject = [];
+        $allFormsIds = array_column($cachedForms, 'id');
+    
+        // Cache pour chaque formulaire
+        foreach ($allFormsIds as $formId) {
+            // Clé de cache unique pour chaque formulaire
+            $dataCacheKey = 'maintenance_form_data_' . $formId;
+            
+            $cachedFormData = $cache->get($dataCacheKey, function(ItemInterface $item) use ($formId) {
+                $item->expiresAfter(1800); // Cache valide 30 minutes
+                
+                $response = $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                    ]
+                );
+                $content = $response->toArray();
+                return $content['data'];
+            });
+    
+            // Créer les objets à partir des données mises en cache
+            foreach ($cachedFormData as $data) {
+                $formIds = new \stdClass();
                 $formIds->form_id = $data['_form_id'];
                 $formIds->data_id = $data['_id'];
                 $formMaintenanceArrayOfObject[] = $formIds;
             }
         }
-        dump($formMaintenanceArrayOfObject);
-        die;
+    
         return $formMaintenanceArrayOfObject;
     }
+        
     
     //      ----------------------------------------------------------------------------------------------------------------------
     //      ---------------------------------------- GET EQUIPMENTS LISTS FROM KIZEO --------------------------------------
