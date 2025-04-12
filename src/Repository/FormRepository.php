@@ -148,7 +148,7 @@ class FormRepository extends ServiceEntityRepository
 
             return $formattedData;
         });
-        dd($formattedData);
+        // dd($formattedData);
         // array:1 [▼
         //     1034808 => array:5 [▼
         //         0 => "212851512"
@@ -167,7 +167,7 @@ class FormRepository extends ServiceEntityRepository
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ],
                     'json' => [
-                        "data_ids" => intval($data['_id']) // Convertir à int
+                        "data_ids" => $dataIds
                     ]
                 ]
             );
