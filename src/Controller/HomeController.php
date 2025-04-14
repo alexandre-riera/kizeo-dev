@@ -192,9 +192,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -211,9 +222,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -230,9 +252,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -249,9 +282,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -328,9 +372,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -347,9 +402,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -366,9 +432,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -385,9 +462,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -404,9 +492,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -423,9 +522,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -442,9 +552,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -461,9 +582,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -480,9 +612,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -499,9 +642,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -518,9 +672,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -537,9 +702,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -556,9 +732,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -575,9 +762,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -594,9 +792,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -613,9 +822,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -632,9 +852,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -651,9 +882,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -670,9 +912,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -689,9 +942,20 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
                     $dateArray = [];                    
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
