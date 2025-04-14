@@ -336,6 +336,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
+                    dump($clientSelectedEquipmentsFiltered);
                     $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -368,6 +369,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
+                    dump($clientSelectedEquipmentsFiltered);
                     $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
