@@ -331,9 +331,7 @@ class HomeController extends AbstractController
                                 $latestEquipments[$visitType][$equipmentKey] = $equipment;
                             }
                             // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
-                            $currentDate = $clientSelectedEquipmentsFiltered[0]->getDateEnregistrement();
-                            
+                                                       
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
@@ -352,6 +350,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
+                    $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S50':
@@ -378,9 +377,7 @@ class HomeController extends AbstractController
                                 $latestEquipments[$visitType][$equipmentKey] = $equipment;
                             }
                             // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
-                            $currentDate = $clientSelectedEquipmentsFiltered[0]->getDateEnregistrement();
-                            
+                                                       
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
@@ -399,6 +396,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
+                    $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S60':
