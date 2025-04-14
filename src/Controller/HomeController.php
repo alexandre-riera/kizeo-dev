@@ -37,6 +37,7 @@ use App\Entity\EquipementS170;
 use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -312,7 +313,7 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = null;
+                    $absoluteLatestVisitDate = new stdClass;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             if ($absoluteLatestVisitDate === null || 
@@ -323,9 +324,7 @@ class HomeController extends AbstractController
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $interval = new \DateInterval('P2M'); // Période de 2 mois
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->sub($interval);
-                    // $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
@@ -348,7 +347,7 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = null;
+                    $absoluteLatestVisitDate = new stdClass;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             if ($absoluteLatestVisitDate === null || 
@@ -359,9 +358,7 @@ class HomeController extends AbstractController
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $interval = new \DateInterval('P2M'); // Période de 2 mois
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->sub($interval);
-                    // $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
