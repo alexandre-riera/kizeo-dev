@@ -336,8 +336,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
-                    dump($clientSelectedEquipmentsFiltered);
-                    $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S50':
@@ -369,8 +368,7 @@ class HomeController extends AbstractController
                             $dateArray[] = $equipment->getDateEnregistrement();
                         }
                     }
-                    dump($clientSelectedEquipmentsFiltered);
-                    $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S60':
