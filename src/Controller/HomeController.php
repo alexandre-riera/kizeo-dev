@@ -37,7 +37,6 @@ use App\Entity\EquipementS170;
 use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -313,18 +312,19 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = new stdClass;
+                    $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             if ($absoluteLatestVisitDate === null || 
                                 $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
-                                $absoluteLatestVisitDate = $equipment->getDateEnregistrement();
+                                $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
                             }
                         }
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $twoMonthsAgo = $absoluteLatestVisitDate->modify('-2 months');
+                    $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
@@ -347,18 +347,19 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = new stdClass;
+                    $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             if ($absoluteLatestVisitDate === null || 
                                 $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
-                                $absoluteLatestVisitDate = $equipment->getDateEnregistrement();
+                                $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
                             }
                         }
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $twoMonthsAgo = $absoluteLatestVisitDate->modify('-2 months');
+                    $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
