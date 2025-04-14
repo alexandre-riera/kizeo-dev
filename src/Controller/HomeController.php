@@ -311,40 +311,28 @@ class HomeController extends AbstractController
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
-                    // Créer un tableau pour stocker les dernières versions des équipements
-                    $latestEquipments = [];
-                    // Créer un tableau pour stocker les dernières versions des visites
-                    $latestVisitDates = [];                    
+                    // Trouver la date de visite la plus récente
+                    $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        // Vérifier si la date d'enregistrement n'est pas null
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            $visitType = $equipment->getVisite();
-                            $equipmentKey = $equipment->getNumeroEquipement();
-                            // Si c'est la première fois qu'on voit ce type de visite ou si la date est plus récente
-                            if (!isset($latestVisitDates[$visitType]) || 
-                                $equipment->getDateEnregistrement() > $latestVisitDates[$visitType]) {
-                                $latestVisitDates[$visitType] = $equipment->getDateEnregistrement();
+                        if ($equipment->getDateEnregistrement() !== null) {
+                            if ($absoluteLatestVisitDate === null || 
+                                $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
+                                $absoluteLatestVisitDate = $equipment->getDateEnregistrement();
                             }
+                        }
+                    }
 
-                            // Ajouter l'équipement s'il correspond à la date la plus récente de sa visite
-                            if ($equipment->getDateEnregistrement() == $latestVisitDates[$visitType]) {
-                                $latestEquipments[$visitType][$equipmentKey] = $equipment;
-                            }
-                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                                                       
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    // Aplatir le tableau des derniers équipements
-                    $clientSelectedEquipmentsFiltered = [];
-                    foreach ($latestVisitDates as $visitType => $date) {
-                        if (isset($latestEquipments[$visitType])) {
-                            $clientSelectedEquipmentsFiltered = array_merge(
-                                $clientSelectedEquipmentsFiltered, 
-                                array_values($latestEquipments[$visitType])
-                            );
-                        }
-                    }
+                    // Calculer la date limite inférieure (2 mois avant la date la plus récente)
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+
+                    // Filtrer les équipements dans l'intervalle
+                    $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
+                        $equipmentDate = $equipment->getDateEnregistrement();
+                        
+                        return $equipmentDate !== null && 
+                            $equipmentDate <= $absoluteLatestVisitDate && 
+                            $equipmentDate >= $twoMonthsAgo;
+                    });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
                         if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
                             $dateArray[] = $equipment->getDateEnregistrement();
@@ -357,40 +345,28 @@ class HomeController extends AbstractController
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
-                    // Créer un tableau pour stocker les dernières versions des équipements
-                    $latestEquipments = [];
-                    // Créer un tableau pour stocker les dernières versions des visites
-                    $latestVisitDates = [];                        
+                    // Trouver la date de visite la plus récente
+                    $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        // Vérifier si la date d'enregistrement n'est pas null
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            $visitType = $equipment->getVisite();
-                            $equipmentKey = $equipment->getNumeroEquipement();
-                            // Si c'est la première fois qu'on voit ce type de visite ou si la date est plus récente
-                            if (!isset($latestVisitDates[$visitType]) || 
-                                $equipment->getDateEnregistrement() > $latestVisitDates[$visitType]) {
-                                $latestVisitDates[$visitType] = $equipment->getDateEnregistrement();
+                        if ($equipment->getDateEnregistrement() !== null) {
+                            if ($absoluteLatestVisitDate === null || 
+                                $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
+                                $absoluteLatestVisitDate = $equipment->getDateEnregistrement();
                             }
+                        }
+                    }
 
-                            // Ajouter l'équipement s'il correspond à la date la plus récente de sa visite
-                            if ($equipment->getDateEnregistrement() == $latestVisitDates[$visitType]) {
-                                $latestEquipments[$visitType][$equipmentKey] = $equipment;
-                            }
-                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                                                       
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    // Aplatir le tableau des derniers équipements
-                    $clientSelectedEquipmentsFiltered = [];
-                    foreach ($latestVisitDates as $visitType => $date) {
-                        if (isset($latestEquipments[$visitType])) {
-                            $clientSelectedEquipmentsFiltered = array_merge(
-                                $clientSelectedEquipmentsFiltered, 
-                                array_values($latestEquipments[$visitType])
-                            );
-                        }
-                    }
+                    // Calculer la date limite inférieure (2 mois avant la date la plus récente)
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+
+                    // Filtrer les équipements dans l'intervalle
+                    $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
+                        $equipmentDate = $equipment->getDateEnregistrement();
+                        
+                        return $equipmentDate !== null && 
+                            $equipmentDate <= $absoluteLatestVisitDate && 
+                            $equipmentDate >= $twoMonthsAgo;
+                    });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
                         if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
                             $dateArray[] = $equipment->getDateEnregistrement();
