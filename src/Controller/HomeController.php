@@ -323,7 +323,9 @@ class HomeController extends AbstractController
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $interval = new \DateInterval('P2M'); // Période de 2 mois
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->sub($interval);
+                    // $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
@@ -357,7 +359,9 @@ class HomeController extends AbstractController
                     }
 
                     // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
+                    $interval = new \DateInterval('P2M'); // Période de 2 mois
+                    $twoMonthsAgo = (clone $absoluteLatestVisitDate)->sub($interval);
+                    // $twoMonthsAgo = (clone $absoluteLatestVisitDate)->modify('-2 months');
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
