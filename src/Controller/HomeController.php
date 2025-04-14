@@ -267,10 +267,21 @@ class HomeController extends AbstractController
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
-                    $dateArray = [];                    
+                    $dateArray = [];
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
@@ -286,10 +297,21 @@ class HomeController extends AbstractController
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $visitArray = [];
-                    $dateArray = [];                    
+                    $dateArray = [];
+                    // Créer un tableau pour stocker les dernières versions des équipements
+                    $latestEquipments = [];                        
                     foreach ($clientSelectedEquipments as $equipment) {
+                        // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
+                            $equipmentKey = $equipment->getNumeroEquipement();
+                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
+                            if (!isset($latestEquipments[$equipmentKey]) || 
+                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
+                                $latestEquipments[$equipmentKey] = $equipment;
+                            }
+                            // Convertir le tableau associatif en tableau indexé
+                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+                            // array_push($clientSelectedEquipmentsFiltered, $equipment);
                             if (!in_array($equipment->getVisite(), $visitArray)) {
                                 $visitArray[] = $equipment->getVisite();
                             }
