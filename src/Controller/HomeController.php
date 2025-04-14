@@ -310,62 +310,96 @@ class HomeController extends AbstractController
                 case 'S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    $visitArray = [];
                     $dateArray = [];
                     // Créer un tableau pour stocker les dernières versions des équipements
-                    $latestEquipments = [];                    
+                    $latestEquipments = [];
+                    // Créer un tableau pour stocker les dernières versions des visites
+                    $latestVisitDates = [];                    
                     foreach ($clientSelectedEquipments as $equipment) {
                         // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
+                            $visitType = $equipment->getVisite();
                             $equipmentKey = $equipment->getNumeroEquipement();
-                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
-                            if (!isset($latestEquipments[$equipmentKey]) || 
-                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
-                                $latestEquipments[$equipmentKey] = $equipment;
+                            // Si c'est la première fois qu'on voit ce type de visite ou si la date est plus récente
+                            if (!isset($latestVisitDates[$visitType]) || 
+                                $equipment->getDateEnregistrement() > $latestVisitDates[$visitType]) {
+                                $latestVisitDates[$visitType] = $equipment->getDateEnregistrement();
                             }
-                            // Convertir le tableau associatif en tableau indexé
-                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+
+                            // Ajouter l'équipement s'il correspond à la date la plus récente de sa visite
+                            if ($equipment->getDateEnregistrement() == $latestVisitDates[$visitType]) {
+                                $latestEquipments[$visitType][$equipmentKey] = $equipment;
+                            }
                             // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            if (!in_array($equipment->getVisite(), $visitArray)) {
-                                $visitArray[] = $equipment->getVisite();
-                            }
-                            if (!in_array($equipment->getDateEnregistrement(), $dateArray)) {
-                                $dateArray[] = $equipment->getDateEnregistrement();
-                            }
-                            $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $dateArray);
+                            $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                            $currentDate = $clientSelectedEquipmentsFiltered[0]->getDateEnregistrement();
+                            
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
+                    // Aplatir le tableau des derniers équipements
+                    $clientSelectedEquipmentsFiltered = [];
+                    foreach ($latestVisitDates as $visitType => $date) {
+                        if (isset($latestEquipments[$visitType])) {
+                            $clientSelectedEquipmentsFiltered = array_merge(
+                                $clientSelectedEquipmentsFiltered, 
+                                array_values($latestEquipments[$visitType])
+                            );
+                        }
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
+                            $dateArray[] = $equipment->getDateEnregistrement();
+                        }
+                    }
+                    $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S50':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    $visitArray = [];
                     $dateArray = [];
                     // Créer un tableau pour stocker les dernières versions des équipements
-                    $latestEquipments = [];                        
+                    $latestEquipments = [];
+                    // Créer un tableau pour stocker les dernières versions des visites
+                    $latestVisitDates = [];                        
                     foreach ($clientSelectedEquipments as $equipment) {
                         // Vérifier si la date d'enregistrement n'est pas null
                         if ($equipment->getDateEnregistrement() != NULL) {
+                            $visitType = $equipment->getVisite();
                             $equipmentKey = $equipment->getNumeroEquipement();
-                            // Si l'équipement n'existe pas encore dans le tableau ou a une date plus récente
-                            if (!isset($latestEquipments[$equipmentKey]) || 
-                                $equipment->getDateEnregistrement() > $latestEquipments[$equipmentKey]->getDateEnregistrement()) {
-                                $latestEquipments[$equipmentKey] = $equipment;
+                            // Si c'est la première fois qu'on voit ce type de visite ou si la date est plus récente
+                            if (!isset($latestVisitDates[$visitType]) || 
+                                $equipment->getDateEnregistrement() > $latestVisitDates[$visitType]) {
+                                $latestVisitDates[$visitType] = $equipment->getDateEnregistrement();
                             }
-                            // Convertir le tableau associatif en tableau indexé
-                            $clientSelectedEquipmentsFiltered = array_values($latestEquipments);
+
+                            // Ajouter l'équipement s'il correspond à la date la plus récente de sa visite
+                            if ($equipment->getDateEnregistrement() == $latestVisitDates[$visitType]) {
+                                $latestEquipments[$visitType][$equipmentKey] = $equipment;
+                            }
                             // array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            if (!in_array($equipment->getVisite(), $visitArray)) {
-                                $visitArray[] = $equipment->getVisite();
-                            }
-                            if (!in_array($equipment->getDateEnregistrement(), $dateArray)) {
-                                $dateArray[] = $equipment->getDateEnregistrement();
-                            }
-                            $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $visitArray, $agenceSelected, $dateArray);
+                            $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                            $currentDate = $clientSelectedEquipmentsFiltered[0]->getDateEnregistrement();
+                            
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
+                    // Aplatir le tableau des derniers équipements
+                    $clientSelectedEquipmentsFiltered = [];
+                    foreach ($latestVisitDates as $visitType => $date) {
+                        if (isset($latestEquipments[$visitType])) {
+                            $clientSelectedEquipmentsFiltered = array_merge(
+                                $clientSelectedEquipmentsFiltered, 
+                                array_values($latestEquipments[$visitType])
+                            );
+                        }
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
+                            $dateArray[] = $equipment->getDateEnregistrement();
+                        }
+                    }
+                    $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $idClientSelected]);
