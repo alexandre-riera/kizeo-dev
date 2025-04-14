@@ -315,7 +315,7 @@ class HomeController extends AbstractController
                     $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            if ($absoluteLatestVisitDate === null || 
+                            if ($absoluteLatestVisitDate === "" || 
                                 $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
                                 $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
                             }
@@ -350,7 +350,7 @@ class HomeController extends AbstractController
                     $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            if ($absoluteLatestVisitDate === null || 
+                            if ($absoluteLatestVisitDate === "" || 
                                 $equipment->getDateEnregistrement() > $absoluteLatestVisitDate) {
                                 $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
                             }
