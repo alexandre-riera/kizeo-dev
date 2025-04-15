@@ -944,10 +944,10 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = new stdClass;
+                    $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
+                            $absoluteLatestVisitDate = new DateTime('Y-m-d', $equipment->getDateEnregistrement());
                         }
                     }
 
@@ -981,10 +981,10 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = new stdClass;
+                    $absoluteLatestVisitDate = "";
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
+                            $absoluteLatestVisitDate = new DateTime('Y-m-d', $equipment->getDateEnregistrement());
                         }
                     }
 
