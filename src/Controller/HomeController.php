@@ -37,6 +37,7 @@ use App\Entity\EquipementS170;
 use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -943,7 +944,7 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = null;
+                    $absoluteLatestVisitDate = new stdClass;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
@@ -980,7 +981,7 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = null;
+                    $absoluteLatestVisitDate = new stdClass;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
                             $absoluteLatestVisitDate = new DateTime($equipment->getDateEnregistrement());
