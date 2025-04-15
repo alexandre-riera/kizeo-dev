@@ -1382,16 +1382,16 @@ class HomeController extends AbstractController
         }
         $agenceSelected = trim($agenceSelected);
 
-        $clientAnneeFilterArray = []; // Je filtre les résultats
-        foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+        $clientAnneeFilterArray = []; // Je filtre les résultats des filtres d'année
+        foreach ($clientSelectedEquipments as $equipment) {
             $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
             // $date_equipment = $equipment->getDateEnregistrement();
             if (!in_array($date_equipment, $clientAnneeFilterArray)) {
                 $clientAnneeFilterArray [] = $date_equipment;
             }
         }
-        $clientVisiteFilterArray = []; // Je filtre les résultats
-        foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+        $clientVisiteFilterArray = []; // Je filtre les résultats des filtres de visite
+        foreach ($clientSelectedEquipments as $equipment) {
             $visite_equipment = $equipment->getVisite();
             if (!in_array($visite_equipment, $clientVisiteFilterArray)) {
                 $clientVisiteFilterArray [] = $visite_equipment;
@@ -1412,7 +1412,7 @@ class HomeController extends AbstractController
                 $clientVisiteFilter = $_POST['clientVisiteFilter'];
                 // On réinitialise le tableau des équipements à 0 !
                 $clientSelectedEquipmentsFiltered = [];
-                foreach ($clientSelectedEquipmentsFiltered as $equipment) {
+                foreach ($clientSelectedEquipments as $equipment) {
                     $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
                     // Si l'année de la visite et le nom de la visite est pareil que l'équipement retourné par la base de données, je le rajoute au tableau des équipements
                     if ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter) {
