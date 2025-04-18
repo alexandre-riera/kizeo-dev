@@ -169,8 +169,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -218,8 +220,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -267,8 +271,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -316,8 +322,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -365,8 +373,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -414,8 +424,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -514,8 +526,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -563,8 +577,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -612,8 +628,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -661,8 +679,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -710,8 +730,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -759,8 +781,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -808,8 +832,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -857,8 +883,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -906,8 +934,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -955,8 +985,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1004,8 +1036,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1104,8 +1138,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1153,8 +1189,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1202,8 +1240,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1239,8 +1279,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1276,8 +1318,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1325,8 +1369,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
@@ -1374,8 +1420,10 @@ class HomeController extends AbstractController
                     $currentVisit = "";
                     if (isset($clientSelectedEquipmentsFiltered[1])) {
                         $currentVisit = $clientSelectedEquipmentsFiltered[1]->getVisite();
-                    }else {
+                    }else if(isset($clientSelectedEquipmentsFiltered[1])){
                         $currentVisit = $clientSelectedEquipmentsFiltered[0]->getVisite();
+                    }else{
+                        $currentVisit = "";
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $currentVisit, $agenceSelected, $dateArray);
                     break;
