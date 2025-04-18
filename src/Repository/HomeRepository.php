@@ -34,8 +34,11 @@ class HomeRepository{
         }
         if (isset($listSplitted)) {
             foreach ($listSplitted as $clientFiltered) {
-                dd($clientFiltered);
-                array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+                if(isset($clientFiltered[8])) {
+                    array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
+                }else{
+                    array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[9]);
+                }
             }
         }
         dump($listClientsFiltered);
