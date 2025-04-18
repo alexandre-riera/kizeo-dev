@@ -683,37 +683,39 @@
                                     <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
-                                <button onclick="editEquipement(
-                                    '{{ equipment.getId() }}',
-                                    '{{ equipment.getLibelleEquipement() }}',
-                                    '{{ equipment.getVisite() }}',
-                                    '{{ equipment.getRaisonSociale() }}',
-                                    '{{ equipment.getModeleNacelle() }}',
-                                    '{{ equipment.getHauteurNacelle() }}',
-                                    '{{ equipment.getIfExistDB() }}',
-                                    '{{ equipment.getSignatureTech() }}',
-                                    '{{ equipment.getTrigrammeTech() }}',
-                                    '{{ equipment.getAnomalies() }}',
-                                    '{{ equipment.getIdContact() }}',
-                                    '{{ equipment.getCodeSociete() }}',
-                                    '{{ equipment.getCodeAgence() }}',
-                                    '{{ equipment.getNumeroEquipement() }}',
-                                    '{{ equipment.getModeFonctionnement() }}',
-                                    '{{ equipment.getRepereSiteClient() }}',
-                                    '{{ equipment.getMiseEnService() }}',
-                                    '{{ equipment.getNumeroDeSerie() }}',
-                                    '{{ equipment.getMarque() }}',
-                                    '{{ equipment.getHauteur() }}',
-                                    '{{ equipment.getLargeur() }}',
-                                    '{{ equipment.getLongueur() }}',
-                                    '{{ equipment.getPlaqueSignaletique() }}',
-                                    '{{ equipment.getEtat() }}',
-                                    '{{ equipment.getDerniereVisite() }}',
-                                    '{{ equipment.getStatutDeMaintenance() }}',
-                                    '{{ equipment.getPresenceCarnetEntretien() }}',
-                                    '{{ equipment.getStatutConformite() }}'
-                                )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                                </button>
+                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
+                                    <button onclick="editEquipement(
+                                        '{{ equipment.getId() }}',
+                                        '{{ equipment.getLibelleEquipement() }}',
+                                        '{{ equipment.getVisite() }}',
+                                        '{{ equipment.getRaisonSociale() }}',
+                                        '{{ equipment.getModeleNacelle() }}',
+                                        '{{ equipment.getHauteurNacelle() }}',
+                                        '{{ equipment.getIfExistDB() }}',
+                                        '{{ equipment.getSignatureTech() }}',
+                                        '{{ equipment.getTrigrammeTech() }}',
+                                        '{{ equipment.getAnomalies() }}',
+                                        '{{ equipment.getIdContact() }}',
+                                        '{{ equipment.getCodeSociete() }}',
+                                        '{{ equipment.getCodeAgence() }}',
+                                        '{{ equipment.getNumeroEquipement() }}',
+                                        '{{ equipment.getModeFonctionnement() }}',
+                                        '{{ equipment.getRepereSiteClient() }}',
+                                        '{{ equipment.getMiseEnService() }}',
+                                        '{{ equipment.getNumeroDeSerie() }}',
+                                        '{{ equipment.getMarque() }}',
+                                        '{{ equipment.getHauteur() }}',
+                                        '{{ equipment.getLargeur() }}',
+                                        '{{ equipment.getLongueur() }}',
+                                        '{{ equipment.getPlaqueSignaletique() }}',
+                                        '{{ equipment.getEtat() }}',
+                                        '{{ equipment.getDerniereVisite() }}',
+                                        '{{ equipment.getStatutDeMaintenance() }}',
+                                        '{{ equipment.getPresenceCarnetEntretien() }}',
+                                        '{{ equipment.getStatutConformite() }}'
+                                    )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
+                                    </button>
+                                {% endif %}
                                 <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a>
                                 </td>
                                 
