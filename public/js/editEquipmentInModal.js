@@ -44,7 +44,7 @@ function editEquipement(idEquipementAndIdRow,libelleEquipement,visite,raisonSoci
     // console.log("anomalies: " +anomalies);
     // console.log("idContact: " +idContact);
     // console.log("idSociete: " +idSociete);
-    // console.log("codeAgence: " +codeAgence);
+    console.log("codeAgence: " +codeAgence);
     // console.log("numeroEquipement: " +numeroEquipement);
     // console.log("modeFonctionnement: " +modeFonctionnement);
     // console.log("repereSiteClient: " +repereSiteClient);
