@@ -683,7 +683,7 @@
                                     <td>{{ equipment.getStatutDeMaintenance() }}</td>
                                 {% endif %}
                                 <td>
-                                {% if is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
+                                {% if is_granted('ROLE_ADMIN') %}
                                     <button onclick="editEquipement(
                                         '{{ equipment.getId() }}',
                                         '{{ equipment.getLibelleEquipement() }}',
