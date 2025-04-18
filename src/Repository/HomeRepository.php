@@ -34,7 +34,7 @@ class HomeRepository{
         }
         if (isset($listSplitted)) {
             foreach ($listSplitted as $clientFiltered) {
-                // dd($clientFiltered);
+                dd($clientFiltered);
                 array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
             }
         }
