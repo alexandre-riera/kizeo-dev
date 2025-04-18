@@ -26,6 +26,7 @@ class HomeRepository{
         );
         $content = $response->getContent();
         $content = $response->toArray();
+        dd($content);
         // if (isset($content['list']['items'])) {
             $content = $content['list']['items'];
             foreach ($content as $client) {
