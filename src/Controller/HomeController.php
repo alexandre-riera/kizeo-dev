@@ -1252,10 +1252,15 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = "";
+                    $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            $absoluteLatestVisitDate = new DateTime('Y-m-d', $equipment->getDateEnregistrement());
+                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                            
+                            // Comparer et garder la date la plus récente
+                            if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
+                                $absoluteLatestVisitDate = $currentDate;
+                            }
                         }
                     }
 
@@ -1291,10 +1296,15 @@ class HomeController extends AbstractController
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     $dateArray = [];
                     // Trouver la date de visite la plus récente
-                    $absoluteLatestVisitDate = "";
+                    $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
                         if ($equipment->getDateEnregistrement() !== null) {
-                            $absoluteLatestVisitDate = new DateTime('Y-m-d', $equipment->getDateEnregistrement());
+                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                            
+                            // Comparer et garder la date la plus récente
+                            if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
+                                $absoluteLatestVisitDate = $currentDate;
+                            }
                         }
                     }
 
