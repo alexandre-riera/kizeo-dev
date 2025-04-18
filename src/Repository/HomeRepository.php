@@ -26,14 +26,12 @@ class HomeRepository{
         );
         $content = $response->getContent();
         $content = $response->toArray();
-        // if (isset($content['list']['items'])) {
-            $content = $content['list']['items'];
-            dd($content);
-            foreach ($content as $client) {
-                $modifiedClient = preg_split("/[:|]/",$client);
-                $listSplitted[] = $modifiedClient;
-            }
-        // }
+        $content = $content['list']['items'];
+        foreach ($content as $client) {
+            $modifiedClient = preg_split("/[:|]/",$client);
+            dd($modifiedClient);
+            $listSplitted[] = $modifiedClient;
+        }
         $listSplitted = [];
         $listClientsFiltered = [];
         // if (isset($listSplitted)) {
