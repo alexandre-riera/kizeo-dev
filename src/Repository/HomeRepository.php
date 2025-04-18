@@ -32,7 +32,8 @@ class HomeRepository{
         $listSplitted = [];
         $listClientsFiltered = [];
         foreach ($content as $client) {
-            array_push($listSplitted, preg_split("/[:|]/",$client));
+            $modifiedClient = preg_split("/[:|]/",$client);
+            $listSplitted[] = $modifiedClient;
         }
         if (isset($listSplitted)) {
             foreach ($listSplitted as $clientFiltered) {
