@@ -28,13 +28,13 @@ class HomeRepository{
         $content = $response->toArray();
         if (isset($content['list']['items'])) {
             $content = $content['list']['items'];
+            foreach ($content as $client) {
+                $modifiedClient = preg_split("/[:|]/",$client);
+                $listSplitted[] = $modifiedClient;
+            }
         }
         $listSplitted = [];
         $listClientsFiltered = [];
-        foreach ($content as $client) {
-            $modifiedClient = preg_split("/[:|]/",$client);
-            $listSplitted[] = $modifiedClient;
-        }
         if (isset($listSplitted)) {
             foreach ($listSplitted as $clientFiltered) {
                 if(isset($clientFiltered[8])) {
