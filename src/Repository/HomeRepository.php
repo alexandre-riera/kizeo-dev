@@ -29,7 +29,7 @@ class HomeRepository{
         $content = $content['list']['items'];
         $listSplitted = [];
         $listClientsFiltered = [];
-        
+
         foreach ($content as $client) {
             $modifiedClient = preg_split("/[:|]/",$client);
             $listSplitted[] = $modifiedClient;
@@ -42,7 +42,7 @@ class HomeRepository{
                 array_push($listClientsFiltered, $clientFiltered[6] . "-" . $clientFiltered[0]);
             }
         }
-        dump($listClientsFiltered);
+        // dump($listClientsFiltered);
         return $listClientsFiltered;
     }
     
