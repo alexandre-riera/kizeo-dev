@@ -14,7 +14,7 @@ class HomeRepository{
         
     }
 
-    public function getListClientFromKizeoById(int $id){
+    public function getListClientFromKizeoById($id){
         $response = $this->client->request(
             'GET',
             'https://forms.kizeo.com/rest/v3/lists/'.$id, [
