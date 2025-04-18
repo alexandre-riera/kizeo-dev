@@ -26,7 +26,9 @@ class HomeRepository{
         );
         $content = $response->getContent();
         $content = $response->toArray();
-        $content = $content['list']['items'];
+        if (isset($content['list']['items'])) {
+            $content = $content['list']['items'];
+        }
         $listSplitted = [];
         $listClientsFiltered = [];
         foreach ($content as $client) {
