@@ -26,9 +26,9 @@ class HomeRepository{
         );
         $content = $response->getContent();
         $content = $response->toArray();
-        dd($content);
         // if (isset($content['list']['items'])) {
             $content = $content['list']['items'];
+            dd($content);
             foreach ($content as $client) {
                 $modifiedClient = preg_split("/[:|]/",$client);
                 $listSplitted[] = $modifiedClient;
