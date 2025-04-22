@@ -1530,7 +1530,7 @@ class HomeController extends AbstractController
     }
 
     #[Route('/save/modal/equipement', name: 'app_save_modal_equipement')]
-    public function saveModalInDatabase(EntityManagerInterface $entityManager){
+    public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request): Response{
 
         // Récupération de l'équipement édité dans la modal
         if(isset($_POST['saveEquipmentFromModal'])){
@@ -1657,10 +1657,10 @@ class HomeController extends AbstractController
             $entityManager->persist($equipement);
             // actually executes the queries (i.e. the INSERT query)
             $entityManager->flush();
-
+            $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
         }
         // return new Response("L'équipement édité dans la modal a bien été enregistré en base de données", Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_front');
+        return $this->redirect($request->getUri());
     }
 
     #[Route('/show/equipement/details/{agence}/{id}', name: 'app_show_equipement_details_by_id')]
