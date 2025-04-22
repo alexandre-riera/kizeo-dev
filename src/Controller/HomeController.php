@@ -1664,7 +1664,7 @@ class HomeController extends AbstractController
         }
         $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
         // return new Response("L'équipement édité dans la modal a bien été enregistré en base de données", Response::HTTP_OK, [], true);
-        return $this->redirect($request->getUri());
+        // return $this->redirect($request->getUri());
     }
 
     #[Route('/show/equipement/details/{agence}/{id}', name: 'app_show_equipement_details_by_id')]
