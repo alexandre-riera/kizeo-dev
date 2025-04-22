@@ -1616,7 +1616,11 @@ class HomeController extends AbstractController
             // $equipement = new $entityAgency;
             $equipement = $entityManager->getRepository($entityAgency)->findOneBy(['id' => $equipmentidEquipementAndIdRow]);
             $equipement->setIdContact($equipmentIdContact);
-            $equipement->setDateEnregistrement(date("Y-m-d H:i:s"));
+            // Pour avoir l'heure exacte de l'enregistrement
+            $date = new DateTime(date("Y-m-d H:i:s"));
+            $dateValable = clone $date;
+            $dateValable->modify('+2 hour');
+            $equipement->setDateEnregistrement($dateValable->format('d-m-Y'));
             $equipement->setCodeSociete($equipmentIdSociete);
             $equipement->setCodeAgence($equipmentCodeAgence);
             $equipement->setDerniereVisite($equipmentDerniereVisiteDeMaintenance);
