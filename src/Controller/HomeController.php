@@ -1620,7 +1620,7 @@ class HomeController extends AbstractController
             $date = new DateTime(date("Y-m-d H:i:s"));
             $dateValable = clone $date;
             $dateValable->modify('+2 hour');
-            $equipement->setDateEnregistrement($dateValable->format('d-m-Y'));
+            $equipement->setDateEnregistrement($dateValable->format('d-m-Y H:i:s'));
             $equipement->setCodeSociete($equipmentIdSociete);
             $equipement->setCodeAgence($equipmentCodeAgence);
             $equipement->setDerniereVisite($equipmentDerniereVisiteDeMaintenance);
