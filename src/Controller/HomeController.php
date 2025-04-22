@@ -132,8 +132,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -155,15 +155,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -183,8 +183,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -206,15 +206,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -234,8 +234,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -257,15 +257,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -285,8 +285,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -308,15 +308,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -336,8 +336,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -359,15 +359,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -387,8 +387,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -410,15 +410,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -438,8 +438,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -461,15 +461,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -489,8 +489,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -512,15 +512,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -540,8 +540,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -563,15 +563,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -591,8 +591,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -614,15 +614,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -642,8 +642,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -665,15 +665,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -693,8 +693,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -716,15 +716,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -744,8 +744,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -767,15 +767,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -795,8 +795,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -818,15 +818,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -846,8 +846,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -869,15 +869,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -897,8 +897,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -920,15 +920,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -948,8 +948,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -971,15 +971,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -999,8 +999,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1022,15 +1022,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1050,8 +1050,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1073,15 +1073,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1101,8 +1101,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1124,15 +1124,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1152,8 +1152,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1175,15 +1175,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1203,8 +1203,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1226,15 +1226,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1254,8 +1254,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1277,15 +1277,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1305,8 +1305,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1328,15 +1328,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1356,8 +1356,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1379,15 +1379,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
@@ -1407,8 +1407,8 @@ class HomeController extends AbstractController
                     // Trouver la date de visite la plus récente
                     $absoluteLatestVisitDate = null;
                     foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() !== null) {
-                            $currentDate = new DateTime($equipment->getDateEnregistrement());
+                        if ($equipment->getDerniereVisite() !== null) {
+                            $currentDate = new DateTime($equipment->getDerniereVisite());
                             
                             // Comparer et garder la date la plus récente
                             if ($absoluteLatestVisitDate === null || $currentDate > $absoluteLatestVisitDate) {
@@ -1430,15 +1430,15 @@ class HomeController extends AbstractController
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
-                        $equipmentDate = $equipment->getDateEnregistrement();
+                        $equipmentDate = $equipment->getDerniereVisite();
                         
                         return $equipmentDate !== null && 
                             $equipmentDate <= $absoluteLatestVisitDate && 
                             $equipmentDate >= $twoMonthsAgo;
                     });
                     foreach($clientSelectedEquipmentsFiltered as $equipment){
-                        if(!in_array($equipment->getDateEnregistrement(), $dateArray)){
-                            $dateArray[] = $equipment->getDateEnregistrement();
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
                         }
                     }
                     $currentVisit = "";
