@@ -1613,7 +1613,8 @@ class HomeController extends AbstractController
                     # code...
                     break;
             }
-            $equipement = new $entityAgency;
+            // $equipement = new $entityAgency;
+            $equipement = $entityManager->getRepository($entityAgency)->findOneBy(['id' => $equipmentidEquipementAndIdRow]);
             $equipement->setIdContact($equipmentIdContact);
             $equipement->setDateEnregistrement(date("Y-m-d H:i:s"));
             $equipement->setCodeSociete($equipmentIdSociete);
