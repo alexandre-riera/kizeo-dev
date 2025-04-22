@@ -13,25 +13,26 @@
     </head>
     <body>
         {% block body %}
-        {% for flash_message in app.flashes('success') %}
-            <div class="alert alert-success">
-                {{ flash_message }}
-            </div>
-        {% endfor %}
+            {% for flash_message in app.flashes('success') %}
+                <div class="alert alert-success">
+                    {{ flash_message }}
+                </div>
+            {% endfor %}
 
-        {% for flash_message in app.flashes('error') %}
-            <div class="alert alert-danger">
-                {{ flash_message }}
-            </div>
-        {% endfor %}
+            {% for flash_message in app.flashes('error') %}
+                <div class="alert alert-danger">
+                    {{ flash_message }}
+                </div>
+            {% endfor %}
 
-        {% block content %}
-        {% endblock %}
+            {% block content %}
+            {% endblock %}
 
-        {% block footer %}
-            <footer>
-                <p>&copy; {{ 'now' | date('Y') }} Gestion de parc équipements</p>
-            </footer>
+            {% block footer %}
+                <footer>
+                    <p>&copy; {{ 'now' | date('Y') }} Gestion de parc équipements</p>
+                </footer>
+            {% endblock %}
         {% endblock %}
     </body>
 </html>
