@@ -1661,8 +1661,8 @@ class HomeController extends AbstractController
             $entityManager->persist($equipement);
             // actually executes the queries (i.e. the INSERT query)
             $entityManager->flush();
-            $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
         }
+        $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
         // return new Response("L'équipement édité dans la modal a bien été enregistré en base de données", Response::HTTP_OK, [], true);
         return $this->redirect($request->getUri());
     }
