@@ -1264,9 +1264,16 @@ class HomeController extends AbstractController
                         }
                     }
 
-                    // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = $absoluteLatestVisitDate->modify('-2 months');
-                    $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
+                    // Vérifier si une date a été trouvée
+                    if ($absoluteLatestVisitDate !== null) {
+                        // Calculer la date limite inférieure (2 mois avant la date la plus récente)
+                        $twoMonthsAgo = clone $absoluteLatestVisitDate;
+                        $twoMonthsAgo->modify('-2 months');
+                        $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
+                    } else {
+                        // Gérer le cas où aucune date n'a été trouvée
+                        $twoMonthsAgo = null;
+                    }
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
@@ -1308,9 +1315,16 @@ class HomeController extends AbstractController
                         }
                     }
 
-                    // Calculer la date limite inférieure (2 mois avant la date la plus récente)
-                    $twoMonthsAgo = $absoluteLatestVisitDate->modify('-2 months');
-                    $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
+                    // Vérifier si une date a été trouvée
+                    if ($absoluteLatestVisitDate !== null) {
+                        // Calculer la date limite inférieure (2 mois avant la date la plus récente)
+                        $twoMonthsAgo = clone $absoluteLatestVisitDate;
+                        $twoMonthsAgo->modify('-2 months');
+                        $twoMonthsAgo = $twoMonthsAgo->format('Y-m-d');
+                    } else {
+                        // Gérer le cas où aucune date n'a été trouvée
+                        $twoMonthsAgo = null;
+                    }
 
                     // Filtrer les équipements dans l'intervalle
                     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($absoluteLatestVisitDate, $twoMonthsAgo) {
