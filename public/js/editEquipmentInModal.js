@@ -17,6 +17,7 @@ function editEquipement(idEquipementAndIdRow,libelleEquipement,visite,raisonSoci
     document.getElementById("modal_trigramme").value = numeroEquipement;
     document.getElementById("modal_modeFonctionnement").value = modeFonctionnement;
     document.getElementById("modal_repereSiteClient").value = repereSiteClient;
+    document.getElementById("modal_repereSiteClient").setAttribute('placeholder', repereSiteClient);
     document.getElementById("modal_miseEnService").value = miseEnService;
     document.getElementById("modal_numeroDeSerie").value = numeroDeSerie;
     document.getElementById("modal_marque").value = marque;
