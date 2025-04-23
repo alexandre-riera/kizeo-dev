@@ -118,7 +118,6 @@
 {% endblock %}
 {% if equipments|length > 0 %}
     <div class="equipment-list">
-        {% for equipment in equipments %}
             <div class="equipment-item">
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
                     <thead>
@@ -141,6 +140,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for equipment in equipments %}
                         <tr class="bkg_row_visite_1" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
                             <td>{{ equipment.getVisite() }}</td>
                             <td>{{ equipment.getNumeroEquipement() }}</td>
