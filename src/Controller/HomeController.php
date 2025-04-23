@@ -1522,6 +1522,7 @@ class HomeController extends AbstractController
             'clientSelectedEquipmentsFiltered'  => $clientSelectedEquipmentsFiltered, // Selected Entity Equipement where last visit is superior 3 months ago
             'totalClientSelectedEquipmentsFiltered'  => count($clientSelectedEquipmentsFiltered), // Total Selected Entity Equipement where last visit is superior 3 months ago
             'directoriesLists' => $directoriesLists, // Array with Objects $myFile with path and annee properties in it
+            'clientSelectedEquipments' =>  $clientSelectedEquipments,
             'visiteDuClient' =>  $visiteDuClient,
             'idClientSelected' =>  $idClientSelected,
             'clientAnneeFilterArray' =>  $clientAnneeFilterArray,
