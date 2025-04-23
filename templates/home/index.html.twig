@@ -607,7 +607,6 @@
             {% endblock %}
 
             {% block clientEquipements %}
-            {% if clientSelectedEquipmentsFiltered != NULL  %}
             <div>
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
                     <thead>
@@ -629,6 +628,7 @@
                             <th>Options</th>
                         </tr>
                     </thead>
+                    {% if clientSelectedEquipmentsFiltered != NULL  %}
                     <tbody>
                         {% for equipment in clientSelectedEquipmentsFiltered %}
                         {% if equipment.visite == "CE1" %}
