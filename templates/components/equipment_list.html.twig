@@ -1,0 +1,15 @@
+{% if equipments|length > 0 %}
+    <div class="equipment-list">
+        {% for equipment in equipments %}
+            <div class="equipment-item">
+                {# Affichez les détails de l'équipement selon votre structure de données #}
+                <h5>{{ equipment.nom }}</h5>
+                <p>Date: {{ equipment.dateEnregistrement|date('d/m/Y') }}</p>
+                <p>Visite: {{ equipment.visite }}</p>
+                {# Autres informations... #}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>Aucun équipement trouvé avec ces critères.</p>
+{% endif %}

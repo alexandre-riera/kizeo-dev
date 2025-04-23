@@ -423,20 +423,22 @@
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">Filtres</h4>
-                                <form action="" method="POST">
+                                <form id="filter-form" action="" method="POST">
                                     <select style="margin-bottom: 10px; margin-top:20px;" class="form-control" id="client-annee-filter-select" name="clientAnneeFilter">
                                         <option value = "" selected> Année </option>
-                                        {% for annee in clientAnneeFilterArray%}
-                                            <option  value="{{ annee }}" id="client_annee_filter">{{ annee }}</option>
+                                        {% for annee in clientAnneeFilterArray %}
+                                            <option value="{{ annee }}" id="client_annee_filter">{{ annee }}</option>
                                         {% endfor %}
                                     </select>
                                     <select style="margin-bottom: 10px" class="form-control" id="client-visite-filter-select" name="clientVisiteFilter">
                                         <option value = "" selected> Visite </option>
-                                        {% for visite in clientVisiteFilterArray%}
-                                            <option  value="{{ visite }}" id="client_visite_filter">{{ visite }}</option>
+                                        {% for visite in clientVisiteFilterArray %}
+                                            <option value="{{ visite }}" id="client_visite_filter">{{ visite }}</option>
                                         {% endfor %}
                                     </select>
-                                    <button type="submit"  name ="submitFilters" class="btn btn-primary">Valider</button>
+                                    <input type="hidden" class="form-control" id="agence-selected" name="agenceSelected" value="{{ agenceSelected }}"/>
+                                    <input type="hidden" class="form-control" id="id-client-selected" name="idClientSelected" value="{{ idClientSelected }}"/>
+                                    <button type="submit" name="submitFilters" class="btn btn-primary">Valider</button>
                                 </form>
                             </div>
                         </div>
@@ -605,7 +607,10 @@
                     </div>
                 </div>
             {% endblock %}
-
+            <div id="equipment-container">
+                {# Contenu initial des équipements non filtrés #}
+                {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
+            </div>
             {% block clientEquipements %}
             <div>
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
@@ -1122,4 +1127,38 @@
             <p>&copy; {{ 'now' | date('Y') }} Gestion de parc équipements</p>
         </footer>
     {% endblock %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('filter-form');
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault(); // Empêche la soumission normale du formulaire
+                
+                const formData = new FormData(form);
+                formData.append('submitFilters', 'true');
+                
+                fetch('{{ path("app_filter_equipments") }}', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.errors) {
+                        // Affichage des erreurs
+                        data.errors.forEach(error => {
+                            // Afficher les erreurs (vous pouvez utiliser addFlash côté serveur aussi)
+                            alert(error);
+                        });
+                    } else {
+                        // Mettre à jour la liste des équipements
+                        const equipmentContainer = document.getElementById('equipment-container');
+                        equipmentContainer.innerHTML = data.html;
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                });
+            });
+        });
+    </script>
 {% endblock %}

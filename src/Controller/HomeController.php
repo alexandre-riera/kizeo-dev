@@ -1528,6 +1528,89 @@ class HomeController extends AbstractController
             'clientVisiteFilterArray' =>  $clientVisiteFilterArray,
         ]);
     }
+    
+    #[Route('/filter-equipments', name: 'app_filter_equipments')]
+    public function filterEquipments(Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $clientAnneeFilter = $request->request->get('clientAnneeFilter', '');
+        $clientVisiteFilter = $request->request->get('clientVisiteFilter', '');
+        $agenceSelected = $request->request->get('agenceSelected', '');
+        $idClientSelected = $request->request->get('idClientSelected', '');
+        $errors = [];
+        
+        // Récupérez les équipements du client (comme vous le faites déjà)
+        $clientSelectedEquipments = [];
+        switch ($agenceSelected) {
+            case 'S10':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S40':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S50':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S60':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S70':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S80':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S100':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S120':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S130':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S140':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S150':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S160':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+            case 'S170':
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                break;
+        }
+        $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+        
+        // Validation des filtres
+        if (empty($clientAnneeFilter)) {
+            $errors[] = 'Sélectionnez l\'année.';
+        }
+
+        if (empty($clientVisiteFilter)) {
+            $errors[] = 'Sélectionnez la visite.';
+        }
+
+        // Filtrage des équipements
+        if (!empty($clientAnneeFilter) && !empty($clientVisiteFilter)) {
+            $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
+                $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+                return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
+            });
+        }
+        
+        if ($errors) {
+            return $this->json(['errors' => $errors]);
+        }
+        
+        // Préparer l'HTML pour la réponse
+        $html = $this->renderView('components/equipment_list.html.twig', [
+            'equipments' => $clientSelectedEquipmentsFiltered
+        ]);
+        
+        return $this->json(['html' => $html]);
+    }
 
     #[Route('/save/modal/equipement', name: 'app_save_modal_equipement')]
     public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request): Response{
