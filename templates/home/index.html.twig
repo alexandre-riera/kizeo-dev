@@ -607,11 +607,11 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipments != NULL  %}
+            {# {% if clientSelectedEquipments != NULL  %}
             <div id="equipment-container">
                 {# Contenu initial des équipements non filtrés #}
-                {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
-            </div>
+                {#{% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
+            </div> #}
             {% endif %}
             {% block clientEquipements %}
             <div>
