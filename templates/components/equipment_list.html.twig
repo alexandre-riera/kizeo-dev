@@ -118,7 +118,8 @@
 {% endblock %}
 {% if equipments|length > 0 %}
     <div class="equipment-list">
-            <div class="equipment-item">
+        <div class="equipment-item">
+            {% for equipment in equipments %}
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
                     <thead>
                         <tr class="sticky">
@@ -140,7 +141,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for equipment in equipments %}
                         <tr class="bkg_row_visite_1" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
                             <td>{{ equipment.getVisite() }}</td>
                             <td>{{ equipment.getNumeroEquipement() }}</td>
@@ -231,14 +231,14 @@
                             
                         </tr>                        
                     </tbody>
-                    {% endfor %}
                 </table>
-                <script>
-                    $(function() {
-                        $('#table').bootstrapTable()
-                    })
-                </script>
-            </div>
+            {% endfor %}
+            <script>
+                $(function() {
+                    $('#table').bootstrapTable()
+                })
+            </script>
+        </div>
     </div>
 {% else %}
     <p>Aucun équipement trouvé avec ces critères.</p>
