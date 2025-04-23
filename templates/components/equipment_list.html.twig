@@ -119,7 +119,6 @@
 {% if equipments|length > 0 %}
     <div class="equipment-list">
         <div class="equipment-item">
-            {% for equipment in equipments %}
                 <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
                     <thead>
                         <tr class="sticky">
@@ -141,6 +140,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for equipment in equipments %}
                         <tr class="bkg_row_visite_1" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
                             <td>{{ equipment.getVisite() }}</td>
                             <td>{{ equipment.getNumeroEquipement() }}</td>
@@ -228,11 +228,10 @@
                             {% endif %}
                             <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a>
                             </td>
-                            
                         </tr>                        
+                        {% endfor %}
                     </tbody>
                 </table>
-            {% endfor %}
             <script>
                 $(function() {
                     $('#table').bootstrapTable()
