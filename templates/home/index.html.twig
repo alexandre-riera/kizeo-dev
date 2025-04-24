@@ -1087,7 +1087,7 @@
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
             
-            {% if clientSelectedEquipments is defined and clientSelectedEquipments is not null and clientSelectedEquipmentsFiltered is null %}
+            {% if equipmentsFiltered is defined and equipmentsFiltered is not null %}
                 <div id="equipment-container">
                     {# Contenu initial des équipements non filtrés #}
                     {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
