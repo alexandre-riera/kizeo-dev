@@ -1532,7 +1532,6 @@ class HomeController extends AbstractController
             'clientAnneeFilterArray' =>  $clientAnneeFilterArray,
             'clientAnneeFilter' =>  $clientAnneeFilter,
             'clientVisiteFilterArray' =>  $clientVisiteFilterArray,
-            'equipmentsFiltered' =>  $equipmentsFiltered,
         ]);
     }
     
