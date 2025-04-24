@@ -1526,6 +1526,7 @@ class HomeController extends AbstractController
             'visiteDuClient' =>  $visiteDuClient,
             'idClientSelected' =>  $idClientSelected,
             'clientAnneeFilterArray' =>  $clientAnneeFilterArray,
+            'clientAnneeFilter' =>  $clientAnneeFilter,
             'clientVisiteFilterArray' =>  $clientVisiteFilterArray,
         ]);
     }

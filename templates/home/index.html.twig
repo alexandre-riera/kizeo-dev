@@ -607,7 +607,7 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not null and clientAnneeFilterArray is defined and clientAnneeFilterArray == "Année" %}
+            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not null and clientAnneeFilter is defined and clientAnneeFilter is null %}
                 {% block clientEquipements %}
                     <div>
                         <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
@@ -1084,11 +1084,10 @@
                             })
                         </script>
                     </div>
-                {# {% endif %} #}
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
 
-            {% if clientSelectedEquipments is defined and clientSelectedEquipments is not null and clientAnneeFilterArray is defined and clientAnneeFilterArray is not null %}
+            {% if clientSelectedEquipments is defined and clientSelectedEquipments is not null and clientAnneeFilter is defined and clientAnneeFilter is not null %}
                 <div id="equipment-container">
                     {# Contenu initial des équipements non filtrés #}
                     {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
