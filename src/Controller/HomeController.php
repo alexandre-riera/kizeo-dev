@@ -1475,12 +1475,11 @@ class HomeController extends AbstractController
         }
         $clientAnneeFilter = "";
         $clientVisiteFilter = "";
-        
+        $equipmentsFiltered = [];
         // Récupération des filtres via la requête
         if ($request->query->get('submitFilters')) {
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
             $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
-            $equipmentsFiltered = []; // Initialisez avec tous les équipements
             // $clientSelectedEquipmentsFiltered = $clientSelectedEquipments; // Initialisez avec tous les équipements
 
             // Validation des filtres
