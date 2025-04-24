@@ -1086,9 +1086,8 @@
                     </div>
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
-            {% if clientAnneeFilter is not empty %}
-                {% set clientSelectedEquipmentsFiltered = null %}
-            {% endif %}
+            
+            {% set clientSelectedEquipmentsFiltered = null %}
             {% if clientSelectedEquipments is defined and clientSelectedEquipments is not null and clientSelectedEquipmentsFiltered is null %}
                 <div id="equipment-container">
                     {# Contenu initial des équipements non filtrés #}
