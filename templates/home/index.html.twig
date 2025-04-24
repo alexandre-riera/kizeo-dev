@@ -1086,7 +1086,7 @@
                     </div>
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
-            {% if clientAnneeFilter not "" %}
+            {% if clientAnneeFilter is not empy %}
                 {% set clientSelectedEquipmentsFiltered = null %}
             {% endif %}
             {% if clientSelectedEquipments is defined and clientSelectedEquipments is not null and clientSelectedEquipmentsFiltered is null %}
