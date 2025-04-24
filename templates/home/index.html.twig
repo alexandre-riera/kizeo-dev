@@ -1087,12 +1087,12 @@
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
             
-            {% if clientAnneeFilter is defined and clientAnneeFilter is not empty %}
+            {#{% if clientAnneeFilter is defined and clientAnneeFilter is not empty %}#}
                 <div id="equipment-container">
                     {# Contenu initial des équipements non filtrés #}
                     {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
                 </div>
-            {% endif %}
+            {#{% endif %}#}
         {% else %}
             <header class="header">
                 <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
