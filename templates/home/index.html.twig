@@ -607,7 +607,7 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not empty and not app.request.query.get('submitFilters') %}
+            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not empty %}
                 {% block clientEquipements %}
                     <div>
                         <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
@@ -1087,7 +1087,7 @@
                 {% endblock %}
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
             
-            {% if app.request.query.get('submitFilters') %}
+            {% if clientSelectedEquipments is defined and clientSelectedEquipments is not empty %}
                 <div id="equipment-container">
                     {# Contenu initial des équipements non filtrés #}
                     {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
