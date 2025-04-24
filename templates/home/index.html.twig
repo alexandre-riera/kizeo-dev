@@ -607,7 +607,7 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not null and clientAnneeFilterArray is defined and clientAnneeFilterArray is not "Année" %}
+            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not null and clientAnneeFilterArray is defined and clientAnneeFilterArray is not == "Année" %}
                 {% block clientEquipements %}
                     <div>
                         <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
