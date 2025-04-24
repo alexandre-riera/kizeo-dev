@@ -1492,15 +1492,11 @@ class HomeController extends AbstractController
 
             // Filtrage des équipements
             if (!empty($clientAnneeFilter) && !empty($clientVisiteFilter)) {
-                // $clientSelectedEquipmentsFiltered = [];
-                $equipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
+                $clientSelectedEquipmentsFiltered = [];
+                $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
                     $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
                     return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
                 });
-                // $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
-                //     $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
-                //     return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
-                // });
             }
         }
 
