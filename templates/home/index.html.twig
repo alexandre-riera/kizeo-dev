@@ -607,7 +607,7 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipmentsFiltered != NULL  %}
+            {% if clientSelectedEquipmentsFiltered is defined && clientSelectedEquipmentsFiltered  is not null  %}
                 {% block clientEquipements %}
                     <div>
                         <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
@@ -630,7 +630,6 @@
                                     <th>Options</th>
                                 </tr>
                             </thead>
-                            {% if clientSelectedEquipmentsFiltered != NULL  %}
                             <tbody>
                                 {% for equipment in clientSelectedEquipmentsFiltered %}
                                 {% if equipment.visite == "CE1" %}
@@ -1075,7 +1074,6 @@
                                         </td>
                                         
                                     </tr>
-                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -1086,14 +1084,14 @@
                         </script>
                     </div>
                 {% endif %}
-                    {% if clientSelectedEquipments != NULL %}
+                    {% if clientSelectedEquipments is defined &&  clientSelectedEquipments is not null %}
                         <div id="equipment-container">
                             {# Contenu initial des équipements non filtrés #}
                             {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
                         </div>
                     {% endif %}
                 {% endblock %}
-            {% endif %}
+            {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
         {% else %}
             <header class="header">
                 <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
