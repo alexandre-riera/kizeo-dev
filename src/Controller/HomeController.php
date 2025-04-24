@@ -1475,7 +1475,6 @@ class HomeController extends AbstractController
         }
         $clientAnneeFilter = "";
         $clientVisiteFilter = "";
-        $equipmentsFiltered = [];
         // Récupération des filtres via la requête
         if ($request->query->get('submitFilters')) {
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
