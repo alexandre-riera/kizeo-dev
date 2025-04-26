@@ -1614,7 +1614,8 @@ class HomeController extends AbstractController
     }
 
     #[Route('/save/modal/equipement', name: 'app_save_modal_equipement')]
-    public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request): Response{
+    public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request)//: Response
+    {
 
         // Récupération de l'équipement édité dans la modal
         if(isset($_POST['saveEquipmentFromModal'])){
