@@ -98,12 +98,12 @@ class AjaxController extends AbstractController
     });
     
     // Récupérer les fichiers pdf du client
-    $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $clientVisiteFilter, $agenceSelected, $clientAnneeFilter);
+    // $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $clientVisiteFilter, $agenceSelected, $clientAnneeFilter);
 
     // Rendre uniquement le tableau des équipements
     return $this->render('components/equipment_table.html.twig', [
         'clientSelectedEquipmentsFiltered' => $clientSelectedEquipmentsFiltered,
-        'directoriesLists' => $directoriesLists
+        // 'directoriesLists' => $directoriesLists
     ]);
 }
 }

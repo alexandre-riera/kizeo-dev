@@ -53,7 +53,7 @@ class HomeRepository{
         $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
         
-        $file = str_replace(" ", "_", $clientSelected) . '-' . date("d-m-Y" , strtotime($clientAnneeFilter)) . '-' . $currentVisite . '.pdf';
+        $file = str_replace(" ", "_", $clientSelected) . '-' . $clientAnneeFilter . '-' . $currentVisite . '.pdf';
         $myFile = new stdClass;
         $myFile->path = $baseDir . '/' . date("Y", strtotime($clientAnneeFilter)) . '/' . $currentVisite . '/' . $file;
         $myFile->visite = $currentVisite;
