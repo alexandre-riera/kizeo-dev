@@ -93,7 +93,7 @@ class AjaxController extends AbstractController
     
     // Appliquer les filtres
     $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
-        $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+        $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite()));
         return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
     });
     
