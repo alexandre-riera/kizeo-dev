@@ -730,15 +730,16 @@
                             })
                         </script>
                     </div>
-                {% endblock %}
+                    {% endblock %}
+                {% elseif app.request.query.get('submitFilters') %}
+                    <div id="equipment-container">
+                        {# Contenu initial des équipements non filtrés #}
+                        {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
+                    </div>
+                {% else %}
+                    <h4>Ce site n'a pas encore eu de visite de maintenance cette année, veuillez rechercher avec les filtres</h4>
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
             
-            {% if clientSelectedEquipments is defined and clientSelectedEquipments is not empty %}
-                <div id="equipment-container">
-                    {# Contenu initial des équipements non filtrés #}
-                    {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
-                </div>
-            {% endif %}
         {% else %}
             <header class="header">
                 <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
