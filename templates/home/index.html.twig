@@ -425,9 +425,9 @@
                             {# Formulaire de filtres avec valeurs par défaut #}
                             {# <form id="filterForm" method="get" action="{{ path('votre_route_actuelle') }}"> #}
                             <form id="filterForm" method="get" action="">
-                                <input type="hidden" name="clientSelected" value="{{ clientSelected }}">
-                                <input type="hidden" name="agenceSelected" value="{{ agenceSelected }}">
-                                <input type="hidden" name="idClientSelected" value="{{ idClientSelected }}">
+                                <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
+                                <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
+                                <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
                                 <div class="form-group">
                                     <label for="clientAnneeFilter">Année :</label>
                                     <select class="form-control" id="clientAnneeFilter" name="clientAnneeFilter">
