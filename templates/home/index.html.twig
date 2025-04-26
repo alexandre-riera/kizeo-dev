@@ -607,7 +607,7 @@
                     </div>
                 </div>
             {% endblock %}
-            {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not empty %}
+            {% if app.request.query.get('submitFilters') and clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not empty %}
                 {% block clientEquipements %}
                     <div>
                         <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
