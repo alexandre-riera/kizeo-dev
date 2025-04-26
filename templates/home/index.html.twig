@@ -736,8 +736,6 @@
                         {# Contenu initial des équipements non filtrés #}
                         {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
                     </div>
-                {% else %}
-                    <h4>Ce site n'a pas encore eu de visite de maintenance cette année, veuillez rechercher avec les filtres</h4>
             {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
             
         {% else %}
