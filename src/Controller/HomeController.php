@@ -171,6 +171,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S10':
@@ -218,6 +223,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -267,6 +277,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S40':
@@ -314,6 +329,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -363,6 +383,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S50':
@@ -410,6 +435,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -459,6 +489,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S60':
@@ -506,6 +541,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -555,6 +595,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S70':
@@ -602,6 +647,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -651,6 +701,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S80':
@@ -698,6 +753,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -747,6 +807,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S100':
@@ -794,6 +859,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -843,6 +913,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S120':
@@ -890,6 +965,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -939,6 +1019,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S130':
@@ -986,6 +1071,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -1086,6 +1176,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S150':
@@ -1133,6 +1228,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -1182,6 +1282,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S160':
@@ -1229,6 +1334,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
@@ -1278,6 +1388,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case 'S170':
@@ -1326,6 +1441,11 @@ class HomeController extends AbstractController
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
                     }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
+                    }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
                 case ' S170':
@@ -1373,6 +1493,11 @@ class HomeController extends AbstractController
                     // Si aucun équipement n'est trouvé avec les filtres par défaut, montrer tous les équipements
                     if (empty($clientSelectedEquipmentsFiltered)) {
                         $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
+                    }
+                    foreach($clientSelectedEquipmentsFiltered as $equipment){
+                        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+                            $dateArray[] = $equipment->getDerniereVisite();
+                        }
                     }
                     $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $defaultVisit, $agenceSelected, $dateArray);
                     break;
