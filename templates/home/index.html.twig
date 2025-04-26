@@ -731,12 +731,13 @@
                         </script>
                     </div>
                     {% endblock %}
-                {% elseif app.request.query.get('submitFilters') %}
-                    <div id="equipment-container">
-                        {# Contenu initial des équipements non filtrés #}
-                        {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
-                    </div>
-            {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
+                    {% endif %} {# Fin de la condition pour $clientSelectedEquipmentsFiltered #}
+                    {% if app.request.query.get('submitFilters') %}
+                        <div id="equipment-container">
+                            {# Contenu initial des équipements non filtrés #}
+                            {% include 'components/equipment_list.html.twig' with {'equipments': clientSelectedEquipments} %}
+                        </div>
+                    {% endif %}
             
         {% else %}
             <header class="header">
