@@ -98,12 +98,18 @@ class AjaxController extends AbstractController
     });
     
     // Récupérer les fichiers pdf du client
-    // $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $clientVisiteFilter, $agenceSelected, $clientAnneeFilter);
+    $dateArray = [];
+    foreach($clientSelectedEquipmentsFiltered as $equipment){
+        if(!in_array($equipment->getDerniereVisite(), $dateArray)){
+            $dateArray[] = $equipment->getDerniereVisite();
+        }
+    }
+    $directoriesLists = $homeRepository->getListOfPdf($clientSelected, $clientVisiteFilter, $agenceSelected, $dateArray);
 
     // Rendre uniquement le tableau des équipements
     return $this->render('components/equipment_table.html.twig', [
         'clientSelectedEquipmentsFiltered' => $clientSelectedEquipmentsFiltered,
-        // 'directoriesLists' => $directoriesLists
+        'directoriesLists' => $directoriesLists
     ]);
 }
 }
