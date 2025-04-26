@@ -46,19 +46,19 @@ class HomeRepository{
         return $listClientsFiltered;
     }
     
-    public function getListOfPdf($clientSelected, $currentVisite, $agenceSelected, $dateArray)
+    public function getListOfPdf($clientSelected, $currentVisite, $agenceSelected, $clientAnneeFilter)
     {
         dump($currentVisite);
-        dump($dateArray);
+        dump($clientAnneeFilter);
         $baseDir = 'https://www.pdf.somafi-group.fr/' . trim($agenceSelected) . '/' . str_replace(" ", "_", $clientSelected);
         $results = [];
-        foreach ($dateArray as $date) {
-            $file = str_replace(" ", "_", $clientSelected) . '-' . date("d-m-Y" , strtotime($date)) . '-' . $currentVisite . '.pdf';
+        foreach ($dateArray as $clientAnneeFilter) {
+            $file = str_replace(" ", "_", $clientSelected) . '-' . date("d-m-Y" , strtotime($clientAnneeFilter)) . '-' . $currentVisite . '.pdf';
             $myFile = new stdClass;
-            $myFile->path = $baseDir . '/' . date("Y", strtotime($date)) . '/' . $currentVisite . '/' . $file;
+            $myFile->path = $baseDir . '/' . date("Y", strtotime($clientAnneeFilter)) . '/' . $currentVisite . '/' . $file;
             $myFile->visite = $currentVisite;
-            $myFile->date = date("d-m-Y" , strtotime($date));
-            $myFile->annee = date("Y", strtotime($date));
+            $myFile->date = date("d-m-Y" , strtotime($clientAnneeFilter));
+            $myFile->annee = date("Y", strtotime($clientAnneeFilter));
             
             if (!in_array($myFile, $results)) {
                 array_push($results, $myFile);
