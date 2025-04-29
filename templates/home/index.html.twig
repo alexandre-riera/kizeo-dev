@@ -268,7 +268,7 @@
     {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
         {% block header %}
             <header class="header">
-                <h1>Gestion de parc équipements ou il y en a beaucoup</h1>
+                <h1>Gestion de parc équipements</h1>
                 <h2>Bonjour {{ app.user.firstName }}</h2>
             </header>
         {% endblock %}
