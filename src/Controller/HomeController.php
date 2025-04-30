@@ -7,6 +7,7 @@ use DOMDocument;
 use DateInterval;
 use App\Entity\Form;
 use App\Entity\Agency;
+use App\Entity\User;
 use App\Form\AgencyType;
 use App\Entity\ContactS10;
 use App\Entity\ContactS40;
@@ -38,7 +39,6 @@ use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Shuchkin\SimpleXLSX;
 use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -1893,9 +1893,26 @@ class HomeController extends AbstractController
 
     // Load all user one time
     #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
-    public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface, SimpleXLSX $simpleXlsx): JsonResponse
+    public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface): JsonResponse
     {
-        $userRepository->loadUsersFromXlsx($simpleXlsx, $entityManagerInterface);
+        require_once __DIR__ . '/../../vendor/SimpleXLSX/SimpleXLSX.php';
+        // $userRepository->loadUsersFromXlsx($simpleXLSX, $entityManagerInterface);
+        $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
+        $xlsxParse = $xlsx::parse($filePath);
+
+        foreach ($xlsxParse->rowsEx() as $row) {
+            dd($row);
+            $user = new User();
+            $user->setFirstName($row[0]);
+            $user->setLastName($row[1]);
+            $user->setEmail($row[2]);
+            $user->setRoles(["ROLE_USER"]);
+            $user->setPassword($row[3]);
+            // Set other properties as needed
+            $this->$entityManagerInterface->persist($user);
+        }
+
+        $this->$entityManagerInterface->flush();
         return $this->json([
             'message' => 'All users loaded successfully'
         ]);
