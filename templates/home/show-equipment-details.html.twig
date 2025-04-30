@@ -132,7 +132,7 @@
             <h4>Galerie photos</h4>
             <div class="picture_container">
                 {% for picture in picturesData %}
-                    {% picturesData %}
+                    {{ picturesData }}
                     <div class="card">
                         <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
                         <div class="card-body">
