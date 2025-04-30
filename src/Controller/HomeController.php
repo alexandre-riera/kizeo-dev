@@ -1891,29 +1891,30 @@ class HomeController extends AbstractController
         ]);
     }
 
-    // Load all user one time
-    #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
-    public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface): JsonResponse
-    {
-        require_once __DIR__ .  '/public/uploads/SimpleXLSX.php';
-        $filePath = __DIR__ . '/public/uploads/users.xlsx';
-        $xlsxParse = $xlsx::parse($filePath);
+    // // Load all user one time
+    // #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
+    // public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface): JsonResponse
+    // {
+    //     require_once  '/public/uploads/SimpleXLSX.php';
+    //     $filePath = __DIR__ . '/public/uploads/users.xlsx';
+    //     $xlsxParse = $xlsx::parse($filePath);
 
-        foreach ($xlsxParse->rowsEx() as $row) {
-            dd($row);
-            $user = new User();
-            $user->setFirstName($row[0]);
-            $user->setLastName($row[1]);
-            $user->setEmail($row[2]);
-            $user->setRoles(["ROLE_USER"]);
-            $user->setPassword($row[3]);
-            // Set other properties as needed
-            $this->$entityManagerInterface->persist($user);
-        }
+    //     $handle = fopen("/public/uploads/users.xlsx", "r");
+    //     // foreach ($xlsxParse->rowsEx() as $row) {
+    //     //     dd($row);
+    //     //     $user = new User();
+    //     //     $user->setFirstName($row[0]);
+    //     //     $user->setLastName($row[1]);
+    //     //     $user->setEmail($row[2]);
+    //     //     $user->setRoles(["ROLE_USER"]);
+    //     //     $user->setPassword($row[3]);
+    //     //     // Set other properties as needed
+    //     //     $this->$entityManagerInterface->persist($user);
+    //     // }
 
-        $this->$entityManagerInterface->flush();
-        return $this->json([
-            'message' => 'All users loaded successfully'
-        ]);
-    }
+    //     $this->$entityManagerInterface->flush();
+    //     return $this->json([
+    //         'message' => 'All users loaded successfully'
+    //     ]);
+    // }
 }

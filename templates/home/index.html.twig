@@ -274,35 +274,48 @@
         {% endblock %}
         <nav class="navbar bg-body-tertiary">
             <div class="container">
-            <a class="navbar-brand" href="/">
-                <i class="fa-solid fa-house"> </i>Accueil
-            </a>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="{{ path('app_contrat_new') }}" class="navbar-brand" ><i class="fa-solid fa-file-contract"> </i>Nouveau contrat</a>
-                </li>
-            </ul>
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="{{ path('app_logout') }}" class="navbar-brand" >
-                        <i class="fa-solid fa-user"></i>Se déconnecter
-                    </a>
-                </li>
-                {#
-                <li class="nav-item dropdown" style="margin-right: 75px;">
-                    <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <img class="nav-profile-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="#">Profile</a>
-                        <a class="dropdown-item" href="#">Create Post</a>
-                        <a class="dropdown-item" href="#">Logout</a>
-                    </div>
-                </li>
-                #}
-            </ul>
+                <a class="navbar-brand" href="/">
+                    <i class="fa-solid fa-house"> </i>Accueil
+                </a>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a href="{{ path('app_contrat_new') }}" class="navbar-brand" ><i class="fa-solid fa-file-contract"> </i>Nouveau contrat</a>
+                    </li>
+                </ul>
+                <a class="navbar-brand" href="{{ path('app_user_index') }}">Gestion des utilisateurs</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_user_index') }}">Liste</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ path('app_user_new') }}">Nouvel utilisateur</a>
+                        </li>
+                    </ul>
+                </div>
+                <ul class="navbar-nav ml-auto">
+                    <li class="nav-item">
+                        <a href="{{ path('app_logout') }}" class="navbar-brand" >
+                            <i class="fa-solid fa-user"></i>Se déconnecter
+                        </a>
+                    </li>
+                </ul>
             </div>
         </nav>
+
+         <div class="container">
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+        </div>
         {% block clientsInformations %}
         <div class="selections-container">
             <div class="selection-client" >
