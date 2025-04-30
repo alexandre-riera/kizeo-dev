@@ -32,8 +32,8 @@
                     {% for user in users %}
                         <tr>
                             <td>{{ user.id }}</td>
-                            <td>{{ user.nom }}</td>
-                            <td>{{ user.prenom }}</td>
+                            <td>{{ user.firstName }}</td>
+                            <td>{{ user.lastName }}</td>
                             <td>{{ user.email }}</td>
                             <td>
                                 {% for role in user.roles %}
