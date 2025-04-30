@@ -133,9 +133,9 @@
             <div class="picture_container">
                 {% for picture in picturesData %}
                     <div class="card">
-                        <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                        <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" >
                         <div class="card-body">
-                            <p class="card-text">date de la photo à venir</p>
+                            <p class="card-text">{{ picture.update_time }}</p>
                         </div>
                     </div>
                 {% endfor %}
