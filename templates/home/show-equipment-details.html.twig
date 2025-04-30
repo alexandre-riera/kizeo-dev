@@ -133,7 +133,7 @@
             <div class="picture_container">
                 {% for picture in picturesData %}
                     <div class="card">
-                        <a href="#" data-target="modal" data-toggle="#Modal4"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
+                        <a href="#" data-target="#Modal4" data-toggle="modal"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
                         <div class="card-body">
                             <p class="card-text">{{ picture.update_time }}</p>
                         </div>
