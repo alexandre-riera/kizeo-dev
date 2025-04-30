@@ -1893,7 +1893,7 @@ class HomeController extends AbstractController
     // Load all user one time
     #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
     public function loadAllUsersFromXlsx(UserRepository $userRepository){
-        $this->$userRepository->loadAllUsersFromXlsx();
+        $userRepository->loadAllUsersFromXlsx();
         return $this->json([
             'message' => 'All users loaded successfully'
         ]);
