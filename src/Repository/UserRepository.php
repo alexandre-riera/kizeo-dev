@@ -3,7 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
-use Shuchkin\SimpleXLSX;
+use shuchkin\simplexlsx;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -60,7 +60,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 //    }
     public function loadUsersFromXlsx(){
         $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
-        $xlsx = SimpleXLSX::parse($filePath);
+        $xlsx = simplexlsx::parse($filePath);
 
         foreach ($xlsx->rowsEx() as $row) {
             dd($row);
