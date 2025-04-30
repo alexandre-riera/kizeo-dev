@@ -3,7 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
-use shuchkin\simplexlsx;
+use Shuchkin\SimpleXLSX\SimpleXLSX;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
