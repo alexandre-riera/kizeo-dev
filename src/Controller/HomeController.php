@@ -36,6 +36,7 @@ use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
 use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
@@ -1883,11 +1884,18 @@ class HomeController extends AbstractController
                 dump($agence . " est vide ou id equipment est vide");
                 break;
         }
-        dump($picturesData);
-        dump($equipment);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesData" => $picturesData,
+        ]);
+    }
+
+    // Load all user one time
+    #[Route('/load-users-from-xlsx', name: 'app_front')]
+    public function loadAllUsersFromXlsx(UserRepository $userRepository){
+        $this->$userRepository->loadAllUsersFromXlsx();
+        return $this->json([
+            'message' => 'All users loaded successfully'
         ]);
     }
 }

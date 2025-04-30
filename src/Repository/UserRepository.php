@@ -3,11 +3,12 @@
 namespace App\Repository;
 
 use App\Entity\User;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Shuchkin\SimpleXLSX;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 
 /**
  * @extends ServiceEntityRepository<User>
@@ -57,4 +58,22 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 //            ->getOneOrNullResult()
 //        ;
 //    }
+    public function loadUsersFromXlsx(){
+        $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
+        $xlsx = SimpleXLSX::parse($filePath);
+
+        foreach ($xlsx->rowsEx() as $row) {
+            dd($row);
+            $user = new User();
+            $user->setFirstName($row[0]);
+            $user->setLastName($row[1]);
+            $user->setEmail($row[2]);
+            $user->setRoles(["ROLE_USER"]);
+            $user->setPassword($row[3]);
+            // Set other properties as needed
+            $this->_em->persist($user);
+        }
+
+        $this->_em->flush();
+    }
 }
