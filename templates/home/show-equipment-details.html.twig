@@ -138,22 +138,22 @@
                             <p class="card-text">{{ picture.update_time }}</p>
                         </div>
                     </div>
-                {% endfor %}
-            </div>
-            <div class="modal" id="Modal4" tabindex="-1" role="dialog">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-body">
-                            <a href="#" data-target="modal" data-toggle="#Modal4"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
-                            <div class="card-body">
-                                <p class="card-text">{{ picture.update_time }}</p>
+                    <div class="modal" id="Modal4" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-body">
+                                    <a href="#" data-target="modal" data-toggle="#Modal4"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
+                                    <div class="card-body">
+                                        <p class="card-text">{{ picture.update_time }}</p>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                </div>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                        </div>
                     </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     {% endif %}
