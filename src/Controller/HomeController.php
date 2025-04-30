@@ -1883,6 +1883,8 @@ class HomeController extends AbstractController
                 dump($agence . " est vide ou id equipment est vide");
                 break;
         }
+        dump($picturesData);
+        dump($equipment);
         return $this->render('home/show-equipment-details.html.twig', [
             "equipment" => $equipment,
             "picturesData" => $picturesData,
