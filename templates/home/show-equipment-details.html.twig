@@ -133,24 +133,9 @@
             <div class="picture_container">
                 {% for picture in picturesData %}
                     <div class="card">
-                        <a href="" data-target="#Modal4" data-toggle="modal"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
+                        <a href="" target="_blank"><img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" ></a>
                         <div class="card-body">
                             <p class="card-text">{{ picture.update_time }}</p>
-                        </div>
-                    </div>
-                    <div class="modal" id="Modal4" tabindex="-1" role="dialog">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-body">
-                                    <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" >
-                                    <div class="card-body">
-                                        <p class="card-text">{{ picture.update_time }}</p>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 {% endfor %}
