@@ -7,6 +7,7 @@ use Shuchkin\SimpleXLSX;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 
@@ -33,6 +34,25 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
+    public function loadUsersFromXlsx(SimpleXLSX $xlsx, EntityManagerInterface $entityManagerInterface): void{
+        $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
+        $xlsxParse = $xlsx::parse($filePath);
+
+        foreach ($xlsxParse->rowsEx() as $row) {
+            dd($row);
+            $user = new User();
+            $user->setFirstName($row[0]);
+            $user->setLastName($row[1]);
+            $user->setEmail($row[2]);
+            $user->setRoles(["ROLE_USER"]);
+            $user->setPassword($row[3]);
+            // Set other properties as needed
+            $this->$entityManagerInterface->persist($user);
+        }
+
+        $this->$entityManagerInterface->flush();
+    }
+    
 
 //    /**
 //     * @return User[] Returns an array of User objects
@@ -58,22 +78,4 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
 //            ->getOneOrNullResult()
 //        ;
 //    }
-    public function loadUsersFromXlsx(){
-        $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
-        $xlsx = SimpleXLSX::parse($filePath);
-
-        foreach ($xlsx->rowsEx() as $row) {
-            dd($row);
-            $user = new User();
-            $user->setFirstName($row[0]);
-            $user->setLastName($row[1]);
-            $user->setEmail($row[2]);
-            $user->setRoles(["ROLE_USER"]);
-            $user->setPassword($row[3]);
-            // Set other properties as needed
-            $this->_em->persist($user);
-        }
-
-        $this->_em->flush();
-    }
 }
