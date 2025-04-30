@@ -12,7 +12,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 #[AsCommand(
-    name: 'import-users',
+    name: 'app:import-users',
     description: 'Import users from JSON file',
 )]
 class ImportUsersCommand extends Command
