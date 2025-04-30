@@ -38,6 +38,7 @@ use Doctrine\ORM\EntityManager;
 use App\Repository\HomeRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Shuchkin\SimpleXLSX;
 use stdClass;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -1892,8 +1893,9 @@ class HomeController extends AbstractController
 
     // Load all user one time
     #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
-    public function loadAllUsersFromXlsx(UserRepository $userRepository){
-        $userRepository->loadUsersFromXlsx();
+    public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface, SimpleXLSX $simpleXlsx): JsonResponse
+    {
+        $userRepository->loadUsersFromXlsx($simpleXlsx, $entityManagerInterface);
         return $this->json([
             'message' => 'All users loaded successfully'
         ]);

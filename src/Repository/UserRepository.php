@@ -34,7 +34,7 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
     }
-    public function loadUsersFromXlsx(SimpleXLSX $xlsx, EntityManagerInterface $entityManagerInterface): void{
+    public function loadUsersFromXlsx($xlsx, $entityManagerInterface): void{
         $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
         $xlsxParse = $xlsx::parse($filePath);
 
