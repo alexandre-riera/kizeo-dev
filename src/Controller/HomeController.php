@@ -1895,8 +1895,8 @@ class HomeController extends AbstractController
     #[Route('/load-users-from-xlsx', name: 'app_load_all_users_from_xlsx')]
     public function loadAllUsersFromXlsx(UserRepository $userRepository, EntityManagerInterface $entityManagerInterface): JsonResponse
     {
-        $xlsx = __DIR__ .  '/../../public/uploads/SimpleXLSX.php';
-        $filePath = __DIR__ . '/../../public/uploads/users.xlsx';
+        $xlsx = __DIR__ .  '/public/uploads/SimpleXLSX.php';
+        $filePath = __DIR__ . '/public/uploads/users.xlsx';
         $xlsxParse = $xlsx::parse($filePath);
 
         foreach ($xlsxParse->rowsEx() as $row) {
