@@ -1828,7 +1828,11 @@ class FormRepository extends ServiceEntityRepository
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value, $entityManager); // It's an array now
                 foreach ($photoJpg as $photo) {
                     $pictureEncoded = base64_encode($photo);
-                    array_push($picturesdata, $pictureEncoded);
+                    $picturesdataObject = new stdClass;
+                    $picturesdataObject->picture = $pictureEncoded;
+                    $picturesdataObject->update_time = $value->update_time;
+                    array_push($picturesdata, $picturesdataObject);
+                    dump($picturesdataObject);
                 }
             // }
         }

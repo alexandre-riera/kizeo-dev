@@ -24,8 +24,3 @@
     width: 100%;
     height: -webkit-fill-available;
 }
-.card-img-top:hover{
-    transform: scale(1.5);
-    position: absolute;
-    z-index: 4000;
-}

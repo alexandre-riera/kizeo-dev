@@ -18,6 +18,7 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+        <script type="text/javascript" src="/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -133,9 +134,9 @@
             <div class="picture_container">
                 {% for picture in picturesData %}
                     <div class="card">
-                        <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture }}" >
+                    <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" >
                         <div class="card-body">
-                            <p class="card-text">date de la photo à venir</p>
+                            <p class="card-text">{{ picture.update_time }}</p>
                         </div>
                     </div>
                 {% endfor %}
