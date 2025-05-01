@@ -25,6 +25,15 @@
                     Vous êtes déjà connecté(e) {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Me déconnecter</a>
                 </div>
             {% endif %}
+
+            {% for flash_message in app.flashes('success') %}
+                <div class="alert alert-success">{{ flash_message }}</div>
+            {% endfor %}
+
+            {% for flash_message in app.flashes('danger') %}
+                <div class="alert alert-danger">{{ flash_message }}</div>
+            {% endfor %}
+            
             <div class="col-md-12">
                 <h1 class="h3 mb-3 font-weight-normal"  style="margin-left:30px;" >Me connecter</h1>
             </div>
@@ -50,7 +59,7 @@
             <button class="btn btn-lg btn-primary col-7" type="submit">
                 Me connecter
             </button>
-            <!-- <p><a href="#">Mot de passe oublié</a></p> -->
+            <p><a href="{{ path('app_forgot_password_request') }}" style="color: white;">Mot de passe oublié</a></p>
             <p>Pas encore inscrit(e) ? <a href="{{ path('app_register') }}">M'inscrire</a></p>
         </form>
     </div>
