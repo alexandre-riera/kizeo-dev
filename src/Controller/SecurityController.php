@@ -68,7 +68,7 @@ class SecurityController extends AbstractController
                 $url = $this->generateUrl('app_reset_password', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
                 
                 $email = (new TemplatedEmail())
-                    ->from(new Address('noreply@yourdomain.com', 'Your App Name'))
+                    ->from(new Address('contact@backend-kizeo.somafi-group.fr', 'Gestion de parc'))
                     ->to($user->getEmail())
                     ->subject('Réinitialisation de votre mot de passe')
                     ->htmlTemplate('security/reset_password_email.html.twig')
