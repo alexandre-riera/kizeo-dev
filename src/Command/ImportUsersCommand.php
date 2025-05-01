@@ -69,7 +69,7 @@ class ImportUsersCommand extends Command
             $user->setLastName($userData['NOM']);
             $user->setFirstName($userData['PRENOM']);
             $user->setEmail($userData['EMAIL']);
-            $user->setRoles(['ROLE_USER']);
+            $user->setRoles(['ROLE_SOMAFI']);
             
             // Hacher le mot de passe
             $hashedPassword = $this->passwordHasher->hashPassword(
