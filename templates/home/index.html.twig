@@ -256,304 +256,305 @@
 
     </style>
     {% if app.user %}
-    {% block clientsInformations %}
-    <div class="selections-container">
-        <div class="selection-client" >
-            <!-- N'apparait que si le client n'est pas sélectionné et que l'agence n'est pas sélectionnée -->
-            {% if agenceSelected == NULL %}
-                <div>
-                    <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
-                    <form action="" method="post">
-                        <select class="form-control" id="agence-somafi" name="agenceName">
-                            <option value = "" selected> Select agence </option> 
-                            {% for agence in agenciesArray %}
-                                <option  value="{{ agence.getCode() }}" id="agence_selected">{{ agence.getAgence() }}</option>
-                            {% endfor %}
-                        </select>
-                        <button type="submit"  name ="submitAgence" class="btn btn-primary">Select Agence</button>
-                    </form>
-                </div>
-            {% endif %}
-            <!-- N'apparait que si l'agence est sélectionnée -->
-            {% if agenceSelected and clientSelected is empty %}
-                <div>
-                    <h2><span class="number"> 2 - </span>Sélectionnez maintenant votre client</h2>
-                    <h3>Agence de rattachement : {{ agenceSelected }}</h3>
-                    <label class="selection-client-label" for="client-select">Client sous contrat</label>
-                    <form action="" method="post">
-                        <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-                        <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)">
-                            <option value = "" selected> Select client </option> 
-                            {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %}
-                                {% for client in clientsGrenoble%}
-                                    <option value="{{ client }} {{ agenceSelected }}" id="client_selected_s50">{{ client }}</option>
+        {% block clientsInformations %}
+        <div class="selections-container">
+            <div class="selection-client" >
+                <!-- N'apparait que si le client n'est pas sélectionné et que l'agence n'est pas sélectionnée -->
+                {% if agenceSelected == NULL %}
+                    <div>
+                        <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
+                        <form action="" method="post">
+                            <select class="form-control" id="agence-somafi" name="agenceName">
+                                <option value = "" selected> Select agence </option> 
+                                {% for agence in agenciesArray %}
+                                    <option  value="{{ agence.getCode() }}" id="agence_selected">{{ agence.getAgence() }}</option>
                                 {% endfor %}
-                            {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
-                                {% for client in clientsMontpellier%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s100">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "ParisNord" or agenceSelected == "paris nord" or agenceSelected == "paris"  or agenceSelected == "S80"  or agenceSelected == "s80" %}
-                                {% for client in clientsParisNord%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s80">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Group" or agenceSelected == "group" or agenceSelected == "grou"  or agenceSelected == "S10"   or agenceSelected == "s10"%}
-                                {% for client in clientsGroup%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s10">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "St Etienne" or agenceSelected == "st etienne" or agenceSelected == "stetienne"  or agenceSelected == "S40"   or agenceSelected == "s40"%}
-                                {% for client in clientsStEtienne%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s40">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Lyon" or agenceSelected == "lyon" or agenceSelected == "ly"  or agenceSelected == "S60"  or agenceSelected == "s60" %}
-                                {% for client in clientsLyon%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s60">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Bordeaux" or agenceSelected == "bordeaux" or agenceSelected == "bor"  or agenceSelected == "S70"   or agenceSelected == "s70"%}
-                                {% for client in clientsBordeaux%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s70">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "HautsDeFrance" or agenceSelected == "Portland" or agenceSelected == "portland" or agenceSelected == "hdf"   or agenceSelected == "S120"   or agenceSelected == "s120"%}
-                                {% for client in clientsHautsDeFrance%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s120">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Toulouse" or agenceSelected == "toulouse" or agenceSelected == "tou"  or agenceSelected == "S130"   or agenceSelected == "s130"%}
-                                {% for client in clientsToulouse%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s130">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "SMP" or agenceSelected == "Epinal" or agenceSelected == "epinal"  or agenceSelected == "smp"  or agenceSelected == "S140"   or agenceSelected == "s140"%}
-                                {% for client in clientsEpinal%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s140">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Paca" or agenceSelected == "PACA" or agenceSelected == "brignoles" or agenceSelected == "Brignoles"   or agenceSelected == "S150"   or agenceSelected == "s150"%}
-                                {% for client in clientsPaca%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s150">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Rouen" or agenceSelected == "rouen" or agenceSelected == "rou"  or agenceSelected == "S160"   or agenceSelected == "s160"%}
-                                {% for client in clientsRouen%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s160">{{ client }}</option>
-                                {% endfor %}
-                            {% elseif agenceSelected == "Rennes" or agenceSelected == "rennes" or agenceSelected == "ren"  or agenceSelected == "S170"   or agenceSelected == "s170"%}
-                                {% for client in clientsRennes%}
-                                    <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s170">{{ client }}</option>
-                                {% endfor %}
-                            {% else %}
-                                <option value=""></option>
-                            {% endif %}
-                        </select>
-                        <button type="submit"  name ="submitClient" class="btn btn-primary">Select Client</button>
-                    </form> 
-                </div>
-            {% endif %}
-        </div>
-    </div>
-    {% if clientSelectedInformations != NULL  %}
-        <div class="row">
-            <div class="col-sm-3 mb-3 mb-sm-0">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Adresse</h4>
-                        <span></span>
-                        <span class="card-text"><b>{{ clientSelectedInformations.getRaisonSociale() }}</b></span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getAdressep1() }} </span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getCpostalp() }} </span><br>
-                        <span class="card-text">{{ clientSelectedInformations.getVillep() }} </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Infos client</h4>
-                        <span class="card-text"><b>Id client</b> : {{ clientSelectedInformations.getIdContact() }} </span><br>
-                        <span class="card-text"><b>Id société</b> : {{ clientSelectedInformations.getIdSociete() }}</span><br>
-                        <span class="card-text"><b>Agence</b> : {{ agenceSelected }}</span><br>
-                        <span class="card-text"><b>Téléphone</b> : {{ clientSelectedInformations.getTelephone() }} </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Filtres</h4>
-                        {# Formulaire de filtres avec valeurs par défaut #}
-                        {# <form id="filterForm" method="get" action="{{ path('votre_route_actuelle') }}"> #}
-                        <form id="filterForm" method="get" action="">
-                            <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
-                            <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
-                            <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
-                            <div class="form-group">
-                                <label for="clientAnneeFilter">Année :</label>
-                                <select class="form-control" id="clientAnneeFilter" name="clientAnneeFilter">
-                                    {% for annee in clientAnneeFilterArray %}
-                                        <option value="{{ annee }}" {% if clientAnneeFilter == annee %}selected{% endif %}>{{ annee }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="clientVisiteFilter">Visite :</label>
-                                <select class="form-control" id="clientVisiteFilter" name="clientVisiteFilter">
-                                    {% for visite in clientVisiteFilterArray %}
-                                        <option value="{{ visite }}" {% if clientVisiteFilter == visite %}selected{% endif %}>{{ visite }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <button type="submit" name="submitFilters" value="1" class="btn btn-primary">Filtrer</button>
+                            </select>
+                            <button type="submit"  name ="submitAgence" class="btn btn-primary">Select Agence</button>
                         </form>
                     </div>
-                </div>
-            </div>
-            <div class="col-sm-2">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Nombre d'équipements</h4>
-                        <br>
-                        <br>
-                        <p class="client-infos-nombre">{{ totalClientSelectedEquipmentsFiltered }}</p>
+                {% endif %}
+                <!-- N'apparait que si l'agence est sélectionnée -->
+                {% if agenceSelected and clientSelected is empty %}
+                    <div>
+                        <h2><span class="number"> 2 - </span>Sélectionnez maintenant votre client</h2>
+                        <h3>Agence de rattachement : {{ agenceSelected }}</h3>
+                        <label class="selection-client-label" for="client-select">Client sous contrat</label>
+                        <form action="" method="post">
+                            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
+                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)">
+                                <option value = "" selected> Select client </option> 
+                                {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %}
+                                    {% for client in clientsGrenoble%}
+                                        <option value="{{ client }} {{ agenceSelected }}" id="client_selected_s50">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
+                                    {% for client in clientsMontpellier%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s100">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "ParisNord" or agenceSelected == "paris nord" or agenceSelected == "paris"  or agenceSelected == "S80"  or agenceSelected == "s80" %}
+                                    {% for client in clientsParisNord%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s80">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Group" or agenceSelected == "group" or agenceSelected == "grou"  or agenceSelected == "S10"   or agenceSelected == "s10"%}
+                                    {% for client in clientsGroup%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s10">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "St Etienne" or agenceSelected == "st etienne" or agenceSelected == "stetienne"  or agenceSelected == "S40"   or agenceSelected == "s40"%}
+                                    {% for client in clientsStEtienne%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s40">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Lyon" or agenceSelected == "lyon" or agenceSelected == "ly"  or agenceSelected == "S60"  or agenceSelected == "s60" %}
+                                    {% for client in clientsLyon%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s60">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Bordeaux" or agenceSelected == "bordeaux" or agenceSelected == "bor"  or agenceSelected == "S70"   or agenceSelected == "s70"%}
+                                    {% for client in clientsBordeaux%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s70">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "HautsDeFrance" or agenceSelected == "Portland" or agenceSelected == "portland" or agenceSelected == "hdf"   or agenceSelected == "S120"   or agenceSelected == "s120"%}
+                                    {% for client in clientsHautsDeFrance%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s120">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Toulouse" or agenceSelected == "toulouse" or agenceSelected == "tou"  or agenceSelected == "S130"   or agenceSelected == "s130"%}
+                                    {% for client in clientsToulouse%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s130">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "SMP" or agenceSelected == "Epinal" or agenceSelected == "epinal"  or agenceSelected == "smp"  or agenceSelected == "S140"   or agenceSelected == "s140"%}
+                                    {% for client in clientsEpinal%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s140">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Paca" or agenceSelected == "PACA" or agenceSelected == "brignoles" or agenceSelected == "Brignoles"   or agenceSelected == "S150"   or agenceSelected == "s150"%}
+                                    {% for client in clientsPaca%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s150">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Rouen" or agenceSelected == "rouen" or agenceSelected == "rou"  or agenceSelected == "S160"   or agenceSelected == "s160"%}
+                                    {% for client in clientsRouen%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s160">{{ client }}</option>
+                                    {% endfor %}
+                                {% elseif agenceSelected == "Rennes" or agenceSelected == "rennes" or agenceSelected == "ren"  or agenceSelected == "S170"   or agenceSelected == "s170"%}
+                                    {% for client in clientsRennes%}
+                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s170">{{ client }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value=""></option>
+                                {% endif %}
+                            </select>
+                            <button type="submit"  name ="submitClient" class="btn btn-primary">Select Client</button>
+                        </form> 
                     </div>
-                </div>
+                {% endif %}
             </div>
         </div>
-    {%endif%}
-    {% endblock %}
-    
-    {% block modal %}
-    <!-- Modal -->
-        <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="staticBackdropLabel"><i class=" fa-solid fa-pen-to-square"></i> Édition de l'équipement</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        {% if clientSelectedInformations != NULL  %}
+            <div class="row">
+                <div class="col-sm-3 mb-3 mb-sm-0">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Adresse</h4>
+                            <span></span>
+                            <span class="card-text"><b>{{ clientSelectedInformations.getRaisonSociale() }}</b></span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getAdressep1() }} </span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getCpostalp() }} </span><br>
+                            <span class="card-text">{{ clientSelectedInformations.getVillep() }} </span>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <form action="/save/modal/equipement" method="post" class="row g-12">
-                            <input type="hidden" class="form-control" id="modal_libelle" value="" name="libelle" />
-                            <input type="hidden" class="form-control" id="modal_idContact" value="" name="idContact" />
-                            <input type="hidden" class="form-control" id="modal_idSociete" value="" name="idSociete" />
-                            <input type="hidden" class="form-control" id="modal_anomalies" value="" name="anomalies" />
-                            <input type="hidden" class="form-control" id="modal_trigrammeTech" value="" name="trigrammeTech" />
-                            <input type="hidden" class="form-control" id="modal_signatureTech" value="" name="signatureTech" />
-                            <input type="hidden" class="form-control" id="modal_ifExistDB" value="" name="ifExistDB" />
-                            <input type="hidden" class="form-control" id="modal_hauteurNacelle" value="" name="hauteurNacelle" />
-                            <input type="hidden" class="form-control" id="modal_modeleNacelle" value="" name="modeleNacelle" />
-                            <input type="hidden" class="form-control" id="modal_raisonSociale" value="" name="raisonSociale" />
-                            <input type="hidden" class="form-control" id="modal_visite" value="" name="visite" />
-                            <input type="hidden" class="form-control" id="modal_id" value="" name="id" />
-                            <div class="col-md-12">
-                                <h3>Personne modifiant l'équipement</h3>
-                                <div class="col-md-6">
-                                    <label for="nom" class="form-label">Votre nom</label>
-                                    <input type="text" class="form-control" id="modal_nom" value="" name="nom" />
+                </div>
+                <div class="col-sm-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Infos client</h4>
+                            <span class="card-text"><b>Id client</b> : {{ clientSelectedInformations.getIdContact() }} </span><br>
+                            <span class="card-text"><b>Id société</b> : {{ clientSelectedInformations.getIdSociete() }}</span><br>
+                            <span class="card-text"><b>Agence</b> : {{ agenceSelected }}</span><br>
+                            <span class="card-text"><b>Téléphone</b> : {{ clientSelectedInformations.getTelephone() }} </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Filtres</h4>
+                            {# Formulaire de filtres avec valeurs par défaut #}
+                            {# <form id="filterForm" method="get" action="{{ path('votre_route_actuelle') }}"> #}
+                            <form id="filterForm" method="get" action="">
+                                <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
+                                <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
+                                <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
+                                <div class="form-group">
+                                    <label for="clientAnneeFilter">Année :</label>
+                                    <select class="form-control" id="clientAnneeFilter" name="clientAnneeFilter">
+                                        {% for annee in clientAnneeFilterArray %}
+                                            <option value="{{ annee }}" {% if clientAnneeFilter == annee %}selected{% endif %}>{{ annee }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientVisiteFilter">Visite :</label>
+                                    <select class="form-control" id="clientVisiteFilter" name="clientVisiteFilter">
+                                        {% for visite in clientVisiteFilterArray %}
+                                            <option value="{{ visite }}" {% if clientVisiteFilter == visite %}selected{% endif %}>{{ visite }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" name="submitFilters" value="1" class="btn btn-primary">Filtrer</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <div class="card">
+                        <div class="card-body">
+                            <h4 class="card-title">Nombre d'équipements</h4>
+                            <br>
+                            <br>
+                            <p class="client-infos-nombre">{{ totalClientSelectedEquipmentsFiltered }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {%endif%}
+        {% endblock %}
+        
+        {% block modal %}
+        <!-- Modal -->
+            <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="staticBackdropLabel"><i class=" fa-solid fa-pen-to-square"></i> Édition de l'équipement</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form action="/save/modal/equipement" method="post" class="row g-12">
+                                <input type="hidden" class="form-control" id="modal_libelle" value="" name="libelle" />
+                                <input type="hidden" class="form-control" id="modal_idContact" value="" name="idContact" />
+                                <input type="hidden" class="form-control" id="modal_idSociete" value="" name="idSociete" />
+                                <input type="hidden" class="form-control" id="modal_anomalies" value="" name="anomalies" />
+                                <input type="hidden" class="form-control" id="modal_trigrammeTech" value="" name="trigrammeTech" />
+                                <input type="hidden" class="form-control" id="modal_signatureTech" value="" name="signatureTech" />
+                                <input type="hidden" class="form-control" id="modal_ifExistDB" value="" name="ifExistDB" />
+                                <input type="hidden" class="form-control" id="modal_hauteurNacelle" value="" name="hauteurNacelle" />
+                                <input type="hidden" class="form-control" id="modal_modeleNacelle" value="" name="modeleNacelle" />
+                                <input type="hidden" class="form-control" id="modal_raisonSociale" value="" name="raisonSociale" />
+                                <input type="hidden" class="form-control" id="modal_visite" value="" name="visite" />
+                                <input type="hidden" class="form-control" id="modal_id" value="" name="id" />
+                                <div class="col-md-12">
+                                    <h3>Personne modifiant l'équipement</h3>
+                                    <div class="col-md-6">
+                                        <label for="nom" class="form-label">Votre nom</label>
+                                        <input type="text" class="form-control" id="modal_nom" value="" name="nom" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="prenom" class="form-label">Votre prénom</label>
+                                        <input type="text" class="form-control" id="modal_prenom" value="" name="prenom" />
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="prenom" class="form-label">Votre prénom</label>
-                                    <input type="text" class="form-control" id="modal_prenom" value="" name="prenom" />
+                                    <label for="trigramme" class="form-label">Équipement cible</label>
+                                    <input type="text" class="form-control" placeholder="" id="modal_trigramme" value="" name="trigramme" />
+                                    <label for="codeAgence" class="form-label">Code Agence</label>
+                                    <input type="text" class="form-control" placeholder="" id="modal_codeAgence" value="" name="codeAgence" />
                                 </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="trigramme" class="form-label">Équipement cible</label>
-                                <input type="text" class="form-control" placeholder="" id="modal_trigramme" value="" name="trigramme" />
-                                <label for="codeAgence" class="form-label">Code Agence</label>
-                                <input type="text" class="form-control" placeholder="" id="modal_codeAgence" value="" name="codeAgence" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="modeFonctionnement" class="form-label">Mode de fonctionnement</label>
-                                <input type="text" class="form-control" placeholder="" id="modal_modeFonctionnement" value="" name="modefonctionnement" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="repereCiteClient" class="form-label">Repère site client</label>
-                                <input type="text" id="modal_repereSiteClient" class="form-control" placeholder="" value="" name="reperesiteclient" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="miseEnService" class="form-label">Mise en service</label>
-                                <input type="text" id="modal_miseEnService" class="form-control" placeholder="" value="" name="miseenservice" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="numeroDeSerie" class="form-label">Numéro de série</label>
-                                <input type="text" id="modal_numeroDeSerie" class="form-control" placeholder="" value="" name="numerodeserie" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="marque" class="form-label">Marque</label>
-                                <input type="text" id="modal_marque" class="form-control" placeholder="" value="" name="marque" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="hauteur" class="form-label">Hauteur</label>
-                                <input type="text" id="modal_hauteur" class="form-control" placeholder="" value="" name="hauteur" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="Largeur" class="form-label">Largeur</label>
-                                <input type="text" id="modal_largeur" class="form-control" placeholder="" value="" name="largeur" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="longueur" class="form-label">Longueur</label>
-                                <input type="text" id="modal_longueur" class="form-control" placeholder="" value="" name="longueur" />
-                            </div>
-                            <div class="col-md-12">
-                                <label for="plaqueSignaletique" class="form-label">Plaque signalétique</label>
-                                <input type="text" id="modal_plaqueSignaletique" class="form-control" placeholder="" value="" name="plaquesignaletique"/>
-                            </div>
-                            <div class="col-12">
-                                <label for="etat" class="form-label">État de l'équipement</label>
-                                <textarea id="modal_etat" class="form-control " value="" name="etat" ></textarea>
-                            </div>
-                            <div class="col-6">
-                                <label for="dateDerniereVisite" class="form-label">Dernière visite de maintenance</label>
-                                <input type="text" id="modal_derniereVisite"class="form-control" placeholder="" value="" name="dernierevisitedemaintenance" />
-                            </div>
-                            <div class="col-6">
-                                <label for="statut-actuel" class="form-label">Statut actuel de l'équipement</label>
-                                <input type="text" id="modal_statut" class="form-control" placeholder="" value="" name="oldstatut" />
-                            </div>
-                            <div class="col-6">
-                                <label for="statut" class="form-label">Statut de l'équipement</label>
-                                <select id="modal_prochain_statut" class="form-select"  name="newstatutclient">
-                                    <option selected>Choose...</option>
-                                    <option value="Vert">Vert</option>
-                                    <option value="Orange">Orange</option>
-                                    <option value="Rouge">Rouge</option>
-                                    <option value="A l'arrêt">A l'arrêt</option>
-                                    <option value="Innaccessible">Inaccessible</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="carnetEntretien" class="form-label">Présence carnet d'entretien</label>
-                                <input type="text" id="modal_carnetEntretien" class="form-control" placeholder="" value="" name="carnetentretien" />
-                            </div>
-                            <div class="col-md-6">
-                                <label for="statutConformite" class="form-label">Statut conformité</label>
-                                <input type="text" id="modal_statutConformite" class="form-control" placeholder="" value="" name="statutconformite" />
-                            </div>
-                            
-                            <button type="submit" id="saveEquipmentFromModal" class="btn btn-primary" name="saveEquipmentFromModal">Enregistrer</button>
-                        </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+                                <div class="col-md-6">
+                                    <label for="modeFonctionnement" class="form-label">Mode de fonctionnement</label>
+                                    <input type="text" class="form-control" placeholder="" id="modal_modeFonctionnement" value="" name="modefonctionnement" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="repereCiteClient" class="form-label">Repère site client</label>
+                                    <input type="text" id="modal_repereSiteClient" class="form-control" placeholder="" value="" name="reperesiteclient" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="miseEnService" class="form-label">Mise en service</label>
+                                    <input type="text" id="modal_miseEnService" class="form-control" placeholder="" value="" name="miseenservice" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="numeroDeSerie" class="form-label">Numéro de série</label>
+                                    <input type="text" id="modal_numeroDeSerie" class="form-control" placeholder="" value="" name="numerodeserie" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="marque" class="form-label">Marque</label>
+                                    <input type="text" id="modal_marque" class="form-control" placeholder="" value="" name="marque" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="hauteur" class="form-label">Hauteur</label>
+                                    <input type="text" id="modal_hauteur" class="form-control" placeholder="" value="" name="hauteur" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="Largeur" class="form-label">Largeur</label>
+                                    <input type="text" id="modal_largeur" class="form-control" placeholder="" value="" name="largeur" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="longueur" class="form-label">Longueur</label>
+                                    <input type="text" id="modal_longueur" class="form-control" placeholder="" value="" name="longueur" />
+                                </div>
+                                <div class="col-md-12">
+                                    <label for="plaqueSignaletique" class="form-label">Plaque signalétique</label>
+                                    <input type="text" id="modal_plaqueSignaletique" class="form-control" placeholder="" value="" name="plaquesignaletique"/>
+                                </div>
+                                <div class="col-12">
+                                    <label for="etat" class="form-label">État de l'équipement</label>
+                                    <textarea id="modal_etat" class="form-control " value="" name="etat" ></textarea>
+                                </div>
+                                <div class="col-6">
+                                    <label for="dateDerniereVisite" class="form-label">Dernière visite de maintenance</label>
+                                    <input type="text" id="modal_derniereVisite"class="form-control" placeholder="" value="" name="dernierevisitedemaintenance" />
+                                </div>
+                                <div class="col-6">
+                                    <label for="statut-actuel" class="form-label">Statut actuel de l'équipement</label>
+                                    <input type="text" id="modal_statut" class="form-control" placeholder="" value="" name="oldstatut" />
+                                </div>
+                                <div class="col-6">
+                                    <label for="statut" class="form-label">Statut de l'équipement</label>
+                                    <select id="modal_prochain_statut" class="form-select"  name="newstatutclient">
+                                        <option selected>Choose...</option>
+                                        <option value="Vert">Vert</option>
+                                        <option value="Orange">Orange</option>
+                                        <option value="Rouge">Rouge</option>
+                                        <option value="A l'arrêt">A l'arrêt</option>
+                                        <option value="Innaccessible">Inaccessible</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="carnetEntretien" class="form-label">Présence carnet d'entretien</label>
+                                    <input type="text" id="modal_carnetEntretien" class="form-control" placeholder="" value="" name="carnetentretien" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="statutConformite" class="form-label">Statut conformité</label>
+                                    <input type="text" id="modal_statutConformite" class="form-control" placeholder="" value="" name="statutconformite" />
+                                </div>
+                                
+                                <button type="submit" id="saveEquipmentFromModal" class="btn btn-primary" name="saveEquipmentFromModal">Enregistrer</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" >Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
+        {% endblock %}
+        {# Conteneur pour la table des équipements (sera mis à jour par AJAX) #}
+        <div id="equipment-table-container">
+            {% include 'components/equipment_table.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered} %}
         </div>
-    {% endblock %}
-    {# Conteneur pour la table des équipements (sera mis à jour par AJAX) #}
-    <div id="equipment-table-container">
-        {% include 'components/equipment_table.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered} %}
-    </div>
-    
-    {% else %}
-    <header class="header">
-        <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
-    </header>
-    <nav class="navbar bg-body-tertiary">
-        <div class="container">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a href="{{ path('app_login') }}" class="navbar-brand" >
-                        <i class="fa-solid fa-user"></i>Se Connecter
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+        
+        {% else %}
+            <header class="header">
+                <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
+            </header>
+            <nav class="navbar bg-body-tertiary">
+                <div class="container">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="{{ path('app_login') }}" class="navbar-brand" >
+                                <i class="fa-solid fa-user"></i>Se Connecter
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+    {% endif %}
     <script>
         $(document).ready(function() {
             // Intercepter la soumission du formulaire
@@ -581,5 +582,4 @@
             });
         });
     </script>
-    {% endif %}
 {% endblock %}
