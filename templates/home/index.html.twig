@@ -267,6 +267,7 @@
         }
 
     </style>
+    {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
         {% block clientsInformations %}
         <div class="selections-container">
             <div class="selection-client" >
@@ -549,6 +550,22 @@
         <div id="equipment-table-container">
             {% include 'components/equipment_table.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered} %}
         </div>
+        {% else %}
+            <header class="header">
+                <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
+            </header>
+            <nav class="navbar bg-body-tertiary">
+                <div class="container">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="{{ path('app_login') }}" class="navbar-brand" >
+                                <i class="fa-solid fa-user"></i>Se Connecter
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+    {% endif %}
     <script>
         $(document).ready(function() {
             // Intercepter la soumission du formulaire
