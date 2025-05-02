@@ -36,6 +36,11 @@
         {% block header %}
             <header class="header">
                 <h1>Gestion de parc équipements</h1>
+                {% if app.user %}
+                    <h2>Bonjour {{ app.user.firstName }}</h2>
+                {% else %}
+                    <h2>Bonjour Invité</h2>
+                {% endif %}
                 <h2>Bonjour {{ app.user.firstName }}</h2>
             </header>
         {% endblock %}
