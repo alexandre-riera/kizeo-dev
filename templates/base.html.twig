@@ -11,7 +11,10 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
         {% block stylesheets %}{% endblock %}
-        {% block javascripts %}{% endblock %}
+        {% block javascripts %}
+        {# Bootstrap JS #}
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        {% endblock %}
     </head>
     {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
         <body>
@@ -102,8 +105,6 @@
                 <p class="text-center">© 2025 Gestion de parc équipements</p>
             </footer>
 
-            {# Bootstrap JS #}
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         </body>
     {% endif %}
 </html>
