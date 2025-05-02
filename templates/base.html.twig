@@ -31,11 +31,6 @@
     </head>
     {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
         <body>
-            <style>
-                body{
-                    background-color: rgb(6, 22, 37);
-                }
-            </style>
             {% block header %}
                 <header class="header">
                     <h1>Gestion de parc équipements</h1>
@@ -104,21 +99,6 @@
                     {% endfor %}
                 {% endfor %}
             </div>
-            {% else %}
-                <header class="header">
-                    <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
-                </header>
-                <nav class="navbar bg-body-tertiary">
-                    <div class="container">
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item">
-                                <a href="{{ path('app_login') }}" class="navbar-brand" >
-                                    <i class="fa-solid fa-user"></i>Se Connecter
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </nav>
             
             <main class="container mt-4">
                 {% block body %}{% endblock %}
