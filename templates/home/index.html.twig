@@ -21,31 +21,14 @@
         <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
         <script src="/public/js/filterFunction.js"></script>
         <script src="/public/js/editEquipmentInModal.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Sélectionner le bouton qui déclenche le collapse
-            var collapseButton = document.querySelector('[data-bs-target="#collapseUsers"]');
-            
-            if (collapseButton) {
-                // Ajouter un écouteur d'événements de clic
-                collapseButton.addEventListener('click', function() {
-                    // Vérifier si le collapse est actuellement ouvert
-                    var isExpanded = this.getAttribute('aria-expanded') === 'true';
-                    
-                    // Mettre à jour l'attribut aria-expanded
-                    this.setAttribute('aria-expanded', !isExpanded);
-                    
-                    // Trouver l'élément collapse
-                    var collapseElement = document.querySelector('#collapseUsers');
-                    
-                    // Basculer la classe 'show'
-                    if (collapseElement) {
-                        collapseElement.classList.toggle('show');
-                    }
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+                var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                    return new bootstrap.Dropdown(dropdownToggleEl)
                 });
-            }
-        });
-    </script>
+            });
+        </script>
 {% endblock %}
 {% block body %}
     <style>
