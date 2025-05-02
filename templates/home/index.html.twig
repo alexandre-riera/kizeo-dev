@@ -308,6 +308,21 @@
                                     <li><a class="dropdown-item" href="{{ path('app_user_new') }}">Nouvel utilisateur</a></li>
                                 </ul>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" data-bs-toggle="collapse" href="#collapseUsers" role="button" aria-expanded="false" aria-controls="collapseUsers">
+                                    Gestion des utilisateurs
+                                </a>
+                                <div class="collapse" id="collapseUsers">
+                                    <ul class="nav flex-column">
+                                        <li class="nav-item">
+                                            <a class="nav-link ms-3" href="{{ path('app_user_index') }}">Liste</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link ms-3" href="{{ path('app_user_new') }}">Nouvel utilisateur</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </li>
                         {% endif %}
                     </ul>
                     
