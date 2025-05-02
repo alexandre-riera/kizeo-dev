@@ -3,6 +3,29 @@
 
 {% block title %}Modifier l'utilisateur{% endblock %}
 
+{% block stylesheets %}
+    <!-- our project just needs Font Awesome Solid + Brands it's FREE icons-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    {# <link href="https://www.dev.backend-kizeo.somafi-group.fr/fontawesome/css/fontawesome.min.css" rel="stylesheet" />
+    <link href="https://www.dev.backend-kizeo.somafi-group.fr/fontawesome/css/brands.min.css" rel="stylesheet" />
+    <link href="https://www.dev.backend-kizeo.somafi-group.fr/fontawesome/css/solid.min.css" rel="stylesheet" /> #}
+{% endblock %}
+{% block javascripts %}
+        <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
+        <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
+        <script src="/public/js/filterFunction.js"></script>
+        <script src="/public/js/editEquipmentInModal.js"></script>
+{% endblock %}
+    
+{% block breadcrumb %}
+    <li class="breadcrumb-item"><a href="{{ path('app_user_index') }}">Liste des utilisateurs</a></li>
+    <li class="breadcrumb-item active">Modifier l'utilisateur</li>
+{% endblock %}
 {% block body %}
     <h1>Modifier l'utilisateur</h1>
 
