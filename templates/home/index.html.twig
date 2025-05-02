@@ -17,18 +17,9 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/extensions/filter-control/bootstrap-table-filter-control.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
         <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
         <script src="/public/js/filterFunction.js"></script>
         <script src="/public/js/editEquipmentInModal.js"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-                var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-                    return new bootstrap.Dropdown(dropdownToggleEl)
-                });
-            });
-        </script>
 {% endblock %}
 {% block body %}
     <style>
@@ -305,13 +296,12 @@
                                 <i class="fa-solid fa-file-contract"></i> Nouveau contrat
                             </a>
                         </li>
-                        
                         {% if is_granted('ROLE_ADMIN') %}
                             <li class="nav-item">
-                                <button class="btn nav-link border-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
+                                <a class="nav-link d-flex align-items-center" data-bs-toggle="collapse" href="#collapseUsers" role="button" aria-expanded="false" aria-controls="collapseUsers">
                                     <span>Gestion des utilisateurs</span>
                                     <i class="ms-1 fa-solid fa-caret-down"></i>
-                                </button>
+                                </a>
                                 <div class="collapse" id="collapseUsers">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
