@@ -25,8 +25,8 @@
             <script src="https://kit.fontawesome.com/722abd2107.js" crossorigin="anonymous"></script>
         {% endblock %}
     </head>
-    {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
-        <body>
+    <body>
+        {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
             {% block header %}
                 <header class="header">
                     <h1>Gestion de parc équipements</h1>
@@ -99,12 +99,26 @@
             <main class="container mt-4">
                 {% block body %}{% endblock %}
             </main>
-
-            <footer class="container mt-5 py-3 border-top">
-                <p class="text-center">© 2025 Gestion de parc équipements</p>
-            </footer>
-        </body>
-    {% endif %}
+            {% else %}
+            <header class="header">
+                <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
+            </header>
+            <nav class="navbar bg-body-tertiary">
+                <div class="container">
+                    <ul class="navbar-nav ml-auto">
+                        <li class="nav-item">
+                            <a href="{{ path('app_login') }}" class="navbar-brand" >
+                                <i class="fa-solid fa-user"></i>Se Connecter
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        {% endif %}
+        <footer class="container mt-5 py-3 border-top">
+            <p class="text-center">© 2025 Gestion de parc équipements</p>
+        </footer>
+    </body>
 </html>
 {# Fin du fichier base.html.twig #}
 {# Ce fichier sert de modèle de base pour toutes les pages de l'application. #}
