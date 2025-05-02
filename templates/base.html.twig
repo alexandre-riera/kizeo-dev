@@ -104,14 +104,6 @@
                     {% endfor %}
                 {% endfor %}
             </div>
-            
-            <main class="container mt-4">
-                {% block body %}{% endblock %}
-            </main>
-
-            <footer class="container mt-5 py-3 border-top">
-                <p class="text-center">© 2025 Gestion de parc équipements</p>
-            </footer>
             {% else %}
                 <header class="header">
                     <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
@@ -127,6 +119,14 @@
                         </ul>
                     </div>
                 </nav>
+            
+            <main class="container mt-4">
+                {% block body %}{% endblock %}
+            </main>
+
+            <footer class="container mt-5 py-3 border-top">
+                <p class="text-center">© 2025 Gestion de parc équipements</p>
+            </footer>
         </body>
     {% endif %}
 </html>
