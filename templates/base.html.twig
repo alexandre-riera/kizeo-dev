@@ -26,6 +26,13 @@
         {% endblock %}
     </head>
     <body>
+        <style>
+            body{
+                background-color: rgb(6, 22, 37);
+                color: white;
+                padding: 80px;
+            }
+        </style>
         {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
             {% block header %}
                 <header class="header">
