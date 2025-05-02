@@ -299,15 +299,6 @@
                         </li>
                         
                         {% if is_granted('ROLE_ADMIN') %}
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Gestion des utilisateurs
-                                </a>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="{{ path('app_user_index') }}">Liste</a></li>
-                                    <li><a class="dropdown-item" href="{{ path('app_user_new') }}">Nouvel utilisateur</a></li>
-                                </ul>
-                            </li>
                             <li class="nav-item">
                                 <button class="btn nav-link border-0 d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#collapseUsers" aria-expanded="false" aria-controls="collapseUsers">
                                     <span>Gestion des utilisateurs</span>
