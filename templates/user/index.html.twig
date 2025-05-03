@@ -32,6 +32,10 @@
         .nav-link {
             color:black
         }
+        .header {
+            position: sticky;
+            top: 0;
+        }
     </style>
     {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
     {% block header %}
@@ -120,15 +124,15 @@
     <div class="card">
         <div class="card-body">
             <div class="table-responsive">
-                <table data-fixed-scroll="true" class="table table-striped table-hover">
-                    <thead>
+                <table class="table table-striped table-hover">
+                    <thead style="position:sticky; top: 0;">
                         <tr>
-                            <th>ID</th>
-                            <th>Nom</th>
-                            <th>Prénom</th>
-                            <th>E-mail</th>
-                            <th>Rôle</th>
-                            <th>Actions</th>
+                            <th class="header" scope="col">ID</th>
+                            <th class="header" scope="col">Nom</th>
+                            <th class="header" scope="col">Prénom</th>
+                            <th class="header" scope="col">E-mail</th>
+                            <th class="header" scope="col">Rôle</th>
+                            <th class="header" scope="col">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
