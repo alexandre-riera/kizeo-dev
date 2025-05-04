@@ -18,7 +18,7 @@ class KuehneRepository{
 
     public function getListClientFromKizeoById(int $id, $entityManager, $contactsCCRepository){
         
-        $allContactsCC = $contactsCCRepository->findall(); // 39 results from BDD
+        $allContactsCC = $contactsCCRepository->findall(); // 64 results from BDD
         $listClientsKuehneFromKizeo = []; // They are from KIZEO with his id_contact, raison_sociale and code_agence
         $kuehneContactsFromBdd = []; // They are from BDD
         $kizeoContactsSplitted = []; // [0][1] Raison sociale, [2][3] Code postal, [4][5] ville, [6][7] id contact, [8][9] Code agence, [10][11] id societe
