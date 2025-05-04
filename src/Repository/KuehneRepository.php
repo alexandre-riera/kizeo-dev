@@ -92,7 +92,7 @@ class KuehneRepository{
                 $contactKuehne = new ContactsCC();
                 $contactKuehne->setIdContact($kizeoKuehne->id_contact);
                 $contactKuehne->setRaisonSocialeContact($kizeoKuehne->raison_sociale);
-                $contactKuehne->setCodeAgence($kizeoKuehne->raison_sociale);
+                $contactKuehne->setCodeAgence($kizeoKuehne->code_agence);
                 $entityManager->persist($contactKuehne);
                 $entityManager->flush();
             }
