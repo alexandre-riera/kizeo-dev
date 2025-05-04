@@ -50,51 +50,22 @@ class KuehneController extends AbstractController
     {   
         // ---------------------------------------------------------------------- GET KUEHNE CONTACTS KIZEO BY AGENCY
         // IMPORTANT  Return $listClientsKuehneFromKizeo array filled with ContactsCC object structured with his id_contact, raison_sociale and code_agence
-        $clientsKuehneStEtienne = $kuehneRepository->getListClientFromKizeoById(427441, $entityManager, $contactsCCRepository);
-        $clientsKuehneGrenoble = $kuehneRepository->getListClientFromKizeoById(409466, $entityManager, $contactsCCRepository);
-        $clientsKuehneLyon = $kuehneRepository->getListClientFromKizeoById(427443, $entityManager, $contactsCCRepository);
-        $clientsKuehneParisNord = $kuehneRepository->getListClientFromKizeoById(421994, $entityManager, $contactsCCRepository);
-        $clientsKuehneMontpellier = $kuehneRepository->getListClientFromKizeoById(423852, $entityManager, $contactsCCRepository);
-        $clientsKuehneHautsDeFrance = $kuehneRepository->getListClientFromKizeoById(434249, $entityManager, $contactsCCRepository);
-        $clientsKuehneEpinal = $kuehneRepository->getListClientFromKizeoById(427681, $entityManager, $contactsCCRepository);
-        $clientsKuehneRouen = $kuehneRepository->getListClientFromKizeoById(427677, $entityManager, $contactsCCRepository);
-        
-        // ---------------------------------------------------------------------- GET KUEHNE CONTACTS GESTAN BY AGENCY
-        $clientsKuehneGroup =  $cache->get('client_group', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $clients = $entityManager->getRepository(ContactS10::class)->findAll();
-            return $clients;
-        });
-        $clientsKuehneBordeaux =  $cache->get('client_bordeaux', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $clients = $entityManager->getRepository(ContactS70::class)->findAll();
-            return $clients;
-        });
-        $clientsKuehneToulouse =  $cache->get('client_toulouse', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $clients = $entityManager->getRepository(ContactS130::class)->findAll();
-            return $clients;
-        });
-        $clientsKuehnePaca =  $cache->get('client_paca', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $clients = $entityManager->getRepository(ContactS150::class)->findAll();
-            return $clients;
-        });
-        $clientsKuehneRennes =  $cache->get('client_rennes', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $clients = $entityManager->getRepository(ContactS170::class)->findAll();
-            return $clients;
-        });
-        
-        $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900 ); // 15 minutes in cache
-            $agencies = $entityManager->getRepository(Agency::class)->findAll();
-            return $agencies;
-        });
+        $clientsKuehneGroup = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_GROUP'], $entityManager, $contactsCCRepository);
+        $clientsKuehneStEtienne = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_ST_ETIENNE'], $entityManager, $contactsCCRepository);
+        $clientsKuehneGrenoble = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_GRENOBLE'], $entityManager, $contactsCCRepository);
+        $clientsKuehneLyon = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_LYON'], $entityManager, $contactsCCRepository);
+        $clientsKuehneBordeaux = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_BORDEAUX'], $entityManager, $contactsCCRepository);
+        $clientsKuehneParisNord = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_PARIS_NORD'], $entityManager, $contactsCCRepository);
+        $clientsKuehneMontpellier = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_MONTPELLIER'], $entityManager, $contactsCCRepository);
+        $clientsKuehneHautsDeFrance = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_HAUTS_DE_FRANCE'], $entityManager, $contactsCCRepository);
+        $clientsKuehneToulouse = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_TOULOUSE'], $entityManager, $contactsCCRepository);
+        $clientsKuehneEpinal = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_EPINAL'], $entityManager, $contactsCCRepository);
+        $clientsKuehnePaca = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_PACA'], $entityManager, $contactsCCRepository);
+        $clientsKuehneRouen = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_ROUEN'], $entityManager, $contactsCCRepository);
+        // $clientsKuehneRennes = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_RENNES'], $entityManager, $contactsCCRepository);  
 
         // Merge all contacts arrays
-        $allKuehneContactsFromFrance = array_merge($clientsKuehneStEtienne, $clientsKuehneGrenoble, $clientsKuehneLyon, $clientsKuehneParisNord, $clientsKuehneMontpellier, $clientsKuehneHautsDeFrance, $clientsKuehneEpinal, $clientsKuehneRouen);
-
+        $allKuehneContactsFromFrance = array_merge($clientsKuehneGroup, $clientsKuehneStEtienne, $clientsKuehneGrenoble, $clientsKuehneLyon, $clientsKuehneBordeaux, $clientsKuehneParisNord, $clientsKuehneMontpellier, $clientsKuehneHautsDeFrance, $clientsKuehneToulouse, $clientsKuehneEpinal, $clientsKuehnePaca, $clientsKuehneRouen, $clientsKuehneRennes);
         // GET CLIENT SELECTED INFORMATION BY AGENCY BY HIS RAISON_SOCIALE
         $clientSelectedInformations  = "";
         // GET CLIENT SELECTED EQUIPMENTS BY AGENCY BY HIS ID_CONTACT
@@ -146,6 +117,7 @@ class KuehneController extends AbstractController
         $visiteDuClient = "";
 
         if ($clientSelected != NULL) {
+            $agenceSelected = trim($agenceSelected);
             switch ($agenceSelected) {
                 case 'S10':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $idClientSelected]);
@@ -160,34 +132,7 @@ class KuehneController extends AbstractController
                         }
                     }
                     break;
-                case ' S10':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
                 case 'S40':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S40':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -214,34 +159,7 @@ class KuehneController extends AbstractController
                     }
                     // PUT HERE THE FUNCTION TO GET CLIENTSELECTED PDF
                     break;
-                case ' S50':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    // PUT HERE THE FUNCTION TO GET CLIENTSELECTED PDF
-                    break;
                 case 'S60':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S60':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -267,33 +185,7 @@ class KuehneController extends AbstractController
                         }
                     }
                     break;
-                case ' S70':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
                 case 'S80':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S80':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -319,33 +211,7 @@ class KuehneController extends AbstractController
                         }
                     }
                     break;
-                case ' S100':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
                 case 'S120':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S120':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -371,33 +237,7 @@ class KuehneController extends AbstractController
                         }
                     }
                     break;
-                case ' S130':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
                 case 'S140':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S140':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -423,33 +263,7 @@ class KuehneController extends AbstractController
                         }
                     }
                     break;
-                case ' S150':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
                 case 'S160':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                case ' S160':
                     $clientSelectedInformations  =  $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $idClientSelected]);
                     $clientSelectedEquipments  = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                     
@@ -474,26 +288,11 @@ class KuehneController extends AbstractController
                             $visiteDuClient =  $equipment->getVisite();
                         }
                     }
-                    break;
-                case ' S170':
-                    $clientSelectedInformations  =  $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $idClientSelected]);
-                    $clientSelectedEquipments  = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                    
-                    
-                    foreach ($clientSelectedEquipments as $equipment) {
-                        if ($equipment->getDateEnregistrement() != NULL) {
-                            array_push($clientSelectedEquipmentsFiltered, $equipment);
-                            $directoriesLists = $kuehneRepository->getListOfPdf($clientSelected, $equipment->getVisite(), $agenceSelected);
-                            $visiteDuClient =  $equipment->getVisite();
-                        }
-                    }
-                    break;
-                
+                    break;                
                 default:
                     break;
             }
         }
-        $agenceSelected = trim($agenceSelected);
 
         return $this->render('kuehne/index.html.twig', [
             'clientsGroup' => $clientsKuehneGroup,  // Array of Contacts
@@ -508,10 +307,10 @@ class KuehneController extends AbstractController
             'clientsEpinal' => $clientsKuehneEpinal,  // Array of Contacts
             'clientsPaca' => $clientsKuehnePaca,  // Array of Contacts
             'clientsRouen' => $clientsKuehneRouen,  // Array of Contacts
-            'clientsRennes' => $clientsKuehneRennes,  // Array of Contacts
+            // 'clientsRennes' => $clientsKuehneRennes,  // Array of Contacts
             'clientSelected' => $clientSelected, // String
             'agenceSelected' => $agenceSelected, // String
-            'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)
+            // 'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)
             'clientSelectedInformations'  => $clientSelectedInformations, // Selected Entity Contact
             'clientSelectedEquipmentsFiltered'  => $clientSelectedEquipmentsFiltered, // Selected Entity Equipement where last visit is superior 3 months ago
             'totalClientSelectedEquipmentsFiltered'  => count($clientSelectedEquipmentsFiltered), // Total Selected Entity Equipement where last visit is superior 3 months ago
