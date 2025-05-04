@@ -65,7 +65,7 @@ class KuehneController extends AbstractController
         // $clientsKuehneRennes = $kuehneRepository->getListClientFromKizeoById($_ENV['PROD_CLIENTS_RENNES'], $entityManager, $contactsCCRepository);  
 
         // Merge all contacts arrays
-        $allKuehneContactsFromFrance = array_merge($clientsKuehneGroup, $clientsKuehneStEtienne, $clientsKuehneGrenoble, $clientsKuehneLyon, $clientsKuehneBordeaux, $clientsKuehneParisNord, $clientsKuehneMontpellier, $clientsKuehneHautsDeFrance, $clientsKuehneToulouse, $clientsKuehneEpinal, $clientsKuehnePaca, $clientsKuehneRouen, $clientsKuehneRennes);
+        $allKuehneContactsFromFrance = array_merge($clientsKuehneGroup, $clientsKuehneStEtienne, $clientsKuehneGrenoble, $clientsKuehneLyon, $clientsKuehneBordeaux, $clientsKuehneParisNord, $clientsKuehneMontpellier, $clientsKuehneHautsDeFrance, $clientsKuehneToulouse, $clientsKuehneEpinal, $clientsKuehnePaca, $clientsKuehneRouen);
         // GET CLIENT SELECTED INFORMATION BY AGENCY BY HIS RAISON_SOCIALE
         $clientSelectedInformations  = "";
         // GET CLIENT SELECTED EQUIPMENTS BY AGENCY BY HIS ID_CONTACT
