@@ -52,7 +52,7 @@ class KuehneRepository{
                 // On push et concatene avec un "-" l'id contact, la raison sociale et le code agence
                 // EX : 3239-KUEHNE  ANDREZIEUX-S40
                 // array_push($listClientsKuehneFromKizeo, $clientFiltered[6] . "-" . $clientFiltered[0] . " - " . $clientFiltered[8]);
-                
+                dump($clientFiltered);
                 // 3) We create a new object, client, with his id_contact, raison_sociale and code_agence
                 // We push him in $listClientKuehne array
                 $clientFromKizeoShortened = new stdClass;
