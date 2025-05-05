@@ -36,7 +36,7 @@ final class UserController extends AbstractController
             // Hacher le mot de passe
             $hashedPassword = $passwordHasher->hashPassword(
                 $user,
-                $form->get('plainPassword')->getData()
+                $form->get('password')->getData()
             );
             $user->setPassword($hashedPassword);
             
