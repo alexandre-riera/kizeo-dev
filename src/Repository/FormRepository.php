@@ -435,7 +435,6 @@ class FormRepository extends ServiceEntityRepository
             // Everytime a new resume is read, we store its value in variable resume_equipement_supplementaire
             // $resume_equipement_supplementaire = array_unique(preg_split("/[:|]/", $additionalEquipment['equipement']['columns']));
             // $resume_equipement_supplementaire = $additionalEquipment['equipement']['columns'];
-            // dump($resume_equipement_supplementaire);
             /**
              * If resume_equipement_supplementaire value is NOT in  $allEquipementsResumeInDatabase array
              * Method used : in_array(search, inThisArray, type) 
@@ -581,7 +580,6 @@ class FormRepository extends ServiceEntityRepository
 
             $equipement->setEnMaintenance(true);
             
-            dump("Les équipements de " . $equipements['nom_client']['value'] . " ont été sauvegardés en BDD");
             
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
@@ -725,7 +723,6 @@ class FormRepository extends ServiceEntityRepository
     public function uploadListAgencyWithNewRecordsOnKizeo($dataOfFormList, $key, $agencyEquipments, $agencyListId){
         
         foreach ($dataOfFormList[$key]['contrat_de_maintenance']['value'] as $equipment) {
-            dump('Équipement remonté avant la mise à jour de la liste : ' . $equipment);
             // A remplacer  "SEC01|Porte sectionnelle|2005|206660A02|nc|A RENSEIGNER|A RENSEIGNER||1533|1533|S50"
             // A remplacer  "Libelle equipement|Type equipement|Année|N° de série|Marque|Hauteur|Largeur|Repère site client|Id client|Id societe|Code agence"
             $columnsUpdate = 
@@ -751,7 +748,6 @@ class FormRepository extends ServiceEntityRepository
             '|' . 
             $dataOfFormList[$key]['id_agence']['value'] // Code agence
             ;
-            dump('Column updates avant la mise à jour de la liste : ' . $columnsUpdate);
             /* Le double antislash correspond à 1 antislash échappé avec un autre
              $equipment['equipement']['path']  =  à LEROY MERLIN VALENCE LOGISITQUE\CE1 auquel on ajoute 1 antislash + les update au dessus
              \NIV28|Niveleur|A RENSEIGNER|A RENSEIGNER|A RENSEIGNER|2200|2400||6257|5947|S50
@@ -764,10 +760,9 @@ class FormRepository extends ServiceEntityRepository
                 array_push($agencyEquipments, $theEquipment);
             }
         }
-        dump(count($agencyEquipments));  // Sans le if on a 5797 équipements sinon avec le if on reste à 5710 équipements
         // J'enlève les doublons de la liste des equipements kizeo dans le tableau $agencyEquipments
         $arrayEquipmentsToPutToKizeo = array_unique($agencyEquipments); // array_unique n'enlève aucun équipement de la liste
-        dump(count($arrayEquipmentsToPutToKizeo));
+        
 
         Request::enableHttpMethodParameterOverride(); // <-- add this line
         $client = new Client();
@@ -827,8 +822,6 @@ class FormRepository extends ServiceEntityRepository
                 $result = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
                 return $result;
             });
-            // dump($structuredEquipements);
-            // dump($kizeoEquipments);
             // Comparer et mettre à jour la liste Kizeo
             $this->compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo);
             
@@ -1198,7 +1191,6 @@ class FormRepository extends ServiceEntityRepository
                                 break;
             
                             default:
-                                dump('Nom en erreur:   ' . $OneFormMaintenanceUnread['nom_client']['value']);
                                 break;
                         }
                     }
@@ -1225,7 +1217,6 @@ class FormRepository extends ServiceEntityRepository
                                 break;
             
                             default:
-                                dump('Nom en erreur:   ' . $OneFormMaintenanceUnread['nom_client']['value']);
                                 break;
                         }
                     }
@@ -1252,7 +1243,6 @@ class FormRepository extends ServiceEntityRepository
                                 break;
             
                             default:
-                                dump('Nom en erreur:   ' . $OneFormMaintenanceUnread['nom_client']['value']);
                                 break;
                         }                        
                     }
@@ -1279,7 +1269,6 @@ class FormRepository extends ServiceEntityRepository
                                 break;
             
                             default:
-                                dump('Nom en erreur:   ' . $OneFormMaintenanceUnread['nom_client']['value']);
                                 break;
                         }
                         
@@ -1307,12 +1296,10 @@ class FormRepository extends ServiceEntityRepository
                                 break;
             
                             default:
-                                dump('Nom en erreur:   ' . $OneFormMaintenanceUnread['nom_client']['value']);
                                 break;
                         }
                         
                     }else{
-                        dump("Ce formulaire n\'est pas un formulaire de maintenance" );
                     }
                 }
                 // -------------------------------------------            MARK FORM AS READ !!!
@@ -1338,7 +1325,6 @@ class FormRepository extends ServiceEntityRepository
 
     
         }
-        dump("Le PDF a bien été sauvegardé");
     }
 
 
@@ -1527,7 +1513,6 @@ class FormRepository extends ServiceEntityRepository
                     break;
                 
                 default:
-                    dump('Le code agence n\'est pas prévu dans le code');
                     break;
             }
             
@@ -1641,7 +1626,6 @@ class FormRepository extends ServiceEntityRepository
                         break;
     
                     default:
-                        dump('Nom en erreur:   ' . $allFormsPortailsArray[$key]['liste_clients']);
                         break;
                 }
             }
@@ -1764,7 +1748,6 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setPhotoMarquageAuSol2($additionalEquipment['photo_marquage_au_sol_']['value']);
             $equipement->setPhoto2($additionalEquipment['photo2']['value']);
             
-            dump("Les photos de " . $additionalEquipment['equipement']['value'] . " ont été sauvegardés en BDD");
             
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
@@ -1776,13 +1759,11 @@ class FormRepository extends ServiceEntityRepository
     }
 
     public function getJpgPictureFromStringName($value, $entityManager){
-        dump($value);
         $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2];
         
         $the_picture = [];
         
         foreach ($picturesNames as $pictureName) {
-            dump('Je suis picture name ligne 1870 : ' . $pictureName);
             if (!str_contains($pictureName, ", ")) {
                 if ($pictureName != "" || $pictureName != null) {
                     $response = $this->client->request(
@@ -1801,7 +1782,6 @@ class FormRepository extends ServiceEntityRepository
             else{
                 $photosSupplementaires = explode(", ", $pictureName);
                 foreach ($photosSupplementaires as $photo) {
-                    // dump('Je suis la photo supplémentaire ligne 1889 : ' . $photo);
                     // Call kizeo url to get jpeg here and encode the result
                     $response = $this->client->request(
                         'GET',
@@ -1832,7 +1812,6 @@ class FormRepository extends ServiceEntityRepository
                     $picturesdataObject->picture = $pictureEncoded;
                     $picturesdataObject->update_time = $value->update_time;
                     array_push($picturesdata, $picturesdataObject);
-                    dump($picturesdataObject);
                 }
             // }
         }

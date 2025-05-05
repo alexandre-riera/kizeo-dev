@@ -100,9 +100,6 @@ class ContratController extends AbstractController
         $typesValorisation = $contratRepositoryS10->getTypesValorisation();
         $visites = $contratRepositoryS10->getVisites();
 
-        // dump($typesEquipements);
-        // dump($modesFonctionnement);
-        // dump($visites);
         // ID de la liste contact à passer à la fonction updateListContactOnKizeo($idListContact)
         $idListContact = "";
 
@@ -169,8 +166,6 @@ class ContratController extends AbstractController
                 return isset($contact->id_societe) && isset($contact->equipement_supp_1) && isset($contact->equipement_supp_2);
             }
         );
-        dump($contactId);
-        dump($contactAgence);
         $clientSelectedInformations = "";
 
         // PUT THE LOGIC IN THE "SWITCH" IF CONTACTAGENCE EQUAL S50, SEARCH CONTRACT IN ENTITY CONTRATS50 WITH HIS CONTACTID
@@ -268,7 +263,6 @@ class ContratController extends AbstractController
         }
 
         if(isset($_POST['numero_contrat'])){
-            // var_dump($_POST);
             $contactAgence = $_POST['contact_agence'];
             $contactRaisonSociale = $_POST['contact_raison_sociale'];
 
@@ -317,9 +311,7 @@ class ContratController extends AbstractController
                     break;
             }
         }
-
-        dump($clientSelectedInformations);
-        dump($formContrat);
+        
         return $this->render('contrat/index.html.twig', [
             'agences' => $agences,
             'contact' => $contact,

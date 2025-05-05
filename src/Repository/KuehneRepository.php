@@ -74,8 +74,6 @@ class KuehneRepository{
             }
         }
 
-        dump($listClientsKuehneFromKizeo);
-        dump($kuehneContactsFromBdd);
         // 4) We iterate over $listClientsKuehneFromKizeo with his id_contact, raison_sociale and code_agence
         // If their Id are NOT into $KuehneContactsFromBdd, so they don't exist yet, we create a new ContactsCC
         // Création d'un tableau associatif pour stocker les IDs des contacts en BDD

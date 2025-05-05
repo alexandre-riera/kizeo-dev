@@ -112,8 +112,6 @@ class KuehneController extends AbstractController
         //     $clientSelected = $key;
         // }
         
-        dump($agenceSelected);
-        dump($clientSelected);
         $visiteDuClient = "";
 
         if ($clientSelected != NULL) {

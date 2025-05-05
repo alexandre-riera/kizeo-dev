@@ -100,14 +100,10 @@ class HomeController extends AbstractController
         }
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
-            dump($clientSelected);
             if(!empty($_POST['clientName'])) {  
                 $clientSelected = $_POST['clientName'];
-                dump($clientSelected);
                 $agenceSelected = substr($clientSelected, -4);
-                dump($agenceSelected); // " S80"
                 $agenceSelected = trim($agenceSelected);
-                dump($agenceSelected); // "S80"
             } else {  
                 echo 'Please select the value.';
             }  
@@ -117,12 +113,9 @@ class HomeController extends AbstractController
         $idClientSelected = "";
         if ($clientSelected != "") {
             $clientSelectedSplitted = preg_split("/[-]/",$clientSelected);
-            dump($clientSelectedSplitted);
             $idClientSelected = $clientSelectedSplitted[0];
             $clientSelected = trim($clientSelectedSplitted[1]);
-            dump($clientSelected);
             $idClientSelected = rtrim($idClientSelected, "\ ");
-            dump($idClientSelected);
         }
         $visiteDuClient = "";
         if ($clientSelected != NULL) {
@@ -1551,7 +1544,6 @@ class HomeController extends AbstractController
             }
         }
 
-        dump($clientSelectedEquipmentsFiltered);
         return $this->render('home/index.html.twig', [
             'clientsGroup' => $clientsGroup,  // Array of Contacts
             'clientsStEtienne' => $clientsStEtienne,  // Array of Contacts
@@ -1849,11 +1841,11 @@ class HomeController extends AbstractController
                 break;
             case 'S120':
                 $equipment = $entityManager->getRepository(EquipementS120::class)->findOneBy(['id' => $id]); // L'ID remonté est bon
-                dump($equipment);
+                
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(array('code_equipement' => $equipment->getNumeroEquipement(), 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()));
-                dump($picturesArray);
+            
                 $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
-                dump($picturesData);
+                
                 break;
             case 'S130':
                 $equipment = $entityManager->getRepository(EquipementS130::class)->findOneBy(['id' => $id]); // L'ID remonté est bon
@@ -1882,7 +1874,6 @@ class HomeController extends AbstractController
                 break;
             
             default:
-                dump($agence . " est vide ou id equipment est vide");
                 break;
         }
         return $this->render('home/show-equipment-details.html.twig', [

@@ -214,7 +214,7 @@
 
     </style>
 
-    {% if app.user %}
+    {% if app.user and is_granted('ROLE_KUEHNE_CC_ADMIN' or is_granted('ROLE_KUEHNE_CC_USER')) %}
         {% block header %}
             <header class="header">
                 {# <h1>Parc Équipements Clients Somafi</h1> #}
@@ -837,7 +837,9 @@
         {% endblock %}
     {% else %}
         <header class="header">
-            <h1>Merci de vous connecter avant de pouvoir accéder à l'application</h1>
+            <h1>Vous n'avez pas suffisament de droits pour accéder à l'application ou n'êtes pas connecté</h1>
+            <br />
+            <h3>Contactez le service informatique ou connectez vous à l'aide d'un autre login</h3>
         </header>
         <nav class="navbar bg-body-tertiary">
             <div class="container">

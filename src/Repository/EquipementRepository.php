@@ -43,8 +43,6 @@ class EquipementRepository extends ServiceEntityRepository
         foreach ($contentAllLists as $key => $value) {
             // ------------------------------------------------------TO REQUEST ONLY "EQUIPEMENT CONTRAT 38"-------------------------
             if ($contentAllLists[$key]['class'] === 'Maintenance' && $contentAllLists[$key]['id'] != '409466') {
-                // dump("Liste d'ID équipements contrat 38");
-                // dump($contentAllLists[$key]['id']);
                 $response = $this->client->request(
                     'GET',
                     'https://forms.kizeo.com/rest/v3/lists/' . $contentAllLists[$key]['id'], [
@@ -115,8 +113,6 @@ class EquipementRepository extends ServiceEntityRepository
 //         foreach ($contentAllLists as $key => $value) {
 //             // ------------------------------------------------------TO REQUEST ONLY "EQUIPEMENT CONTRAT 38"-------------------------
 //             if ($contentAllLists[$key]['class'] === 'PORTAILS') {
-//                 dump("Liste des IDs des listes portails par agence");
-//                 dump($contentAllLists[$key]['id']);
 //                 $response = $this->client->request(
 //                     'GET',
 //                     'https://forms.kizeo.com/rest/v3/lists/' . $contentAllLists[$key]['id'], [
