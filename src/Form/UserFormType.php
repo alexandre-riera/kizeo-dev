@@ -35,6 +35,10 @@ class UserFormType extends AbstractType
                 'choices'  => [
                     'Administrateur' => 'ROLE_ADMIN',
                     'Utilisateur SOMAFI' => 'ROLE_SOMAFI',
+                    'Admin KUEHNE' => 'ROLE_ADMIN_KUEHNE',
+                    'Utilisateur KUEHNE' => 'ROLE_KUEHNE_USER',
+                    'Admin GLS' => 'ROLE_ADMIN_GLS',
+                    'Utilisateur GLS' => 'ROLE_GLS_USER',
                 ],
                 'multiple' => true,
                 'expanded' => true,
