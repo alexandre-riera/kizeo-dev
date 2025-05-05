@@ -58,11 +58,11 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
+                    {#<li class="nav-item">
                         <a href="{{ path('app_contrat_new') }}" class="nav-link" >
                             <i class="fa-solid fa-file-contract"></i> Nouveau contrat
                         </a>
-                    </li>
+                    </li>#}
                     {% if is_granted('ROLE_ADMIN') %}
                         <li class="nav-item">
                             <a class="nav-link align-items-center" data-bs-toggle="collapse" href="#collapseUsers" role="button" aria-expanded="false" aria-controls="collapseUsers">
