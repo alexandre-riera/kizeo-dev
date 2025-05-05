@@ -107,18 +107,68 @@
         {% endfor %}
     </div>
     <br />
-    <h1>Créer un nouvel utilisateur</h1>
-
-    <div class="card">
-        <div class="card-body">
-            {{ form_start(form) }}
-                {{ form_widget(form) }}
-                <div class="mt-4">
-                    <a href="{{ path('app_user_index') }}" class="btn btn-secondary">Annuler</a>
-                    <button type="submit" class="btn btn-primary">Créer</button>
-                </div>
-            {{ form_end(form) }}
+    <div class="container py-4">
+        <h1>Créer un nouvel utilisateur</h1>
+    
+        <div class="card">
+            <div class="card-body">
+                {{ form_start(form) }}
+                    {{ form_row(form.first_name) }}
+                    {{ form_row(form.last_name) }}
+                    {{ form_row(form.email) }}
+                    
+                    {# Personnalisation du rendu des rôles #}
+                    <div class="mb-3">
+                        {{ form_label(form.roles) }}
+                        <div class="role-container border rounded p-3">
+                            {% set role_groups = {
+                                'Globaux': ['ROLE_ADMIN'],
+                                'SOMAFI': ['ROLE_SOMAFI'],
+                                'KUEHNE': ['ROLE_ADMIN_KUEHNE', 'ROLE_KUEHNE_USER'],
+                                'GLS': ['ROLE_ADMIN_GLS', 'ROLE_GLS_USER']
+                            } %}
+                            
+                            {% for group_name, group_roles in role_groups %}
+                                <div class="role-group mb-2">
+                                    <h6 class="text-muted mb-2">{{ group_name }}</h6>
+                                    <div class="d-flex flex-wrap gap-3">
+                                        {% for child in form.roles.children %}
+                                            {% if child.vars.value in group_roles %}
+                                                <div class="form-check">
+                                                    {{ form_widget(child, {'attr': {'class': 'form-check-input'}}) }}
+                                                    {{ form_label(child, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                                                </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% if not loop.last %}
+                                    <hr class="my-2">
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {{ form_errors(form.roles) }}
+                    </div>
+                    
+                    {{ form_row(form.password) }}
+                    
+                    <div class="mt-4">
+                        <a href="{{ path('app_user_index') }}" class="btn btn-secondary">Annuler</a>
+                        <button type="submit" class="btn btn-success">Enregistrer</button>
+                    </div>
+                {{ form_end(form) }}
+            </div>
         </div>
     </div>
+    
+    <style>
+        .role-container {
+            background-color: #f8f9fa;
+        }
+        
+        .role-group .form-check {
+            min-width: 180px;
+        }
+    </style>
 {% endif %}
 {% endblock %}
