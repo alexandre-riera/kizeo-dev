@@ -120,7 +120,7 @@
                     {{ form_row(form.first_name) }}
                     {{ form_row(form.last_name) }}
                     {{ form_row(form.email) }}
-                    
+
                     {# Personnalisation du rendu des rôles #}
                     <div class="mb-3">
                         {{ form_label(form.roles) }}
@@ -131,7 +131,7 @@
                                 'KUEHNE': ['ROLE_ADMIN_KUEHNE', 'ROLE_USER_KUEHNE'],
                                 'GLS': ['ROLE_ADMIN_GLS', 'ROLE_USER_GLS']
                             } %}
-                            
+
                             {% for group_name, group_roles in role_groups %}
                                 <div class="role-group mb-2">
                                     <h6 class="text-muted mb-2">{{ group_name }}</h6>
@@ -154,13 +154,16 @@
                         {{ form_errors(form.roles) }}
                     </div>
                     
-                    {{ form_row(form.password) }}
+                    {# Marquer le champ roles comme déjà rendu #}
+                    {% do form.roles.setRendered %}
                     
+                    {{ form_row(form.password) }}
+
                     <div class="mt-4">
                         <a href="{{ path('app_user_index') }}" class="btn btn-secondary">Annuler</a>
                         <button type="submit" class="btn btn-success">Enregistrer</button>
                     </div>
-                {{ form_end(form, {'render_rest': false}) }}
+                {{ form_end(form) }}
             </div>
         </div>
     </div>
