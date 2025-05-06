@@ -52,7 +52,7 @@ class UsersAuthenticator extends AbstractLoginFormAuthenticator
         // Check user rôle to change redirect route 
         $user = $token->getUser();
 
-        if (in_array("ROLE_KUEHNE_CC_ADMIN", $user->getRoles()) || in_array("ROLE_KUEHNE_CC_USER", $user->getRoles())) {
+        if (in_array("ROLE_ADMIN_KUEHNE", $user->getRoles()) || in_array("ROLE_USER_KUEHNE", $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('app_kuehne'));
         }
 
