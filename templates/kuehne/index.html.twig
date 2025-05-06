@@ -214,7 +214,7 @@
 
     </style>
 
-    {% if app.user and is_granted('ROLE_KUEHNE_CC_ADMIN') or is_granted('ROLE_KUEHNE_CC_USER') %}
+    {% if app.user and is_granted('ROLE_ADMIN_KUEHNE') or is_granted('ROLE_USER_KUEHNE') %}
         {% block header %}
             <header class="header">
                 {# <h1>Parc Équipements Clients Somafi</h1> #}
