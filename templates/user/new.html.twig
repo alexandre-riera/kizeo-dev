@@ -124,8 +124,8 @@
                             {% set role_groups = {
                                 'Globaux': ['ROLE_ADMIN'],
                                 'SOMAFI': ['ROLE_SOMAFI'],
-                                'KUEHNE': ['ROLE_ADMIN_KUEHNE', 'ROLE_KUEHNE_USER'],
-                                'GLS': ['ROLE_ADMIN_GLS', 'ROLE_GLS_USER']
+                                'KUEHNE': ['ROLE_ADMIN_KUEHNE', 'ROLE_USER_KUEHNE'],
+                                'GLS': ['ROLE_ADMIN_GLS', 'ROLE_USER_GLS']
                             } %}
                             
                             {% for group_name, group_roles in role_groups %}
