@@ -55,6 +55,9 @@ class UsersAuthenticator extends AbstractLoginFormAuthenticator
         if (in_array("ROLE_ADMIN_KUEHNE", $user->getRoles()) || in_array("ROLE_USER_KUEHNE", $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('app_kuehne'));
         }
+        if (in_array("ROLE_ADMIN_GLS", $user->getRoles()) || in_array("ROLE_USER_GLS", $user->getRoles())) {
+            return new RedirectResponse($this->urlGenerator->generate('app_gls'));
+        }
 
         return new RedirectResponse($this->urlGenerator->generate('app_front'));
         // throw new \Exception('TODO: provide a valid redirect inside '.__FILE__);
