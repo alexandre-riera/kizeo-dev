@@ -153,51 +153,11 @@
             height: 100%;
             width: min-content;
         }
-        /* Couleurs des td selon statut de maintenance */
-        .bkg_vert{
-            width: 4rem;
-            background-color: green;
-            color: white;
-            font-weight: bold;
-        }
-        .bkg_orange{
-            width: 4rem;
-            background-color: orange;
-            color: white;
-            font-weight: bold;
-        }
-        .bkg_rouge{
-            width: 4rem;
-            background-color: red;
-            color: white;
-            font-weight: bold;
-        }
-        .bkg_arret{
-            width: 4rem;
-            background-color: black;
-            color: white;
-            font-weight: bold;
-        }
-        .bkg_inaccessible{
-            width: 4rem;
-            background-color: yellow;
-            font-weight: bold;
-        }
-        /* Couleurs des TR selon la visite */
-        .bkg_row_visite_1{
-            background-color: lightgray;
-        }
-        .bkg_row_visite_2{
-            background-color: lightblue;
-        }
-        .bkg_row_visite_3{
-            background-color: lightseagreen;
-        }
-        .bkg_row_visite_4{
-            background-color: lightsalmon;
-        }
-        .bkg_row_visite_A{
-            background-color: lightyellow;
+        .bootstrap-table .fixed-table-container .fixed-table-body {
+            overflow: auto;
+            height: 100%;
+            /* width: 100vw; */
+            margin-left: -85%;
         }
 
         /*Filtres de la table*/
