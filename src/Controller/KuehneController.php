@@ -1589,6 +1589,10 @@ class KuehneController extends AbstractController
             'visiteDuClient' =>  $visiteDuClient,
             'idClientSelected' =>  $idClientSelected,
             'allKuehneContactsFromFrance' =>  $allKuehneContactsFromFrance,
+            'clientAnneeFilterArray' =>  $clientAnneeFilterArray,
+            'clientAnneeFilter' =>  $clientAnneeFilter,
+            'clientVisiteFilterArray' =>  $clientVisiteFilterArray,
+            'clientVisiteFilter' =>  $clientVisiteFilter,
         ]);
     }
 
