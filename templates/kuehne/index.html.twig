@@ -312,16 +312,37 @@
                         </div>
                     </div>
                 </div>
-                {# <div class="col-sm-2">
+                <div class="col-sm-2">
                     <div class="card">
                         <div class="card-body">
-                            <h4 class="card-title">Date de fin de contrat</h4>
-                            <br>
-                            <br>
-                            <p class="client-infos-nombre">N/C</p>
+                            <h4 class="card-title">Filtres</h4>
+                            {# Formulaire de filtres avec valeurs par défaut #}
+                            {# <form id="filterForm" method="get" action="{{ path('votre_route_actuelle') }}"> #}
+                            <form id="filterForm" method="get" action="">
+                                <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
+                                <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
+                                <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
+                                <div class="form-group">
+                                    <label for="clientAnneeFilter">Année :</label>
+                                    <select class="form-control" id="clientAnneeFilter" name="clientAnneeFilter">
+                                        {% for annee in clientAnneeFilterArray %}
+                                            <option value="{{ annee }}" {% if clientAnneeFilter == annee %}selected{% endif %}>{{ annee }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="clientVisiteFilter">Visite :</label>
+                                    <select class="form-control" id="clientVisiteFilter" name="clientVisiteFilter">
+                                        {% for visite in clientVisiteFilterArray %}
+                                            <option value="{{ visite }}" {% if clientVisiteFilter == visite %}selected{% endif %}>{{ visite }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button type="submit" name="submitFilters" value="1" class="btn btn-primary">Filtrer</button>
+                            </form>
                         </div>
                     </div>
-                </div> #}
+                </div>
                 <div class="col-sm-2">
                     <div class="card">
                         <div class="card-body">
@@ -487,354 +508,10 @@
                 </div>
             </div>
         {% endblock %}
-
-        {% block clientEquipements %}
-        {% if clientSelectedInformations != NULL and clientSelectedEquipmentsFiltered != NULL  %}
-        <div>
-            <table id="table" class="table-equipement-client  table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
-                <thead>
-                    <tr class="sticky">
-                        <th data-sortable="true" data-filter-control="select" data-field="visite">Visite</th>
-                        <th data-sortable="true" data-filter-control="select" data-field="n°">N°</th>
-                        {# <th data-sortable="true" data-field="libelle">Libelle</th> #}
-                        <th data-sortable="true" data-field="derniere_visite">Date visite</th>
-                        <th data-sortable="false" data-field="repere">Repère</th>
-                        {# <th data-sortable="false" data-field="installe_le">Installé le</th> #}
-                        {# <th data-sortable="false" data-field="num_serie">N° de série</th> #}
-                        <th data-sortable="true" data-filter-control="select" data-field="marque">Marque</th>
-                        {# <th data-sortable="true" data-field="hauteur">h</th> #}
-                        {# <th data-sortable="true" data-field="largeur">l</th> #}
-                        {# <th data-sortable="true" data-field="longueur">L</th> #}
-                        {# <th data-sortable="true" data-field="date_enregistrement">Enregistré</th> #}
-                        <th data-sortable="true" data-filter-control="select" data-field="etat">État</th>
-                        <th data-sortable="true" data-filter-control="select" data-field="statut_maintenance">Statut</th>
-                        {# <th>Options</th> #}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for equipment in clientSelectedEquipmentsFiltered %}
-                    {% if equipment.visite == "CE1" %}
-                        <tr class="bkg_row_visite_1" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
-                            <td>{{ equipment.getVisite() }}</td>
-                            <td>{{ equipment.getNumeroEquipement() }}</td>
-                            {# <td>{{ equipment.getLibelleEquipement() }}</td> #}
-                            <td>{{ equipment.getDerniereVisite()|date("d/m/Y", false) }}</td>
-                            <td>{{ equipment.getRepereSiteClient() }}</td>
-                            {# <td>{{ equipment.getMiseEnService() }}</td> #}
-                            {# <td>{{ equipment.getNumeroDeSerie() }}</td> #}
-                            <td>{{ equipment.getMarque() }}</td>
-                            {# <td>{{ equipment.getHauteur() }}</td> #}
-                            {# <td>{{ equipment.getLargeur() }}</td> #}
-                            {# <td>{{ equipment.getLongueur() }}</td> #}
-                            {# <td>{{ equipment.getDateEnregistrement() }}</td> #}
-                            <td>{{ equipment.getEtat() }}</td>
-                            {%if equipment.statutDeMaintenance == "Vert" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Orange" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Rouge" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "A l'arrêt" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                            {% endif %}
-                            {# <td> #}
-                            {# <button onclick="editEquipement(
-                                '{{ equipment.getId() }}',
-                                '{{ equipment.getLibelleEquipement() }}',
-                                '{{ equipment.getVisite() }}',
-                                '{{ equipment.getRaisonSociale() }}',
-                                '{{ equipment.getModeleNacelle() }}',
-                                '{{ equipment.getHauteurNacelle() }}',
-                                '{{ equipment.getIfExistDB() }}',
-                                '{{ equipment.getSignatureTech() }}',
-                                '{{ equipment.getTrigrammeTech() }}',
-                                '{{ equipment.getAnomalies() }}',
-                                '{{ equipment.getIdContact() }}',
-                                '{{ equipment.getCodeSociete() }}',
-                                '{{ equipment.getCodeAgence() }}',
-                                '{{ equipment.getNumeroEquipement() }}',
-                                '{{ equipment.getModeFonctionnement() }}',
-                                '{{ equipment.getRepereSiteClient() }}',
-                                '{{ equipment.getMiseEnService() }}',
-                                '{{ equipment.getNumeroDeSerie() }}',
-                                '{{ equipment.getMarque() }}',
-                                '{{ equipment.getHauteur() }}',
-                                '{{ equipment.getLargeur() }}',
-                                '{{ equipment.getLongueur() }}',
-                                '{{ equipment.getPlaqueSignaletique() }}',
-                                '{{ equipment.getEtat() }}',
-                                '{{ equipment.getDerniereVisite() }}',
-                                '{{ equipment.getStatutDeMaintenance() }}',
-                                '{{ equipment.getPresenceCarnetEntretien() }}',
-                                '{{ equipment.getStatutConformite() }}'
-                            )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                            </button> #}
-                            {# <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a> #}
-                            {# </td> #}
-                            
-                        </tr>
-                    {% elseif  equipment.visite  == "CE2" %}
-                        <tr class="bkg_row_visite_2" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
-                            <td>{{ equipment.getVisite() }}</td>
-                            <td>{{ equipment.getNumeroEquipement() }}</td>
-                            {# <td>{{ equipment.getLibelleEquipement() }}</td> #}
-                            <td>{{ equipment.getDerniereVisite()|date("d/m/Y", false) }}</td>
-                            <td>{{ equipment.getRepereSiteClient() }}</td>
-                            {# <td>{{ equipment.getMiseEnService() }}</td> #}
-                            {# <td>{{ equipment.getNumeroDeSerie() }}</td> #}
-                            <td>{{ equipment.getMarque() }}</td>
-                            {# <td>{{ equipment.getHauteur() }}</td> #}
-                            {# <td>{{ equipment.getLargeur() }}</td> #}
-                            {# <td>{{ equipment.getLongueur() }}</td> #}
-                            {# <td>{{ equipment.getDateEnregistrement() }}</td> #}
-                            <td>{{ equipment.getEtat() }}</td>
-                            {%if equipment.statutDeMaintenance == "Vert" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Orange" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Rouge" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "A l'arrêt" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                            {% endif %}
-                            {# <td> #}
-                            {# <button onclick="editEquipement(
-                                '{{ equipment.getId() }}',
-                                '{{ equipment.getLibelleEquipement() }}',
-                                '{{ equipment.getVisite() }}',
-                                '{{ equipment.getRaisonSociale() }}',
-                                '{{ equipment.getModeleNacelle() }}',
-                                '{{ equipment.getHauteurNacelle() }}',
-                                '{{ equipment.getIfExistDB() }}',
-                                '{{ equipment.getSignatureTech() }}',
-                                '{{ equipment.getTrigrammeTech() }}',
-                                '{{ equipment.getAnomalies() }}',
-                                '{{ equipment.getIdContact() }}',
-                                '{{ equipment.getCodeSociete() }}',
-                                '{{ equipment.getCodeAgence() }}',
-                                '{{ equipment.getNumeroEquipement() }}',
-                                '{{ equipment.getModeFonctionnement() }}',
-                                '{{ equipment.getRepereSiteClient() }}',
-                                '{{ equipment.getMiseEnService() }}',
-                                '{{ equipment.getNumeroDeSerie() }}',
-                                '{{ equipment.getMarque() }}',
-                                '{{ equipment.getHauteur() }}',
-                                '{{ equipment.getLargeur() }}',
-                                '{{ equipment.getLongueur() }}',
-                                '{{ equipment.getPlaqueSignaletique() }}',
-                                '{{ equipment.getEtat() }}',
-                                '{{ equipment.getDerniereVisite() }}',
-                                '{{ equipment.getStatutDeMaintenance() }}',
-                                '{{ equipment.getPresenceCarnetEntretien() }}',
-                                '{{ equipment.getStatutConformite() }}'
-                            )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                            </button> #}
-                            {# <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a> #}
-                            {# </td> #}
-                            
-                        </tr>
-                    {% elseif  equipment.visite  == "CE3" %}
-                        <tr class="bkg_row_visite_3" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
-                            <td>{{ equipment.getVisite() }}</td>
-                            <td>{{ equipment.getNumeroEquipement() }}</td>
-                            {# <td>{{ equipment.getLibelleEquipement() }}</td> #}
-                            <td>{{ equipment.getDerniereVisite()|date("d/m/Y", false) }}</td>
-                            <td>{{ equipment.getRepereSiteClient() }}</td>
-                            {# <td>{{ equipment.getMiseEnService() }}</td> #}
-                            {# <td>{{ equipment.getNumeroDeSerie() }}</td> #}
-                            <td>{{ equipment.getMarque() }}</td>
-                            {# <td>{{ equipment.getHauteur() }}</td> #}
-                            {# <td>{{ equipment.getLargeur() }}</td> #}
-                            {# <td>{{ equipment.getLongueur() }}</td> #}
-                            {# <td>{{ equipment.getDateEnregistrement() }}</td> #}
-                            <td>{{ equipment.getEtat() }}</td>
-                            {%if equipment.statutDeMaintenance == "Vert" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Orange" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Rouge" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "A l'arrêt" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                            {% endif %}
-                            {# <td> #}
-                            {# <button onclick="editEquipement(
-                                '{{ equipment.getId() }}',
-                                '{{ equipment.getLibelleEquipement() }}',
-                                '{{ equipment.getVisite() }}',
-                                '{{ equipment.getRaisonSociale() }}',
-                                '{{ equipment.getModeleNacelle() }}',
-                                '{{ equipment.getHauteurNacelle() }}',
-                                '{{ equipment.getIfExistDB() }}',
-                                '{{ equipment.getSignatureTech() }}',
-                                '{{ equipment.getTrigrammeTech() }}',
-                                '{{ equipment.getAnomalies() }}',
-                                '{{ equipment.getIdContact() }}',
-                                '{{ equipment.getCodeSociete() }}',
-                                '{{ equipment.getCodeAgence() }}',
-                                '{{ equipment.getNumeroEquipement() }}',
-                                '{{ equipment.getModeFonctionnement() }}',
-                                '{{ equipment.getRepereSiteClient() }}',
-                                '{{ equipment.getMiseEnService() }}',
-                                '{{ equipment.getNumeroDeSerie() }}',
-                                '{{ equipment.getMarque() }}',
-                                '{{ equipment.getHauteur() }}',
-                                '{{ equipment.getLargeur() }}',
-                                '{{ equipment.getLongueur() }}',
-                                '{{ equipment.getPlaqueSignaletique() }}',
-                                '{{ equipment.getEtat() }}',
-                                '{{ equipment.getDerniereVisite() }}',
-                                '{{ equipment.getStatutDeMaintenance() }}',
-                                '{{ equipment.getPresenceCarnetEntretien() }}',
-                                '{{ equipment.getStatutConformite() }}'
-                            )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                            </button> #}
-                            {# <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a> #}
-                            {# </td> #}
-                            
-                        </tr>
-                    {% elseif  equipment.visite  == "CE4" %}
-                        <tr class="bkg_row_visite_4" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
-                            <td>{{ equipment.getVisite() }}</td>
-                            <td>{{ equipment.getNumeroEquipement() }}</td>
-                            {# <td>{{ equipment.getLibelleEquipement() }}</td> #}
-                            <td>{{ equipment.getDerniereVisite()|date("d/m/Y", false) }}</td>
-                            <td>{{ equipment.getRepereSiteClient() }}</td>
-                            {# <td>{{ equipment.getMiseEnService() }}</td> #}
-                            {# <td>{{ equipment.getNumeroDeSerie() }}</td> #}
-                            <td>{{ equipment.getMarque() }}</td>
-                            {# <td>{{ equipment.getHauteur() }}</td> #}
-                            {# <td>{{ equipment.getLargeur() }}</td> #}
-                            {# <td>{{ equipment.getLongueur() }}</td> #}
-                            {# <td>{{ equipment.getDateEnregistrement() }}</td> #}
-                            <td>{{ equipment.getEtat() }}</td>
-                            {%if equipment.statutDeMaintenance == "Vert" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Orange" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Rouge" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "A l'arrêt" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                            {% endif %}
-                            {# <td> #}
-                            {# <button onclick="editEquipement(
-                                '{{ equipment.getId() }}',
-                                '{{ equipment.getLibelleEquipement() }}',
-                                '{{ equipment.getVisite() }}',
-                                '{{ equipment.getRaisonSociale() }}',
-                                '{{ equipment.getModeleNacelle() }}',
-                                '{{ equipment.getHauteurNacelle() }}',
-                                '{{ equipment.getIfExistDB() }}',
-                                '{{ equipment.getSignatureTech() }}',
-                                '{{ equipment.getTrigrammeTech() }}',
-                                '{{ equipment.getAnomalies() }}',
-                                '{{ equipment.getIdContact() }}',
-                                '{{ equipment.getCodeSociete() }}',
-                                '{{ equipment.getCodeAgence() }}',
-                                '{{ equipment.getNumeroEquipement() }}',
-                                '{{ equipment.getModeFonctionnement() }}',
-                                '{{ equipment.getRepereSiteClient() }}',
-                                '{{ equipment.getMiseEnService() }}',
-                                '{{ equipment.getNumeroDeSerie() }}',
-                                '{{ equipment.getMarque() }}',
-                                '{{ equipment.getHauteur() }}',
-                                '{{ equipment.getLargeur() }}',
-                                '{{ equipment.getLongueur() }}',
-                                '{{ equipment.getPlaqueSignaletique() }}',
-                                '{{ equipment.getEtat() }}',
-                                '{{ equipment.getDerniereVisite() }}',
-                                '{{ equipment.getStatutDeMaintenance() }}',
-                                '{{ equipment.getPresenceCarnetEntretien() }}',
-                                '{{ equipment.getStatutConformite() }}'
-                            )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                            </button> #}
-                            {# <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a> #}
-                            {# </td> #}
-                            
-                        </tr>
-                    {% elseif  equipment.visite  == "CEA" %}
-                        <tr class="bkg_row_visite_A" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
-                            <td>{{ equipment.getVisite() }}</td>
-                            <td>{{ equipment.getNumeroEquipement() }}</td>
-                            {# <td>{{ equipment.getLibelleEquipement() }}</td> #}
-                            <td>{{ equipment.getDerniereVisite()|date("d/m/Y", false) }}</td>
-                            <td>{{ equipment.getRepereSiteClient() }}</td>
-                            {# <td>{{ equipment.getMiseEnService() }}</td> #}
-                            {# <td>{{ equipment.getNumeroDeSerie() }}</td> #}
-                            <td>{{ equipment.getMarque() }}</td>
-                            {# <td>{{ equipment.getHauteur() }}</td> #}
-                            {# <td>{{ equipment.getLargeur() }}</td> #}
-                            {# <td>{{ equipment.getLongueur() }}</td> #}
-                            {# <td>{{ equipment.getDateEnregistrement() }}</td> #}
-                            <td>{{ equipment.getEtat() }}</td>
-                            {%if equipment.statutDeMaintenance == "Vert" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Orange" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Rouge" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "A l'arrêt" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
-                                <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                            {% endif %}
-                            {# <td> #}
-                            {# <button onclick="editEquipement(
-                                '{{ equipment.getId() }}',
-                                '{{ equipment.getLibelleEquipement() }}',
-                                '{{ equipment.getVisite() }}',
-                                '{{ equipment.getRaisonSociale() }}',
-                                '{{ equipment.getModeleNacelle() }}',
-                                '{{ equipment.getHauteurNacelle() }}',
-                                '{{ equipment.getIfExistDB() }}',
-                                '{{ equipment.getSignatureTech() }}',
-                                '{{ equipment.getTrigrammeTech() }}',
-                                '{{ equipment.getAnomalies() }}',
-                                '{{ equipment.getIdContact() }}',
-                                '{{ equipment.getCodeSociete() }}',
-                                '{{ equipment.getCodeAgence() }}',
-                                '{{ equipment.getNumeroEquipement() }}',
-                                '{{ equipment.getModeFonctionnement() }}',
-                                '{{ equipment.getRepereSiteClient() }}',
-                                '{{ equipment.getMiseEnService() }}',
-                                '{{ equipment.getNumeroDeSerie() }}',
-                                '{{ equipment.getMarque() }}',
-                                '{{ equipment.getHauteur() }}',
-                                '{{ equipment.getLargeur() }}',
-                                '{{ equipment.getLongueur() }}',
-                                '{{ equipment.getPlaqueSignaletique() }}',
-                                '{{ equipment.getEtat() }}',
-                                '{{ equipment.getDerniereVisite() }}',
-                                '{{ equipment.getStatutDeMaintenance() }}',
-                                '{{ equipment.getPresenceCarnetEntretien() }}',
-                                '{{ equipment.getStatutConformite() }}'
-                            )" type="button" class="btn btn-primary edit_equipement" data-bs-toggle="modal" data-bs-target="#staticBackdrop" ><i class=" fa-solid fa-pen-to-square"></i> Edit
-                            </button> #}
-                            {# <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a> #}
-                            {# </td> #}
-                            
-                        </tr>
-                    {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-            <script>
-                $(function() {
-                    $('#table').bootstrapTable()
-                })
-            </script>
+        {# Conteneur pour la table des équipements (sera mis à jour par AJAX) #}
+        <div id="equipment-table-container">
+            {% include 'components/equipment_table_kuehne.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered} %}
         </div>
-        {%endif%}
-        {% endblock %}
         {% else %}
         <header class="header">
             <h1>Vous n'avez pas suffisament de droits pour accéder à l'application ou n'êtes pas connecté</h1>
@@ -853,4 +530,31 @@
             </div>
         </nav>
     {% endif %}
+    <script>
+        $(document).ready(function() {
+            // Intercepter la soumission du formulaire
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Récupérer les données du formulaire
+                var formData = $(this).serialize();
+                
+                // Envoyer la requête AJAX
+                $.ajax({
+                    url: '/ajax/filter-equipment',
+                    type: 'GET',
+                    data: formData,
+                    success: function(response) {
+                        // Mettre à jour le conteneur du tableau
+                        $('#equipment-table-container').html(response);
+                        // Réinitialiser Bootstrap Table
+                        $('#table').bootstrapTable();
+                    },
+                    error: function(xhr) {
+                        console.error('Erreur lors du chargement des données:', xhr.responseText);
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}
