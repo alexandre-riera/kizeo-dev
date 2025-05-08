@@ -1,4 +1,4 @@
-{# components/equipment_table_kuehne.html.twig #}
+{# components/equipment_table_gls.html.twig #}
 <style>
     .bootstrap-table .fixed-table-container .fixed-table-body {
         overflow: auto;
@@ -41,7 +41,7 @@
                         <th data-sortable="true" data-filter-control="select" data-field="marque">Marque</th>
                         <th data-sortable="true" data-filter-control="select" data-field="etat">État</th>
                         <th data-sortable="true" data-filter-control="select" data-field="statut_maintenance">Statut</th>
-                        {% if is_granted('ROLE_ADMIN_KUEHNE') %}
+                        {% if is_granted('ROLE_ADMIN_GLS') %}
                             <th data-sortable="false" data-field="action">Action</th>
                         {% endif %}
                     </tr>
@@ -93,7 +93,7 @@
                                 {% elseif equipment.statutDeMaintenance == "Non présent" %}
                                 <td>{{ equipment.getStatutDeMaintenance() }}</td>
                             {% endif %}
-                            {% if is_granted('ROLE_ADMIN_KUEHNE') %}
+                            {% if is_granted('ROLE_ADMIN_GLS') %}
                                 <td>
                                     <button onclick="editEquipement(
                                         '{{ equipment.getId() }}',
