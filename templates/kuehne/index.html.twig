@@ -272,7 +272,7 @@
                         <h2>Sélectionnez votre site</h2>
                         <form action="" method="post">
                             <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)">
+                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)"  onclick="unexpand(this)">
                                 <option value = "" selected> Sélection du site </option> 
                                 {% for client in allKuehneContactsFromFrance%}
                                     <option value="{{ client.raison_sociale }}" id="client_selected_s50">{{ client.raison_sociale }}</option>
