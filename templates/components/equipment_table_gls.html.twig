@@ -12,6 +12,10 @@
     .fixed-table-body{
         width: 90vw !important;
     }
+    
+    .fixed-table-container {
+        width: -170px !important;
+    }
 </style>
 {% if app.user and is_granted('ROLE_ADMIN_GLS') or is_granted('ROLE_USER_GLS') %}
     {% if clientSelectedEquipmentsFiltered is defined and clientSelectedEquipmentsFiltered is not empty %}
