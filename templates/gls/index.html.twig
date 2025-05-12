@@ -227,24 +227,37 @@
             <a class="navbar-brand" href="/gls">
                 <i class="fa-solid fa-house"> </i>Accueil
             </a>
+            <ul class="navbar-nav me-auto">
+                {% if is_granted('ROLE_ADMIN_KUEHNE') or is_granted('ROLE_ADMIN_GLS') %}
+                    <li class="nav-item">
+                        <a class="nav-link align-items-center" data-bs-toggle="collapse" href="#collapseUsers" role="button" aria-expanded="false" aria-controls="collapseUsers">
+                            <i class="fa-solid fa-user"></i>
+                            <span style="font-size:16px;">Interface de gestion Contrats Cadre</span>
+                            <i class="ms-1 fa-solid fa-caret-down"></i>
+                        </a>
+                        <div class="collapse" id="collapseUsers">
+                            <ul class="nav flex-column">
+                                {% if is_granted('ROLE_ADMIN_KUEHNE') %}
+                                    <li class="nav-item">
+                                        <a class="nav-link ms-3" href="{{ path('app_kuehne') }}">KUEHNE</a>
+                                    </li>
+                                {% endif %}
+                                {% if is_granted('ROLE_ADMIN_GLS') %}
+                                    <li class="nav-item">
+                                        <a class="nav-link ms-3" href="{{ path('app_gls') }}">GLS</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </li>
+                {% endif %}
+            </ul>
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
                     <a href="{{ path('app_logout') }}" class="navbar-brand" >
                         <i class="fa-solid fa-user"></i>Se déconnecter
                     </a>
                 </li>
-                {#
-                <li class="nav-item dropdown" style="margin-right: 75px;">
-                    <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <img class="nav-profile-img rounded-circle" src="{{ asset('images/astronaut-profile.png') }}">
-                    </a>
-                    <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
-                        <a class="dropdown-item" href="#">Profile</a>
-                        <a class="dropdown-item" href="#">Create Post</a>
-                        <a class="dropdown-item" href="#">Logout</a>
-                    </div>
-                </li>
-                #}
             </ul>
             </div>
         </nav>
