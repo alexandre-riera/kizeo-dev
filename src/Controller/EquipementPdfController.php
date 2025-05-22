@@ -105,7 +105,7 @@ class EquipementPdfController extends AbstractController
         }
         
         // Générer le HTML pour le PDF
-        $html = $this->renderView('pdf/client_equipements.html.twig', [
+        $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
             'clientId' => $id,
             'agence' => $agence
