@@ -26,12 +26,6 @@
         <!-- Modal show equipment details -->
         <div id="showEquipmentDetails" >
             <h3 class="col-md-12">Détails équipement</h3>
-            <div class="mb-3">
-                <a href="{{ path('equipement_pdf_single', {'agence': equipment.getCodeAgence(), 'id': equipment.getId()}) }}" 
-                class="btn btn-sm btn-outline-danger" target="_blank" title="PDF de cet équipement">
-                    <i class="fa-solid fa-file-pdf"></i>
-                </a>
-            </div>
             <div class="card bg-light mb-3">
                 <div class="card-body">
                     <h4 class="card-title">Raison sociale et visite</h4>
@@ -134,6 +128,12 @@
                     <p class="card-text" id="modal_show_statutConformite">{{ equipment.getstatutConformite() }}</p>
                 </div>
             </div>
+        </div>
+        <div class="mb-3">
+            <a href="{{ path('equipement_pdf_single', {'agence': equipment.getCodeAgence(), 'id': equipment.getId()}) }}" 
+            class="btn btn-primary" target="_blank" title="PDF de cet équipement">
+                <i class="fa-solid fa-file-pdf"></i>PDF de cet équipemen
+            </a>
         </div>
         <div class="galerie-photos">
             <h4>Galerie photos</h4>
