@@ -2,59 +2,193 @@
 // src/Controller/EquipementPdfController.php
 namespace App\Controller;
 
-use App\Repository\EquipementS10Repository;
-use App\Repository\FormRepository;
+use App\Entity\EquipementS10;
+use App\Entity\EquipementS40;
+use App\Entity\EquipementS50;
+use App\Entity\EquipementS60;
+use App\Entity\EquipementS70;
+use App\Entity\EquipementS80;
+use App\Entity\EquipementS100;
+use App\Entity\EquipementS120;
+use App\Entity\EquipementS130;
+use App\Entity\EquipementS140;
+use App\Entity\EquipementS150;
+use App\Entity\EquipementS160;
+use App\Entity\EquipementS170;
+use App\Entity\Form;
 use App\Service\PdfGenerator;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 class EquipementPdfController extends AbstractController
 {
-    private $equipementRepository;
-    private $formRepository;
     private $pdfGenerator;
     
-    public function __construct(
-        EquipementS10Repository $equipementRepository,
-        FormRepository $formRepository,
-        PdfGenerator $pdfGenerator
-    ) {
-        $this->equipementRepository = $equipementRepository;
-        $this->formRepository = $formRepository;
+    public function __construct(PdfGenerator $pdfGenerator)
+    {
         $this->pdfGenerator = $pdfGenerator;
     }
     
     /**
-     * 
+     * @Route("/equipement/pdf/{agence}/{id}", name="equipement_pdf_single")
      */
-    #[Route('/client/{id}/equipements/pdf', name: 'client_equipements_pdf', methods: ['GET'])]
-    public function generateClientEquipementsPdf($id): Response
+    public function generateSingleEquipementPdf(string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
-        // Récupérer les équipements du client
-        $equipements = $this->equipementRepository->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+        // Récupérer l'équipement selon l'agence (même logique que votre fonction existante)
+        $equipment = $this->getEquipmentByAgence($agence, $id, $entityManager);
         
-        // Récupérer les photos associées aux équipements
-        $photos = $this->formRepository->findBy(['id_client' => $id]);
+        if (!$equipment) {
+            throw $this->createNotFoundException('Équipement non trouvé');
+        }
+        
+        // Récupérer les photos selon votre logique existante
+        $picturesArray = $entityManager->getRepository(Form::class)->findBy([
+            'code_equipement' => $equipment->getNumeroEquipement(), 
+            'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
+        ]);
+        
+        $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
         
         // Générer le HTML pour le PDF
-        $html = $this->renderView('pdf/equipements.html.twig', [
-            'equipements' => $equipements,
-            'photos' => $photos,
-            'client_id' => $id
+        $html = $this->renderView('pdf/single_equipement.html.twig', [
+            'equipment' => $equipment,
+            'picturesData' => $picturesData,
+            'agence' => $agence
         ]);
         
         // Générer le PDF
-        $pdfContent = $this->pdfGenerator->generatePdf($html, "equipements_client_$id.pdf");
+        $filename = "equipement_{$equipment->getNumeroEquipement()}_{$agence}.pdf";
+        $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
         
-        // Retourner le PDF en tant que réponse
+        // Retourner le PDF
         return new Response(
             $pdfContent,
             Response::HTTP_OK,
             [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => "inline; filename=equipements_client_$id.pdf"
+                'Content-Disposition' => "inline; filename=\"$filename\""
             ]
         );
+    }
+    
+    /**
+     * @Route("/client/equipements/pdf/{agence}/{id}", name="client_equipements_pdf")
+     */
+    public function generateClientEquipementsPdf(string $agence, string $id, EntityManagerInterface $entityManager): Response
+    {
+        // Récupérer tous les équipements du client selon l'agence
+        $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
+        
+        if (empty($equipments)) {
+            throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
+        }
+        
+        $equipmentsWithPictures = [];
+        
+        // Pour chaque équipement, récupérer ses photos
+        foreach ($equipments as $equipment) {
+            $picturesArray = $entityManager->getRepository(Form::class)->findBy([
+                'code_equipement' => $equipment->getNumeroEquipement(), 
+                'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
+            ]);
+            
+            $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
+            
+            $equipmentsWithPictures[] = [
+                'equipment' => $equipment,
+                'pictures' => $picturesData
+            ];
+        }
+        
+        // Générer le HTML pour le PDF
+        $html = $this->renderView('pdf/client_equipements.html.twig', [
+            'equipmentsWithPictures' => $equipmentsWithPictures,
+            'clientId' => $id,
+            'agence' => $agence
+        ]);
+        
+        // Générer le PDF
+        $filename = "equipements_client_{$id}_{$agence}.pdf";
+        $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
+        
+        // Retourner le PDF
+        return new Response(
+            $pdfContent,
+            Response::HTTP_OK,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => "inline; filename=\"$filename\""
+            ]
+        );
+    }
+    
+    private function getEquipmentByAgence(string $agence, string $id, EntityManagerInterface $entityManager)
+    {
+        switch ($agence) {
+            case 'S10':
+                return $entityManager->getRepository(EquipementS10::class)->findOneBy(['id' => $id]);
+            case 'S40':
+                return $entityManager->getRepository(EquipementS40::class)->findOneBy(['id' => $id]);
+            case 'S50':
+                return $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]);
+            case 'S60':
+                return $entityManager->getRepository(EquipementS60::class)->findOneBy(['id' => $id]);
+            case 'S70':
+                return $entityManager->getRepository(EquipementS70::class)->findOneBy(['id' => $id]);
+            case 'S80':
+                return $entityManager->getRepository(EquipementS80::class)->findOneBy(['id' => $id]);
+            case 'S100':
+                return $entityManager->getRepository(EquipementS100::class)->findOneBy(['id' => $id]);
+            case 'S120':
+                return $entityManager->getRepository(EquipementS120::class)->findOneBy(['id' => $id]);
+            case 'S130':
+                return $entityManager->getRepository(EquipementS130::class)->findOneBy(['id' => $id]);
+            case 'S140':
+                return $entityManager->getRepository(EquipementS140::class)->findOneBy(['id' => $id]);
+            case 'S150':
+                return $entityManager->getRepository(EquipementS150::class)->findOneBy(['id' => $id]);
+            case 'S160':
+                return $entityManager->getRepository(EquipementS160::class)->findOneBy(['id' => $id]);
+            case 'S170':
+                return $entityManager->getRepository(EquipementS170::class)->findOneBy(['id' => $id]);
+            default:
+                return null;
+        }
+    }
+    
+    private function getEquipmentsByClientAndAgence(string $agence, string $id, EntityManagerInterface $entityManager)
+    {
+        switch ($agence) {
+            case 'S10':
+                return $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S40':
+                return $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S50':
+                return $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S60':
+                return $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S70':
+                return $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S80':
+                return $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S100':
+                return $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S120':
+                return $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S130':
+                return $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S140':
+                return $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S150':
+                return $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S160':
+                return $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            case 'S170':
+                return $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
+            default:
+                return [];
+        }
     }
 }
