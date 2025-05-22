@@ -1,0 +1,143 @@
+{# templates/pdf/single_equipement.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche équipement {{ equipment.numeroEquipement }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+        .equipement-info {
+            margin-bottom: 30px;
+        }
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .info-table th, .info-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .info-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+            width: 30%;
+        }
+        .photos-section {
+            margin-top: 30px;
+        }
+        .photos-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .photo-container {
+            margin-bottom: 15px;
+            page-break-inside: avoid;
+        }
+        .photo {
+            max-width: 400px;
+            max-height: 300px;
+            border: 1px solid #ddd;
+            padding: 5px;
+        }
+        .photo-caption {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .page-break {
+            page-break-before: always;
+        }
+        .agence-badge {
+            background-color: #007bff;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Fiche Équipement</h1>
+        <span class="agence-badge">Agence {{ agence }}</span>
+        <h2>{{ equipment.numeroEquipement }}</h2>
+    </div>
+    
+    <div class="equipement-info">
+        <h3>Informations de l'équipement</h3>
+        <table class="info-table">
+            <tr>
+                <th>Numéro d'équipement</th>
+                <td>{{ equipment.numeroEquipement }}</td>
+            </tr>
+            <tr>
+                <th>Raison sociale</th>
+                <td>{{ equipment.raisonSociale }}</td>
+            </tr>
+            <tr>
+                <th>Type</th>
+                <td>{{ equipment.type ?? 'Non renseigné' }}</td>
+            </tr>
+            <tr>
+                <th>Marque</th>
+                <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
+            </tr>
+            <tr>
+                <th>Modèle</th>
+                <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
+            </tr>
+            <tr>
+                <th>Date d'enregistrement</th>
+                <td>{{ equipment.dateEnregistrement ? equipment.dateEnregistrement|date('d/m/Y H:i') : 'Non renseigné' }}</td>
+            </tr>
+            <tr>
+                <th>Dernière visite</th>
+                <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
+            </tr>
+            <tr>
+                <th>Visite</th>
+                <td>{{ equipment.visite ?? 'Non renseigné' }}</td>
+            </tr>
+            {% if equipment.commentaire %}
+            <tr>
+                <th>Commentaire</th>
+                <td>{{ equipment.commentaire }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+    
+    <div class="photos-section">
+        <h3>Photos de l'équipement</h3>
+        {% if picturesData|length > 0 %}
+            {% for pictureData in picturesData %}
+                <div class="photo-container">
+                    <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
+                    <div class="photo-caption">
+                        Date de mise à jour : {{ pictureData.update_time ? pictureData.update_time|date('d/m/Y H:i') : 'Non renseigné' }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Aucune photo disponible pour cet équipement.</p>
+        {% endif %}
+    </div>
+    
+    <div style="margin-top: 50px; font-size: 10px; color: #666; text-align: center;">
+        Document généré le {{ "now"|date('d/m/Y à H:i') }}
+    </div>
+</body>
+</html>
