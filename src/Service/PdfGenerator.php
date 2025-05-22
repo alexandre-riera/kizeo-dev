@@ -9,14 +9,13 @@ class PdfGenerator
 {
     public function generatePdf($html, $filename = 'document.pdf')
     {
-        // Initialisation de Dompdf (version simple sans Options)
-        $dompdf = new Dompdf();
+        // Configuration des options
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true); // Pour permettre le chargement d'images externes
         
-        // Configuration des options directement sur l'instance
-        $dompdf->getOptions()->setIsHtml5ParserEnabled(true);
-        $dompdf->getOptions()->setIsRemoteEnabled(true);
-        
-        // Charger le HTML
+        // Initialisation de Dompdf
+        $dompdf = new Dompdf($options);
         $dompdf->loadHtml($html);
         
         // Configuration du format et orientation
@@ -27,5 +26,4 @@ class PdfGenerator
         
         return $dompdf->output();
     }
-
 }
