@@ -140,7 +140,7 @@
                             {% endif %}
                             <a style="margin-top:10px;" class="btn btn-primary" href="{{ path('app_show_equipement_details_by_id', {'agence': equipment.getCodeAgence(), 'id': equipment.getId() }) }}" target="_blank"><i class=" fa-solid fa-magnifying-glass-plus"></i> Fiche équipement</a>
                             <a href="{{ path('equipement_pdf_single', {'agence': equipment.getCodeAgence(), 'id': equipment.getId()}) }}" 
-                            class="btn btn-outline-danger" target="_blank" title="PDF de cet équipement">
+                            class="btn btn-primary" target="_blank" title="PDF de cet équipement">
                                 <i class="fa-solid fa-file-pdf"></i>
                             </a>
                             </td>
