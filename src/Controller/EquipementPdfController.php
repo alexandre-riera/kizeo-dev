@@ -99,7 +99,7 @@ class EquipementPdfController extends AbstractController
                 
                 // Filtre par année si défini
                 if (!empty($clientAnneeFilter)) {
-                    $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
                     $matches = $matches && ($annee_date_equipment == $clientAnneeFilter);
                 }
                 

@@ -1505,10 +1505,11 @@ class HomeController extends AbstractController
 
         $clientAnneeFilterArray = []; // Je filtre les résultats des filtres d'année
         foreach ($clientSelectedEquipments as $equipment) {
-            $date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
-            // $date_equipment = $equipment->getDateEnregistrement();
-            if (!in_array($date_equipment, $clientAnneeFilterArray)) {
-                $clientAnneeFilterArray [] = $date_equipment;
+            if ($equipment->getDerniereVisite() !== null) { // Vérifier que la date existe
+                $date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
+                if (!in_array($date_equipment, $clientAnneeFilterArray)) {
+                    $clientAnneeFilterArray [] = $date_equipment;
+                }
             }
         }
         $clientVisiteFilterArray = []; // Je filtre les résultats des filtres de visite
@@ -1520,7 +1521,7 @@ class HomeController extends AbstractController
         }
         $clientAnneeFilter = "";
         $clientVisiteFilter = "";
-        
+
         // Récupération des filtres via la requête
         if ($request->query->get('submitFilters')) {
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
@@ -1539,7 +1540,7 @@ class HomeController extends AbstractController
             // Filtrage des équipements
             if (!empty($clientAnneeFilter) && !empty($clientVisiteFilter)) {
                 $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
-                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite()));
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
                     return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
                 });
             }
@@ -1657,7 +1658,7 @@ class HomeController extends AbstractController
         // Filtrage des équipements
         if (!empty($clientAnneeFilter) && !empty($clientVisiteFilter)) {
             $clientSelectedEquipmentsFiltered = array_filter($clientSelectedEquipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
-                $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite()));
+                $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
                 return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
             });
         }
