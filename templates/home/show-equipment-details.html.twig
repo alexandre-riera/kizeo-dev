@@ -35,7 +35,8 @@
             <div class="card bg-light mb-3">
                 <div class="card-body">
                     <h4 class="card-title">Raison sociale et visite</h4>
-                    <p class="card-text" id="modal_show_trigramme">{{ equipment.getRaisonSociale() }} || {{ equipment.getVisite() }}</p>
+                    <p class="card-text" id="modal_show_trigramme">{{ equipment.getRaisonSociale() }}</p>
+                    <p class="card-text" id="modal_show_trigramme">{{ equipment.getVisite() }} de {{ equipment.getDerniereVisite()|date('Y') }}</p>
                 </div>
             </div>
             <div class="card bg-light mb-3">
