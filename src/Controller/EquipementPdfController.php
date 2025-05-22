@@ -32,8 +32,9 @@ class EquipementPdfController extends AbstractController
     }
     
     /**
-     * @Route("/equipement/pdf/{agence}/{id}", name="equipement_pdf_single")
+     * 
      */
+    #[Route('/equipement/pdf/{agence}/{id}', name: 'equipement_pdf_single')]
     public function generateSingleEquipementPdf(string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
         // Récupérer l'équipement selon l'agence (même logique que votre fonction existante)
@@ -74,8 +75,9 @@ class EquipementPdfController extends AbstractController
     }
     
     /**
-     * @Route("/client/equipements/pdf/{agence}/{id}", name="client_equipements_pdf")
+     * 
      */
+    #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
     public function generateClientEquipementsPdf(string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
         // Récupérer tous les équipements du client selon l'agence
