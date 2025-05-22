@@ -458,7 +458,7 @@
                             <form id="filterForm" method="get" action="">
                                 <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
                                 <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
-                                <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
+                                <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ clientSelectedInformations.getIdContact() }}">
                                 <div class="form-group">
                                     <label for="clientAnneeFilter">Année :</label>
                                     <select class="form-control" id="clientAnneeFilter" name="clientAnneeFilter">
@@ -492,7 +492,7 @@
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="mb-3">
-                    <a href="{{ path('client_equipements_pdf', {'agence': agenceSelected, 'id': idClientSelected}) }}" 
+                    <a href="{{ path('client_equipements_pdf', {'agence': agenceSelected, 'id': clientSelectedInformations.getIdContact()}) }}" 
                     class="btn btn-success btn-lg" target="_blank">
                         <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
                     </a>
