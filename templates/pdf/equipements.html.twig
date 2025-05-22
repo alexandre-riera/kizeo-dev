@@ -56,7 +56,7 @@
     <div class="summary">
         <h3>Résumé</h3>
         <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
-        <p><strong>Date de génération :</strong> {{ "now"|date('d/m/Y à H:i', strtotime('+2 hours')) }}</p>
+        <p><strong>Date de génération :</strong> {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}</p>
     </div>
     
     {% for equipmentData in equipmentsWithPictures %}
