@@ -29,7 +29,7 @@
             </div>
             <div class="card-body">
                 {# Dans votre template d'affichage de la liste des équipements #}
-                <a href="{{ path('client_equipements_pdf', {'id': idClientSelected}) }}" class="btn btn-primary" target="_blank">
+                <a href="{{ path('client_equipements_pdf', {'id': idClientSelected, 'agence': agenceSelected}) }}" class="btn btn-primary" target="_blank">
                     <i class="fa-solid fa-file-pdf"></i> Générer PDF
                 </a>
             </div>
