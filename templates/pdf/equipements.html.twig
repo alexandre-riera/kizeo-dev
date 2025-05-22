@@ -1,0 +1,117 @@
+{# templates/pdf/equipements.html.twig #}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Équipements du client {{ idClientSelected }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        .page-break {
+            page-break-after: always;
+        }
+        .equipement {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .equipement-header {
+            background-color: #f5f5f5;
+            padding: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .photo {
+            max-width: 300px;
+            max-height: 200px;
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+        th {
+            width: 30%;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fiche d'équipements - Client {{ idClientSelected }}</h1>
+    
+    {% for equipement in clientSelectedEquipmentsFiltered %}
+    <div class="equipement">
+        <div class="equipement-header">
+            Équipement #{{ equipement.numero_equipement }}
+        </div>
+        
+        <table>
+            <tr>
+                <th>Type</th>
+                <td>{{ equipement.getNumeroEquipement() }}</td>
+            </tr>
+            <tr>
+                <th>Marque</th>
+                <td>{{ equipement.getMarque() }}</td>
+            </tr>
+            <tr>
+                <th>Modèle</th>
+                <td>{{ equipement.getModele() }}</td>
+            </tr>
+            <tr>
+                <th>Date d'enregistrement</th>
+                <td>{{ equipement.getDateEnregistrement()|date('d/m/Y') }}</td>
+            </tr>
+            <tr>
+                <th>Dernière visite</th>
+                <td>{{ equipement.getDerniereVisite() ? equipement.getDerniereVisite()|date('d/m/Y') : 'Aucune' }}</td>
+            </tr>
+            <tr>
+                <th>Visite</th>
+                <td>{{ equipement.getVisite() }}</td>
+            </tr>
+            {% if equipement.getCommentaire() %}
+            <tr>
+                <th>Commentaire</th>
+                <td>{{ equipement.getCommentaire() }}</td>
+            </tr>
+            {% endif %}
+        </table>
+        
+        <h3>Photos</h3>
+        {% set equipementPhotos = [] %}
+        {% for photo in photos %}
+            {% if photo.id_equipement == equipement.id %}
+                {% set equipementPhotos = equipementPhotos|merge([photo]) %}
+            {% endif %}
+        {% endfor %}
+        
+        {% if equipementPhotos|length > 0 %}
+            {% for photo in equipementPhotos %}
+                <div>
+                    <img src="data:image/jpeg;base64,{{ photo.image_data|base64_encode }}" class="photo">
+                    {% if photo.description %}
+                    <p>{{ photo.description }}</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>Aucune photo disponible pour cet équipement.</p>
+        {% endif %}
+    </div>
+    
+    {% if not loop.last %}
+        <div class="page-break"></div>
+    {% endif %}
+    {% endfor %}
+</body>
+</html>
