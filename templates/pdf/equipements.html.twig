@@ -3,7 +3,6 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    {# <title>Équipements du client {{ clientId }}</title> #}
     <title>Équipements du client</title>
     <style>
         body {
@@ -44,17 +43,50 @@
             width: 30%;
             background-color: #f9f9f9;
         }
+        .filter-info {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 11px;
+        }
+        .filter-badge {
+            background-color: #007bff;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Rapport d'équipements</h1>
         <span class="agence-badge">Agence {{ agence }}</span>
+        
+        {% if isFiltered is defined and isFiltered %}
+            <div class="filter-info">
+                <strong>⚠️ Filtres appliqués :</strong>
+                {% if clientAnneeFilter %}
+                    <span class="filter-badge">Année : {{ clientAnneeFilter }}</span>
+                {% endif %}
+                {% if clientVisiteFilter %}
+                    <span class="filter-badge">Visite : {{ clientVisiteFilter }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
     
     <div class="summary">
         <h3>Résumé</h3>
         <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
+        {% if isFiltered is defined and isFiltered %}
+            <p><em>📋 Résultats filtrés selon les critères sélectionnés</em></p>
+        {% else %}
+            <p><em>📋 Tous les équipements du client</em></p>
+        {% endif %}
         <p><strong>Date de génération :</strong> {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}</p>
     </div>
     
@@ -95,12 +127,6 @@
                     <th>ID Contact</th>
                     <td>{{ equipment.idContact ?? 'Non renseigné' }}</td>
                 </tr>
-                {#{% if equipment.commentaire %}
-                <tr>
-                    <th colspan="3">Commentaire</th>
-                    <td>{{ equipment.commentaire }}</td>
-                </tr>
-                {% endif %}#}
             </table>
             
             <div class="photos-section">
@@ -129,6 +155,9 @@
     
     <div style="margin-top: 30px; font-size: 9px; color: #666; text-align: center; border-top: 1px solid #ddd; padding-top: 10px;">
         Document généré automatiquement le {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }} - {{ equipmentsWithPictures|length }} équipement{{ equipmentsWithPictures|length > 1 ? 's' : '' }} traité{{ equipmentsWithPictures|length > 1 ? 's' : '' }}
+        {% if isFiltered is defined and isFiltered %}
+            <br><em>Filtres appliqués lors de la génération</em>
+        {% endif %}
     </div>
 </body>
 </html>

@@ -21,6 +21,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Request;
 
 class EquipementPdfController extends AbstractController
 {
@@ -78,8 +79,12 @@ class EquipementPdfController extends AbstractController
      * 
      */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
-    public function generateClientEquipementsPdf(string $agence, string $id, EntityManagerInterface $entityManager): Response
+    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
+        // Récupérer les filtres depuis les paramètres de la requête
+        $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
+        $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
+        
         // Récupérer tous les équipements du client selon l'agence
         $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
         
@@ -87,9 +92,34 @@ class EquipementPdfController extends AbstractController
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
         }
         
+        // Appliquer les filtres si ils sont définis
+        if (!empty($clientAnneeFilter) || !empty($clientVisiteFilter)) {
+            $equipments = array_filter($equipments, function($equipment) use ($clientAnneeFilter, $clientVisiteFilter) {
+                $matches = true;
+                
+                // Filtre par année si défini
+                if (!empty($clientAnneeFilter)) {
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDateEnregistrement()));
+                    $matches = $matches && ($annee_date_equipment == $clientAnneeFilter);
+                }
+                
+                // Filtre par visite si défini
+                if (!empty($clientVisiteFilter)) {
+                    $matches = $matches && ($equipment->getVisite() == $clientVisiteFilter);
+                }
+                
+                return $matches;
+            });
+        }
+        
+        // Vérifier s'il reste des équipements après filtrage
+        if (empty($equipments)) {
+            throw $this->createNotFoundException('Aucun équipement trouvé pour ce client avec les critères de filtrage sélectionnés');
+        }
+        
         $equipmentsWithPictures = [];
         
-        // Pour chaque équipement, récupérer ses photos
+        // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
             $picturesArray = $entityManager->getRepository(Form::class)->findBy([
                 'code_equipement' => $equipment->getNumeroEquipement(), 
@@ -108,11 +138,26 @@ class EquipementPdfController extends AbstractController
         $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
             'clientId' => $id,
-            'agence' => $agence
+            'agence' => $agence,
+            'clientAnneeFilter' => $clientAnneeFilter,
+            'clientVisiteFilter' => $clientVisiteFilter,
+            'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
         ]);
         
+        // Générer le nom de fichier avec les filtres si applicables
+        $filename = "equipements_client_{$id}_{$agence}";
+        if (!empty($clientAnneeFilter) || !empty($clientVisiteFilter)) {
+            $filename .= '_filtered';
+            if (!empty($clientAnneeFilter)) {
+                $filename .= '_' . $clientAnneeFilter;
+            }
+            if (!empty($clientVisiteFilter)) {
+                $filename .= '_' . str_replace(' ', '_', $clientVisiteFilter);
+            }
+        }
+        $filename .= '.pdf';
+        
         // Générer le PDF
-        $filename = "equipements_client_{$id}_{$agence}.pdf";
         $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
         
         // Retourner le PDF
