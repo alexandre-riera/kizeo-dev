@@ -1520,6 +1520,7 @@ class HomeController extends AbstractController
         }
         $clientAnneeFilter = "";
         $clientVisiteFilter = "";
+        
         // Récupération des filtres via la requête
         if ($request->query->get('submitFilters')) {
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
@@ -1542,6 +1543,19 @@ class HomeController extends AbstractController
                     return ($annee_date_equipment == $clientAnneeFilter && $equipment->getVisite() == $clientVisiteFilter);
                 });
             }
+        }
+        // Définir les variables par défaut si elles ne sont pas encore définies
+        if (!isset($defaultYear)) {
+            $defaultYear = '';
+        }
+        if (!isset($defaultVisit)) {
+            $defaultVisit = '';
+        }
+        if (!isset($clientAnneeFilter)) {
+            $clientAnneeFilter = $defaultYear;
+        }
+        if (!isset($clientVisiteFilter)) {
+            $clientVisiteFilter = $defaultVisit;
         }
 
         return $this->render('home/index.html.twig', [
@@ -1572,6 +1586,8 @@ class HomeController extends AbstractController
             'clientAnneeFilter' =>  $clientAnneeFilter,
             'clientVisiteFilterArray' =>  $clientVisiteFilterArray,
             'clientVisiteFilter' =>  $clientVisiteFilter,
+            'defaultYear' => $defaultYear,
+            'defaultVisit' => $defaultVisit,
         ]);
     }
     

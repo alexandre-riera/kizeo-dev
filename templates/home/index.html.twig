@@ -492,14 +492,19 @@
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="mb-3">
-                    <a href="{{ path('client_equipements_pdf', {
+                    <a id="pdf-button" href="{{ path('client_equipements_pdf', {
                         'agence': agenceSelected, 
                         'id': clientSelectedInformations.getIdContact(),
-                        'clientAnneeFilter': clientAnneeFilter|default(''),
-                        'clientVisiteFilter': clientVisiteFilter|default('')
+                        'clientAnneeFilter': clientAnneeFilter,
+                        'clientVisiteFilter': clientVisiteFilter
                     }) }}" 
                     class="btn btn-success btn-lg" target="_blank">
                         <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
+                        {% if clientAnneeFilter or clientVisiteFilter %}
+                            <small class="d-block">
+                                ({% if clientAnneeFilter %}{{ clientAnneeFilter }}{% endif %}{% if clientVisiteFilter %} - {{ clientVisiteFilter }}{% endif %})
+                            </small>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -646,6 +651,48 @@
     {% endif %}
     <script>
         $(document).ready(function() {
+            const anneeSelect = document.getElementById('clientAnneeFilter');
+            const visiteSelect = document.getElementById('clientVisiteFilter');
+            const pdfButton = document.getElementById('pdf-button');
+            
+            function updatePdfButton() {
+                if (!pdfButton) return;
+                
+                const baseUrl = pdfButton.href.split('?')[0];
+                const url = new URL(baseUrl);
+                
+                const anneeValue = anneeSelect.value;
+                const visiteValue = visiteSelect.value;
+                
+                if (anneeValue) {
+                    url.searchParams.set('clientAnneeFilter', anneeValue);
+                }
+                if (visiteValue) {
+                    url.searchParams.set('clientVisiteFilter', visiteValue);
+                }
+                
+                pdfButton.href = url.toString();
+                
+                // Mettre à jour le texte du bouton pour afficher les filtres
+                const buttonSmall = pdfButton.querySelector('small');
+                if (anneeValue || visiteValue) {
+                    let filterText = '';
+                    if (anneeValue) filterText += anneeValue;
+                    if (visiteValue) filterText += (filterText ? ' - ' : '') + visiteValue;
+                    
+                    if (buttonSmall) {
+                        buttonSmall.textContent = `(${filterText})`;
+                    } else {
+                        const smallElement = document.createElement('small');
+                        smallElement.className = 'd-block';
+                        smallElement.textContent = `(${filterText})`;
+                        pdfButton.appendChild(smallElement);
+                    }
+                } else if (buttonSmall) {
+                    buttonSmall.textContent = '';
+                }
+            }
+
             // Intercepter la soumission du formulaire
             $('#filterForm').on('submit', function(e) {
                 e.preventDefault();
@@ -663,12 +710,20 @@
                         $('#equipment-table-container').html(response);
                         // Réinitialiser Bootstrap Table
                         $('#table').bootstrapTable();
+                        // Mettre à jour le bouton PDF après le filtrage AJAX
+                        updatePdfButton();
                     },
                     error: function(xhr) {
                         console.error('Erreur lors du chargement des données:', xhr.responseText);
                     }
                 });
             });
+            // Écouter les changements sur les sélecteurs
+            if (anneeSelect) anneeSelect.addEventListener('change', updatePdfButton);
+            if (visiteSelect) visiteSelect.addEventListener('change', updatePdfButton);
+            
+            // Mettre à jour au chargement initial
+            updatePdfButton();
         });
     </script>
 {% endblock %}
