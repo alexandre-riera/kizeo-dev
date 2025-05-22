@@ -27,7 +27,7 @@
         <div id="showEquipmentDetails" >
             <h3 class="col-md-12">Détails équipement</h3>
             <div class="mb-3">
-                <a href="{{ path('equipement_pdf_single', {'agence': agenceSelected, 'id': equipment.getId()}) }}" 
+                <a href="{{ path('equipement_pdf_single', {'agence': equipment.getCodeAgence(), 'id': equipment.getId()}) }}" 
                 class="btn btn-sm btn-outline-danger" target="_blank" title="PDF de cet équipement">
                     <i class="fa-solid fa-file-pdf"></i>
                 </a>
