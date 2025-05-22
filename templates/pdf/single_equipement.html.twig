@@ -138,7 +138,7 @@
     </div>
     
     <div style="margin-top: 50px; font-size: 10px; color: #666; text-align: center;">
-        Document généré le {{ "now"|date('d/m/Y à H:i') }}
+        Document généré le {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}
     </div>
 </body>
 </html>
