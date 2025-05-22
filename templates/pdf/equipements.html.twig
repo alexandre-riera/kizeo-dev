@@ -46,72 +46,89 @@
     </style>
 </head>
 <body>
-    <h1>Fiche d'équipements - Client {{ idClientSelected }}</h1>
-    
-    {% for equipement in clientSelectedEquipmentsFiltered %}
-    <div class="equipement">
-        <div class="equipement-header">
-            Équipement #{{ equipement.numero_equipement }}
-        </div>
-        
-        <table>
-            <tr>
-                <th>Type</th>
-                <td>{{ equipement.getNumeroEquipement() }}</td>
-            </tr>
-            <tr>
-                <th>Marque</th>
-                <td>{{ equipement.getMarque() }}</td>
-            </tr>
-            <tr>
-                <th>Modèle</th>
-                <td>{{ equipement.getModele() }}</td>
-            </tr>
-            <tr>
-                <th>Date d'enregistrement</th>
-                <td>{{ equipement.getDateEnregistrement()|date('d/m/Y') }}</td>
-            </tr>
-            <tr>
-                <th>Dernière visite</th>
-                <td>{{ equipement.getDerniereVisite() ? equipement.getDerniereVisite()|date('d/m/Y') : 'Aucune' }}</td>
-            </tr>
-            <tr>
-                <th>Visite</th>
-                <td>{{ equipement.getVisite() }}</td>
-            </tr>
-            {% if equipement.getCommentaire() %}
-            <tr>
-                <th>Commentaire</th>
-                <td>{{ equipement.getCommentaire() }}</td>
-            </tr>
-            {% endif %}
-        </table>
-        
-        <h3>Photos</h3>
-        {% set equipementPhotos = [] %}
-        {% for photo in photos %}
-            {% if photo.id_equipement == equipement.id %}
-                {% set equipementPhotos = equipementPhotos|merge([photo]) %}
-            {% endif %}
-        {% endfor %}
-        
-        {% if equipementPhotos|length > 0 %}
-            {% for photo in equipementPhotos %}
-                <div>
-                    <img src="data:image/jpeg;base64,{{ photo.image_data|base64_encode }}" class="photo">
-                    {% if photo.description %}
-                    <p>{{ photo.description }}</p>
-                    {% endif %}
-                </div>
-            {% endfor %}
-        {% else %}
-            <p>Aucune photo disponible pour cet équipement.</p>
-        {% endif %}
+    <div class="header">
+        <h1>Rapport d'équipements</h1>
+        <span class="agence-badge">Agence {{ agence }}</span>
+        <h2>Client {{ clientId }}</h2>
     </div>
     
-    {% if not loop.last %}
-        <div class="page-break"></div>
-    {% endif %}
+    <div class="summary">
+        <h3>Résumé</h3>
+        <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
+        <p><strong>Date de génération :</strong> {{ "now"|date('d/m/Y à H:i') }}</p>
+    </div>
+    
+    {% for equipmentData in equipmentsWithPictures %}
+        {% set equipment = equipmentData.equipment %}
+        {% set pictures = equipmentData.pictures %}
+        
+        <div class="equipement">
+            <div class="equipement-header">
+                <div class="equipement-title">
+                    Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
+                </div>
+            </div>
+            
+            <h4>Informations techniques</h4>
+            <table class="info-table">
+                <tr>
+                    <th>Numéro</th>
+                    <td>{{ equipment.numeroEquipement }}</td>
+                    <th>Type</th>
+                    <td>{{ equipment.type ?? 'Non renseigné' }}</td>
+                </tr>
+                <tr>
+                    <th>Marque</th>
+                    <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
+                    <th>Modèle</th>
+                    <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
+                </tr>
+                <tr>
+                    <th>Date enregistrement</th>
+                    <td>{{ equipment.dateEnregistrement ? equipment.dateEnregistrement|date('d/m/Y') : 'Non renseigné' }}</td>
+                    <th>Dernière visite</th>
+                    <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>
+                </tr>
+                <tr>
+                    <th>Visite</th>
+                    <td>{{ equipment.visite ?? 'Non renseigné' }}</td>
+                    <th>ID Contact</th>
+                    <td>{{ equipment.idContact ?? 'Non renseigné' }}</td>
+                </tr>
+                {% if equipment.commentaire %}
+                <tr>
+                    <th colspan="3">Commentaire</th>
+                    <td>{{ equipment.commentaire }}</td>
+                </tr>
+                {% endif %}
+            </table>
+            
+            <div class="photos-section">
+                <h4>Photos ({{ pictures|length }} photo{{ pictures|length > 1 ? 's' : '' }})</h4>
+                {% if pictures|length > 0 %}
+                    <div class="photos-grid">
+                        {% for pictureData in pictures %}
+                            <div class="photo-container">
+                                <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
+                                <div class="photo-caption">
+                                    {{ pictureData.update_time ? pictureData.update_time|date('d/m/Y H:i') : 'Date inconnue' }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p><em>Aucune photo disponible pour cet équipement.</em></p>
+                {% endif %}
+            </div>
+        </div>
+        
+        {% if not loop.last %}
+            <div class="page-break"></div>
+        {% endif %}
     {% endfor %}
+    
+    <div style="margin-top: 30px; font-size: 9px; color: #666; text-align: center; border-top: 1px solid #ddd; padding-top: 10px;">
+        Document généré automatiquement le {{ "now"|date('d/m/Y à H:i') }} - {{ equipmentsWithPictures|length }} équipement{{ equipmentsWithPictures|length > 1 ? 's' : '' }} traité{{ equipmentsWithPictures|length > 1 ? 's' : '' }}
+    </div>
 </body>
 </html>

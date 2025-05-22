@@ -490,7 +490,13 @@
                         </div>
                     </div>
                 </div>
-                
+                <!-- Bouton pour générer le PDF de tous les équipements du client -->
+                <div class="mb-3">
+                    <a href="{{ path('client_equipements_pdf', {'agence': agenceSelected, 'clientId': idClientSelected}) }}" 
+                    class="btn btn-success btn-lg" target="_blank">
+                        <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
+                    </a>
+                </div>
             </div>
         {%endif%}
         {% endblock %}

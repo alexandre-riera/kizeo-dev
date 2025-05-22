@@ -26,6 +26,12 @@
         <!-- Modal show equipment details -->
         <div id="showEquipmentDetails" >
             <h3 class="col-md-12">Détails équipement</h3>
+            <div class="mb-3">
+                <a href="{{ path('equipement_pdf_single', {'agence': app.request.get('agence'), 'id': equipment.getId()}) }}" 
+                class="btn btn-danger" target="_blank">
+                    <i class="fa-solid fa-file-pdf"></i> Générer PDF
+                </a>
+            </div>
             <div class="card bg-light mb-3">
                 <div class="card-body">
                     <h4 class="card-title">Raison sociale et visite</h4>
