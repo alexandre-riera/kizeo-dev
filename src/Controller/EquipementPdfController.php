@@ -26,8 +26,9 @@ class EquipementPdfController extends AbstractController
     }
     
     /**
-     * @Route("/client/{id}/equipements/pdf", name="client_equipements_pdf")
+     * 
      */
+    #[Route('/client/{id}/equipements/pdf', name: 'client_equipements_pdf', methods: ['GET'])]
     public function generateClientEquipementsPdf($id): Response
     {
         // Récupérer les équipements du client
