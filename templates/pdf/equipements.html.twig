@@ -68,7 +68,7 @@
         
         {% if isFiltered is defined and isFiltered %}
             <div class="filter-info">
-                <strong>⚠️ Filtres appliqués :</strong>
+                <strong>Filtres appliqués :</strong>
                 {% if clientAnneeFilter %}
                     <span class="filter-badge">Année : {{ clientAnneeFilter }}</span>
                 {% endif %}
@@ -83,11 +83,11 @@
         <h3>Résumé</h3>
         <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
         {% if isFiltered is defined and isFiltered %}
-            <p><em>📋 Résultats filtrés selon les critères sélectionnés</em></p>
+            <p><em>Résultats filtrés selon les critères sélectionnés</em></p>
         {% else %}
-            <p><em>📋 Tous les équipements du client</em></p>
+            <p><em>Tous les équipements du client</em></p>
         {% endif %}
-        <p><strong>Date de génération :</strong> {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}</p>
+        {#<p><strong>Date de génération :</strong> {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}</p>#}
     </div>
     
     {% for equipmentData in equipmentsWithPictures %}
@@ -121,12 +121,12 @@
                     <th>Dernière visite</th>
                     <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>
                 </tr>
-                <tr>
+                {#<tr>
                     <th>Visite</th>
                     <td>{{ equipment.visite ?? 'Non renseigné' }}</td>
                     <th>ID Contact</th>
                     <td>{{ equipment.idContact ?? 'Non renseigné' }}</td>
-                </tr>
+                </tr>#}
             </table>
             
             <div class="photos-section">
