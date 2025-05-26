@@ -169,7 +169,7 @@
                     {% endif %}
                     
                     <tr>
-                        <td style="text-align: center;">
+                        {#<td style="text-align: center;">
                             {% if logoColor == 'vert' %}
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
                             {% elseif logoColor == 'orange' %}
@@ -178,6 +178,17 @@
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
                             {% elseif logoColor == 'noir' %}
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                            {% endif %}
+                        </td>#}
+                        <td style="text-align: center;">
+                            {% if logoColor == 'vert' %}
+                                <div style="width: 20px; height: 20px; background-color: #4CAF50; border-radius: 50%; display: inline-block;"></div>
+                            {% elseif logoColor == 'orange' %}
+                                <div style="width: 20px; height: 20px; background-color: #FF9800; border-radius: 50%; display: inline-block;"></div>
+                            {% elseif logoColor == 'rouge' %}
+                                <div style="width: 20px; height: 20px; background-color: #F44336; border-radius: 50%; display: inline-block;"></div>
+                            {% elseif logoColor == 'noir' %}
+                                <div style="width: 20px; height: 20px; background-color: #424242; border-radius: 50%; display: inline-block;"></div>
                             {% endif %}
                         </td>
                         <td style="text-align: left; padding-left: 10px;">{{ etat }}</td>
