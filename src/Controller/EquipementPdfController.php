@@ -76,8 +76,8 @@ class EquipementPdfController extends AbstractController
     }
     
     /**
-    * Générer le PDF des équipements d'un client
-    */
+     * 
+     */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
     public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
@@ -142,9 +142,9 @@ class EquipementPdfController extends AbstractController
         // Fonction pour déterminer le logo selon l'état
         $getLogoByEtat = function($etat) {
             switch ($etat) {
-                case "Bon état de fonctionnement le jour de la visite":
+                case "Rien à signaler le jour de la visite. Fonctionnement ok":
                     return 'vert';
-                case "Travaux préventifs":
+                case "Travaux à prévoir":
                     return 'orange';
                 case "Travaux curatifs":
                 case "Equipement à l'arrêt le jour de la visite":
