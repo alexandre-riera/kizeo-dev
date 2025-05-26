@@ -159,8 +159,8 @@
                 {% for etat, count in statistiques.etatsCount %}
                     <tr>
                         <td style="text-align: center;">
-                            {# Debug: affichons l'état pour voir ce qui se passe #}
-                            {# {{ etat }} #}
+                            {# Debug temporaire : affichons l'état exact #}
+                            <small style="font-size: 8px; color: red;">"{{ etat }}"</small><br>
                             
                             {% if etat == "Bon état de fonctionnement le jour de la visite" %}
                                 <div style="width: 20px; height: 20px; background-color: #4CAF50; border-radius: 50%; display: inline-block;" title="Vert"></div>
@@ -213,6 +213,9 @@
                 <div class="equipement-title">
                     Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                     {% if equipment.etat %}
+                        {# Debug temporaire : affichons l'état exact #}
+                        <small style="font-size: 8px; color: red; float: right; clear: both;">"{{ equipment.etat }}"</small><br style="clear: both;">
+                        
                         {% if equipment.etat == "Bon état de fonctionnement le jour de la visite" %}
                             <div style="width: 20px; height: 20px; background-color: #4CAF50; border-radius: 50%; float: right; margin-top: 2px;" title="Vert"></div>
                         {% elseif equipment.etat == "Travaux préventifs" %}
