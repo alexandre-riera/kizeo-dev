@@ -144,7 +144,7 @@
     {# Tableau de statistiques #}
     {% if statistiques is defined %}
     <div class="stats-section">
-        <div class="stats-title">📊 Statistiques par statut</div>
+        <div class="stats-title">Statistiques par statut</div>
         
         <table class="stats-table">
             <thead>
@@ -170,9 +170,15 @@
                     
                     <tr>
                         <td style="text-align: center;">
-                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/"~{{ logoColor }}~".png" 
-                                 alt="logo "~ {{ logoColor }} 
-                                 style="width: 20px; height: 20px;">
+                            {% if logoColor == 'vert' %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
+                            {% elseif logoColor == 'orange' %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
+                            {% elseif logoColor == 'rouge' %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
+                            {% elseif logoColor == 'noir' %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                            {% endif %}
                         </td>
                         <td style="text-align: left; padding-left: 10px;">{{ etat }}</td>
                         <td style="text-align: center;">
@@ -222,9 +228,16 @@
                         {% elseif equipment.etat in ["Equipement inaccessible le jour de la visite", "Equipement non présent sur site"] %}
                             {% set logoColor = 'noir' %}
                         {% endif %}
-                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/{{ logoColor }}.png" 
-                             alt="logo {{ logoColor }}" 
-                             style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        
+                        {% if logoColor == 'vert' %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif logoColor == 'orange' %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif logoColor == 'rouge' %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif logoColor == 'noir' %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% endif %}
                     {% endif %}
                 </div>
             </div>
