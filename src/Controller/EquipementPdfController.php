@@ -99,7 +99,7 @@ class EquipementPdfController extends AbstractController
                 
                 // Filtre par année si défini
                 if (!empty($clientAnneeFilter)) {
-                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite()));
                     $matches = $matches && ($annee_date_equipment == $clientAnneeFilter);
                 }
                 
@@ -116,6 +116,84 @@ class EquipementPdfController extends AbstractController
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client avec les critères de filtrage sélectionnés');
         }
+        
+        // === CALCUL DES STATISTIQUES ===
+        $etats = [];
+        $counterVert = 0;
+        $counterOrange = 0;
+        $counterRouge = 0;
+        $counterNoir = 0;
+        $counterInexistant = 0;
+        
+        // Parcourir tous les équipements pour calculer les statistiques
+        foreach ($equipments as $equipment) {
+            $etat = $equipment->getEtat();
+            
+            // Ajouter l'état s'il n'existe pas déjà dans le tableau
+            if ($etat && !in_array($etat, $etats)) {
+                $etats[] = $etat;
+            }
+            
+            // Compter selon le statut (couleur)
+            switch ($etat) {
+                case "Bon état de fonctionnement le jour de la visite":
+                    $counterVert++;
+                    break;
+                case "Travaux préventifs":
+                    $counterOrange++;
+                    break;
+                case "Travaux curatifs":
+                case "Equipement à l'arrêt le jour de la visite":
+                case "Equipement mis à l'arrêt lors de l'intervention":
+                    $counterRouge++;
+                    break;
+                case "Equipement inaccessible le jour de la visite":
+                case "Equipement non présent sur site":
+                    $counterNoir++;
+                    if ($etat === "Equipement non présent sur site") {
+                        $counterInexistant++;
+                    }
+                    break;
+            }
+        }
+        
+        // Créer le tableau de statistiques
+        $statistiques = [
+            'etats' => $etats,
+            'counters' => [
+                'vert' => $counterVert,
+                'orange' => $counterOrange,
+                'rouge' => $counterRouge,
+                'noir' => $counterNoir,
+                'inexistant' => $counterInexistant
+            ],
+            'statuts' => [
+                'vert' => [
+                    'libelle' => 'Bon état',
+                    'etats' => ['Bon état de fonctionnement le jour de la visite'],
+                    'count' => $counterVert,
+                    'logo' => 'vert'
+                ],
+                'orange' => [
+                    'libelle' => 'Travaux préventifs', 
+                    'etats' => ['Travaux préventifs'],
+                    'count' => $counterOrange,
+                    'logo' => 'orange'
+                ],
+                'rouge' => [
+                    'libelle' => 'Travaux curatifs/Arrêt',
+                    'etats' => ['Travaux curatifs', 'Equipement à l\'arrêt le jour de la visite', 'Equipement mis à l\'arrêt lors de l\'intervention'],
+                    'count' => $counterRouge,
+                    'logo' => 'rouge'
+                ],
+                'noir' => [
+                    'libelle' => 'Inaccessible/Inexistant',
+                    'etats' => ['Equipement inaccessible le jour de la visite', 'Equipement non présent sur site'],
+                    'count' => $counterNoir,
+                    'logo' => 'noir'
+                ]
+            ]
+        ];
         
         $equipmentsWithPictures = [];
         
@@ -141,7 +219,8 @@ class EquipementPdfController extends AbstractController
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
-            'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
+            'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
+            'statistiques' => $statistiques // 🎯 Nouvelle variable ajoutée
         ]);
         
         // Générer le nom de fichier avec les filtres si applicables
