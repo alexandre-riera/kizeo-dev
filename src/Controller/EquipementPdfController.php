@@ -76,8 +76,8 @@ class EquipementPdfController extends AbstractController
     }
     
     /**
-     * 
-     */
+    * Générer le PDF des équipements d'un client
+    */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
     public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
@@ -118,81 +118,51 @@ class EquipementPdfController extends AbstractController
         }
         
         // === CALCUL DES STATISTIQUES ===
-        $etats = [];
-        $counterVert = 0;
-        $counterOrange = 0;
-        $counterRouge = 0;
-        $counterNoir = 0;
+        $etatsCount = [];
         $counterInexistant = 0;
         
-        // Parcourir tous les équipements pour calculer les statistiques
+        // Parcourir tous les équipements pour compter chaque état
         foreach ($equipments as $equipment) {
             $etat = $equipment->getEtat();
             
-            // Ajouter l'état s'il n'existe pas déjà dans le tableau
-            if ($etat && !in_array($etat, $etats)) {
-                $etats[] = $etat;
-            }
-            
-            // Compter selon le statut (couleur)
-            switch ($etat) {
-                case "Bon état de fonctionnement le jour de la visite":
-                    $counterVert++;
-                    break;
-                case "Travaux préventifs":
-                    $counterOrange++;
-                    break;
-                case "Travaux curatifs":
-                case "Equipement à l'arrêt le jour de la visite":
-                case "Equipement mis à l'arrêt lors de l'intervention":
-                    $counterRouge++;
-                    break;
-                case "Equipement inaccessible le jour de la visite":
-                case "Equipement non présent sur site":
-                    $counterNoir++;
-                    if ($etat === "Equipement non présent sur site") {
-                        $counterInexistant++;
-                    }
-                    break;
+            if ($etat) {
+                // Compter chaque état
+                if (!isset($etatsCount[$etat])) {
+                    $etatsCount[$etat] = 0;
+                }
+                $etatsCount[$etat]++;
+                
+                // Compter spécifiquement les équipements inexistants
+                if ($etat === "Equipement non présent sur site") {
+                    $counterInexistant++;
+                }
             }
         }
         
+        // Fonction pour déterminer le logo selon l'état
+        $getLogoByEtat = function($etat) {
+            switch ($etat) {
+                case "Bon état de fonctionnement le jour de la visite":
+                    return 'vert';
+                case "Travaux préventifs":
+                    return 'orange';
+                case "Travaux curatifs":
+                case "Equipement à l'arrêt le jour de la visite":
+                case "Equipement mis à l'arrêt lors de l'intervention":
+                    return 'rouge';
+                case "Equipement inaccessible le jour de la visite":
+                case "Equipement non présent sur site":
+                    return 'noir';
+                default:
+                    return 'noir';
+            }
+        };
+        
         // Créer le tableau de statistiques
         $statistiques = [
-            'etats' => $etats,
-            'counters' => [
-                'vert' => $counterVert,
-                'orange' => $counterOrange,
-                'rouge' => $counterRouge,
-                'noir' => $counterNoir,
-                'inexistant' => $counterInexistant
-            ],
-            'statuts' => [
-                'vert' => [
-                    'libelle' => 'Bon état',
-                    'etats' => ['Bon état de fonctionnement le jour de la visite'],
-                    'count' => $counterVert,
-                    'logo' => 'vert'
-                ],
-                'orange' => [
-                    'libelle' => 'Travaux préventifs', 
-                    'etats' => ['Travaux préventifs'],
-                    'count' => $counterOrange,
-                    'logo' => 'orange'
-                ],
-                'rouge' => [
-                    'libelle' => 'Travaux curatifs/Arrêt',
-                    'etats' => ['Travaux curatifs', 'Equipement à l\'arrêt le jour de la visite', 'Equipement mis à l\'arrêt lors de l\'intervention'],
-                    'count' => $counterRouge,
-                    'logo' => 'rouge'
-                ],
-                'noir' => [
-                    'libelle' => 'Inaccessible/Inexistant',
-                    'etats' => ['Equipement inaccessible le jour de la visite', 'Equipement non présent sur site'],
-                    'count' => $counterNoir,
-                    'logo' => 'noir'
-                ]
-            ]
+            'etatsCount' => $etatsCount,
+            'counterInexistant' => $counterInexistant,
+            'getLogoByEtat' => $getLogoByEtat
         ];
         
         $equipmentsWithPictures = [];

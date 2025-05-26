@@ -150,71 +150,55 @@
             <thead>
                 <tr>
                     <th>Statut</th>
-                    {% for etat in statistiques.etats %}
-                        <th style="width: 120px;">{{ etat|slice(0, 15) }}{% if etat|length > 15 %}...{% endif %}</th>
-                    {% endfor %}
+                    <th>État</th>
                     <th>Total</th>
                     <th>Total inexistant</th>
                 </tr>
             </thead>
             <tbody>
-                {% for statutKey, statut in statistiques.statuts %}
-                    {% if statut.count > 0 %}
+                {% for etat, count in statistiques.etatsCount %}
+                    {% set logoColor = '' %}
+                    {% if etat == "Bon état de fonctionnement le jour de la visite" %}
+                        {% set logoColor = 'vert' %}
+                    {% elseif etat == "Travaux préventifs" %}
+                        {% set logoColor = 'orange' %}
+                    {% elseif etat in ["Travaux curatifs", "Equipement à l'arrêt le jour de la visite", "Equipement mis à l'arrêt lors de l'intervention"] %}
+                        {% set logoColor = 'rouge' %}
+                    {% elseif etat in ["Equipement inaccessible le jour de la visite", "Equipement non présent sur site"] %}
+                        {% set logoColor = 'noir' %}
+                    {% endif %}
+                    
                     <tr>
-                        <td class="statut-cell">
-                            <span class="logo-statut logo-{{ statut.logo }}"></span>
-                            {{ statut.libelle }}
+                        <td style="text-align: center;">
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/{{ logoColor }}.png" 
+                                 alt="logo {{ logoColor }}" 
+                                 style="width: 20px; height: 20px;">
                         </td>
-                        {% for etat in statistiques.etats %}
-                            <td>
-                                {% set count = 0 %}
-                                {% for equipmentData in equipmentsWithPictures %}
-                                    {% if equipmentData.equipment.etat == etat and etat in statut.etats %}
-                                        {% set count = count + 1 %}
-                                    {% endif %}
-                                {% endfor %}
-                                {{ count > 0 ? count : '-' }}
-                            </td>
-                        {% endfor %}
-                        <td><strong>{{ statut.count }}</strong></td>
-                        <td>
-                            {% if statutKey == 'noir' %}
-                                {{ statistiques.counters.inexistant }}
+                        <td style="text-align: left; padding-left: 10px;">{{ etat }}</td>
+                        <td style="text-align: center;">
+                            {% if etat == "Equipement non présent sur site" %}
+                                {# Pour les équipements non présents, on n'affiche pas le total dans la colonne Total #}
                             {% else %}
-                                -
+                                {{ count }}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if etat == "Equipement non présent sur site" %}
+                                {{ count }}
                             {% endif %}
                         </td>
                     </tr>
-                    {% endif %}
                 {% endfor %}
-                
-                {# Ligne de total #}
-                <tr style="background-color: #e9ecef; font-weight: bold;">
-                    <td class="statut-cell"><strong>TOTAL</strong></td>
-                    {% for etat in statistiques.etats %}
-                        <td>
-                            {% set totalParEtat = 0 %}
-                            {% for equipmentData in equipmentsWithPictures %}
-                                {% if equipmentData.equipment.etat == etat %}
-                                    {% set totalParEtat = totalParEtat + 1 %}
-                                {% endif %}
-                            {% endfor %}
-                            <strong>{{ totalParEtat }}</strong>
-                        </td>
-                    {% endfor %}
-                    <td><strong>{{ equipmentsWithPictures|length }}</strong></td>
-                    <td><strong>{{ statistiques.counters.inexistant }}</strong></td>
-                </tr>
             </tbody>
         </table>
         
         {# Légende des couleurs #}
         <div style="margin-top: 15px; font-size: 10px;">
             <strong>Légende :</strong>
-            <span class="logo-statut logo-vert"></span>Bon état |
-            <span class="logo-statut logo-orange"></span>Travaux préventifs |
-            <span class="logo-statut logo-rouge"></span>Travaux curatifs/Arrêt |
-            <span class="logo-statut logo-noir"></span>Inaccessible/Inexistant
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux préventifs |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
         </div>
     </div>
     {% endif %}
@@ -228,17 +212,19 @@
                 <div class="equipement-title">
                     Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                     {% if equipment.etat %}
-                        {% set logoClass = '' %}
+                        {% set logoColor = '' %}
                         {% if equipment.etat == "Bon état de fonctionnement le jour de la visite" %}
-                            {% set logoClass = 'logo-vert' %}
+                            {% set logoColor = 'vert' %}
                         {% elseif equipment.etat == "Travaux préventifs" %}
-                            {% set logoClass = 'logo-orange' %}
+                            {% set logoColor = 'orange' %}
                         {% elseif equipment.etat in ["Travaux curatifs", "Equipement à l'arrêt le jour de la visite", "Equipement mis à l'arrêt lors de l'intervention"] %}
-                            {% set logoClass = 'logo-rouge' %}
+                            {% set logoColor = 'rouge' %}
                         {% elseif equipment.etat in ["Equipement inaccessible le jour de la visite", "Equipement non présent sur site"] %}
-                            {% set logoClass = 'logo-noir' %}
+                            {% set logoColor = 'noir' %}
                         {% endif %}
-                        <span class="logo-statut {{ logoClass }}" style="float: right; margin-top: 2px;"></span>
+                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/{{ logoColor }}.png" 
+                             alt="logo {{ logoColor }}" 
+                             style="width: 20px; height: 20px; float: right; margin-top: 2px;">
                     {% endif %}
                 </div>
             </div>
