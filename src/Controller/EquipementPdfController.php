@@ -193,13 +193,9 @@ class EquipementPdfController extends AbstractController
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
-<<<<<<< HEAD
             'clientRaisonSociale' => $clientRaisonSociale,
+            'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
-=======
-            'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
-            'statistiques' => $statistiques // 🎯 Nouvelle variable ajoutée
->>>>>>> 359c2884634841dc785cfb3b5a52f8d78c5149af
         ]);
         
         // Générer le nom de fichier avec les filtres si applicables
