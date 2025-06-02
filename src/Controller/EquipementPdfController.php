@@ -167,7 +167,7 @@ class EquipementPdfController extends AbstractController
         
         $equipmentsWithPictures = [];
         
-        $clientRaisonSociale = $entityManager->getRepository(Form::class)->findOneBy(['id_contact' => $id]);
+        // $clientRaisonSociale = $entityManager->getRepository(Form::class)->findOneBy(['id_contact' => $id]);
         if (!$clientRaisonSociale) {
             throw $this->createNotFoundException('Client non trouvé');
         }
@@ -193,7 +193,7 @@ class EquipementPdfController extends AbstractController
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
-            'clientRaisonSociale' => $clientRaisonSociale,
+            // 'clientRaisonSociale' => $clientRaisonSociale,
             'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
         ]);
