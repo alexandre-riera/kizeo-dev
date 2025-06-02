@@ -59,6 +59,58 @@
             font-size: 10px;
             margin-right: 5px;
         }
+        
+        /* Styles pour le tableau de statistiques */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 11px;
+        }
+        .stats-table th {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+            padding: 8px;
+        }
+        .stats-table td {
+            text-align: center;
+            padding: 6px;
+            border: 1px solid #ddd;
+        }
+        .stats-table .statut-cell {
+            text-align: left;
+            padding-left: 15px;
+        }
+        
+        /* Logos de statut */
+        .logo-statut {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .logo-vert { background-color: #4CAF50; }
+        .logo-orange { background-color: #FF9800; }
+        .logo-rouge { background-color: #F44336; }
+        .logo-noir { background-color: #424242; }
+        
+        .stats-section {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .stats-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #495057;
+        }
     </style>
 </head>
 <body>
@@ -87,8 +139,67 @@
         {% else %}
             <p><em>Tous les équipements du client</em></p>
         {% endif %}
-        {#<p><strong>Date de génération :</strong> {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }}</p>#}
     </div>
+    
+    {# Tableau de statistiques #}
+    {% if statistiques is defined %}
+    <div class="stats-section">
+        <div class="stats-title">Statistiques par statut</div>
+        
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>Statut</th>
+                    <th>État</th>
+                    <th>Total</th>
+                    <th>Total inexistant</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for etat, count in statistiques.etatsCount %}
+                    <tr>
+                        <td style="text-align: center;">
+                            {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
+                            {% elseif etat == "Travaux à prévoir" %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
+                            {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
+                            {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "Equipement non présent sur site" %}
+                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                            {% else %}
+                                {# Fallback: cercle gris pour les états non reconnus #}
+                                <div style="width: 20px; height: 20px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: left; padding-left: 10px;">{{ etat }}</td>
+                        <td style="text-align: center;">
+                            {% if etat == "Equipement non présent sur site" %}
+                                {# Pour les équipements non présents, on n'affiche pas le total dans la colonne Total #}
+                            {% else %}
+                                {{ count }}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if etat == "Equipement non présent sur site" %}
+                                {{ count }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {# Légende des couleurs #}
+        <div style="margin-top: 15px; font-size: 10px;">
+            <strong>Légende :</strong>
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux à prévoir |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
+        </div>
+    </div>
+    {% endif %}
     
     {% for equipmentData in equipmentsWithPictures %}
         {% set equipment = equipmentData.equipment %}
@@ -98,6 +209,20 @@
             <div class="equipement-header">
                 <div class="equipement-title">
                     Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
+                    {% if equipment.etat %}
+                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif equipment.etat == "Travaux à prévoir" %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "Equipement non présent sur site" %}
+                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px; float: right; margin-top: 2px;">
+                        {% else %}
+                            {# Fallback: cercle gris pour les états non reconnus #}
+                            <div style="width: 20px; height: 20px; background-color: #CCCCCC; border-radius: 50%; float: right; margin-top: 2px;"></div>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
             
@@ -121,12 +246,12 @@
                     <th>Dernière visite</th>
                     <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>
                 </tr>
-                {#<tr>
-                    <th>Visite</th>
-                    <td>{{ equipment.visite ?? 'Non renseigné' }}</td>
-                    <th>ID Contact</th>
-                    <td>{{ equipment.idContact ?? 'Non renseigné' }}</td>
-                </tr>#}
+                {% if equipment.etat %}
+                <tr>
+                    <th>État</th>
+                    <td colspan="3">{{ equipment.etat }}</td>
+                </tr>
+                {% endif %}
             </table>
             
             <div class="photos-section">

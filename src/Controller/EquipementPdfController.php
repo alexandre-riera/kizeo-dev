@@ -99,7 +99,7 @@ class EquipementPdfController extends AbstractController
                 
                 // Filtre par année si défini
                 if (!empty($clientAnneeFilter)) {
-                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite())); // ✅ CORRECT
+                    $annee_date_equipment = date("Y", strtotime($equipment->getDerniereVisite()));
                     $matches = $matches && ($annee_date_equipment == $clientAnneeFilter);
                 }
                 
@@ -116,6 +116,54 @@ class EquipementPdfController extends AbstractController
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client avec les critères de filtrage sélectionnés');
         }
+        
+        // === CALCUL DES STATISTIQUES ===
+        $etatsCount = [];
+        $counterInexistant = 0;
+        
+        // Parcourir tous les équipements pour compter chaque état
+        foreach ($equipments as $equipment) {
+            $etat = $equipment->getEtat();
+            
+            if ($etat) {
+                // Compter chaque état
+                if (!isset($etatsCount[$etat])) {
+                    $etatsCount[$etat] = 0;
+                }
+                $etatsCount[$etat]++;
+                
+                // Compter spécifiquement les équipements inexistants
+                if ($etat === "Equipement non présent sur site") {
+                    $counterInexistant++;
+                }
+            }
+        }
+        
+        // Fonction pour déterminer le logo selon l'état
+        $getLogoByEtat = function($etat) {
+            switch ($etat) {
+                case "Rien à signaler le jour de la visite. Fonctionnement ok":
+                    return 'vert';
+                case "Travaux à prévoir":
+                    return 'orange';
+                case "Travaux curatifs":
+                case "Equipement à l'arrêt le jour de la visite":
+                case "Equipement mis à l'arrêt lors de l'intervention":
+                    return 'rouge';
+                case "Equipement inaccessible le jour de la visite":
+                case "Equipement non présent sur site":
+                    return 'noir';
+                default:
+                    return 'noir';
+            }
+        };
+        
+        // Créer le tableau de statistiques
+        $statistiques = [
+            'etatsCount' => $etatsCount,
+            'counterInexistant' => $counterInexistant,
+            'getLogoByEtat' => $getLogoByEtat
+        ];
         
         $equipmentsWithPictures = [];
         
@@ -145,8 +193,13 @@ class EquipementPdfController extends AbstractController
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
+<<<<<<< HEAD
             'clientRaisonSociale' => $clientRaisonSociale,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
+=======
+            'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
+            'statistiques' => $statistiques // 🎯 Nouvelle variable ajoutée
+>>>>>>> 359c2884634841dc785cfb3b5a52f8d78c5149af
         ]);
         
         // Générer le nom de fichier avec les filtres si applicables
