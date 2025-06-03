@@ -119,6 +119,9 @@ class EquipementS120
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $numero_identification = null;
 
+    #[ORM\Column]
+    private ?bool $is_archive = null;
+
 
     public function getId(): ?int
     {
@@ -541,6 +544,18 @@ class EquipementS120
     public function setNumeroIdentification(?string $numero_identification): static
     {
         $this->numero_identification = $numero_identification;
+
+        return $this;
+    }
+
+    public function isArchive(): ?bool
+    {
+        return $this->is_archive;
+    }
+
+    public function setIsArchive(bool $is_archive): static
+    {
+        $this->is_archive = $is_archive;
 
         return $this;
     }

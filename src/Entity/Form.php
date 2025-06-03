@@ -151,6 +151,9 @@ class Form
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $photo_feux = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $photo_compte_rendu = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -692,6 +695,18 @@ class Form
     public function setPhotoFeux(?string $photo_feux): static
     {
         $this->photo_feux = $photo_feux;
+
+        return $this;
+    }
+
+    public function getPhotoCompteRendu(): ?string
+    {
+        return $this->photo_compte_rendu;
+    }
+
+    public function setPhotoCompteRendu(?string $photo_compte_rendu): static
+    {
+        $this->photo_compte_rendu = $photo_compte_rendu;
 
         return $this;
     }

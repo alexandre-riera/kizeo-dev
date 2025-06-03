@@ -1362,7 +1362,7 @@ class FormRepository extends ServiceEntityRepository
         $entiteEquipementS160 = new EquipementS160;
         $entiteEquipementS170 = new EquipementS170;
         
-        // ----------------------------- GET ALL ID from forms with class "MAINTENANCE" WITH CACHE  1 week
+        // ----------------------------- GET ALL ID from forms with class "MAINTENANCE"
         foreach ($allFormsArray as $key => $value) {
             if ($allFormsArray[$key]['class'] === 'MAINTENANCE') {
                 // Récuperation des forms ID
@@ -1393,7 +1393,7 @@ class FormRepository extends ServiceEntityRepository
             
         }
        
-        // ----------------------------------------------------------------------- Début d'appel data des formulaires non lus
+        // ----------------------------------------------------------------------- Début d'appel des data des formulaires non lus
         // --------------- Remise à zéro du tableau $dataOfFormMaintenanceUnread  ------------------
         // --------------- Avant de le recharger avec la data des 5 formulaires non lus  ------------------
         $dataOfFormMaintenanceUnread = [];
@@ -1517,7 +1517,7 @@ class FormRepository extends ServiceEntityRepository
             }
             
         // }
-    }
+        }
         
         return "L'enregistrement en base de données s'est bien déroulé";
     }
