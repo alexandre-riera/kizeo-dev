@@ -1759,7 +1759,10 @@ class FormRepository extends ServiceEntityRepository
     }
 
     public function getJpgPictureFromStringName($value, $entityManager){
-        $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2];
+        // $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2, $value->photo_compte_rendu];
+
+        // On récupère la photo du compte rendu uniquement
+        $picturesNames = [$value->photo_compte_rendu];
         
         $the_picture = [];
         
@@ -1805,6 +1808,8 @@ class FormRepository extends ServiceEntityRepository
         $photoJpg ="";
         foreach ($picturesArray as $key => $value) {
             // if ($equipment->getRaisonSociale() . "\\" . $equipment->getVisite() === $value->raison_sociale_visite) {
+                // On récupère la photo du compte rendu uniquement au lieu de toutes les photos
+                // Changer dans le tableau des photos à récupérer de function getJpgPictureFromStringName() pour toutes les avoir
                 $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value, $entityManager); // It's an array now
                 foreach ($photoJpg as $photo) {
                     $pictureEncoded = base64_encode($photo);
