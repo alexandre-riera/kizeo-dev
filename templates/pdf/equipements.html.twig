@@ -119,7 +119,7 @@
         {% if isFiltered is defined and isFiltered %}
             <h1>Compte rendu d'entretien de la visite {{ clientVisiteFilter }} pour l'année {{ clientAnneeFilter }}</h1>
             <h2>{{ clientRaisonSociale }}</h2>
-            <div class="filter-info">
+            {#<div class="filter-info">
                 <strong>Filtres appliqués :</strong>
                 {% if clientAnneeFilter %}
                     <span class="filter-badge">Année : {{ clientAnneeFilter }}</span>
@@ -127,7 +127,7 @@
                 {% if clientVisiteFilter %}
                     <span class="filter-badge">Visite : {{ clientVisiteFilter }}</span>
                 {% endif %}
-            </div>
+            </div>#}
         {% endif %}
     </div>
     
@@ -297,6 +297,10 @@
                             <p>{{ equipment.etat }}</p>
                         {% endif %}
                     </td>
+                    <tr>
+                        <th>Dernière visite</th>
+                        <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
+                    </tr>
                 </tr>
                 {% endif %}
             </table>
