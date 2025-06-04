@@ -169,9 +169,7 @@ class EquipementPdfController extends AbstractController
         
         // Récupérer la raison sociale du client
         $clientRaisonSociale = "";
-        if (!empty($equipments)) {
-            $clientRaisonSociale = $equipments[0]->getRaisonSociale();
-        }
+        
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
             $clientRaisonSociale = $equipment->getRaisonSociale();
