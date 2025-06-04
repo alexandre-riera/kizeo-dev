@@ -295,7 +295,7 @@
                 {% if pictures|length > 0 %}
                     <div class="photos-grid">
                         {% for pictureData in pictures %}
-                            <div style="display: flex;" class="photo-container">
+                            <div class="photo-container">
                                 <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
                                 <div class="photo-caption">
                                     {{ pictureData.update_time ? pictureData.update_time|date('d/m/Y H:i') : 'Date inconnue' }}
