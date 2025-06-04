@@ -192,15 +192,6 @@
                 {% endfor %}
             </tbody>
         </table>
-        
-        {# Légende des couleurs #}
-        <div style="margin-top: 15px; font-size: 10px;">
-            <strong>Légende :</strong>
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux à prévoir |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
-        </div>
         <br />
         <div class="stats-title">Équipements non présents le jour de la visite</div>
         <table class="stats-table">
@@ -233,6 +224,14 @@
                 {% endfor %}
             </tbody>
         </table>
+        {# Légende des couleurs #}
+        <div style="margin-top: 15px; font-size: 10px;">
+            <strong>Légende :</strong>
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux à prévoir |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
+            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
+        </div>
     </div>
     {% endif %}
     
