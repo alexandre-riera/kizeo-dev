@@ -289,10 +289,9 @@
                             <p>{{ equipment.etat }}</p>
                         {% endif %}
                     </td>
-                    <tr>
-                        <th>Dernière visite</th>
-                        <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
-                    </tr>
+                    <th>Dernière visite</th>
+                    <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
+                    
                 </tr>
                 {% endif %}
             </table>
