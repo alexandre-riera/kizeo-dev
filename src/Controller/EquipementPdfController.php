@@ -167,12 +167,15 @@ class EquipementPdfController extends AbstractController
         
         $equipmentsWithPictures = [];
         
-        $clientRaisonSociale = $entityManager->getRepository(Form::class)->findOneBy(['id_contact' => $id]);
+        // Récupérer la raison sociale du client
+        $clientRaisonSociale = "";
+
         if (!$clientRaisonSociale) {
             throw $this->createNotFoundException('Client non trouvé');
         }
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
+            $clientRaisonSociale = $equipment->getRaisonSociale();
             $picturesArray = $entityManager->getRepository(Form::class)->findBy([
                 'code_equipement' => $equipment->getNumeroEquipement(), 
                 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
