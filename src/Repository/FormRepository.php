@@ -425,29 +425,11 @@ class FormRepository extends ServiceEntityRepository
      * Function to create and save new equipments in local database by agency --- OK POUR TOUTES LES AGENCES DE S10 à S170 --- MAJ IMAGES OK
      */
     public function createAndSaveInDatabaseByAgency($equipements, $entityAgency){
-        
-        
+    
         /**
-        * List all additional equipments stored in individual array
-        */
-        // On sauvegarde les équipements issus des formulaires non lus en BDD
-        foreach ($equipements['contrat_de_maintenance']['value']  as $additionalEquipment){
-            // Everytime a new resume is read, we store its value in variable resume_equipement_supplementaire
-            // $resume_equipement_supplementaire = array_unique(preg_split("/[:|]/", $additionalEquipment['equipement']['columns']));
-            // $resume_equipement_supplementaire = $additionalEquipment['equipement']['columns'];
-            /**
-             * If resume_equipement_supplementaire value is NOT in  $allEquipementsResumeInDatabase array
-             * Method used : in_array(search, inThisArray, type) 
-             * type Optional. If this parameter is set to TRUE, the in_array() function searches for the search-string and specific type in the array
-             */
-            
-            // if (!in_array($resume_equipement_supplementaire, $allEquipementsResumeInDatabase, TRUE) && $equipements['test_']['value'] != 'oui' ) {
-            // As we are processing only unread forms, we don't need resumes in database and also resumes of equipements supplémentaires    
-            // if (!in_array($resume_equipement_supplementaire, $arrayResumesEquipments, TRUE)) {
-            /**
-             * Persist each equipement in database
-             * Save a new contrat_de_maintenance equipement in database when a technician make an update
-             */
+         * Première étape : Enregistrement des équipements AU CONTRAT
+         */
+        foreach ($equipements['contrat_de_maintenance']['value'] as $additionalEquipment){
             $equipement = new $entityAgency;
             $equipement->setIdContact($equipements['id_client_']['value']);
             $equipement->setRaisonSociale($equipements['nom_client']['value']);
@@ -458,12 +440,12 @@ class FormRepository extends ServiceEntityRepository
 
             if (isset($equipements['id_societe']['value'])) {
                 $equipement->setCodeSociete($equipements['id_societe']['value']);
-            }else{
+            } else {
                 $equipement->setCodeSociete("");
             }
             if (isset($equipements['id_agence']['value'])) {
                 $equipement->setCodeAgence($equipements['id_agence']['value']);
-            }else{
+            } else {
                 $equipement->setCodeAgence("");
             }
             
@@ -471,21 +453,19 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setTrigrammeTech($equipements['trigramme']['value']);
             $equipement->setSignatureTech($equipements['signature3']['value']);
             
+            // Détermination du type de visite
             if (str_contains($additionalEquipment['equipement']['path'], 'CE1')) {
                 $equipement->setVisite("CE1");
-            }
-            elseif(str_contains($additionalEquipment['equipement']['path'], 'CE2')){
+            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE2')){
                 $equipement->setVisite("CE2");
-            }
-            elseif(str_contains($additionalEquipment['equipement']['path'], 'CE3')){
+            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE3')){
                 $equipement->setVisite("CE3");
-            }
-            elseif(str_contains($additionalEquipment['equipement']['path'], 'CE4')){
+            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE4')){
                 $equipement->setVisite("CE4");
-            }
-            elseif(str_contains($additionalEquipment['equipement']['path'], 'CEA')){
+            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CEA')){
                 $equipement->setVisite("CEA");
             }
+            
             $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
             $equipement->setIfExistDB($additionalEquipment['equipement']['columns']);
             $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
@@ -494,57 +474,35 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
             $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
             $equipement->setMarque($additionalEquipment['reference5']['value']);
+            
             if (isset($additionalEquipment['reference3']['value'])) {
                 $equipement->setLargeur($additionalEquipment['reference3']['value']);
-            }else{
+            } else {
                 $equipement->setLargeur("");
             }
             if (isset($additionalEquipment['reference1']['value'])) {
                 $equipement->setHauteur($additionalEquipment['reference1']['value']);
-            }else{
+            } else {
                 $equipement->setHauteur("");
             }
             if (isset($additionalEquipment['longueur']['value'])) {
                 $equipement->setLongueur($additionalEquipment['longueur']['value']);
-            }else{
+            } else {
                 $equipement->setLongueur("NC");
             }
+            
             $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
-            // dd($additionalEquipment);
-            // //Anomalies en fonction du libellé de l'équipement
-            // switch($additionalEquipment['anomalie']['value']){
-            //     case 'niveleur':
-            //         $equipement->setAnomalies($additionalEquipment['anomalie_niveleur']['value']);
-            //         break;
-            //     case 'portail':
-            //         $equipement->setAnomalies($additionalEquipment['anomalie_portail']['value']);
-            //         break;
-            //     case 'porte rapide':
-            //         $equipement->setAnomalies($additionalEquipment['anomalie_porte_rapide']['value']);
-            //         break;
-            //     case 'porte pietonne':
-            //         $equipement->setAnomalies($additionalEquipment['anomalie_porte_pietonne']['value']);
-            //         break;
-            //     case 'barriere':
-            //         $equipement->setAnomalies($additionalEquipment['anomalie_barriere']['value']);
-            //         break;
-            //     case 'rideau':
-            //         $equipement->setAnomalies($additionalEquipment['rid']['value']);
-            //         break;
-            //     default:
-            //         $equipement->setAnomalies($additionalEquipment['anomalie']['value']);
-                
-            // }
             $equipement->setEtat($additionalEquipment['etat']['value']);
+            
             if (isset($additionalEquipment['hauteur_de_nacelle_necessaire']['value'])) {
                 $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value']);
-            }else{
+            } else {
                 $equipement->setHauteurNacelle("");
             }
             
             if (isset($additionalEquipment['si_location_preciser_le_model']['value'])) {
                 $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value']);
-            }else{
+            } else {
                 $equipement->setModeleNacelle("");
             }
             
@@ -574,21 +532,236 @@ class FormRepository extends ServiceEntityRepository
                     default:
                         $equipement->setStatutDeMaintenance("NC");
                         break;
-                        
                 }
             }
 
             $equipement->setEnMaintenance(true);
+            $equipement->setIsArchive(false);
             
-            
-            // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
-            // actually executes the queries (i.e. the INSERT query)
-            $this->getEntityManager()->flush();
+        }
+
+        /**
+         * Deuxième étape : Traitement des équipements HORS CONTRAT
+         * avec attribution automatique des numéros
+         */
+        foreach ($equipements['tableau2']['value'] as $equipementsHorsContrat){
+            $equipement = new $entityAgency;
+            $equipement->setIdContact($equipements['id_client_']['value']);
+            $equipement->setRaisonSociale($equipements['nom_client']['value']);
+            if (isset($equipements['test_']['value'])) {
+                $equipement->setTest($equipements['test_']['value']);
+            }
+            $equipement->setDateEnregistrement($equipements['date_et_heure1']['value']);
+
+            if (isset($equipements['id_societe']['value'])) {
+                $equipement->setCodeSociete($equipements['id_societe']['value']);
+            } else {
+                $equipement->setCodeSociete("");
+            }
+            if (isset($equipements['id_agence']['value'])) {
+                $equipement->setCodeAgence($equipements['id_agence']['value']);
+            } else {
+                $equipement->setCodeAgence("");
+            }
             
-            // }
-        };
+            $equipement->setDerniereVisite($equipements['date_et_heure1']['value']);
+            $equipement->setTrigrammeTech($equipements['trigramme']['value']);
+            $equipement->setSignatureTech($equipements['signature3']['value']);
+            
+            // Détermination du type de visite (basée sur le premier équipement au contrat)
+            if (!empty($equipements['contrat_de_maintenance']['value'])) {
+                if (str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE1')) {
+                    $equipement->setVisite("CE1");
+                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE2')){
+                    $equipement->setVisite("CE2");
+                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE3')){
+                    $equipement->setVisite("CE3");
+                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE4')){
+                    $equipement->setVisite("CE4");
+                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CEA')){
+                    $equipement->setVisite("CEA");
+                } else {
+                    $equipement->setVisite("CE1"); // Valeur par défaut
+                }
+            } else {
+                $equipement->setVisite("CE1"); // Valeur par défaut si pas d'équipement au contrat
+            }
+            
+            // Attribution automatique du numéro d'équipement
+            $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
+            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+            
+            // Interroger la base de données pour obtenir le prochain numéro
+            $idClient = $equipements['id_client_']['value'];
+            $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityAgency);
+            
+            // Formater le numéro d'équipement (ex: SEC01)
+            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+            $equipement->setNumeroEquipement($numeroFormate);
+            
+            $equipement->setLibelleEquipement($typeLibelle);
+            $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
+            $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
+            $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
+            $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
+            $equipement->setMarque($equipementsHorsContrat['marque']['value']);
+            
+            if (isset($equipementsHorsContrat['largeur']['value'])) {
+                $equipement->setLargeur($equipementsHorsContrat['largeur']['value']);
+            } else {
+                $equipement->setLargeur("");
+            }
+            if (isset($equipementsHorsContrat['hauteur']['value'])) {
+                $equipement->setHauteur($equipementsHorsContrat['hauteur']['value']);
+            } else {
+                $equipement->setHauteur("");
+            }
+            
+            $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
+            $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
+            
+            if (isset($equipementsHorsContrat['etat1']['value'])) {
+                switch ($equipementsHorsContrat['etat1']['value']) {
+                    case "A":
+                        $equipement->setStatutDeMaintenance("Bon état de fonctionnement le jour de la visite");
+                        break;
+                    case "B":
+                        $equipement->setStatutDeMaintenance("Travaux préventifs");
+                        break;
+                    case "C":
+                        $equipement->setStatutDeMaintenance("Travaux curatifs");
+                        break;
+                    case "D":
+                        $equipement->setStatutDeMaintenance("Equipement à l'arrêt le jour de la visite");
+                        break;
+                    case "E":
+                        $equipement->setStatutDeMaintenance("Equipement mis à l'arrêt lors de l'intervention");
+                        break;
+                    default:
+                        $equipement->setStatutDeMaintenance("NC");
+                        break;
+                }
+            }
+
+            $equipement->setEnMaintenance(false);
+            $equipement->setIsArchive(false);
+            
+            $this->getEntityManager()->persist($equipement);
+        }
         
+        // FLUSH ici seulement des équipement AU CONTRAT et HORS CONTRAT persistés
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * Obtient le code du type d'équipement à partir du libellé
+     * 
+     * @param string $typeLibelle Le libellé du type d'équipement
+     * @return string Le code du type (ex: SEC pour porte sectionnelle)
+     */
+    private function getTypeCodeFromLibelle(string $typeLibelle): string
+    {
+        // Mappings connus pour les types d'équipement courants
+        $typeCodeMap = [
+            'porte sectionnelle' => 'SEC',
+            'porte battante' => 'BPA',
+            'porte basculante' => 'PBA',
+            'porte rapide' => 'RAP',
+            'porte pietonne' => 'PPV',
+            'porte coulissante' => 'COU',
+            'porte coupe feu' => 'CFE',
+            'porte coupe-feu' => 'CFE',
+            'porte accordéon' => 'PAC',
+            'porte frigorifique' => 'COF',
+            'barriere levante' => 'BLE',
+            'barriere' => 'BLE',
+            'mini pont' => 'MIP',
+            'mini-pont' => 'MIP',
+            'rideau' => 'RID',
+            'rideau métalliques' => 'RID',
+            'rideau metallique' => 'RID',
+            'rideau métallique' => 'RID',
+            'niveleur' => 'NIV',
+            'portail' => 'PAU',
+            'portail motorisé' => 'PMO',
+            'portail motorise' => 'PMO',
+            'portail manuel' => 'PMA',
+            'portail coulissant' => 'PCO',
+            'protection' => 'PRO',
+            'portillon' => 'POR',
+            'table elevatrice' => 'TEL',
+            'tourniquet' => 'TOU',
+            'issue de secours' => 'BPO',
+            'bloc roue' => 'BLR',
+            'sas' => 'SAS',
+            'plaque de quai' => 'PLQ',
+            // Ajoutez d'autres mappages selon vos besoins
+        ];
+
+        $typeLibelle = strtolower(trim($typeLibelle));
+        
+        // Vérifier si le type est dans notre mapping
+        if (isset($typeCodeMap[$typeLibelle])) {
+            return $typeCodeMap[$typeLibelle];
+        }
+        
+        // Si le libellé contient plusieurs mots, prendre les premières lettres de chaque mot
+        $words = explode(' ', $typeLibelle);
+        if (count($words) > 1) {
+            $code = '';
+            foreach ($words as $word) {
+                if (strlen($word) > 0) {
+                    $code .= strtoupper(substr($word, 0, 1));
+                }
+            }
+            // Si le code est trop court, utiliser les 3 premières lettres du premier mot
+            if (strlen($code) < 3 && strlen($words[0]) >= 3) {
+                $code = strtoupper(substr($words[0], 0, 3));
+            }
+            return $code;
+        }
+        
+        // Sinon, utiliser les 3 premières lettres du type en majuscules
+        return strtoupper(substr($typeLibelle, 0, 3));
+    }
+
+    /**
+    * Détermine le prochain numéro d'équipement à utiliser en vérifiant la base de données
+    * 
+    * @param string $typeCode Le code du type d'équipement
+    * @param string $idClient L'identifiant du client
+    * @param string $entityAgency La classe de l'entité d'agence
+    * @return int Le prochain numéro à utiliser
+    */
+    private function getNextEquipmentNumberFromDatabase(string $typeCode, string $idClient, string $entityAgency): int
+    {
+        // Requête pour trouver tous les équipements du même type pour ce client
+        $equipements = $this->getEntityManager()->getRepository($entityAgency)
+            ->createQueryBuilder('e')
+            ->where('e.idContact = :idClient')
+            ->andWhere('e.numeroEquipement LIKE :pattern')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('pattern', $typeCode . '%')
+            ->getQuery()
+            ->getResult();
+        
+        $dernierNumero = 0;
+        
+        foreach ($equipements as $equipement) {
+            $numeroEquipement = $equipement->getNumeroEquipement();
+            
+            // Si le format correspond (ex: SEC01, SEC02...)
+            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
+                $numero = (int)$matches[1];
+                if ($numero > $dernierNumero) {
+                    $dernierNumero = $numero;
+                }
+            }
+        }
+        
+        // Retourner le prochain numéro
+        return $dernierNumero + 1;
     }
 
     /**
@@ -1442,8 +1615,6 @@ class FormRepository extends ServiceEntityRepository
         // ------------- Selon le code agence, enregistrement des equipements en BDD local
         foreach ($dataOfFormMaintenanceUnread as $equipements){
             $equipements = $equipements['data']['fields'];
-            // dd($equipements);
-        // foreach ($equipements as $equipement) {
             // ----------------------------------------------------------   
             // IF code_agence d'$equipement = S50 ou S100 ou etc... on boucle sur ses équipements supplémentaires
             // ----------------------------------------------------------
@@ -1515,8 +1686,6 @@ class FormRepository extends ServiceEntityRepository
                 default:
                     break;
             }
-            
-        // }
         }
         
         return "L'enregistrement en base de données s'est bien déroulé";
@@ -1751,18 +1920,29 @@ class FormRepository extends ServiceEntityRepository
             
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
-            // actually executes the queries (i.e. the INSERT query)
-            $this->getEntityManager()->flush();
-            
-            // }
         }
+        // On sauvegarde les équipements HORS CONTRAT issus des formulaires non lus en BDD
+        foreach ($equipements['fields']['tableau2']['value']  as $equipmentSupplementaire){
+            $equipement = new Form;
+
+            $equipement->setFormId($equipements['form_id']);
+            $equipement->setDataId($equipements['id']);
+            $equipement->setUpdateTime($equipements['update_time']);
+            
+            $equipement->setPhotoCompteRendu($equipmentSupplementaire['photo3']['value']);
+            
+            
+            // tell Doctrine you want to (eventually) save the Product (no queries yet)
+            $this->getEntityManager()->persist($equipement);
+        }
+        $this->getEntityManager()->flush();
     }
 
     public function getJpgPictureFromStringName($value, $entityManager){
         // $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2, $value->photo_compte_rendu];
 
         // On récupère la photo du compte rendu uniquement
-        $picturesNames = [$value->photo_compte_rendu];
+        $picturesNames = [ $value->photo_2, $value->photo_compte_rendu];
         
         $the_picture = [];
         
