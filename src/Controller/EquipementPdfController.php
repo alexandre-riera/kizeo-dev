@@ -169,7 +169,7 @@ class EquipementPdfController extends AbstractController
         
         // Récupérer la raison sociale du client
         $clientRaisonSociale = "";
-        
+
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
             $clientRaisonSociale = $equipment->getRaisonSociale();
@@ -184,11 +184,23 @@ class EquipementPdfController extends AbstractController
                 'equipment' => $equipment,
                 'pictures' => $picturesData
             ];
+        } 
+
+        $equipementsSupplementaires = array_filter($equipmentsWithPictures, function($equipement) {
+            return $equipement['equipment']->isEnMaintenance() === false;
+        });
+        $equipementsNonPresents = [];
+        foreach ($equipmentsWithPictures as $equipement) {
+            if ($equipement['equipment']->getEtat() === "Equipement non présent sur site") {
+                $equipementsNonPresents[] = $equipement;
+            }
         }
-        
+
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
+            'equipementsSupplementaires' => $equipementsSupplementaires,
+            'equipementsNonPresents' => $equipementsNonPresents,
             'clientId' => $id,
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
