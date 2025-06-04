@@ -201,7 +201,8 @@
             <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
             <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
         </div>
-
+        <br />
+        <div class="stats-title">Statistiques par statut</div>
         <table class="stats-table">
             <thead>
                 <tr>
@@ -216,9 +217,6 @@
                         <td style="text-align: center;">
                             {% if etat == "Equipement non présent sur site" %}
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
-                            {% else %}
-                                {# Fallback: cercle gris pour les états non reconnus #}
-                                <div style="width: 20px; height: 20px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
                             {% endif %}
                         </td>
                         <td style="text-align: center;">
