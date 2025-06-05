@@ -1928,7 +1928,7 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setFormId($equipements['form_id']);
             $equipement->setDataId($equipements['id']);
             $equipement->setUpdateTime($equipements['update_time']);
-            
+            $equipement->setRaisonSocialeVisite($equipements['fields']['contrat_de_maintenance']['value']['equipement']['path']);
             $equipement->setPhotoCompteRendu($equipmentSupplementaire['photo3']['value']);
             
             
