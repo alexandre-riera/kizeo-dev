@@ -161,7 +161,7 @@
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
                             {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
-                            {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "Equipement non présent sur site" or etat == "G" or etat == "D" %}
+                            {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
                             {% else %}
                                 {# Fallback: cercle gris pour les états non reconnus #}
@@ -175,8 +175,6 @@
                                 <p>Travaux à prévoir</p>
                             {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
                                 <p>Travaux urgent ou à l'arrêt</p>
-                            {% elseif etat == "Equipement non présent sur site" or etat == "G" %}
-                                <p>Équipement non présent</p>
                             {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
                                 <p>Équipement inaccessible</p>
                             {% else %}
