@@ -139,10 +139,10 @@ class FormController extends AbstractController
         
         
         // return new JsonResponse("Les équipements de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
-        return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // Sauvegarder 5 formulaires à la fois en BDD en BOUCLE A utiliser pour ne mettre à jour que la base de données
+        // return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // Sauvegarder 5 formulaires à la fois en BDD en BOUCLE A utiliser pour ne mettre à jour que la base de données
        
         // Commenter pour éviter de mettre les listes Kizeo à jour à chaque fois que l'on sauvegarde les équipements de maintenance
-        // return $this->redirectToRoute('app_api_form_update_lists_equipements_from_bdd'); 
+        return $this->redirectToRoute('app_api_form_update_lists_equipements_from_bdd'); 
     }
 
     /**
