@@ -201,7 +201,7 @@
             </thead>
             <tbody>
                 {% for etat, count in statistiques.etatsCount %}
-                    {% if etat == "Equipement non présent sur site" %}
+                    {% if etat == "Equipement non présent sur site" or etat == "Equipement non présent" %}
                         <tr>
                             <td style="text-align: center;">
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
