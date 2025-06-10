@@ -317,15 +317,21 @@
                         {% endif %}
                     </td>
                     <td>
-                        <th>Numéro</th>
+                    <table>
+                        <thead>
+                            <th>Numéro</th>
+                            <th>Type</th>
+                            <th>Marque</th>
+                            <th>Modèle</th>
+                            <th>État</th>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
                         <td>{{ equipment.numeroEquipement }}</td>
-                        <th>Type</th>
                         <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
-                        <th>Marque</th>
                         <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
-                        <th>Modèle</th>
                         <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
-                        <th>État</th>
                         <td>
                         {% if equipment.etat %}
                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
