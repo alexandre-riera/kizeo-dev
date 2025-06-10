@@ -24,8 +24,8 @@
             font-weight: bold;
         }
         .photo {
-            max-width: 300px;
-            max-height: 200px;
+            max-width: 150px;
+            max-height: 100px;
             margin: 5px 0;
         }
         table {
@@ -116,10 +116,9 @@
 <body>
     <div class="header">
         {# <h1>Rapport d'équipements {{ clientRaisonSociale }}</h1> #}
-        <h1>Rapport d'équipements</h1>
-        <span class="agence-badge">Agence {{ agence }}</span>
         
         {% if isFiltered is defined and isFiltered %}
+            <h1>Compte rendu d'entretien - visite {{ clientVisiteFilter }} de {{  }}</h1>
             <div class="filter-info">
                 <strong>Filtres appliqués :</strong>
                 {% if clientAnneeFilter %}
@@ -135,11 +134,8 @@
     <div class="summary">
         <h3>Résumé</h3>
         <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
-        {% if isFiltered is defined and isFiltered %}
-            <p><em>Résultats filtrés selon les critères sélectionnés</em></p>
-        {% else %}
-            <p><em>Tous les équipements du client</em></p>
-        {% endif %}
+        <p><strong>Nombre d'équipements visités :</strong> 0</p>
+        <p><strong>Nombre d'équipements inexistants :</strong> 0</p>
     </div>
     
     {# Tableau de statistiques #}
@@ -173,7 +169,23 @@
                                 <div style="width: 20px; height: 20px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
                             {% endif %}
                         </td>
-                        <td style="text-align: left; padding-left: 10px;">{{ etat }}</td>
+                        <td style="text-align: left; padding-left: 10px;">
+                            {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" %}
+                                <p>Bon état</p>
+                            {% elseif etat == "Travaux à prévoir" %}
+                                <p>Travaux à prévoir</p>
+                            {% elseif etat == "Travaux curatifs" %}
+                                <p>Travaux curatifs</p>
+                            {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" %}
+                                <p>A l'arrêt</p>
+                            {% elseif etat == "Equipement inaccessible le jour de la visite" %}
+                                <p>Inaccessible</p>
+                            {% elseif etat == "Equipement non présent sur site" %}
+                                <p>Inexistant</p>
+                            {% else %}
+                                <p>{{ etat }}</p>
+                            {% endif %}
+                        </td>
                         <td style="text-align: center;">
                             {% if etat == "Equipement non présent sur site" %}
                                 {# Pour les équipements non présents, on n'affiche pas le total dans la colonne Total #}
@@ -200,6 +212,8 @@
             <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
         </div>
     </div>
+
+    {# Mettre ici la table pour les équipements supplémentaires #}
     {% endif %}
     
     {% for equipmentData in equipmentsWithPictures %}
@@ -245,7 +259,7 @@
                     <th>Date enregistrement</th>
                     <td>{{ equipment.dateEnregistrement ? equipment.dateEnregistrement|date('d/m/Y') : 'Non renseigné' }}</td>
                     <th>Dernière visite</th>
-                    <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>
+                    {#<td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>#}
                 </tr>
                 {% if equipment.etat %}
                 <tr>
@@ -262,9 +276,6 @@
                         {% for pictureData in pictures %}
                             <div class="photo-container">
                                 <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
-                                <div class="photo-caption">
-                                    {{ pictureData.update_time ? pictureData.update_time|date('d/m/Y H:i') : 'Date inconnue' }}
-                                </div>
                             </div>
                         {% endfor %}
                     </div>

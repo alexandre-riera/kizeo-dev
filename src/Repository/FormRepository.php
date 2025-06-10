@@ -426,24 +426,13 @@ class FormRepository extends ServiceEntityRepository
      */
     public function createAndSaveInDatabaseByAgency($equipements, $entityAgency){
         
-        
         /**
         * List all additional equipments stored in individual array
+        * $equipements contient la data du formulaire contenue dans ['data']['fields']
         */
-        // On sauvegarde les équipements issus des formulaires non lus en BDD
+
+        // On sauvegarde les équipements AU CONTRAT issus des formulaires non lus en BDD
         foreach ($equipements['contrat_de_maintenance']['value']  as $additionalEquipment){
-            // Everytime a new resume is read, we store its value in variable resume_equipement_supplementaire
-            // $resume_equipement_supplementaire = array_unique(preg_split("/[:|]/", $additionalEquipment['equipement']['columns']));
-            // $resume_equipement_supplementaire = $additionalEquipment['equipement']['columns'];
-            /**
-             * If resume_equipement_supplementaire value is NOT in  $allEquipementsResumeInDatabase array
-             * Method used : in_array(search, inThisArray, type) 
-             * type Optional. If this parameter is set to TRUE, the in_array() function searches for the search-string and specific type in the array
-             */
-            
-            // if (!in_array($resume_equipement_supplementaire, $allEquipementsResumeInDatabase, TRUE) && $equipements['test_']['value'] != 'oui' ) {
-            // As we are processing only unread forms, we don't need resumes in database and also resumes of equipements supplémentaires    
-            // if (!in_array($resume_equipement_supplementaire, $arrayResumesEquipments, TRUE)) {
             /**
              * Persist each equipement in database
              * Save a new contrat_de_maintenance equipement in database when a technician make an update
@@ -579,16 +568,156 @@ class FormRepository extends ServiceEntityRepository
             }
 
             $equipement->setEnMaintenance(true);
+            $equipement->setIsArchive(false);
             
             
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
-            // actually executes the queries (i.e. the INSERT query)
-            $this->getEntityManager()->flush();
             
-            // }
         };
-        
+
+        // On sauvegarde les équipements HORS CONTRAT issus des formulaires non lus en BDD
+        foreach ($equipements['tableau2']['value']  as $equipementHorsContrat){
+            /**
+             * Persist each equipement in database
+             * Save a new contrat_de_maintenance equipement in database when a technician make an update
+             */
+            $equipement = new $entityAgency;
+            $equipement->setIdContact($equipements['id_client_']['value']);
+            $equipement->setRaisonSociale($equipements['nom_client']['value']);
+            if (isset($equipements['test_']['value'])) {
+                $equipement->setTest($equipements['test_']['value']);
+            }
+            $equipement->setDateEnregistrement($equipements['date_et_heure1']['value']);
+
+            if (isset($equipements['id_societe']['value'])) {
+                $equipement->setCodeSociete($equipements['id_societe']['value']);
+            }else{
+                $equipement->setCodeSociete("");
+            }
+            if (isset($equipements['id_agence']['value'])) {
+                $equipement->setCodeAgence($equipements['id_agence']['value']);
+            }else{
+                $equipement->setCodeAgence("");
+            }
+            
+            $equipement->setDerniereVisite($equipements['date_et_heure1']['value']);
+            $equipement->setTrigrammeTech($equipements['trigramme']['value']);
+            $equipement->setSignatureTech($equipements['signature3']['value']);
+            
+            // if (str_contains($equipementHorsContrat['equipement']['path'], 'CE1')) {
+            //     $equipement->setVisite("CE1");
+            // }
+            // elseif(str_contains($equipementHorsContrat['equipement']['path'], 'CE2')){
+            //     $equipement->setVisite("CE2");
+            // }
+            // elseif(str_contains($equipementHorsContrat['equipement']['path'], 'CE3')){
+            //     $equipement->setVisite("CE3");
+            // }
+            // elseif(str_contains($equipementHorsContrat['equipement']['path'], 'CE4')){
+            //     $equipement->setVisite("CE4");
+            // }
+            // elseif(str_contains($equipementHorsContrat['equipement']['path'], 'CEA')){
+            //     $equipement->setVisite("CEA");
+            // }
+            // $equipement->setNumeroEquipement($equipementHorsContrat['equipement']['value']);
+            // $equipement->setIfExistDB($equipementHorsContrat['equipement']['columns']);
+            $equipement->setLibelleEquipement(strtolower($equipementHorsContrat['nature']['value']));
+            $equipement->setModeFonctionnement($equipementHorsContrat['mode_fonctionnement_']['value']);
+            $equipement->setRepereSiteClient($equipementHorsContrat['localisation_site_client1']['value']);
+            $equipement->setMiseEnService($equipementHorsContrat['annee']['value']);
+            $equipement->setNumeroDeSerie($equipementHorsContrat['n_de_serie']['value']);
+            $equipement->setMarque($equipementHorsContrat['marque']['value']);
+            if (isset($equipementHorsContrat['largeur']['value'])) {
+                $equipement->setLargeur($equipementHorsContrat['largeur']['value']);
+            }else{
+                $equipement->setLargeur("");
+            }
+            if (isset($equipementHorsContrat['hauteur']['value'])) {
+                $equipement->setHauteur($equipementHorsContrat['hauteur']['value']);
+            }else{
+                $equipement->setHauteur("");
+            }
+            // if (isset($equipementHorsContrat['longueur']['value'])) {
+            //     $equipement->setLongueur($equipementHorsContrat['longueur']['value']);
+            // }else{
+            //     $equipement->setLongueur("NC");
+            // }
+            $equipement->setPlaqueSignaletique($equipementHorsContrat['photo_plaque_signaletique']['value']);
+            // //Anomalies en fonction du libellé de l'équipement
+            // switch($equipementHorsContrat['anomalie']['value']){
+            //     case 'niveleur':
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie_niveleur']['value']);
+            //         break;
+            //     case 'portail':
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie_portail']['value']);
+            //         break;
+            //     case 'porte rapide':
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie_porte_rapide']['value']);
+            //         break;
+            //     case 'porte pietonne':
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie_porte_pietonne']['value']);
+            //         break;
+            //     case 'barriere':
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie_barriere']['value']);
+            //         break;
+            //     case 'rideau':
+            //         $equipement->setAnomalies($equipementHorsContrat['rid']['value']);
+            //         break;
+            //     default:
+            //         $equipement->setAnomalies($equipementHorsContrat['anomalie']['value']);
+                
+            // }
+            ;
+            // if (isset($equipementHorsContrat['hauteur_de_nacelle_necessaire']['value'])) {
+            //     $equipement->setHauteurNacelle($equipementHorsContrat['hauteur_de_nacelle_necessaire']['value']);
+            // }else{
+            //     $equipement->setHauteurNacelle("");
+            // }
+            
+            // if (isset($equipementHorsContrat['si_location_preciser_le_model']['value'])) {
+            //     $equipement->setModeleNacelle($equipementHorsContrat['si_location_preciser_le_model']['value']);
+            // }else{
+            //     $equipement->setModeleNacelle("");
+            // }
+            
+            if (isset($equipementHorsContrat['etat1']['value'])) {
+                switch ($equipementHorsContrat['etat1']['value']) {
+                    case "A":
+                        $equipement->setEtat("Bon état de fonctionnement le jour de la visite");
+                        $equipement->setStatutDeMaintenance("Vert");
+                        break;
+                    case "B":
+                        $equipement->setEtat("Travaux préventifs");
+                        $equipement->setStatutDeMaintenance("Orange");
+                        break;
+                    case "C":
+                        $equipement->setEtat("Travaux curatifs");
+                        $equipement->setStatutDeMaintenance("Rouge");
+                        break;
+                    case "D":
+                        $equipement->setEtat("Equipement à l'arrêt le jour de la visite");
+                        $equipement->setStatutDeMaintenance("Inaccessible");
+                        break;
+                    case "E":
+                        $equipement->setEtat("Equipement mis à l'arrêt lors de l'intervention");
+                        $equipement->setStatutDeMaintenance("A l'arrêt");
+                        break;
+                    default:
+                        $equipement->setStatutDeMaintenance("");
+                        break;
+                        
+                }
+            }
+
+            $equipement->setEnMaintenance(false);
+            $equipement->setIsArchive(false);
+            
+            // tell Doctrine you want to (eventually) save the Product (no queries yet)
+            $this->getEntityManager()->persist($equipement);
+        };
+        // actually executes the queries (i.e. the INSERT query)
+        $this->getEntityManager()->flush();
     }
 
     /**
@@ -1439,11 +1568,9 @@ class FormRepository extends ServiceEntityRepository
             FormRepository::uploadPicturesInDatabase($equipements);
         }
 
-        // ------------- Selon le code agence, enregistrement des equipements en BDD local
+        // ------------- Selon le code agence, enregistrement des equipements AU CONTRAT et HORS CONTRAT en BDD local
         foreach ($dataOfFormMaintenanceUnread as $equipements){
             $equipements = $equipements['data']['fields'];
-            // dd($equipements);
-        // foreach ($equipements as $equipement) {
             // ----------------------------------------------------------   
             // IF code_agence d'$equipement = S50 ou S100 ou etc... on boucle sur ses équipements supplémentaires
             // ----------------------------------------------------------
@@ -1690,7 +1817,8 @@ class FormRepository extends ServiceEntityRepository
         /**
         * List all additional equipments stored in individual array
         */
-        // On sauvegarde les équipements issus des formulaires non lus en BDD
+
+        // On sauvegarde les photos d'équipements AU CONTRAT issus des formulaires non lus en BDD
         foreach ($equipements['fields']['contrat_de_maintenance']['value']  as $additionalEquipment){
             $equipement = new Form;
 
@@ -1699,7 +1827,6 @@ class FormRepository extends ServiceEntityRepository
             $equipement->setUpdateTime($equipements['update_time']);
             
             $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
-            // $equipement->setEquipmentId($additionalEquipment['equipement']['value']);
             $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
             if (isset($additionalEquipment['photo_etiquette_somafi']['value'])) {
                 $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
@@ -1755,6 +1882,72 @@ class FormRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
             
             // }
+        }
+
+        // On sauvegarde les photos d'équipements HORS CONTRAT issus des formulaires non lus en BDD
+        if (isset($equipements['fields']['tableau2']['value'])) {
+            foreach ($equipements['fields']['tableau2']['value']  as $equipementHorsContrat){
+                $equipementHorsContratEntretien = new Form;
+
+                $equipementHorsContratEntretien->setFormId($equipements['form_id']);
+                $equipementHorsContratEntretien->setDataId($equipements['id']);
+                $equipementHorsContratEntretien->setUpdateTime($equipements['update_time']);
+                
+                // $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
+                // $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
+                // if (isset($additionalEquipment['photo_etiquette_somafi']['value'])) {
+                //     $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
+                // }
+                // $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
+                // $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
+                // if (isset($additionalEquipment['photo_choc_tablier_porte']['value'])) {
+                //     $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
+                // }
+                // if (isset($additionalEquipment['photo_choc_tablier']['value'])) {
+                //     $equipement->setPhotoChocTablier($additionalEquipment['photo_choc_tablier']['value']);
+                // }
+                // if (isset($additionalEquipment['photo_axe']['value'])) {
+                //     $equipement->setPhotoAxe($additionalEquipment['photo_axe']['value']);
+                // }
+                // if (isset($additionalEquipment['photo_serrure']['value'])) {
+                //     $equipement->setPhotoSerrure($additionalEquipment['photo_serrure']['value']);
+                // }
+                // if (isset($additionalEquipment['photo_serrure1']['value'])) {
+                //     $equipement->setPhotoSerrure1($additionalEquipment['photo_serrure1']['value']);
+                // }
+                // if (isset($additionalEquipment['photo_feux']['value'])) {
+                //     $equipement->setPhotoSerrure1($additionalEquipment['photo_feux']['value']);
+                // }
+                // $equipement->setPhotoPanneauIntermediaireI($additionalEquipment['photo_panneau_intermediaire_i']['value']);
+                // $equipement->setPhotoPanneauBasInterExt($additionalEquipment['photo_panneau_bas_inter_ext']['value']);
+                // $equipement->setPhotoLameBasseIntExt($additionalEquipment['photo_lame_basse_int_ext']['value']);
+                // $equipement->setPhotoLameIntermediaireInt($additionalEquipment['photo_lame_intermediaire_int_']['value']);
+                // $equipement->setPhotoEnvironnementEquipement1($additionalEquipment['photo_environnement_equipemen1']['value']);
+                // $equipement->setPhotoCoffretDeCommande($additionalEquipment['photo_coffret_de_commande']['value']);
+                // $equipement->setPhotoCarte($additionalEquipment['photo_carte']['value']);
+                // $equipement->setPhotoRail($additionalEquipment['photo_rail']['value']);
+                // $equipement->setPhotoEquerreRail($additionalEquipment['photo_equerre_rail']['value']);
+                // $equipement->setPhotoFixationCoulisse($additionalEquipment['photo_fixation_coulisse']['value']);
+                // $equipement->setPhotoMoteur($additionalEquipment['photo_moteur']['value']);
+                // $equipement->setPhotoDeformationPlateau($additionalEquipment['photo_deformation_plateau']['value']);
+                // $equipement->setPhotoDeformationPlaque($additionalEquipment['photo_deformation_plaque']['value']);
+                // $equipement->setPhotoDeformationStructure($additionalEquipment['photo_deformation_structure']['value']);
+                // $equipement->setPhotoDeformationChassis($additionalEquipment['photo_deformation_chassis']['value']);
+                // $equipement->setPhotoDeformationLevre($additionalEquipment['photo_deformation_levre']['value']);
+                // $equipement->setPhotoFissureCordon($additionalEquipment['photo_fissure_cordon']['value']);
+                // $equipement->setPhotoJoue($additionalEquipment['photo_joue']['value']);
+                // $equipement->setPhotoButoir($additionalEquipment['photo_butoir']['value']);
+                // $equipement->setPhotoVantail($additionalEquipment['photo_vantail']['value']);
+                // $equipement->setPhotoLinteau($additionalEquipment['photo_linteau']['value']);
+                // $equipement->setPhotoMarquageAuSol2($additionalEquipment['photo_marquage_au_sol_']['value']);
+                $equipementHorsContratEntretien->setPhotoCompteRendu($equipementHorsContrat['photo3']['value']);
+                
+                
+                // tell Doctrine you want to (eventually) save the Product (no queries yet)
+                $this->getEntityManager()->persist($equipementHorsContratEntretien);
+                // actually executes the queries (i.e. the INSERT query)
+                $this->getEntityManager()->flush();
+            } 
         }
     }
 
