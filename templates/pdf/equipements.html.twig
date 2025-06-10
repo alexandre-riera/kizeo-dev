@@ -120,7 +120,7 @@
             <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
             <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
             {% set variable1 = clientSelectedInformations.getRaisonSociale() %}
-            {% do variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
+            {% set variable1 = variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
             <h2>{{ variable1 }}</h2>
             <p>{{ clientSelectedInformations.getAdressep1() }}</p>
             {% if clientSelectedInformations.getAdressep2() is not empty %}
