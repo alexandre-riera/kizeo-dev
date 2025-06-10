@@ -119,7 +119,7 @@
         {% if isFiltered is defined and isFiltered %}
             <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
             <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
-            {% set variable1 = clientRaisonSociale %}
+            {% set variable1 = clientSelectedInformations.getRaisonSociale() %}
             {% do variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
             <h2>{{ variable1 }}</h2>
             <p>{{ clientSelectedInformations.getAdressep1() }}</p>
