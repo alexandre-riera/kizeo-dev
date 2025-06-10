@@ -118,12 +118,16 @@
         }
 
         .equipment-image {
-            border: 1px solid red;
+             width: 250px; /* Largeur de l'image */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .main-photo {
-            max-height: 300px;
-            object-fit: contain;
+            max-width: 100%;
+            max-height: 300px; /* Ajustez la hauteur pour le PDF */
+            object-fit: contain;            /* Assure que l'image garde ses proportions */
         }
 
         .no-image {
@@ -137,7 +141,7 @@
         }
 
         .info-table {
-            margin-left: 20px; /* Espace entre l'image et les infos */
+            width: 100%; /* Assurez-vous que la table prend toute la largeur */
         }
 
         .info-table th {
@@ -301,75 +305,57 @@
             </div>
             
             <h4>Informations techniques</h4>
-            <div class="equipment-container">
-                <div class="equipment-image">
-                    {% if pictures|length > 0 %}
-                    <table>
-                        <th></th>
-                        <tr>
-                            <td>
-                                <div class="photo-container">
-                                    {% if pictures[0].picture is not empty %}
-                                        <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
-                                    {% else %}
-                                        <div class="no-image">
-                                            <em>Aucune photo disponible</em>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                    {% else %}
-                        <div class="no-image">
-                            <em>Aucune photo disponible</em>
-                        </div>
-                    {% endif %}
-                    <table>
-                        <tr>
-                            <th>Numéro</th>
-                            <td>{{ equipment.numeroEquipement }}</td>
-                        </tr>
-                        <tr>
-                            <th>Type</th>
-                            <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Marque</th>
-                            <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
-                        </tr>
-                        <tr>
-                            <th>Modèle</th>
-                            <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
-                        </tr>
-                        {% if equipment.etat %}
-                        <tr>
-                            <th>État</th>
-                            <td>
-                                {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
-                                    Bon état
-                                {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
-                                    Travaux à prévoir
-                                {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
-                                    Travaux urgent ou à l'arrêt
-                                {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
-                                    Équipement non présent
-                                {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
-                                    Équipement inaccessible
-                                {% else %}
-                                    {{ equipment.etat }}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        <tr>
-                            <th>Dernière visite</th>
-                            <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
-                        </tr>
+            <table class="info-table">
+                <tr>
+                    <td rowspan="5" class="equipment-image">
+                        {% if pictures|length > 0 %}
+                            <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
+                        {% else %}
+                            <div class="no-image">
+                                <em>Aucune photo disponible</em>
+                            </div>
                         {% endif %}
-                    </table>
-                </div>
-                
-            </div>
+                    </td>
+                    <th>Numéro</th>
+                    <td>{{ equipment.numeroEquipement }}</td>
+                </tr>
+                <tr>
+                    <th>Type</th>
+                    <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                </tr>
+                <tr>
+                    <th>Marque</th>
+                    <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
+                </tr>
+                <tr>
+                    <th>Modèle</th>
+                    <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
+                </tr>
+                {% if equipment.etat %}
+                <tr>
+                    <th>État</th>
+                    <td>
+                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                            Bon état
+                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                            Travaux à prévoir
+                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                            Travaux urgent ou à l'arrêt
+                        {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                            Équipement non présent
+                        {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                            Équipement inaccessible
+                        {% else %}
+                            {{ equipment.etat }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <th>Dernière visite</th>
+                    <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
+                </tr>
+            </table>
 
             {% if pictures|length > 1 %}
             <div class="photos-section">
