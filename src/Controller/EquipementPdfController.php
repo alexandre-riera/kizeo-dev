@@ -90,7 +90,7 @@ class EquipementPdfController extends AbstractController
 
         //Récupérer le client
         $clientSelectedInformations = $request->query->get('clientSelectedInformations', '');
-        
+        dd($clientSelectedInformations);
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
         }
