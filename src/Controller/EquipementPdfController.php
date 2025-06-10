@@ -167,12 +167,12 @@ class EquipementPdfController extends AbstractController
         
         $equipmentsWithPictures = [];
         
-        // $clientRaisonSociale = $entityManager->getRepository(Form::class)->findOneBy(['id_contact' => $id]);
-        // if (!$clientRaisonSociale) {
-        //     throw $this->createNotFoundException('Client non trouvé');
-        // }
+        // Récupérer la raison sociale du client
+        $clientRaisonSociale = "";
+
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
+            $clientRaisonSociale = $equipment->getRaisonSociale();
             $picturesArray = $entityManager->getRepository(Form::class)->findBy([
                 'code_equipement' => $equipment->getNumeroEquipement(), 
                 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
@@ -184,16 +184,28 @@ class EquipementPdfController extends AbstractController
                 'equipment' => $equipment,
                 'pictures' => $picturesData
             ];
+        } 
+
+        $equipementsSupplementaires = array_filter($equipmentsWithPictures, function($equipement) {
+            return $equipement['equipment']->isEnMaintenance() === false;
+        });
+        $equipementsNonPresents = [];
+        foreach ($equipmentsWithPictures as $equipement) {
+            if ($equipement['equipment']->getEtat() === "Equipement non présent sur site" || $equipement['equipment']->getEtat() === "G") {
+                $equipementsNonPresents[] = $equipement;
+            }
         }
-        
+
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
+            'equipementsSupplementaires' => $equipementsSupplementaires,
+            'equipementsNonPresents' => $equipementsNonPresents,
             'clientId' => $id,
             'agence' => $agence,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
-            // 'clientRaisonSociale' => $clientRaisonSociale,
+            'clientRaisonSociale' => $clientRaisonSociale,
             'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
         ]);

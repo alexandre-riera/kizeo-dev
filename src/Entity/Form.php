@@ -134,25 +134,25 @@ class Form
     public ?string $photo_etiquette_somafi = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_choc_tablier_porte = null;
+    public ?string $photo_choc_tablier_porte = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_choc_tablier = null;
+    public ?string $photo_choc_tablier = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_axe = null;
+    public ?string $photo_axe = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_serrure = null;
+    public ?string $photo_serrure = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_serrure1 = null;
+    public ?string $photo_serrure1 = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_feux = null;
+    public ?string $photo_feux = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    private ?string $photo_compte_rendu = null;
+    public ?string $photo_compte_rendu = null;
 
     public function getId(): ?int
     {
