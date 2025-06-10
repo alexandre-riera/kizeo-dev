@@ -121,7 +121,8 @@
             <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
             <h2>{{ clientRaisonSociale }}</h2>
             {% set variable1 = clientRaisonSociale %}
-            {% do variable1.remove(clientSelectedInformations.getVillep()) %}
+            {% do variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
+            <p>{{ variable1 }}</p>
             <p>{{ clientSelectedInformations.adressep_1 }}</p>
             {% if clientSelectedInformations.adressep_2 is not empty %}
                 <p>{{ clientSelectedInformations.adressep_2 }}</p>
