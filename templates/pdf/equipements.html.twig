@@ -24,7 +24,6 @@
             font-weight: bold;
         }
         .photo {
-<<<<<<< HEAD
             max-width: 300px;
             max-height: 200px;
             margin: 5px 0;
@@ -116,19 +115,11 @@
 </head>
 <body>
     <div class="header">
-<<<<<<< HEAD
-        {# <h1>Rapport d'équipements {{ clientRaisonSociale }}</h1> #}
-        
-        {% if isFiltered is defined and isFiltered %}
-            <h1>Compte rendu d'entretien - visite {{ clientVisiteFilter }} de {{  }}</h1>
-            <div class="filter-info">
-=======
 
         {% if isFiltered is defined and isFiltered %}
             <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
             <h2>{{ clientRaisonSociale }}</h2>
             {#<div class="filter-info">
->>>>>>> 71227f7fbe9c01937856e0615906c797cb9bfaec
                 <strong>Filtres appliqués :</strong>
                 {% if clientAnneeFilter %}
                     <span class="filter-badge">Année : {{ clientAnneeFilter }}</span>
@@ -142,15 +133,9 @@
     
     <div class="summary">
         <h3>Résumé</h3>
-<<<<<<< HEAD
-        <p><strong>Nombre total d'équipements :</strong> {{ equipmentsWithPictures|length }}</p>
-        <p><strong>Nombre d'équipements visités :</strong> 0</p>
-        <p><strong>Nombre d'équipements inexistants :</strong> 0</p>
-=======
         <p><strong>Nombre d'équipements visités :</strong> {{ equipmentsWithPictures|length }}</p>
         <p><strong>Nombre d'équipements inexistants :</strong> {{ equipementsNonPresents|length }}</p>
         <p><strong>Nombre d'équipements supplémentaires :</strong> {{ equipementsSupplementaires|length }}</p>
->>>>>>> 71227f7fbe9c01937856e0615906c797cb9bfaec
     </div>
     
     {# Tableau de statistiques #}
@@ -220,40 +205,11 @@
                         <tr>
                             <td style="text-align: center;">
                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
-<<<<<<< HEAD
-                            {% else %}
-                                {# Fallback: cercle gris pour les états non reconnus #}
-                                <div style="width: 20px; height: 20px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: left; padding-left: 10px;">
-                            {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" %}
-                                <p>Bon état</p>
-                            {% elseif etat == "Travaux à prévoir" %}
-                                <p>Travaux à prévoir</p>
-                            {% elseif etat == "Travaux curatifs" %}
-                                <p>Travaux curatifs</p>
-                            {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" %}
-                                <p>A l'arrêt</p>
-                            {% elseif etat == "Equipement inaccessible le jour de la visite" %}
-                                <p>Inaccessible</p>
-                            {% elseif etat == "Equipement non présent sur site" %}
-                                <p>Inexistant</p>
-                            {% else %}
-                                <p>{{ etat }}</p>
-                            {% endif %}
-                        </td>
-                        <td style="text-align: center;">
-                            {% if etat == "Equipement non présent sur site" %}
-                                {# Pour les équipements non présents, on n'affiche pas le total dans la colonne Total #}
-                            {% else %}
-=======
                             </td>
                             <td style="text-align: center;">
                                 <p>Équipement non présent</p>
                             </td>
                             <td style="text-align: center;">
->>>>>>> 71227f7fbe9c01937856e0615906c797cb9bfaec
                                 {{ count }}
                             </td>
                         </tr>
@@ -311,15 +267,6 @@
                     <th>Modèle</th>
                     <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
                 </tr>
-<<<<<<< HEAD
-                <tr>
-                    <th>Date enregistrement</th>
-                    <td>{{ equipment.dateEnregistrement ? equipment.dateEnregistrement|date('d/m/Y') : 'Non renseigné' }}</td>
-                    <th>Dernière visite</th>
-                    {#<td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune' }}</td>#}
-                </tr>
-=======
->>>>>>> 71227f7fbe9c01937856e0615906c797cb9bfaec
                 {% if equipment.etat %}
                 <tr>
                     <th>État</th>
