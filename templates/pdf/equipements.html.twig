@@ -123,11 +123,11 @@
             {% set variable1 = clientRaisonSociale %}
             {% do variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
             <p>{{ variable1 }}</p>
-            <p>{{ clientSelectedInformations.adressep_1 }}</p>
-            {% if clientSelectedInformations.adressep_2 is not empty %}
-                <p>{{ clientSelectedInformations.adressep_2 }}</p>
+            <p>{{ clientSelectedInformations.getAdressep1() }}</p>
+            {% if clientSelectedInformations.getAdressep2() is not empty %}
+                <p>{{ clientSelectedInformations.getAdressep2() }}</p>
             {% endif %}
-            <p>{{ clientSelectedInformations.codePostal }} {{ clientSelectedInformations.ville }}</p>
+            <p>{{ clientSelectedInformations.getCpostalp() }} {{ clientSelectedInformations.getVillep() }}</p>
             {#<div class="filter-info">
                 <strong>Filtres appliqués :</strong>
                 {% if clientAnneeFilter %}
