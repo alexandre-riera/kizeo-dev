@@ -147,7 +147,6 @@ class EquipementPdfController extends AbstractController
             default:
                 break;
         }
-        dd($clientSelectedInformations);
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
         }
