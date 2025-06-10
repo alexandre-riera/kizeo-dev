@@ -123,7 +123,7 @@
             {% set variable1 = variable1 %}
             {% do variable1.remove(clientSelectedInformations.ville) %}
             <p>{{ clientSelectedInformations.adressep_1 }}</p>
-            if clientSelectedInformations.adressep_2 is not empty %}
+            {% if clientSelectedInformations.adressep_2 is not empty %}
                 <p>{{ clientSelectedInformations.adressep_2 }}</p>
             {% endif %}
             <p>{{ clientSelectedInformations.codePostal }} {{ clientSelectedInformations.ville }}</p>
