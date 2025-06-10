@@ -118,7 +118,7 @@
 
         {% if isFiltered is defined and isFiltered %}
             <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
-            <p>Date de visite : {{ dateDeDerniererVisite|date('d/m/Y') }}</p>
+            <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
             <h2>{{ clientRaisonSociale }}</h2>
             <p>{{ clientSelectedInformations }}</p>
             {#<div class="filter-info">
