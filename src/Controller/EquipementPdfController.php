@@ -173,7 +173,7 @@ class EquipementPdfController extends AbstractController
         // Récupérer la raison sociale du client et la date de dernière visite
         $clientRaisonSociale = "";
         $dateDeDerniererVisite = "";
-        
+
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
             $clientRaisonSociale = $equipment->getRaisonSociale();
@@ -197,6 +197,7 @@ class EquipementPdfController extends AbstractController
         foreach ($equipmentsWithPictures as $equipement) {
             if ($equipement['equipment']->getEtat() === "Equipement non présent sur site" || $equipement['equipment']->getEtat() === "G") {
                 $equipementsNonPresents[] = $equipement;
+                $dateDeDerniererVisite = $equipement['equipment']->getVisite();
             }
         }
 
