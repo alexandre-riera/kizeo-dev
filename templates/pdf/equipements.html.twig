@@ -113,15 +113,12 @@
         }
         .equipment-container {
             display: flex;
-            gap: 20px;
+            justify-content: space-between; /* Aligne le contenu sur les bords */
             margin-bottom: 20px;
         }
 
         .equipment-image {
-            flex: 0 0 250px; /* Adjust width as needed */
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            flex: 0 0 250px; /* Largeur de l'image */
         }
 
         .main-photo {
@@ -142,10 +139,15 @@
 
         .info-table {
             flex: 1;
+            margin-left: 20px; /* Espace entre l'image et les infos */
+        }
+
+        .info-table table {
+            width: 100%; /* Prend toute la largeur */
         }
 
         .info-table th {
-            width: 120px;
+            width: 120px; /* Largeur des colonnes pour les titres */
             text-align: left;
             padding: 8px;
             background-color: #f5f5f5;
@@ -316,48 +318,50 @@
                     {% endif %}
                 </div>
                 
-                <table class="info-table">
-                    <tr>
-                        <th>Numéro</th>
-                        <td>{{ equipment.numeroEquipement }}</td>
-                    </tr>
-                    <tr>
-                        <th>Type</th>
-                        <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Marque</th>
-                        <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
-                    </tr>
-                    <tr>
-                        <th>Modèle</th>
-                        <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
-                    </tr>
-                    {% if equipment.etat %}
-                    <tr>
-                        <th>État</th>
-                        <td>
-                            {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
-                                Bon état
-                            {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
-                                Travaux à prévoir
-                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
-                                Travaux urgent ou à l'arrêt
-                            {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
-                                Équipement non présent
-                            {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
-                                Équipement inaccessible
-                            {% else %}
-                                {{ equipment.etat }}
-                            {% endif %}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Dernière visite</th>
-                        <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
+                <div class="info-table">
+                    <table>
+                        <tr>
+                            <th>Numéro</th>
+                            <td>{{ equipment.numeroEquipement }}</td>
+                        </tr>
+                        <tr>
+                            <th>Type</th>
+                            <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Marque</th>
+                            <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
+                        </tr>
+                        <tr>
+                            <th>Modèle</th>
+                            <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
+                        </tr>
+                        {% if equipment.etat %}
+                        <tr>
+                            <th>État</th>
+                            <td>
+                                {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                    Bon état
+                                {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                    Travaux à prévoir
+                                {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                    Travaux urgent ou à l'arrêt
+                                {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                                    Équipement non présent
+                                {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                                    Équipement inaccessible
+                                {% else %}
+                                    {{ equipment.etat }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Dernière visite</th>
+                            <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
             </div>
 
             {% if pictures|length > 1 %}
