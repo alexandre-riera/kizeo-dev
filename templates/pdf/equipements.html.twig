@@ -120,7 +120,7 @@
             <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
             <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
             <h2>{{ clientRaisonSociale }}</h2>
-            {% set variable1 = variable1 %}
+            {% set variable1 = clientRaisonSociale %}
             {% do variable1.remove(clientSelectedInformations.ville) %}
             <p>{{ clientSelectedInformations.adressep_1 }}</p>
             {% if clientSelectedInformations.adressep_2 is not empty %}
