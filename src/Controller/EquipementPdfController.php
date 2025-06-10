@@ -2,12 +2,27 @@
 // src/Controller/EquipementPdfController.php
 namespace App\Controller;
 
+use App\Entity\Form;
+use App\Entity\ContactS10;
+use App\Entity\ContactS40;
+use App\Entity\ContactS50;
+use App\Entity\ContactS60;
+use App\Entity\ContactS70;
+use App\Entity\ContactS80;
+use App\Entity\ContactS100;
+use App\Entity\ContactS120;
+use App\Entity\ContactS130;
+use App\Entity\ContactS140;
+use App\Entity\ContactS150;
+use App\Entity\ContactS160;
+use App\Entity\ContactS170;
 use App\Entity\EquipementS10;
 use App\Entity\EquipementS40;
 use App\Entity\EquipementS50;
 use App\Entity\EquipementS60;
 use App\Entity\EquipementS70;
 use App\Entity\EquipementS80;
+use App\Service\PdfGenerator;
 use App\Entity\EquipementS100;
 use App\Entity\EquipementS120;
 use App\Entity\EquipementS130;
@@ -15,13 +30,11 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
-use App\Entity\Form;
-use App\Service\PdfGenerator;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class EquipementPdfController extends AbstractController
 {
@@ -89,7 +102,51 @@ class EquipementPdfController extends AbstractController
         $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
 
         //Récupérer le client
-        $clientSelectedInformations = $request->query->get('clientSelectedInformations', '');
+        $clientSelectedInformations = null;
+        switch ($agence) {
+            case 'S10':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S40':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S50':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S60':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S70':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S80':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S100':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S120':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S130':    
+                $clientSelectedInformations = $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S140':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S150':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S160':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $id]);
+                break;
+            case 'S170':
+                $clientSelectedInformations = $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $id]);
+                break;
+            
+            default:
+                break;
+        }
         dd($clientSelectedInformations);
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
