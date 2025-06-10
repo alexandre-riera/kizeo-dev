@@ -87,6 +87,9 @@ class EquipementPdfController extends AbstractController
         
         // Récupérer tous les équipements du client selon l'agence
         $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
+
+        //Récupérer le client
+        $clientSelectedInformations = $request->query->get('clientSelectedInformations', '');
         
         if (empty($equipments)) {
             throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
@@ -167,9 +170,14 @@ class EquipementPdfController extends AbstractController
         
         $equipmentsWithPictures = [];
         
-        // Récupérer la raison sociale du client
+        // Récupérer la raison sociale du client et la date de dernière visite
         $clientRaisonSociale = "";
+        $dateDeDerniererVisite = "";
 
+        if (!empty($equipments)) {
+            $clientRaisonSociale = $equipments[0]->getRaisonSociale();
+            $dateDeDerniererVisite = $equipments[0]->getDerniereVisite();
+        }
         // Pour chaque équipement filtré, récupérer ses photos
         foreach ($equipments as $equipment) {
             $clientRaisonSociale = $equipment->getRaisonSociale();
@@ -207,6 +215,8 @@ class EquipementPdfController extends AbstractController
             'clientVisiteFilter' => $clientVisiteFilter,
             'clientRaisonSociale' => $clientRaisonSociale,
             'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
+            'dateDeDerniererVisite' => $dateDeDerniererVisite,
+            'clientSelectedInformations' => $clientSelectedInformations,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
         ]);
         

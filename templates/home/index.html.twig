@@ -493,7 +493,8 @@
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="mb-3">
                     <a id="pdf-button" href="{{ path('client_equipements_pdf', {
-                        'agence': agenceSelected, 
+                        'clientSelectedInformations': clientSelectedInformations,
+                        'agence': agenceSelected,
                         'id': clientSelectedInformations.getIdContact(),
                         'clientAnneeFilter': clientAnneeFilter,
                         'clientVisiteFilter': clientVisiteFilter
