@@ -118,7 +118,7 @@
         }
 
         .equipment-image {
-             width: 250px; /* Largeur de l'image */
+            width: 25%; /* Largeur de l'image */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -316,39 +316,41 @@
                             </div>
                         {% endif %}
                     </td>
-                    <td>
-                    <table>
-                        <thead>
-                            <th>Numéro</th>
-                            <th>Type</th>
-                            <th>Marque</th>
-                            <th>Modèle</th>
-                            <th>État</th>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                        <td>{{ equipment.numeroEquipement }}</td>
-                        <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
-                        <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
-                        <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
-                        <td>
-                        {% if equipment.etat %}
-                            {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
-                                Bon état
-                            {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
-                                Travaux à prévoir
-                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
-                                Travaux urgent ou à l'arrêt
-                            {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
-                                Équipement non présent
-                            {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
-                                Équipement inaccessible
-                            {% else %}
-                                {{ equipment.etat }}
-                            {% endif %}
-                        {% endif %}
-                        </td>
+                    <td style="width: 70%;">
+                        <table>
+                            <thead>
+                                <th>Numéro</th>
+                                <th>Type</th>
+                                <th>Marque</th>
+                                <th>Modèle</th>
+                                <th>État</th>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ equipment.numeroEquipement }}</td>
+                                    <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                                    <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
+                                    <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
+                                    <td>
+                                    {% if equipment.etat %}
+                                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                            Bon état
+                                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                            Travaux à prévoir
+                                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                            Travaux urgent ou à l'arrêt
+                                        {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                                            Équipement non présent
+                                        {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                                            Équipement inaccessible
+                                        {% else %}
+                                            {{ equipment.etat }}
+                                        {% endif %}
+                                    {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </td>
                 </tr>
             </table>
