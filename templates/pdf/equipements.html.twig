@@ -304,7 +304,22 @@
             <div class="equipment-container">
                 <div class="equipment-image">
                     {% if pictures|length > 0 %}
-                        <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
+                    <table>
+                        <th></th>
+                        <tr>
+                            <td>
+                                <div class="photo-container">
+                                    {% if pictures[0].picture is not empty %}
+                                        <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
+                                    {% else %}
+                                        <div class="no-image">
+                                            <em>Aucune photo disponible</em>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
                     {% else %}
                         <div class="no-image">
                             <em>Aucune photo disponible</em>
