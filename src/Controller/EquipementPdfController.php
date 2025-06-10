@@ -198,7 +198,7 @@ class EquipementPdfController extends AbstractController
             if ($equipement['equipment']->getEtat() === "Equipement non présent sur site" || $equipement['equipment']->getEtat() === "G") {
                 $equipementsNonPresents[] = $equipement;
             }
-            $dateDeDerniererVisite = $equipement['equipment']->getVisite();
+            $dateDeDerniererVisite = $equipement['equipment']->getDateDerniereVisite();
         }
 
         // Générer le HTML pour le PDF
