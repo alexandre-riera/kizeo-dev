@@ -318,23 +318,15 @@
                     </td>
                     <th>Numéro</th>
                     <td>{{ equipment.numeroEquipement }}</td>
-                </tr>
-                <tr>
                     <th>Type</th>
                     <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
-                </tr>
-                <tr>
                     <th>Marque</th>
                     <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
-                </tr>
-                <tr>
                     <th>Modèle</th>
                     <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
-                </tr>
-                {% if equipment.etat %}
-                <tr>
                     <th>État</th>
                     <td>
+                    {% if equipment.etat %}
                         {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
                             Bon état
                         {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
@@ -348,12 +340,8 @@
                         {% else %}
                             {{ equipment.etat }}
                         {% endif %}
+                    {% endif %}
                     </td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <th>Dernière visite</th>
-                    <td>{{ equipment.derniereVisite ? equipment.derniereVisite|date('d/m/Y') : 'Aucune visite' }}</td>
                 </tr>
             </table>
 
