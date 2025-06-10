@@ -1921,74 +1921,6 @@ class FormRepository extends ServiceEntityRepository
             // tell Doctrine you want to (eventually) save the Product (no queries yet)
             $this->getEntityManager()->persist($equipement);
         }
-<<<<<<< HEAD
-
-        // On sauvegarde les photos d'équipements HORS CONTRAT issus des formulaires non lus en BDD
-        if (isset($equipements['fields']['tableau2']['value'])) {
-            foreach ($equipements['fields']['tableau2']['value']  as $equipementHorsContrat){
-                $equipementHorsContratEntretien = new Form;
-
-                $equipementHorsContratEntretien->setFormId($equipements['form_id']);
-                $equipementHorsContratEntretien->setDataId($equipements['id']);
-                $equipementHorsContratEntretien->setUpdateTime($equipements['update_time']);
-                
-                // $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
-                // $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
-                // if (isset($additionalEquipment['photo_etiquette_somafi']['value'])) {
-                //     $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
-                // }
-                // $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
-                // $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
-                // if (isset($additionalEquipment['photo_choc_tablier_porte']['value'])) {
-                //     $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
-                // }
-                // if (isset($additionalEquipment['photo_choc_tablier']['value'])) {
-                //     $equipement->setPhotoChocTablier($additionalEquipment['photo_choc_tablier']['value']);
-                // }
-                // if (isset($additionalEquipment['photo_axe']['value'])) {
-                //     $equipement->setPhotoAxe($additionalEquipment['photo_axe']['value']);
-                // }
-                // if (isset($additionalEquipment['photo_serrure']['value'])) {
-                //     $equipement->setPhotoSerrure($additionalEquipment['photo_serrure']['value']);
-                // }
-                // if (isset($additionalEquipment['photo_serrure1']['value'])) {
-                //     $equipement->setPhotoSerrure1($additionalEquipment['photo_serrure1']['value']);
-                // }
-                // if (isset($additionalEquipment['photo_feux']['value'])) {
-                //     $equipement->setPhotoSerrure1($additionalEquipment['photo_feux']['value']);
-                // }
-                // $equipement->setPhotoPanneauIntermediaireI($additionalEquipment['photo_panneau_intermediaire_i']['value']);
-                // $equipement->setPhotoPanneauBasInterExt($additionalEquipment['photo_panneau_bas_inter_ext']['value']);
-                // $equipement->setPhotoLameBasseIntExt($additionalEquipment['photo_lame_basse_int_ext']['value']);
-                // $equipement->setPhotoLameIntermediaireInt($additionalEquipment['photo_lame_intermediaire_int_']['value']);
-                // $equipement->setPhotoEnvironnementEquipement1($additionalEquipment['photo_environnement_equipemen1']['value']);
-                // $equipement->setPhotoCoffretDeCommande($additionalEquipment['photo_coffret_de_commande']['value']);
-                // $equipement->setPhotoCarte($additionalEquipment['photo_carte']['value']);
-                // $equipement->setPhotoRail($additionalEquipment['photo_rail']['value']);
-                // $equipement->setPhotoEquerreRail($additionalEquipment['photo_equerre_rail']['value']);
-                // $equipement->setPhotoFixationCoulisse($additionalEquipment['photo_fixation_coulisse']['value']);
-                // $equipement->setPhotoMoteur($additionalEquipment['photo_moteur']['value']);
-                // $equipement->setPhotoDeformationPlateau($additionalEquipment['photo_deformation_plateau']['value']);
-                // $equipement->setPhotoDeformationPlaque($additionalEquipment['photo_deformation_plaque']['value']);
-                // $equipement->setPhotoDeformationStructure($additionalEquipment['photo_deformation_structure']['value']);
-                // $equipement->setPhotoDeformationChassis($additionalEquipment['photo_deformation_chassis']['value']);
-                // $equipement->setPhotoDeformationLevre($additionalEquipment['photo_deformation_levre']['value']);
-                // $equipement->setPhotoFissureCordon($additionalEquipment['photo_fissure_cordon']['value']);
-                // $equipement->setPhotoJoue($additionalEquipment['photo_joue']['value']);
-                // $equipement->setPhotoButoir($additionalEquipment['photo_butoir']['value']);
-                // $equipement->setPhotoVantail($additionalEquipment['photo_vantail']['value']);
-                // $equipement->setPhotoLinteau($additionalEquipment['photo_linteau']['value']);
-                // $equipement->setPhotoMarquageAuSol2($additionalEquipment['photo_marquage_au_sol_']['value']);
-                $equipementHorsContratEntretien->setPhotoCompteRendu($equipementHorsContrat['photo3']['value']);
-                
-                
-                // tell Doctrine you want to (eventually) save the Product (no queries yet)
-                $this->getEntityManager()->persist($equipementHorsContratEntretien);
-                // actually executes the queries (i.e. the INSERT query)
-                $this->getEntityManager()->flush();
-            } 
-        }
-=======
         // On sauvegarde les équipements HORS CONTRAT issus des formulaires non lus en BDD
         foreach ($equipements['fields']['tableau2']['value']  as $equipmentSupplementaire){
             $equipement = new Form;
@@ -2004,7 +1936,6 @@ class FormRepository extends ServiceEntityRepository
             $this->getEntityManager()->persist($equipement);
         }
         $this->getEntityManager()->flush();
->>>>>>> 71227f7fbe9c01937856e0615906c797cb9bfaec
     }
 
     public function getJpgPictureFromStringName($value, $entityManager){
