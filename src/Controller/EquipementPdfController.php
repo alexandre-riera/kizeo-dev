@@ -197,7 +197,7 @@ class EquipementPdfController extends AbstractController
         foreach ($equipmentsWithPictures as $equipement) {
             if ($equipement['equipment']->getEtat() === "Equipement non présent sur site" || $equipement['equipment']->getEtat() === "G") {
                 $equipementsNonPresents[] = $equipement;
-                $dateDeDerniererVisite = $equipement['equipment']->getVisite();
+                $dateDeDerniererVisite = $equipement['equipment'];
             }
         }
 
