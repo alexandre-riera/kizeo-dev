@@ -380,7 +380,7 @@ class EquipementPdfController extends AbstractController
             case 'S40':
                 return $basePath . '/img/background-pdf/st-etienne.jpg';
             case 'S50':
-                return $basePath . '/img/background/grenoble.jpg';
+                return '/public/img/background/grenoble.jpg';
             case 'S60':
                 return $basePath . '/img/background-pdf/lyon.jpg';
             case 'S70':
