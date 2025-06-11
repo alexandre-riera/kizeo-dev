@@ -376,24 +376,24 @@
             </table>
 
             {% if pictures|length > 1 %}
-            <div class="photos-section">
-                <h4>Photos supplémentaires ({{ pictures|length - 1 }} photo{{ pictures|length - 1 > 1 ? 's' : '' }})</h4>
-                <div class="photos-grid">
-                    {% for pictureData in pictures %}
-                        {% if not loop.first %}
-                            <div class="photo-container">
-                                <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
-                            </div>
-                        {% endif %}
-                    {% endfor %}
+                <div class="photos-section">
+                    <h4>Photos supplémentaires ({{ pictures|length - 1 }} photo{{ pictures|length - 1 > 1 ? 's' : '' }})</h4>
+                    <div class="photos-grid">
+                        {% for pictureData in pictures %}
+                            {% if not loop.first %}
+                                <div class="photo-container">
+                                    <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
-            </div>
             {% endif %}
         </div>
         
-        {#{% if not loop.last %}
+        {% if loop.index is divisible by(2) and not loop.last %} 
             <div class="page-break"></div>
-        {% endif %}#}
+        {% endif %}
     {% endfor %}
     
     <div style="margin-top: 30px; font-size: 9px; color: #666; text-align: center; border-top: 1px solid #ddd; padding-top: 10px;">
