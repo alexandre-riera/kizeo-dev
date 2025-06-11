@@ -295,23 +295,7 @@
         {% set pictures = equipmentData.pictures %}
         
         <div class="equipement">
-            <div class="equipement-header">
-                <div class="equipement-title">
-                    Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
-                    {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
-                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px; margin-top:2px; float: right;">
-                    {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
-                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px; margin-top:2px; float: right;">
-                    {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
-                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px; margin-top:2px; float: right;">
-                    {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" or equipment.etat == "D" %}
-                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px; margin-top:2px; float: right;">
-                    {% else %}
-                        {# Fallback: cercle gris pour les états non reconnus #}
-                        <div style="width: 20px; height: 20px; margin-top:2px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
-                    {% endif %}
-                </div>
-            </div>
+            
             
             <table class="info-table">
                 <tr>
@@ -326,6 +310,27 @@
                     </td>
                     <td style="width: 70%;">
                         <table>
+                            <tr>
+                                <td>
+                                    <div class="equipement-header">
+                                        <div class="equipement-title">
+                                            Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
+                                            {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px; margin-top:2px; float: right;">
+                                            {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px; margin-top:2px; float: right;">
+                                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px; margin-top:2px; float: right;">
+                                            {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" or equipment.etat == "D" %}
+                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px; margin-top:2px; float: right;">
+                                            {% else %}
+                                                {# Fallback: cercle gris pour les états non reconnus #}
+                                                <div style="width: 20px; height: 20px; margin-top:2px; background-color: #CCCCCC; border-radius: 50%; display: inline-block;"></div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
                             <tr>
                                 <th>Numéro</th>
                                 <td>{{ equipment.numeroEquipement }}</td>
