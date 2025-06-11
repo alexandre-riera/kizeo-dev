@@ -72,7 +72,7 @@
             font-size: 11px;
         }
         .stats-table th {
-            background-color: #4CAF50;
+            background-color: #ffff00;
             color: white;
             font-weight: bold;
             text-align: center;
@@ -164,7 +164,8 @@
     <div class="header">
 
         {% if isFiltered is defined and isFiltered %}
-            <h1>Compte rendu d'entretien | Visite {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</h1>
+            <h1 style="text-align:center;">Compte rendu d'entretien</h1>
+            <p><strong>Visite</strong> {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</p>
             <p><strong>Date de visite : </strong>{{ dateDeDerniererVisite|date('d/m/Y') }}</p>
             {% set variable1 = clientSelectedInformations.getRaisonSociale() %}
             {% set variable1 = variable1|replace({(clientSelectedInformations.getVillep()): ''}) %}
@@ -245,33 +246,35 @@
                 {% endfor %}
             </tbody>
         </table>
-        <div class="stats-title">Équipements non présents le jour de la visite</div>
-        <table class="stats-table">
-            <thead>
-                <tr>
-                    <th>Statut</th>
-                    <th>État</th>
-                    <th>Total inexistant</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for etat, count in statistiques.etatsCount %}
-                    {% if etat == "Equipement non présent sur site" or etat == "Equipement non présent" or etat == "G" %}
-                        <tr>
-                            <td style="text-align: center;">
-                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
-                            </td>
-                            <td style="text-align: center;">
-                                <p>Équipement non présent</p>
-                            </td>
-                            <td style="text-align: center;">
-                                {{ count }}
-                            </td>
-                        </tr>
-                    {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
+        {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
+            <div class="stats-title">Équipements non présents le jour de la visite</div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Statut</th>
+                        <th>État</th>
+                        <th>Total inexistant</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for etat, count in statistiques.etatsCount %}
+                        {% if etat == "Equipement non présent sur site" or etat == "Equipement non présent" or etat == "G" %}
+                            <tr>
+                                <td style="text-align: center;">
+                                    <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                                </td>
+                                <td style="text-align: center;">
+                                    <p>Équipement non présent</p>
+                                </td>
+                                <td style="text-align: center;">
+                                    {{ count }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
         {# Légende des couleurs #}
         <div style="margin-top: 15px; font-size: 10px;">
             <strong>Légende :</strong>
