@@ -313,7 +313,6 @@
                 </div>
             </div>
             
-            <h4>Informations techniques</h4>
             <table class="info-table">
                 <tr>
                     <td rowspan="5" class="equipment-image">
@@ -336,7 +335,7 @@
                                 <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
                             </tr>
                             <tr>
-                                <th>État</th>
+                                <th>Marque</th>
                                 <td>{{ equipment.marque ?? 'Non renseigné' }}</td>
                             </tr>
                             <tr>
@@ -344,7 +343,7 @@
                                 <td>{{ equipment.modele ?? 'Non renseigné' }}</td>
                             </tr>
                             <tr>
-                                <th>Marque</th>
+                                <th>État</th>
                                 <td>
                                 {% if equipment.etat %}
                                     {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
@@ -362,6 +361,14 @@
                                     {% endif %}
                                 {% endif %}
                                 </td>
+                            </tr>
+                            <tr>
+                                <th>Mise en service</th>
+                                <td>{{ equipment.miseEnService ?? 'Année non présente sur équipement' }}</td>
+                            </tr>
+                            <tr>
+                                <th>Repère site client</th>
+                                <td>{{ equipment.reperesiteclient ?? 'Non repèré' }}</td>
                             </tr>
                         </table>
                     </td>
