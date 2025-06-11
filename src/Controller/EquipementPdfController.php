@@ -257,7 +257,7 @@ class EquipementPdfController extends AbstractController
 
         // Déterminer l'URL de l'image en fonction du nom de l'agence
         $imageUrl = $this->getImageUrlForAgency($agence);
-        dd($imageUrl);
+        // dd($imageUrl);
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
