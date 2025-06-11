@@ -378,7 +378,7 @@ class EquipementPdfController extends AbstractController
             case 'S40':
                 return '/img/background-pdf/st-etienne.jpg';
             case 'S50':
-                return '/public/img/background-pdf/grenoble.jpg';
+                return 'img/background-pdf/grenoble.jpg';
             case 'S60':
                 return '/img/background-pdf/lyon.jpg';
             case 'S70':
