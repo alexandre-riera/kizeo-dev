@@ -371,36 +371,39 @@ class EquipementPdfController extends AbstractController
 
     private function getImageUrlForAgency(string $agencyName): string
     {
+        // Assurer que cela renvoie un chemin absolu
+        $basePath = $this->getParameter('kernel.project_dir') . '/public';
+
         // Assurez-vous d'ajouter vos conditions pour les URL spécifiques
         switch ($agencyName) {
             case 'S10':
-                return '/img/background-pdf/group.jpg';
+                return $basePath . '/img/background-pdf/group.jpg';
             case 'S40':
-                return '/img/background-pdf/st-etienne.jpg';
+                return $basePath . '/img/background-pdf/st-etienne.jpg';
             case 'S50':
-                return '/img/background/grenoble.jpg';
+                return $basePath . '/img/background/grenoble.jpg';
             case 'S60':
-                return '/img/background-pdf/lyon.jpg';
+                return $basePath . '/img/background-pdf/lyon.jpg';
             case 'S70':
-                return '/img/background-pdf/bordeaux.jpg';
+                return $basePath . '/img/background-pdf/bordeaux.jpg';
             case 'S80':
-                return '/img/background-pdf/paris.jpg';
+                return $basePath . '/img/background-pdf/paris.jpg';
             case 'S100':
-                return '/img/background-pdf/montpellier.jpg';
+                return $basePath . '/img/background-pdf/montpellier.jpg';
             case 'S120':
-                return '/img/background-pdf/portland.jpg';
+                return $basePath . '/img/background-pdf/portland.jpg';
             case 'S130':
-                return '/img/background-pdf/toulouse.jpg';
+                return $basePath . '/img/background-pdf/toulouse.jpg';
             case 'S140':
-                return '/img/background-pdf/grand-est.jpg';
+                return $basePath . '/img/background-pdf/grand-est.jpg';
             case 'S150':
-                return '/img/background-pdf/paca.jpg';
+                return $basePath . '/img/background-pdf/paca.jpg';
             case 'S160':
-                return '/img/background-pdf/rouen.jpg';
+                return $basePath . '/img/background-pdf/rouen.jpg';
             case 'S170':
-                return '/img/background-pdf/rennes.jpg';
+                return $basePath . '/img/background-pdf/rennes.jpg';
             default:
-                return '/img/background-pdf/default.jpg'; // Image par défaut
+                return $basePath . '/img/background-pdf/default.jpg'; // Image par défaut
         }
     }
 }
