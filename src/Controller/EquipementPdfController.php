@@ -255,6 +255,9 @@ class EquipementPdfController extends AbstractController
             $dateDeDerniererVisite = $equipement['equipment']->getDerniereVisite();
         }
 
+        // Déterminer l'URL de l'image en fonction du nom de l'agence
+        $imageUrl = $this->getImageUrlForAgency($agence);
+
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/equipements.html.twig', [
             'equipmentsWithPictures' => $equipmentsWithPictures,
@@ -262,6 +265,7 @@ class EquipementPdfController extends AbstractController
             'equipementsNonPresents' => $equipementsNonPresents,
             'clientId' => $id,
             'agence' => $agence,
+            'imageUrl' => $imageUrl,
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
             'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
@@ -362,6 +366,41 @@ class EquipementPdfController extends AbstractController
                 return $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $id], ['numero_equipement' => 'ASC']);
             default:
                 return [];
+        }
+    }
+
+    private function getImageUrlForAgency(string $agencyName): string
+    {
+        // Assurez-vous d'ajouter vos conditions pour les URL spécifiques
+        switch ($agencyName) {
+            case 'S10':
+                return '/img/background-pdf/group.jpg';
+            case 'S40':
+                return '/img/background-pdf/st-etienne.jpg';
+            case 'S50':
+                return '/img/background-pdf/grenoble.jpg';
+            case 'S60':
+                return '/img/background-pdf/lyon.jpg';
+            case 'S70':
+                return '/img/background-pdf/bordeaux.jpg';
+            case 'S80':
+                return '/img/background-pdf/paris.jpg';
+            case 'S100':
+                return '/img/background-pdf/montpellier.jpg';
+            case 'S120':
+                return '/img/background-pdf/portland.jpg';
+            case 'S130':
+                return '/img/background-pdf/toulouse.jpg';
+            case 'S140':
+                return '/img/background-pdf/grand-est.jpg';
+            case 'S150':
+                return '/img/background-pdf/paca.jpg';
+            case 'S160':
+                return '/img/background-pdf/rouen.jpg';
+            case 'S170':
+                return '/img/background-pdf/rennes.jpg';
+            default:
+                return '/img/background-pdf/default.jpg'; // Image par défaut
         }
     }
 }
