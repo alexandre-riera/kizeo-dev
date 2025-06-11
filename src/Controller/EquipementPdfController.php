@@ -371,7 +371,6 @@ class EquipementPdfController extends AbstractController
 
     private function getImageUrlForAgency(string $agencyName): string
     {
-        dd($agencyName);
         // Assurez-vous d'ajouter vos conditions pour les URL spécifiques
         switch ($agencyName) {
             case 'S10':
@@ -379,7 +378,7 @@ class EquipementPdfController extends AbstractController
             case 'S40':
                 return '/img/background-pdf/st-etienne.jpg';
             case 'S50':
-                return 'img/background-pdf/grenoble.jpg';
+                return 'background-pdf/grenoble.jpg';
             case 'S60':
                 return '/img/background-pdf/lyon.jpg';
             case 'S70':
