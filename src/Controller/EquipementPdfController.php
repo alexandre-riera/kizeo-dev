@@ -371,6 +371,7 @@ class EquipementPdfController extends AbstractController
 
     private function getImageUrlForAgency(string $agencyName): string
     {
+        dd($agencyName);
         // Assurez-vous d'ajouter vos conditions pour les URL spécifiques
         switch ($agencyName) {
             case 'S10':
