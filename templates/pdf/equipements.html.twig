@@ -314,7 +314,7 @@
                                 <th>Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}</th>
                                 <td>
                                     <div class="equipement-header">
-                                        <div class="equipement-title">
+                                        <div >
                                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
                                                 <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px; margin-top:2px; float: right;">
                                             {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
