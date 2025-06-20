@@ -1,0 +1,140 @@
+{# templates/pdf/equipements_fallback.html.twig #}
+<div style="font-family: Arial, sans-serif; font-size: 11px;">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <h1>Compte rendu d'entretien</h1>
+        {% if clientVisiteFilter and clientAnneeFilter %}
+            <p><strong>Visite :</strong> {{ clientVisiteFilter }} - {{ clientAnneeFilter }}</p>
+        {% endif %}
+        {% if dateDeDerniererVisite %}
+            <p><strong>Date de visite :</strong> {{ dateDeDerniererVisite|date('d/m/Y') }}</p>
+        {% endif %}
+        
+        {% if clientSelectedInformations %}
+            {% set raisonSociale = clientSelectedInformations.getRaisonSociale() %}
+            {% if clientSelectedInformations.getVillep() %}
+                {% set raisonSociale = raisonSociale|replace({(clientSelectedInformations.getVillep()): ''}) %}
+            {% endif %}
+            <h2>{{ raisonSociale }}</h2>
+            <p>{{ clientSelectedInformations.getAdressep1() ?? '' }}</p>
+            {% if clientSelectedInformations.getAdressep2() is not empty %}
+                <p>{{ clientSelectedInformations.getAdressep2() }}</p>
+            {% endif %}
+            <p>{{ clientSelectedInformations.getCpostalp() ?? '' }} {{ clientSelectedInformations.getVillep() ?? '' }}</p>
+        {% endif %}
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <h3>Résumé</h3>
+        <p><strong>Nombre d'équipements :</strong> {{ equipments|length }}</p>
+    </div>
+
+    {# Statistiques simplifiées #}
+    {% if statistiques is defined %}
+    <div style="margin-bottom: 20px;">
+        <h3>Statistiques des équipements</h3>
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 5px; background-color: #f9f9f9;">État</th>
+                    <th style="border: 1px solid #ddd; padding: 5px; background-color: #f9f9f9;">Nombre</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for etat, count in statistiques.etatsCount %}
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px;">
+                            {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                Bon état
+                            {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                Travaux à prévoir
+                            {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
+                                Travaux urgent ou à l'arrêt
+                            {% elseif etat == "Equipement non présent sur site" or etat == "G" %}
+                                Équipement non présent
+                            {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                Équipement inaccessible
+                            {% else %}
+                                {{ etat }}
+                            {% endif %}
+                        </td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <div style="page-break-before: always;">
+        <h3>Liste des équipements</h3>
+        
+        {% for equipment in equipments %}
+            <div style="margin-bottom: 15px; border: 1px solid #ddd; padding: 8px; break-inside: avoid;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <th colspan="2" style="text-align: center; background-color: #f5f5f5; padding: 5px; border: 1px solid #ddd;">
+                            Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
+                        </th>
+                    </tr>
+                    <tr>
+                        <th style="width: 30%; padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Numéro</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.numeroEquipement }}</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Type</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Marque</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.marque ?? 'Non renseigné' }}</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">État</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">
+                            {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                <span style="color: #4CAF50;">●</span> Bon état
+                            {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                <span style="color: #FF9800;">●</span> Travaux à prévoir
+                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                <span style="color: #F44336;">●</span> Travaux urgent ou à l'arrêt
+                            {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                                <span style="color: #424242;">●</span> Équipement non présent
+                            {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                                <span style="color: #424242;">●</span> Équipement inaccessible
+                            {% else %}
+                                {{ equipment.etat }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Mise en service</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.miseEnService ?? 'Non renseignée' }}</td>
+                    </tr>
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Repère site</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.repereSiteClient ?? 'Non repèré' }}</td>
+                    </tr>
+                    {% if equipment.modeFonctionnement %}
+                    <tr>
+                        <th style="padding: 3px; border: 1px solid #ddd; background-color: #f9f9f9;">Mode</th>
+                        <td style="padding: 3px; border: 1px solid #ddd;">{{ equipment.modeFonctionnement }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+            
+            {# Saut de page tous les 4 équipements #}
+            {% if loop.index is divisible by(4) and not loop.last %}
+                <div style="page-break-after: always;"></div>
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <div style="margin-top: 20px; font-size: 8px; color: #666; text-align: center; border-top: 1px solid #ddd; padding-top: 10px;">
+        Document généré automatiquement le {{ "now"|date_modify("+2 hours")|date('d/m/Y à H:i') }} - {{ equipments|length }} équipement{{ equipments|length > 1 ? 's' : '' }} traité{{ equipments|length > 1 ? 's' : '' }}
+        {% if isFiltered is defined and isFiltered %}
+            <br><em>Filtres appliqués lors de la génération</em>
+        {% endif %}
+        <br><em>Version simplifiée sans images (fallback)</em>
+    </div>
+</div>
