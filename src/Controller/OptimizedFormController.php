@@ -28,8 +28,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class OptimizedFormController extends AbstractController
 {
     private const AGENCIES = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
-    private const BATCH_SIZE = 3; // Petits lots pour éviter les timeouts
-    private const MAX_EXECUTION_TIME = 840; // 14 minutes (garder 1 min de marge)
+    private const BATCH_SIZE = 1; // UN SEUL formulaire à la fois
+    private const MAX_EXECUTION_TIME = 480; // 8 minutes max (2 min de marge)
+    private const MAX_FORMS_PER_SESSION = 5; // Maximum 5 formulaires par session
     
     private HttpClientInterface $client;
     private FormRepository $formRepository;
@@ -42,6 +43,7 @@ class OptimizedFormController extends AbstractController
 
     /**
      * Route principale pour traiter toutes les agences avec gestion de reprise
+     * OPTIMISÉE pour éviter les timeouts de 10 minutes
      */
     #[Route('/api/forms/process/all-agencies', name: 'app_process_all_agencies', methods: ['GET'])]
     public function processAllAgencies(
@@ -49,91 +51,77 @@ class OptimizedFormController extends AbstractController
         CacheInterface $cache,
         Request $request
     ): JsonResponse {
-        set_time_limit(0);
-        ini_set('memory_limit', '2048M');
+        set_time_limit(480); // 8 minutes max
+        ini_set('memory_limit', '1024M'); // Réduire à 1GB
         
         $startAgency = $request->query->get('start_agency', 'S10');
-        $continueFromFormIndex = $request->query->get('continue_from', 0);
+        $continueFromFormIndex = (int)$request->query->get('continue_from', 0);
+        $maxFormsThisSession = (int)$request->query->get('max_forms', self::MAX_FORMS_PER_SESSION);
         
         $globalStats = [
             'start_time' => time(),
             'current_agency' => $startAgency,
-            'agencies_processed' => [],
+            'session_forms_processed' => 0,
+            'max_forms_this_session' => $maxFormsThisSession,
             'total_equipment_processed' => 0,
             'total_errors' => 0,
             'last_position' => []
         ];
         
-        $startProcessing = false;
+        $this->logProgress("🚀 DÉBUT session - Agence: $startAgency, Index: $continueFromFormIndex, Max formulaires: $maxFormsThisSession");
         
-        foreach (self::AGENCIES as $agency) {
-            // Commencer à partir de l'agence spécifiée
-            if (!$startProcessing && $agency !== $startAgency) {
-                continue;
-            }
-            $startProcessing = true;
+        try {
+            $result = $this->processAgencyOptimized(
+                $startAgency, 
+                $entityManager, 
+                $cache, 
+                $continueFromFormIndex,
+                $maxFormsThisSession
+            );
             
-            $globalStats['current_agency'] = $agency;
+            $globalStats['agency_result'] = $result;
+            $globalStats['total_equipment_processed'] = $result['total_processed'];
+            $globalStats['total_errors'] = $result['errors'];
+            $globalStats['session_forms_processed'] = $result['processed_forms'];
             
-            // Vérifier le timeout global
-            if ((time() - $globalStats['start_time']) > self::MAX_EXECUTION_TIME) {
-                $globalStats['timeout_reached'] = true;
+            // Déterminer la suite
+            if (isset($result['timeout_reached']) || isset($result['max_forms_reached'])) {
+                $nextIndex = $continueFromFormIndex + $result['processed_forms'];
                 $globalStats['continue_url'] = $this->generateUrl('app_process_all_agencies', [
-                    'start_agency' => $agency,
-                    'continue_from' => 0
+                    'start_agency' => $startAgency,
+                    'continue_from' => $nextIndex,
+                    'max_forms' => $maxFormsThisSession
                 ]);
-                break;
+                $globalStats['status'] = 'partial_complete';
+                $globalStats['message'] = "Session terminée. Continuer avec l'URL fournie.";
+            } else {
+                // Passer à l'agence suivante
+                $nextAgencyIndex = array_search($startAgency, self::AGENCIES) + 1;
+                if ($nextAgencyIndex < count(self::AGENCIES)) {
+                    $nextAgency = self::AGENCIES[$nextAgencyIndex];
+                    $globalStats['continue_url'] = $this->generateUrl('app_process_all_agencies', [
+                        'start_agency' => $nextAgency,
+                        'continue_from' => 0,
+                        'max_forms' => $maxFormsThisSession
+                    ]);
+                    $globalStats['status'] = 'agency_complete';
+                    $globalStats['message'] = "Agence $startAgency terminée. Passer à $nextAgency.";
+                } else {
+                    $globalStats['status'] = 'all_complete';
+                    $globalStats['message'] = "Toutes les agences ont été traitées !";
+                }
             }
             
-            try {
-                $this->logProgress("🚀 DÉBUT traitement agence $agency");
-                
-                $agencyResult = $this->processAgencyOptimized(
-                    $agency, 
-                    $entityManager, 
-                    $cache, 
-                    $agency === $startAgency ? $continueFromFormIndex : 0
-                );
-                
-                $globalStats['agencies_processed'][$agency] = $agencyResult;
-                $globalStats['total_equipment_processed'] += $agencyResult['total_processed'];
-                $globalStats['total_errors'] += $agencyResult['errors'];
-                
-                $this->logProgress("✅ TERMINÉ agence $agency - Équipements: {$agencyResult['total_processed']}, Erreurs: {$agencyResult['errors']}");
-                
-                // Sauvegarder la position actuelle
-                $globalStats['last_position'] = [
-                    'agency' => $agency,
-                    'completed' => true
-                ];
-                
-                // Pause entre les agences
-                sleep(2);
-                
-            } catch (\Exception $e) {
-                $this->logError("❌ ERREUR CRITIQUE agence $agency: " . $e->getMessage());
-                $globalStats['agencies_processed'][$agency] = [
-                    'error' => $e->getMessage(),
-                    'total_processed' => 0,
-                    'errors' => 1
-                ];
-                $globalStats['total_errors']++;
-            }
+        } catch (\Exception $e) {
+            $this->logError("❌ ERREUR CRITIQUE session: " . $e->getMessage());
+            $globalStats['error'] = $e->getMessage();
+            $globalStats['status'] = 'error';
         }
         
         $globalStats['execution_time'] = time() - $globalStats['start_time'];
-        $this->logProgress("🎉 TRAITEMENT GLOBAL TERMINÉ - Total équipements: {$globalStats['total_equipment_processed']}, Erreurs: {$globalStats['total_errors']}");
+        $this->logProgress("🏁 FIN session - Formulaires: {$globalStats['session_forms_processed']}, Équipements: {$globalStats['total_equipment_processed']}");
         
-        return new JsonResponse([
-            'status' => 'completed',
-            'global_stats' => $globalStats,
-            'summary' => [
-                'agencies_processed' => count($globalStats['agencies_processed']),
-                'total_equipment' => $globalStats['total_equipment_processed'],
-                'total_errors' => $globalStats['total_errors'],
-                'execution_time_minutes' => round($globalStats['execution_time'] / 60, 2)
-            ]
-        ]);
+        return new JsonResponse($globalStats);
     }
 
     /**
@@ -161,13 +149,14 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * Traitement optimisé d'une agence avec gestion de reprise
+     * Traitement optimisé d'une agence avec gestion de reprise ET limitation du nombre de formulaires
      */
     private function processAgencyOptimized(
         string $agency, 
         EntityManagerInterface $entityManager, 
         CacheInterface $cache, 
-        int $continueFromIndex = 0
+        int $continueFromIndex = 0,
+        int $maxForms = self::MAX_FORMS_PER_SESSION
     ): array {
         $startTime = time();
         
@@ -179,7 +168,8 @@ class OptimizedFormController extends AbstractController
             'errors' => 0,
             'processed_forms' => 0,
             'error_details' => [],
-            'continue_from_index' => $continueFromIndex
+            'continue_from_index' => $continueFromIndex,
+            'max_forms_this_session' => $maxForms
         ];
         
         try {
@@ -188,23 +178,22 @@ class OptimizedFormController extends AbstractController
             $allForms = $this->getAllFormsForAgency($agency);
             $totalForms = count($allForms);
             
-            $this->logProgress("📊 [$agency] $totalForms formulaires trouvés, début à l'index $continueFromIndex");
+            $this->logProgress("📊 [$agency] $totalForms formulaires trouvés, début à l'index $continueFromIndex, max $maxForms cette session");
             
             if ($totalForms === 0) {
                 $this->logProgress("⚠️ [$agency] Aucun formulaire trouvé");
                 return $stats;
             }
             
-            // Traiter à partir de l'index spécifié
-            for ($i = $continueFromIndex; $i < $totalForms; $i++) {
+            // Calculer la fin de cette session
+            $endIndex = min($continueFromIndex + $maxForms, $totalForms);
+            
+            // Traiter uniquement les formulaires de cette session
+            for ($i = $continueFromIndex; $i < $endIndex; $i++) {
                 // Vérifier le timeout
                 if ((time() - $startTime) > self::MAX_EXECUTION_TIME) {
                     $this->logProgress("⏰ [$agency] TIMEOUT atteint à l'index $i/$totalForms");
                     $stats['timeout_reached'] = true;
-                    $stats['continue_url'] = $this->generateUrl('app_process_agency', [
-                        'agency' => $agency,
-                        'continue_from' => $i
-                    ]);
                     break;
                 }
                 
@@ -235,7 +224,25 @@ class OptimizedFormController extends AbstractController
                 }
                 
                 // Pause entre les formulaires
-                usleep(100000); // 0.1 seconde
+                usleep(200000); // 0.2 seconde
+            }
+            
+            // Vérifier si on a atteint la limite de formulaires
+            if ($stats['processed_forms'] >= $maxForms) {
+                $stats['max_forms_reached'] = true;
+                $this->logProgress("📈 [$agency] Limite de $maxForms formulaires atteinte pour cette session");
+            }
+            
+            // Vérifier s'il reste des formulaires à traiter
+            $nextIndex = $continueFromIndex + $stats['processed_forms'];
+            if ($nextIndex < $totalForms) {
+                $stats['has_more_forms'] = true;
+                $stats['next_index'] = $nextIndex;
+                $stats['remaining_forms'] = $totalForms - $nextIndex;
+                $this->logProgress("📋 [$agency] {$stats['remaining_forms']} formulaires restants (prochain index: $nextIndex)");
+            } else {
+                $stats['agency_complete'] = true;
+                $this->logProgress("🎯 [$agency] Tous les formulaires traités !");
             }
             
         } catch (\Exception $e) {
@@ -245,7 +252,7 @@ class OptimizedFormController extends AbstractController
         }
         
         $stats['execution_time'] = time() - $startTime;
-        $this->logProgress("🎯 [$agency] TERMINÉ - Formulaires: {$stats['processed_forms']}, Équipements: {$stats['total_processed']}, Erreurs: {$stats['errors']}");
+        $this->logProgress("🎯 [$agency] SESSION TERMINÉE - Formulaires: {$stats['processed_forms']}, Équipements: {$stats['total_processed']}, Erreurs: {$stats['errors']}");
         
         return $stats;
     }
@@ -817,7 +824,7 @@ class OptimizedFormController extends AbstractController
         string $agency, 
         EntityManagerInterface $entityManager, 
         CacheInterface $cache,
-        ?int $fromIndex = 0,
+        ?int $fromIndex = 0
     ): JsonResponse {
         if (!in_array($agency, self::AGENCIES)) {
             return new JsonResponse(['error' => 'Agence non valide'], 400);
