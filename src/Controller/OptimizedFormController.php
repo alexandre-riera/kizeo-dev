@@ -816,7 +816,7 @@ class OptimizedFormController extends AbstractController
     public function resumeProcessing(
         string $agency, 
         EntityManagerInterface $entityManager, 
-        CacheInterface $cache
+        CacheInterface $cache,
         ?int $fromIndex = 0,
     ): JsonResponse {
         if (!in_array($agency, self::AGENCIES)) {
