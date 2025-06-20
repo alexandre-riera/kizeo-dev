@@ -815,9 +815,9 @@ class OptimizedFormController extends AbstractController
     #[Route('/api/forms/resume/{agency}/{fromIndex?}', name: 'app_forms_resume', methods: ['GET'])]
     public function resumeProcessing(
         string $agency, 
-        ?int $fromIndex = 0,
         EntityManagerInterface $entityManager, 
         CacheInterface $cache
+        ?int $fromIndex = 0,
     ): JsonResponse {
         if (!in_array($agency, self::AGENCIES)) {
             return new JsonResponse(['error' => 'Agence non valide'], 400);
