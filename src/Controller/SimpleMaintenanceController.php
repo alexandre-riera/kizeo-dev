@@ -18,13 +18,13 @@ use App\Entity\EquipementS170;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class OptimizedFormController extends AbstractController
+class SimpleMaintenanceController extends AbstractController
 {
-    private HttpClientInterface $client;
+    private $client;
 
     public function __construct(HttpClientInterface $client)
     {
@@ -32,10 +32,8 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * SOLUTION SIMPLE : Un seul formulaire à la fois par agence
-     * Usage: GET /api/forms/process/simple/{agency}?offset=0
+     * @Route("/api/forms/process/simple/{agency}", name="app_process_simple_agency", methods={"GET"})
      */
-    #[Route('/api/forms/process/simple/{agency}', name: 'app_process_simple_agency', methods: ['GET'])]
     public function processSimpleAgency(
         string $agency,
         EntityManagerInterface $entityManager,
@@ -131,9 +129,8 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * ROUTE DE COMPTAGE : Compter les formulaires par agence
+     * @Route("/api/forms/count/simple/{agency}", name="app_count_simple_agency", methods={"GET"})
      */
-    #[Route('/api/forms/count/simple/{agency}', name: 'app_count_simple_agency', methods: ['GET'])]
     public function countSimpleAgency(string $agency): JsonResponse
     {
         ini_set('memory_limit', '256M');
@@ -207,9 +204,6 @@ class OptimizedFormController extends AbstractController
         ]);
     }
 
-    /**
-     * Trouve un formulaire spécifique à un offset donné
-     */
     private function findFormAtOffset(string $agency, int $targetOffset): ?array
     {
         $currentIndex = 0;
@@ -264,9 +258,6 @@ class OptimizedFormController extends AbstractController
         return null;
     }
 
-    /**
-     * Vérification rapide de l'agence
-     */
     private function quickAgencyCheck(string $formId, string $dataId, string $expectedAgency): bool
     {
         try {
@@ -289,9 +280,6 @@ class OptimizedFormController extends AbstractController
         }
     }
 
-    /**
-     * Récupération des détails de formulaire
-     */
     private function getFormDetails(string $formId, string $dataId): ?array
     {
         try {
@@ -312,9 +300,6 @@ class OptimizedFormController extends AbstractController
         }
     }
 
-    /**
-     * Traitement des équipements d'un formulaire
-     */
     private function processFormEquipments(array $fields, EntityManagerInterface $entityManager, string $agency): array
     {
         $results = ['contract' => 0, 'off_contract' => 0];
@@ -365,9 +350,6 @@ class OptimizedFormController extends AbstractController
         return $results;
     }
 
-    /**
-     * Marquer formulaire comme lu
-     */
     private function markFormAsRead(string $formId, string $dataId): void
     {
         try {
@@ -387,7 +369,6 @@ class OptimizedFormController extends AbstractController
         }
     }
 
-    // Méthodes utilitaires identiques au contrôleur précédent
     private function getEntityClassByAgency(string $codeAgence): ?string
     {
         $agencyMap = [
@@ -473,7 +454,6 @@ class OptimizedFormController extends AbstractController
         $equipement->setIsArchive(false);
     }
 
-    // Méthodes de statut et utilitaires...
     private function getMaintenanceContractStatus(string $etat): string
     {
         switch ($etat) {
