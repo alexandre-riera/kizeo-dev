@@ -27,8 +27,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class OptimizedFormController extends AbstractController
 {
-    private const BATCH_SIZE = 5; // Traitement par lots de 5
-    private const MAX_EXECUTION_TIME = 50; // 50 secondes max pour éviter timeout
+    private const AGENCIES = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+    private const BATCH_SIZE = 3; // Petits lots pour éviter les timeouts
+    private const MAX_EXECUTION_TIME = 840; // 14 minutes (garder 1 min de marge)
     
     private HttpClientInterface $client;
     private FormRepository $formRepository;
@@ -40,216 +41,318 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * Route principale pour traiter les formulaires de maintenance par lots
+     * Route principale pour traiter toutes les agences avec gestion de reprise
      */
-    #[Route('/api/forms/process/maintenance/batch', name: 'app_process_maintenance_batch', methods: ['GET'])]
-    public function processMaintenanceBatch(
+    #[Route('/api/forms/process/all-agencies', name: 'app_process_all_agencies', methods: ['GET'])]
+    public function processAllAgencies(
         EntityManagerInterface $entityManager, 
         CacheInterface $cache,
         Request $request
     ): JsonResponse {
+        set_time_limit(0);
+        ini_set('memory_limit', '2048M');
+        
+        $startAgency = $request->query->get('start_agency', 'S10');
+        $continueFromFormIndex = $request->query->get('continue_from', 0);
+        
+        $globalStats = [
+            'start_time' => time(),
+            'current_agency' => $startAgency,
+            'agencies_processed' => [],
+            'total_equipment_processed' => 0,
+            'total_errors' => 0,
+            'last_position' => []
+        ];
+        
+        $startProcessing = false;
+        
+        foreach (self::AGENCIES as $agency) {
+            // Commencer à partir de l'agence spécifiée
+            if (!$startProcessing && $agency !== $startAgency) {
+                continue;
+            }
+            $startProcessing = true;
+            
+            $globalStats['current_agency'] = $agency;
+            
+            // Vérifier le timeout global
+            if ((time() - $globalStats['start_time']) > self::MAX_EXECUTION_TIME) {
+                $globalStats['timeout_reached'] = true;
+                $globalStats['continue_url'] = $this->generateUrl('app_process_all_agencies', [
+                    'start_agency' => $agency,
+                    'continue_from' => 0
+                ]);
+                break;
+            }
+            
+            try {
+                $this->logProgress("🚀 DÉBUT traitement agence $agency");
+                
+                $agencyResult = $this->processAgencyOptimized(
+                    $agency, 
+                    $entityManager, 
+                    $cache, 
+                    $agency === $startAgency ? $continueFromFormIndex : 0
+                );
+                
+                $globalStats['agencies_processed'][$agency] = $agencyResult;
+                $globalStats['total_equipment_processed'] += $agencyResult['total_processed'];
+                $globalStats['total_errors'] += $agencyResult['errors'];
+                
+                $this->logProgress("✅ TERMINÉ agence $agency - Équipements: {$agencyResult['total_processed']}, Erreurs: {$agencyResult['errors']}");
+                
+                // Sauvegarder la position actuelle
+                $globalStats['last_position'] = [
+                    'agency' => $agency,
+                    'completed' => true
+                ];
+                
+                // Pause entre les agences
+                sleep(2);
+                
+            } catch (\Exception $e) {
+                $this->logError("❌ ERREUR CRITIQUE agence $agency: " . $e->getMessage());
+                $globalStats['agencies_processed'][$agency] = [
+                    'error' => $e->getMessage(),
+                    'total_processed' => 0,
+                    'errors' => 1
+                ];
+                $globalStats['total_errors']++;
+            }
+        }
+        
+        $globalStats['execution_time'] = time() - $globalStats['start_time'];
+        $this->logProgress("🎉 TRAITEMENT GLOBAL TERMINÉ - Total équipements: {$globalStats['total_equipment_processed']}, Erreurs: {$globalStats['total_errors']}");
+        
+        return new JsonResponse([
+            'status' => 'completed',
+            'global_stats' => $globalStats,
+            'summary' => [
+                'agencies_processed' => count($globalStats['agencies_processed']),
+                'total_equipment' => $globalStats['total_equipment_processed'],
+                'total_errors' => $globalStats['total_errors'],
+                'execution_time_minutes' => round($globalStats['execution_time'] / 60, 2)
+            ]
+        ]);
+    }
+
+    /**
+     * Route pour traiter une agence spécifique avec gestion de reprise
+     */
+    #[Route('/api/forms/process/agency/{agency}', name: 'app_process_agency', methods: ['GET'])]
+    public function processAgency(
+        string $agency,
+        EntityManagerInterface $entityManager, 
+        CacheInterface $cache,
+        Request $request
+    ): JsonResponse {
+        if (!in_array($agency, self::AGENCIES)) {
+            return new JsonResponse(['error' => 'Agence non valide'], 400);
+        }
+        
+        $continueFromIndex = $request->query->get('continue_from', 0);
+        $result = $this->processAgencyOptimized($agency, $entityManager, $cache, $continueFromIndex);
+        
+        return new JsonResponse([
+            'status' => 'completed',
+            'agency' => $agency,
+            'result' => $result
+        ]);
+    }
+
+    /**
+     * Traitement optimisé d'une agence avec gestion de reprise
+     */
+    private function processAgencyOptimized(
+        string $agency, 
+        EntityManagerInterface $entityManager, 
+        CacheInterface $cache, 
+        int $continueFromIndex = 0
+    ): array {
         $startTime = time();
-        $processedCount = 0;
-        $totalProcessed = 0;
+        
+        $stats = [
+            'agency' => $agency,
+            'processed_contract' => 0,
+            'processed_off_contract' => 0,
+            'total_processed' => 0,
+            'errors' => 0,
+            'processed_forms' => 0,
+            'error_details' => [],
+            'continue_from_index' => $continueFromIndex
+        ];
         
         try {
-            // Récupérer l'offset depuis la requête (pour la pagination)
-            $offset = $request->query->get('offset', 0);
-            $agencyFilter = $request->query->get('agency', null); // Filtrer par agence si nécessaire
+            // Récupérer tous les formulaires de l'agence
+            $this->logProgress("🔍 [$agency] Récupération de tous les formulaires...");
+            $allForms = $this->getAllFormsForAgency($agency);
+            $totalForms = count($allForms);
             
-            // Récupérer les formulaires de maintenance non lus par lots
-            $unreadForms = $this->getUnreadMaintenanceFormsBatch($cache, self::BATCH_SIZE, $offset, $agencyFilter);
+            $this->logProgress("📊 [$agency] $totalForms formulaires trouvés, début à l'index $continueFromIndex");
             
-            if (empty($unreadForms)) {
-                return new JsonResponse([
-                    'status' => 'completed',
-                    'message' => 'Aucun formulaire non lu trouvé',
-                    'processed' => 0,
-                    'total_processed' => $totalProcessed
-                ]);
+            if ($totalForms === 0) {
+                $this->logProgress("⚠️ [$agency] Aucun formulaire trouvé");
+                return $stats;
             }
-
-            // Traitement des formulaires
-            foreach ($unreadForms as $formData) {
-                // Vérifier le temps d'exécution
-                if ((time() - $startTime) >= self::MAX_EXECUTION_TIME) {
+            
+            // Traiter à partir de l'index spécifié
+            for ($i = $continueFromIndex; $i < $totalForms; $i++) {
+                // Vérifier le timeout
+                if ((time() - $startTime) > self::MAX_EXECUTION_TIME) {
+                    $this->logProgress("⏰ [$agency] TIMEOUT atteint à l'index $i/$totalForms");
+                    $stats['timeout_reached'] = true;
+                    $stats['continue_url'] = $this->generateUrl('app_process_agency', [
+                        'agency' => $agency,
+                        'continue_from' => $i
+                    ]);
                     break;
                 }
-
+                
+                $formData = $allForms[$i];
+                $this->logProgress("📝 [$agency] [$i/$totalForms] Traitement formulaire {$formData['form_id']}/{$formData['data_id']}");
+                
                 try {
-                    // Récupérer les données détaillées du formulaire
-                    $formDetails = $this->getFormDetails($formData['form_id'], $formData['data_id']);
+                    $result = $this->processFormComplete($formData, $entityManager);
                     
-                    if ($formDetails && isset($formDetails['fields'])) {
-                        // AJOUT : Enregistrer les photos
-                        $this->uploadPicturesInDatabase($formDetails, $entityManager);
-                        
-                        // Traiter et enregistrer les équipements
-                        $this->processFormEquipments($formDetails['fields'], $entityManager);
-                        
-                        // Marquer le formulaire comme lu
-                        $this->markFormAsRead($formData['form_id'], $formData['data_id']);
-                        
-                        $processedCount++;
-                        $totalProcessed++;
+                    $stats['processed_contract'] += $result['contract_equipment'];
+                    $stats['processed_off_contract'] += $result['off_contract_equipment'];
+                    $stats['total_processed'] += $result['contract_equipment'] + $result['off_contract_equipment'];
+                    $stats['processed_forms']++;
+                    
+                    $this->logProgress("✅ [$agency] Formulaire traité - AU CONTRAT: {$result['contract_equipment']}, HORS CONTRAT: {$result['off_contract_equipment']}");
+                    
+                } catch (\Exception $e) {
+                    $stats['errors']++;
+                    $errorDetail = [
+                        'form_id' => $formData['form_id'],
+                        'data_id' => $formData['data_id'],
+                        'index' => $i,
+                        'error' => $e->getMessage(),
+                        'timestamp' => date('Y-m-d H:i:s')
+                    ];
+                    $stats['error_details'][] = $errorDetail;
+                    $this->logError("❌ [$agency] ERREUR formulaire {$formData['form_id']}: " . $e->getMessage());
+                }
+                
+                // Pause entre les formulaires
+                usleep(100000); // 0.1 seconde
+            }
+            
+        } catch (\Exception $e) {
+            $this->logError("💥 [$agency] ERREUR CRITIQUE: " . $e->getMessage());
+            $stats['critical_error'] = $e->getMessage();
+            $stats['errors']++;
+        }
+        
+        $stats['execution_time'] = time() - $startTime;
+        $this->logProgress("🎯 [$agency] TERMINÉ - Formulaires: {$stats['processed_forms']}, Équipements: {$stats['total_processed']}, Erreurs: {$stats['errors']}");
+        
+        return $stats;
+    }
+
+    /**
+     * Récupération de tous les formulaires (LUS ET NON LUS) pour une agence
+     */
+    private function getAllFormsForAgency(string $agency): array
+    {
+        $allForms = [];
+        
+        try {
+            // Récupérer tous les formulaires MAINTENANCE
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
+            ]);
+            
+            $content = $response->toArray();
+            $maintenanceForms = array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+
+            foreach ($maintenanceForms as $form) {
+                try {
+                    // MODIFICATION: Récupérer TOUS les formulaires (pas seulement les non lus)
+                    $response = $this->client->request('POST', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/advanced", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]);
+
+                    $result = $response->toArray();
+                    
+                    foreach ($result['data'] as $formData) {
+                        // Vérifier si c'est la bonne agence
+                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                        if ($details && isset($details['fields']['code_agence']['value']) && 
+                            $details['fields']['code_agence']['value'] === $agency) {
+                            
+                            $allForms[] = [
+                                'form_id' => $formData['_form_id'],
+                                'data_id' => $formData['_id']
+                            ];
+                        }
                     }
                 } catch (\Exception $e) {
-                    error_log("Erreur lors du traitement du formulaire {$formData['form_id']}/{$formData['data_id']}: " . $e->getMessage());
+                    $this->logError("Erreur récupération formulaire {$form['id']}: " . $e->getMessage());
                     continue;
                 }
             }
+            
+        } catch (\Exception $e) {
+            $this->logError("Erreur récupération formulaires généraux: " . $e->getMessage());
+        }
+        
+        return $allForms;
+    }
 
-            // Déterminer s'il y a encore des formulaires à traiter
-            $hasMore = count($unreadForms) === self::BATCH_SIZE;
-            $nextOffset = $offset + self::BATCH_SIZE;
+    /**
+     * Traitement complet d'un formulaire (photos + équipements)
+     */
+    private function processFormComplete(array $formData, EntityManagerInterface $entityManager): array
+    {
+        $formDetails = $this->getFormDetails($formData['form_id'], $formData['data_id']);
+        
+        if (!$formDetails || !isset($formDetails['fields'])) {
+            throw new \Exception("Impossible de récupérer les détails du formulaire");
+        }
+        
+        // Enregistrer les photos
+        $this->uploadPicturesInDatabase($formDetails, $entityManager);
+        
+        // Traiter les équipements
+        return $this->processFormEquipmentsDetailed($formDetails['fields'], $entityManager);
+    }
 
-            return new JsonResponse([
-                'status' => $hasMore ? 'continue' : 'completed',
-                'processed' => $processedCount,
-                'total_processed' => $totalProcessed,
-                'next_offset' => $hasMore ? $nextOffset : null,
-                'execution_time' => (time() - $startTime),
-                'next_url' => $hasMore ? $this->generateUrl('app_process_maintenance_batch', ['offset' => $nextOffset]) : null
+    /**
+     * Récupère les détails d'un formulaire
+     */
+    private function getFormDetails(string $formId, string $dataId): ?array
+    {
+        try {
+            $response = $this->client->request('GET', 
+                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$dataId}", [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
             ]);
 
+            $result = $response->toArray();
+            return $result['data'] ?? null;
         } catch (\Exception $e) {
-            error_log('Erreur lors du traitement par lots: ' . $e->getMessage());
-            return new JsonResponse([
-                'status' => 'error',
-                'message' => 'Erreur lors du traitement',
-                'processed' => $processedCount
-            ], 500);
+            throw new \Exception("Erreur récupération détails formulaire {$formId}/{$dataId}: " . $e->getMessage());
         }
     }
 
     /**
-     * Route pour traiter automatiquement tous les formulaires par lots successifs
-     * AMÉLIORATION : Augmentation du timeout et de la limite par lot
-     */
-    #[Route('/api/forms/process/maintenance/auto', name: 'app_process_maintenance_auto', methods: ['GET'])]
-    public function processMaintenanceAuto(EntityManagerInterface $entityManager, CacheInterface $cache): JsonResponse
-    {
-        // AMÉLIORATION : Augmenter la limite de temps et la taille des lots
-        set_time_limit(900); // 15 minutes
-        ini_set('memory_limit', '1024M'); // 1GB de RAM
-        
-        $stats = [
-            'total_processed' => 0,
-            'batches_processed' => 0,
-            'errors' => 0,
-            'start_time' => time()
-        ];
-
-        $offset = 0;
-        $hasMore = true;
-        $batchSize = 10; // AMÉLIORATION : Augmenter la taille du lot
-
-        while ($hasMore && (time() - $stats['start_time']) < 840) { // 14 minutes max (garder 1 min de marge)
-            try {
-                $unreadForms = $this->getUnreadMaintenanceFormsBatch($cache, $batchSize, $offset);
-                
-                if (empty($unreadForms)) {
-                    $hasMore = false;
-                    break;
-                }
-
-                $batchProcessed = 0;
-                foreach ($unreadForms as $formData) {
-                    try {
-                        $formDetails = $this->getFormDetails($formData['form_id'], $formData['data_id']);
-                        
-                        if ($formDetails && isset($formDetails['fields'])) {
-                            // AJOUT : Enregistrer les photos
-                            $this->uploadPicturesInDatabase($formDetails, $entityManager);
-                            
-                            $this->processFormEquipments($formDetails['fields'], $entityManager);
-                            $this->markFormAsRead($formData['form_id'], $formData['data_id']);
-                            $batchProcessed++;
-                        }
-                    } catch (\Exception $e) {
-                        $stats['errors']++;
-                        error_log("Erreur formulaire {$formData['form_id']}: " . $e->getMessage());
-                    }
-                }
-
-                $stats['total_processed'] += $batchProcessed;
-                $stats['batches_processed']++;
-                $offset += $batchSize;
-                
-                // Si on a traité moins que la taille du lot, on a terminé
-                if (count($unreadForms) < $batchSize) {
-                    $hasMore = false;
-                }
-
-                // AMÉLIORATION : Réduire la pause pour traiter plus rapidement
-                usleep(50000); // 0.05 seconde
-
-            } catch (\Exception $e) {
-                $stats['errors']++;
-                error_log('Erreur dans le lot: ' . $e->getMessage());
-                break;
-            }
-        }
-
-        return new JsonResponse([
-            'status' => 'completed',
-            'stats' => $stats,
-            'execution_time' => (time() - $stats['start_time']),
-            'remaining_check' => $hasMore ? 'Il pourrait y avoir encore des formulaires à traiter' : 'Tous les formulaires disponibles ont été traités'
-        ]);
-    }
-
-    /**
-     * NOUVEAU : Route pour continuer le traitement là où on s'est arrêté
-     */
-    #[Route('/api/forms/process/maintenance/continue', name: 'app_process_maintenance_continue', methods: ['GET'])]
-    public function processMaintenanceContinue(
-        EntityManagerInterface $entityManager, 
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
-        $startOffset = $request->query->get('offset', 0);
-        $maxBatches = $request->query->get('max_batches', 20); // Limite de lots à traiter
-        
-        $totalProcessed = 0;
-        $batchesProcessed = 0;
-        $errors = 0;
-        $currentOffset = $startOffset;
-        
-        for ($i = 0; $i < $maxBatches; $i++) {
-            $response = $this->processMaintenanceBatch($entityManager, $cache, new Request(['offset' => $currentOffset]));
-            $data = json_decode($response->getContent(), true);
-            
-            if ($data['status'] === 'completed' && $data['processed'] === 0) {
-                break; // Plus de formulaires à traiter
-            }
-            
-            $totalProcessed += $data['processed'] ?? 0;
-            $batchesProcessed++;
-            
-            if ($data['status'] === 'completed' || !isset($data['next_offset'])) {
-                break;
-            }
-            
-            $currentOffset = $data['next_offset'];
-            
-            // Petite pause entre les lots
-            usleep(100000); // 0.1 seconde
-        }
-        
-        return new JsonResponse([
-            'status' => 'completed',
-            'start_offset' => $startOffset,
-            'final_offset' => $currentOffset,
-            'batches_processed' => $batchesProcessed,
-            'total_processed' => $totalProcessed,
-            'continue_url' => $currentOffset > $startOffset ? 
-                $this->generateUrl('app_process_maintenance_continue', ['offset' => $currentOffset]) : null
-        ]);
-    }
-
-    /**
-     * AJOUT : Méthode pour enregistrer les photos (adaptée de FormRepository)
+     * Enregistrement des photos d'un formulaire
      */
     private function uploadPicturesInDatabase(array $formData, EntityManagerInterface $entityManager): void
     {
@@ -271,12 +374,13 @@ class OptimizedFormController extends AbstractController
             $entityManager->flush();
             
         } catch (\Exception $e) {
-            error_log("Erreur lors de l'enregistrement des photos: " . $e->getMessage());
+            $this->logError("Erreur sauvegarde photos: " . $e->getMessage());
+            throw $e;
         }
     }
 
     /**
-     * AJOUT : Méthode pour sauvegarder les photos d'un équipement
+     * Sauvegarde des photos d'un équipement
      */
     private function saveEquipmentPictures(array $formData, ?array $contractEquipment, ?array $offContractEquipment, EntityManagerInterface $entityManager): void
     {
@@ -291,14 +395,12 @@ class OptimizedFormController extends AbstractController
             $equipement->setCodeEquipement($contractEquipment['equipement']['value']);
             $equipement->setRaisonSocialeVisite($contractEquipment['equipement']['path']);
             
-            // Photos des équipements au contrat
             if (isset($contractEquipment['photo_etiquette_somafi']['value'])) {
                 $equipement->setPhotoEtiquetteSomafi($contractEquipment['photo_etiquette_somafi']['value']);
             }
             $equipement->setPhotoPlaque($contractEquipment['photo_plaque']['value'] ?? '');
             $equipement->setPhotoChoc($contractEquipment['photo_choc']['value'] ?? '');
             
-            // Toutes les autres photos du contrat
             $this->setContractEquipmentPhotos($equipement, $contractEquipment);
             
         } elseif ($offContractEquipment) {
@@ -311,7 +413,7 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * AJOUT : Méthode pour définir toutes les photos des équipements au contrat
+     * Définition de toutes les photos des équipements au contrat
      */
     private function setContractEquipmentPhotos($equipement, array $contractEquipment): void
     {
@@ -334,398 +436,144 @@ class OptimizedFormController extends AbstractController
                 }
             }
         }
+    }
+
+    /**
+     * Traitement détaillé des équipements avec comptage
+     */
+    private function processFormEquipmentsDetailed(array $fields, EntityManagerInterface $entityManager): array
+    {
+        $results = [
+            'contract_equipment' => 0,
+            'off_contract_equipment' => 0
+        ];
         
-        // Cas spéciaux avec des noms différents
-        if (isset($contractEquipment['photo_panneau_intermediaire_i']['value'])) {
-            $equipement->setPhotoPanneauIntermediaireI($contractEquipment['photo_panneau_intermediaire_i']['value']);
-        }
-        if (isset($contractEquipment['photo_panneau_bas_inter_ext']['value'])) {
-            $equipement->setPhotoPanneauBasInterExt($contractEquipment['photo_panneau_bas_inter_ext']['value']);
-        }
-        if (isset($contractEquipment['photo_lame_basse_int_ext']['value'])) {
-            $equipement->setPhotoLameBasseIntExt($contractEquipment['photo_lame_basse_int_ext']['value']);
-        }
-        if (isset($contractEquipment['photo_lame_intermediaire_int_']['value'])) {
-            $equipement->setPhotoLameIntermediaireInt($contractEquipment['photo_lame_intermediaire_int_']['value']);
-        }
-        if (isset($contractEquipment['photo_environnement_equipemen1']['value'])) {
-            $equipement->setPhotoEnvironnementEquipement1($contractEquipment['photo_environnement_equipemen1']['value']);
-        }
-        if (isset($contractEquipment['photo_marquage_au_sol_']['value'])) {
-            $equipement->setPhotoMarquageAuSol2($contractEquipment['photo_marquage_au_sol_']['value']);
-        }
-        if (isset($contractEquipment['photo2']['value'])) {
-            $equipement->setPhoto2($contractEquipment['photo2']['value']);
-        }
-    }
-
-    /**
-     * Récupère les formulaires de maintenance non lus par lots avec filtrage par agence CORRIGÉ
-     */
-    private function getUnreadMaintenanceFormsBatch(CacheInterface $cache, int $limit, int $offset = 0, ?string $agencyFilter = null): array
-    {
-        // Récupérer les formulaires de maintenance depuis le cache
-        $maintenanceForms = $cache->get('maintenance_forms_list', function($item) {
-            $item->expiresAfter(3600); // 1 heure
-            
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]);
-            
-            $content = $response->toArray();
-            return array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-        });
-
-        $unreadForms = [];
-        $processedCount = 0;
-
-        foreach ($maintenanceForms as $form) {
-            if (count($unreadForms) >= $limit) {
-                break;
-            }
-
-            try {
-                // Récupérer les données non lues pour ce formulaire
-                $response = $this->client->request('GET', 
-                    "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/" . ($limit * 2), [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]);
-
-                $result = $response->toArray();
-                
-                foreach ($result['data'] as $formData) {
-                    // CORRECTION : Vérifier l'offset avant de traiter
-                    if ($processedCount < $offset) {
-                        $processedCount++;
-                        continue;
-                    }
-                    
-                    if (count($unreadForms) >= $limit) {
-                        break 2; // Sortir des deux boucles
-                    }
-
-                    // CORRECTION : Filtrer par agence AVANT d'ajouter à la liste
-                    if ($agencyFilter) {
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                        if (!$details || !isset($details['fields']['code_agence']['value']) || 
-                            $details['fields']['code_agence']['value'] !== $agencyFilter) {
-                            $processedCount++;
-                            continue; // Passer au formulaire suivant si ce n'est pas la bonne agence
-                        }
-                    }
-
-                    $unreadForms[] = [
-                        'form_id' => $formData['_form_id'],
-                        'data_id' => $formData['_id']
-                    ];
-                    $processedCount++;
-                }
-            } catch (\Exception $e) {
-                error_log("Erreur lors de la récupération des formulaires non lus pour {$form['id']}: " . $e->getMessage());
-                continue;
-            }
-        }
-
-        return $unreadForms;
-    }
-
-    /**
-     * NOUVELLE MÉTHODE : Filtrage plus efficace par agence
-     */
-    private function getUnreadMaintenanceFormsByAgency(string $agency, int $limit, int $offset = 0): array
-    {
-        $unreadForms = [];
-        $processedCount = 0;
-        $foundCount = 0;
-
-        try {
-            // Récupérer tous les formulaires de maintenance
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]);
-            
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-
-            foreach ($maintenanceForms as $form) {
-                if ($foundCount >= $limit) {
-                    break;
-                }
-
-                try {
-                    // Récupérer les données non lues pour ce formulaire
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/50", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        if ($foundCount >= $limit) {
-                            break 2;
-                        }
-
-                        // Récupérer les détails pour vérifier l'agence
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                        
-                        if ($details && isset($details['fields']['code_agence']['value']) && 
-                            $details['fields']['code_agence']['value'] === $agency) {
-                            
-                            // Vérifier l'offset
-                            if ($processedCount >= $offset) {
-                                $unreadForms[] = [
-                                    'form_id' => $formData['_form_id'],
-                                    'data_id' => $formData['_id']
-                                ];
-                                $foundCount++;
-                            }
-                            $processedCount++;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    error_log("Erreur lors de la récupération pour {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-
-        } catch (\Exception $e) {
-            error_log("Erreur générale dans getUnreadMaintenanceFormsByAgency: " . $e->getMessage());
-        }
-
-        return $unreadForms;
-    }
-
-    /**
-     * Récupère les détails d'un formulaire
-     */
-    private function getFormDetails(string $formId, string $dataId): ?array
-    {
-        try {
-            $response = $this->client->request('GET', 
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$dataId}", [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]);
-
-            $result = $response->toArray();
-            return $result['data'] ?? null;
-        } catch (\Exception $e) {
-            error_log("Erreur lors de la récupération des détails du formulaire {$formId}/{$dataId}: " . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Traite et enregistre les équipements d'un formulaire
-     */
-    private function processFormEquipments(array $fields, EntityManagerInterface $entityManager): void
-    {
         if (!isset($fields['code_agence']['value'])) {
-            return;
+            return $results;
         }
 
         $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
         if (!$entityClass) {
-            return;
+            return $results;
         }
 
         // Traitement des équipements AU CONTRAT
-        if (isset($fields['contrat_de_maintenance']['value'])) {
-            $this->processContractEquipments($fields, $entityClass, $entityManager);
+        if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+            $contractCount = $this->processContractEquipments($fields, $entityClass, $entityManager);
+            $results['contract_equipment'] = $contractCount;
         }
 
         // Traitement des équipements HORS CONTRAT
-        if (isset($fields['tableau2']['value'])) {
-            $this->processOffContractEquipments($fields, $entityClass, $entityManager);
+        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+            $offContractCount = $this->processOffContractEquipments($fields, $entityClass, $entityManager);
+            $results['off_contract_equipment'] = $offContractCount;
         }
+        
+        return $results;
     }
 
     /**
-     * Marque un formulaire comme lu
+     * Traitement équipements au contrat avec comptage
      */
-    private function markFormAsRead(string $formId, string $dataId): void
+    private function processContractEquipments(array $fields, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        try {
-            $this->client->request('POST', 
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/markasreadbyaction/bienrecu", [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'json' => [
-                    "data_ids" => [intval($dataId)]
-                ]
-            ]);
-        } catch (\Exception $e) {
-            error_log("Erreur lors du marquage comme lu du formulaire {$formId}/{$dataId}: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Route pour obtenir le statut du traitement
-     */
-    #[Route('/api/forms/status/maintenance', name: 'app_maintenance_status', methods: ['GET'])]
-    public function getMaintenanceStatus(CacheInterface $cache): JsonResponse
-    {
-        try {
-            $stats = [];
-            
-            // Compter les formulaires non lus par agence
-            $maintenanceForms = $cache->get('maintenance_forms_list', function($item) {
-                $item->expiresAfter(300); // 5 minutes pour le statut
-                
-                $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]);
-                
-                $content = $response->toArray();
-                return array_filter($content['forms'], function($form) {
-                    return $form['class'] == "MAINTENANCE";
-                });
-            });
-
-            $totalUnread = 0;
-            foreach ($maintenanceForms as $form) {
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/100", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]);
-
-                    $result = $response->toArray();
-                    $count = count($result['data']);
-                    $totalUnread += $count;
-                    
-                    $stats['forms'][] = [
-                        'form_id' => $form['id'],
-                        'form_name' => $form['name'],
-                        'unread_count' => $count
-                    ];
-                } catch (\Exception $e) {
-                    continue;
-                }
-            }
-
-            return new JsonResponse([
-                'total_unread' => $totalUnread,
-                'estimated_batches' => ceil($totalUnread / self::BATCH_SIZE),
-                'batch_size' => self::BATCH_SIZE,
-                'forms_details' => $stats['forms'] ?? []
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Erreur lors de la récupération du statut'], 500);
-        }
-    }
-
-    // Reprendre les méthodes de traitement des équipements du WebhookController précédent
-    private function processContractEquipments(array $fields, string $entityClass, EntityManagerInterface $entityManager): void
-    {
-        // Code identique au WebhookController
+        $count = 0;
+        
         foreach ($fields['contrat_de_maintenance']['value'] as $additionalEquipment) {
-            $equipement = new $entityClass();
-            
-            $this->setCommonEquipmentData($equipement, $fields);
-            
-            $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
-            $equipement->setIfExistDB($additionalEquipment['equipement']['columns']);
-            $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
-            $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
-            $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
-            $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
-            $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
-            $equipement->setMarque($additionalEquipment['reference5']['value']);
-            
-            $equipement->setLargeur($additionalEquipment['reference3']['value'] ?? '');
-            $equipement->setHauteur($additionalEquipment['reference1']['value'] ?? '');
-            $equipement->setLongueur($additionalEquipment['longueur']['value'] ?? 'NC');
-            
-            $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
-            $equipement->setEtat($additionalEquipment['etat']['value']);
-            
-            $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value'] ?? '');
-            $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value'] ?? '');
-            
-            $equipement->setStatutDeMaintenance($this->getMaintenanceContractStatus($additionalEquipment['etat']['value']));
-            $equipement->setVisite($this->getVisitType($additionalEquipment['equipement']['path']));
-            
-            $equipement->setEnMaintenance(true);
-            $equipement->setIsArchive(false);
-            
-            $entityManager->persist($equipement);
+            try {
+                $equipement = new $entityClass();
+                
+                $this->setCommonEquipmentData($equipement, $fields);
+                
+                $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
+                $equipement->setIfExistDB($additionalEquipment['equipement']['columns']);
+                $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
+                $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
+                $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
+                $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
+                $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
+                $equipement->setMarque($additionalEquipment['reference5']['value']);
+                
+                $equipement->setLargeur($additionalEquipment['reference3']['value'] ?? '');
+                $equipement->setHauteur($additionalEquipment['reference1']['value'] ?? '');
+                $equipement->setLongueur($additionalEquipment['longueur']['value'] ?? 'NC');
+                
+                $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
+                $equipement->setEtat($additionalEquipment['etat']['value']);
+                
+                $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value'] ?? '');
+                $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value'] ?? '');
+                
+                $equipement->setStatutDeMaintenance($this->getMaintenanceContractStatus($additionalEquipment['etat']['value']));
+                $equipement->setVisite($this->getVisitType($additionalEquipment['equipement']['path']));
+                
+                $equipement->setEnMaintenance(true);
+                $equipement->setIsArchive(false);
+                
+                $entityManager->persist($equipement);
+                $count++;
+                
+            } catch (\Exception $e) {
+                $this->logError("Erreur équipement au contrat: " . $e->getMessage());
+                continue;
+            }
         }
         
         $entityManager->flush();
+        return $count;
     }
 
-    private function processOffContractEquipments(array $fields, string $entityClass, EntityManagerInterface $entityManager): void
+    /**
+     * Traitement équipements hors contrat avec comptage
+     */
+    private function processOffContractEquipments(array $fields, string $entityClass, EntityManagerInterface $entityManager): int
     {
+        $count = 0;
+        
         foreach ($fields['tableau2']['value'] as $equipementsHorsContrat) {
-            $equipement = new $entityClass();
-            
-            // Données communes
-            $this->setCommonEquipmentData($equipement, $fields);
-            
-            // Attribution automatique du numéro d'équipement
-            $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
-            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-            $idClient = $fields['id_client_']['value'];
-            $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
-            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-            
-            $equipement->setNumeroEquipement($numeroFormate);
-            $equipement->setLibelleEquipement($typeLibelle);
-            $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
-            $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
-            $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
-            $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
-            $equipement->setMarque($equipementsHorsContrat['marque']['value']);
-            
-            // Dimensions (optionnelles)
-            $equipement->setLargeur($equipementsHorsContrat['largeur']['value'] ?? '');
-            $equipement->setHauteur($equipementsHorsContrat['hauteur']['value'] ?? '');
-            
-            $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
-            $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
-            
-            // Statut de maintenance pour équipements hors contrat
-            $equipement->setStatutDeMaintenance($this->getOffContractMaintenanceStatus($equipementsHorsContrat['etat1']['value']));
-            
-            // Type de visite basé sur le premier équipement au contrat
-            $equipement->setVisite($this->getDefaultVisitType($fields));
-            
-            $equipement->setEnMaintenance(false);
-            $equipement->setIsArchive(false);
-            
-            $entityManager->persist($equipement);
+            try {
+                $equipement = new $entityClass();
+                
+                $this->setCommonEquipmentData($equipement, $fields);
+                
+                // Attribution automatique du numéro d'équipement
+                $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
+                $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+                $idClient = $fields['id_client_']['value'];
+                $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
+                $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+                
+                $equipement->setNumeroEquipement($numeroFormate);
+                $equipement->setLibelleEquipement($typeLibelle);
+                $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
+                $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
+                $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
+                $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
+                $equipement->setMarque($equipementsHorsContrat['marque']['value']);
+                
+                $equipement->setLargeur($equipementsHorsContrat['largeur']['value'] ?? '');
+                $equipement->setHauteur($equipementsHorsContrat['hauteur']['value'] ?? '');
+                
+                $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
+                $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
+                
+                $equipement->setStatutDeMaintenance($this->getOffContractMaintenanceStatus($equipementsHorsContrat['etat1']['value']));
+                $equipement->setVisite($this->getDefaultVisitType($fields));
+                
+                $equipement->setEnMaintenance(false);
+                $equipement->setIsArchive(false);
+                
+                $entityManager->persist($equipement);
+                $count++;
+                
+            } catch (\Exception $e) {
+                $this->logError("Erreur équipement hors contrat: " . $e->getMessage());
+                continue;
+            }
         }
         
         $entityManager->flush();
+        return $count;
     }
 
     /**
@@ -772,8 +620,36 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * Détermination du type de visite basé sur le chemin de l'équipement
+     * Détermine le prochain numéro d'équipement à utiliser
      */
+    private function getNextEquipmentNumberFromDatabase(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
+    {
+        $equipements = $entityManager->getRepository($entityClass)
+            ->createQueryBuilder('e')
+            ->where('e.idContact = :idClient')
+            ->andWhere('e.numeroEquipement LIKE :pattern')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('pattern', $typeCode . '%')
+            ->getQuery()
+            ->getResult();
+        
+        $dernierNumero = 0;
+        
+        foreach ($equipements as $equipement) {
+            $numeroEquipement = $equipement->getNumeroEquipement();
+            
+            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
+                $numero = (int)$matches[1];
+                if ($numero > $dernierNumero) {
+                    $dernierNumero = $numero;
+                }
+            }
+        }
+        
+        return $dernierNumero + 1;
+    }
+
+    // Méthodes utilitaires pour les statuts et types
     private function getVisitType(string $equipmentPath): string
     {
         if (str_contains($equipmentPath, 'CE1')) return 'CE1';
@@ -782,12 +658,9 @@ class OptimizedFormController extends AbstractController
         if (str_contains($equipmentPath, 'CE4')) return 'CE4';
         if (str_contains($equipmentPath, 'CEA')) return 'CEA';
         
-        return 'CE1'; // Valeur par défaut
+        return 'CE1';
     }
 
-    /**
-     * Type de visite par défaut pour équipements hors contrat
-     */
     private function getDefaultVisitType(array $fields): string
     {
         if (!empty($fields['contrat_de_maintenance']['value'])) {
@@ -796,9 +669,6 @@ class OptimizedFormController extends AbstractController
         return 'CE1';
     }
 
-    /**
-     * Statut de maintenance pour équipements au contrat
-     */
     private function getMaintenanceContractStatus(string $etat): string
     {
         switch ($etat) {
@@ -821,9 +691,6 @@ class OptimizedFormController extends AbstractController
         }
     }
 
-    /**
-     * Statut de maintenance pour équipements hors contrat
-     */
     private function getOffContractMaintenanceStatus(string $etat): string
     {
         switch ($etat) {
@@ -842,9 +709,6 @@ class OptimizedFormController extends AbstractController
         }
     }
 
-    /**
-     * Obtient le code du type d'équipement à partir du libellé
-     */
     private function getTypeCodeFromLibelle(string $typeLibelle): string
     {
         $typeCodeMap = [
@@ -907,1897 +771,210 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * Détermine le prochain numéro d'équipement à utiliser
+     * Route pour obtenir le statut du traitement
      */
-    private function getNextEquipmentNumberFromDatabase(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
-    {
-        $equipements = $entityManager->getRepository($entityClass)
-            ->createQueryBuilder('e')
-            ->where('e.idContact = :idClient')
-            ->andWhere('e.numeroEquipement LIKE :pattern')
-            ->setParameter('idClient', $idClient)
-            ->setParameter('pattern', $typeCode . '%')
-            ->getQuery()
-            ->getResult();
-        
-        $dernierNumero = 0;
-        
-        foreach ($equipements as $equipement) {
-            $numeroEquipement = $equipement->getNumeroEquipement();
-            
-            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
-                $numero = (int)$matches[1];
-                if ($numero > $dernierNumero) {
-                    $dernierNumero = $numero;
-                }
-            }
-        }
-        
-        return $dernierNumero + 1;
-    }
-
-    /**
-     * STRATÉGIE DE TRAITEMENT COMPLÈTE
-     * 
-     * 1. Utilisez d'abord cette route pour connaître le nombre total :
-     */
-    #[Route('/api/forms/count/maintenance/unread', name: 'app_count_maintenance_unread', methods: ['GET'])]
-    public function countUnreadMaintenanceForms(CacheInterface $cache): JsonResponse
+    #[Route('/api/forms/status/{agency?}', name: 'app_forms_status', methods: ['GET'])]
+    public function getFormsStatus(?string $agency = null): JsonResponse
     {
         try {
-            $maintenanceForms = $cache->get('maintenance_forms_list', function($item) {
-                $item->expiresAfter(300); // 5 minutes
-                
-                $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]);
-                
-                $content = $response->toArray();
-                return array_filter($content['forms'], function($form) {
-                    return $form['class'] == "MAINTENANCE";
-                });
-            });
-
-            $totalUnread = 0;
-            $formDetails = [];
+            $stats = ['agencies' => []];
             
-            foreach ($maintenanceForms as $form) {
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/100", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 10
-                    ]);
-
-                    $result = $response->toArray();
-                    $count = count($result['data']);
-                    $totalUnread += $count;
-                    
-                    if ($count > 0) {
-                        $formDetails[] = [
-                            'form_id' => $form['id'],
-                            'form_name' => $form['name'],
-                            'unread_count' => $count
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    error_log("Erreur form {$form['id']}: " . $e->getMessage());
+            $agenciesToCheck = $agency ? [$agency] : self::AGENCIES;
+            
+            foreach ($agenciesToCheck as $agencyCode) {
+                if (!in_array($agencyCode, self::AGENCIES)) {
                     continue;
                 }
-            }
-
-            $estimatedBatches = ceil($totalUnread / 10); // Avec lots de 10
-            $estimatedTime = $estimatedBatches * 2; // 2 minutes par lot
-
-            return new JsonResponse([
-                'total_unread_forms' => $totalUnread,
-                'forms_with_unread' => count($formDetails),
-                'estimated_batches' => $estimatedBatches,
-                'estimated_time_minutes' => $estimatedTime,
-                'forms_details' => $formDetails,
-                'recommendations' => [
-                    'use_continue_route' => $totalUnread > 50,
-                    'suggested_batch_size' => min(10, max(3, floor(50 / count($maintenanceForms)))),
-                    'max_iterations_needed' => ceil($totalUnread / 10)
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => 'Erreur lors du comptage: ' . $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * 2. Route pour traitement en boucle jusqu'à completion
-     */
-    #[Route('/api/forms/process/maintenance/complete', name: 'app_process_maintenance_complete', methods: ['GET'])]
-    public function processMaintenanceComplete(
-        EntityManagerInterface $entityManager, 
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
-        set_time_limit(0); // Pas de limite
-        ini_set('memory_limit', '2048M'); // 2GB
-        
-        $maxIterations = $request->query->get('max_iterations', 50); // Limite de sécurité
-        $batchSize = $request->query->get('batch_size', 5);
-        
-        $globalStats = [
-            'total_processed' => 0,
-            'total_errors' => 0,
-            'iterations' => 0,
-            'start_time' => time(),
-            'batches_details' => []
-        ];
-        
-        $offset = 0;
-        $hasMore = true;
-        $consecutiveEmptyBatches = 0;
-        
-        while ($hasMore && $globalStats['iterations'] < $maxIterations) {
-            $iterationStart = time();
-            
-            try {
-                // Traiter un lot
-                $request = new Request(['offset' => $offset, 'batch_size' => $batchSize]);
-                $response = $this->processMaintenanceBatch($entityManager, $cache, $request);
-                $batchData = json_decode($response->getContent(), true);
                 
-                $processed = $batchData['processed'] ?? 0;
-                $globalStats['total_processed'] += $processed;
-                
-                if ($processed === 0) {
-                    $consecutiveEmptyBatches++;
-                    if ($consecutiveEmptyBatches >= 3) {
-                        $hasMore = false; // Arrêter si 3 lots vides consécutifs
-                        break;
-                    }
-                } else {
-                    $consecutiveEmptyBatches = 0;
-                }
-                
-                $globalStats['batches_details'][] = [
-                    'iteration' => $globalStats['iterations'] + 1,
-                    'offset' => $offset,
-                    'processed' => $processed,
-                    'status' => $batchData['status'] ?? 'unknown',
-                    'execution_time' => time() - $iterationStart
+                $agencyStats = [
+                    'agency' => $agencyCode,
+                    'total_forms' => 0,
+                    'entity_class' => $this->getEntityClassByAgency($agencyCode)
                 ];
                 
-                // Avancer l'offset
-                if (isset($batchData['next_offset'])) {
-                    $offset = $batchData['next_offset'];
-                } else {
-                    $offset += $batchSize;
+                try {
+                    $allForms = $this->getAllFormsForAgency($agencyCode);
+                    $agencyStats['total_forms'] = count($allForms);
+                } catch (\Exception $e) {
+                    $agencyStats['error'] = $e->getMessage();
                 }
                 
-                $globalStats['iterations']++;
-                
-                // Pause entre les itérations
-                usleep(100000); // 0.1 seconde
-                
-            } catch (\Exception $e) {
-                $globalStats['total_errors']++;
-                error_log("Erreur iteration {$globalStats['iterations']}: " . $e->getMessage());
-                
-                // Avancer même en cas d'erreur
-                $offset += $batchSize;
-                $globalStats['iterations']++;
+                $stats['agencies'][$agencyCode] = $agencyStats;
             }
             
-            // Vérification de sécurité temps
-            if ((time() - $globalStats['start_time']) > 1800) { // 30 minutes max
-                break;
-            }
+            return new JsonResponse($stats);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la récupération du statut: ' . $e->getMessage()], 500);
         }
-        
-        $globalStats['end_time'] = time();
-        $globalStats['total_execution_time'] = $globalStats['end_time'] - $globalStats['start_time'];
-        
-        return new JsonResponse([
-            'status' => 'completed',
-            'global_stats' => $globalStats,
-            'summary' => [
-                'total_forms_processed' => $globalStats['total_processed'],
-                'total_iterations' => $globalStats['iterations'],
-                'total_time_minutes' => round($globalStats['total_execution_time'] / 60, 2),
-                'average_time_per_iteration' => $globalStats['iterations'] > 0 ? 
-                    round($globalStats['total_execution_time'] / $globalStats['iterations'], 2) : 0,
-                'stopped_reason' => $hasMore ? 'max_iterations_reached' : 'no_more_data'
-            ]
-        ]);
     }
 
     /**
-     * 3. Route pour traitement par agence (plus efficace)
+     * Route pour nettoyer et reprendre le traitement depuis un point spécifique
      */
-    #[Route('/api/forms/process/maintenance/by-agency/{agency}', name: 'app_process_maintenance_by_agency', methods: ['GET'])]
-    public function processMaintenanceByAgency(
-        string $agency,
+    #[Route('/api/forms/resume/{agency}/{fromIndex?}', name: 'app_forms_resume', methods: ['GET'])]
+    public function resumeProcessing(
+        string $agency, 
+        ?int $fromIndex = 0,
         EntityManagerInterface $entityManager, 
         CacheInterface $cache
     ): JsonResponse {
-        set_time_limit(600); // 10 minutes par agence
-        
-        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
-        
-        if (!in_array($agency, $validAgencies)) {
+        if (!in_array($agency, self::AGENCIES)) {
             return new JsonResponse(['error' => 'Agence non valide'], 400);
         }
         
-        $stats = [
-            'agency' => $agency,
-            'processed' => 0,
-            'errors' => 0,
-            'start_time' => time(),
-            'details' => []
-        ];
+        $this->logProgress("🔄 REPRISE traitement agence $agency depuis l'index $fromIndex");
         
         try {
-            $offset = 0;
-            $hasMore = true;
-            $batchSize = 5; // Réduire la taille pour un meilleur contrôle
+            $result = $this->processAgencyOptimized($agency, $entityManager, $cache, $fromIndex);
             
-            while ($hasMore && (time() - $stats['start_time']) < 540) { // 9 minutes max
-                
-                // CORRECTION : Utiliser la nouvelle méthode de filtrage
-                $unreadForms = $this->getUnreadMaintenanceFormsByAgency($agency, $batchSize, $offset);
-                
-                if (empty($unreadForms)) {
-                    $hasMore = false;
-                    break;
-                }
-                
-                $batchProcessed = 0;
-                $batchErrors = 0;
-                
-                foreach ($unreadForms as $formData) {
-                    try {
-                        $formDetails = $this->getFormDetails($formData['form_id'], $formData['data_id']);
-                        
-                        if ($formDetails && isset($formDetails['fields'])) {
-                            // Vérifier encore une fois l'agence (double sécurité)
-                            if ($formDetails['fields']['code_agence']['value'] === $agency) {
-                                // Enregistrer les photos
-                                $this->uploadPicturesInDatabase($formDetails, $entityManager);
-                                
-                                // Enregistrer les équipements
-                                $this->processFormEquipments($formDetails['fields'], $entityManager);
-                                
-                                // Marquer comme lu
-                                $this->markFormAsRead($formData['form_id'], $formData['data_id']);
-                                
-                                $batchProcessed++;
-                            } else {
-                                error_log("ATTENTION: Formulaire {$formData['form_id']} de l'agence {$formDetails['fields']['code_agence']['value']} traité au lieu de $agency");
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        $batchErrors++;
-                        error_log("Erreur formulaire {$formData['form_id']}: " . $e->getMessage());
-                    }
-                }
-                
-                $stats['processed'] += $batchProcessed;
-                $stats['errors'] += $batchErrors;
-                $stats['details'][] = [
-                    'offset' => $offset,
-                    'batch_processed' => $batchProcessed,
-                    'batch_errors' => $batchErrors,
-                    'forms_found' => count($unreadForms)
-                ];
-                
-                $offset += $batchSize;
-                
-                // Si on a traité moins que la taille du lot, on a probablement terminé
-                if (count($unreadForms) < $batchSize) {
-                    $hasMore = false;
-                }
-                
-                usleep(100000); // 0.1 seconde entre les lots
-            }
-            
-        } catch (\Exception $e) {
-            $stats['errors']++;
-            error_log("Erreur agence $agency: " . $e->getMessage());
-        }
-        
-        $stats['execution_time'] = time() - $stats['start_time'];
-        
-        return new JsonResponse([
-            'status' => 'completed',
-            'agency_stats' => $stats
-        ]);
-    }
-    /**
-     * ROUTE AMÉLIORÉE pour traitement par agence avec gestion des timeouts
-     */
-    #[Route('/api/forms/process/maintenance/agency/{agency}/optimized', name: 'app_process_maintenance_agency_optimized', methods: ['GET'])]
-    public function processMaintenanceAgencyOptimized(
-        string $agency,
-        EntityManagerInterface $entityManager, 
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
-        // Configuration pour traitement long
-        set_time_limit(1800); // 30 minutes
-        ini_set('memory_limit', '2048M'); // 2GB
-        ini_set('max_execution_time', 1800);
-        
-        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
-        
-        if (!in_array($agency, $validAgencies)) {
-            return new JsonResponse(['error' => 'Agence non valide'], 400);
-        }
-        
-        $startTime = time();
-        $maxExecutionTime = 1500; // 25 minutes pour garder de la marge
-        
-        $stats = [
-            'agency' => $agency,
-            'processed_contract' => 0,
-            'processed_off_contract' => 0,
-            'total_processed' => 0,
-            'errors' => 0,
-            'start_time' => $startTime,
-            'details' => [],
-            'error_details' => []
-        ];
-        
-        try {
-            // ÉTAPE 1 : Compter tous les formulaires de cette agence
-            error_log("🔍 [AGENCY $agency] Début du comptage des formulaires...");
-            $totalFormsCount = $this->countFormsForAgency($agency);
-            error_log("📊 [AGENCY $agency] Total formulaires trouvés: $totalFormsCount");
-            
-            $stats['total_forms_found'] = $totalFormsCount;
-            
-            // ÉTAPE 2 : Traitement par petits lots pour éviter le timeout
-            $batchSize = 3; // RÉDUIT pour éviter les timeouts
-            $processedForms = 0;
-            $hasMore = true;
-            
-            while ($hasMore && (time() - $startTime) < $maxExecutionTime) {
-                $batchStartTime = time();
-                error_log("⚙️ [AGENCY $agency] Traitement lot $processedForms à " . ($processedForms + $batchSize));
-                
-                // Récupérer un petit lot de formulaires
-                $formsBatch = $this->getFormsBatchForAgency($agency, $batchSize, $processedForms);
-                
-                if (empty($formsBatch)) {
-                    error_log("✅ [AGENCY $agency] Aucun formulaire supplémentaire trouvé - Fin du traitement");
-                    $hasMore = false;
-                    break;
-                }
-                
-                $batchStats = [
-                    'batch_number' => floor($processedForms / $batchSize) + 1,
-                    'forms_in_batch' => count($formsBatch),
-                    'processed_contract' => 0,
-                    'processed_off_contract' => 0,
-                    'errors' => 0
-                ];
-                
-                // Traiter chaque formulaire du lot
-                foreach ($formsBatch as $formData) {
-                    $formStartTime = time();
-                    
-                    // Sécurité timeout
-                    if ((time() - $startTime) >= $maxExecutionTime) {
-                        error_log("⏰ [AGENCY $agency] TIMEOUT atteint - Arrêt du traitement");
-                        $hasMore = false;
-                        break;
-                    }
-                    
-                    try {
-                        error_log("📝 [AGENCY $agency] Traitement formulaire {$formData['form_id']}/{$formData['data_id']}");
-                        
-                        $formDetails = $this->getFormDetails($formData['form_id'], $formData['data_id']);
-                        
-                        if ($formDetails && isset($formDetails['fields'])) {
-                            // Vérification agence
-                            if ($formDetails['fields']['code_agence']['value'] === $agency) {
-                                
-                                // CORRECTION : Enregistrer les photos d'abord
-                                $this->uploadPicturesInDatabase($formDetails, $entityManager);
-                                
-                                // CORRECTION : Traitement équipements AU CONTRAT et HORS CONTRAT
-                                $equipmentResults = $this->processFormEquipmentsDetailed($formDetails['fields'], $entityManager);
-                                
-                                $batchStats['processed_contract'] += $equipmentResults['contract_equipment'];
-                                $batchStats['processed_off_contract'] += $equipmentResults['off_contract_equipment'];
-                                
-                                // Marquer comme lu
-                                $this->markFormAsRead($formData['form_id'], $formData['data_id']);
-                                
-                                $formTime = time() - $formStartTime;
-                                error_log("✅ [AGENCY $agency] Formulaire traité en {$formTime}s - AU CONTRAT: {$equipmentResults['contract_equipment']}, HORS CONTRAT: {$equipmentResults['off_contract_equipment']}");
-                                
-                            } else {
-                                error_log("❌ [AGENCY $agency] Agence incorrecte: {$formDetails['fields']['code_agence']['value']}");
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        $batchStats['errors']++;
-                        $stats['error_details'][] = [
-                            'form_id' => $formData['form_id'],
-                            'data_id' => $formData['data_id'],
-                            'error' => $e->getMessage(),
-                            'timestamp' => date('Y-m-d H:i:s')
-                        ];
-                        error_log("❌ [AGENCY $agency] Erreur formulaire {$formData['form_id']}: " . $e->getMessage());
-                    }
-                }
-                
-                $stats['processed_contract'] += $batchStats['processed_contract'];
-                $stats['processed_off_contract'] += $batchStats['processed_off_contract'];
-                $stats['total_processed'] += $batchStats['processed_contract'] + $batchStats['processed_off_contract'];
-                $stats['errors'] += $batchStats['errors'];
-                
-                $batchTime = time() - $batchStartTime;
-                $batchStats['execution_time'] = $batchTime;
-                $stats['details'][] = $batchStats;
-                
-                error_log("📊 [AGENCY $agency] Lot terminé en {$batchTime}s - Total AU CONTRAT: {$stats['processed_contract']}, HORS CONTRAT: {$stats['processed_off_contract']}");
-                
-                $processedForms += count($formsBatch);
-                
-                // Si on a traité moins que la taille du lot, on a terminé
-                if (count($formsBatch) < $batchSize) {
-                    $hasMore = false;
-                }
-                
-                // Pause entre les lots
-                usleep(200000); // 0.2 seconde
-            }
-            
-        } catch (\Exception $e) {
-            $stats['errors']++;
-            $stats['critical_error'] = $e->getMessage();
-            error_log("💥 [AGENCY $agency] Erreur critique: " . $e->getMessage());
-        }
-        
-        $stats['execution_time'] = time() - $startTime;
-        $stats['execution_time_minutes'] = round($stats['execution_time'] / 60, 2);
-        
-        error_log("🎉 [AGENCY $agency] TRAITEMENT TERMINÉ:");
-        error_log("   - Temps d'exécution: {$stats['execution_time_minutes']} minutes");
-        error_log("   - Équipements AU CONTRAT: {$stats['processed_contract']}");
-        error_log("   - Équipements HORS CONTRAT: {$stats['processed_off_contract']}");
-        error_log("   - Total traité: {$stats['total_processed']}");
-        error_log("   - Erreurs: {$stats['errors']}");
-        
-        return new JsonResponse([
-            'status' => 'completed',
-            'agency_stats' => $stats,
-            'summary' => [
+            return new JsonResponse([
+                'status' => 'completed',
                 'agency' => $agency,
-                'contract_equipment_processed' => $stats['processed_contract'],
-                'off_contract_equipment_processed' => $stats['processed_off_contract'],
-                'total_equipment_processed' => $stats['total_processed'],
-                'execution_time_minutes' => $stats['execution_time_minutes'],
-                'errors_count' => $stats['errors']
-            ]
-        ]);
-    }
-
-    /**
-     * NOUVELLE MÉTHODE : Comptage des formulaires pour une agence
-     */
-    private function countFormsForAgency(string $agency): int
-    {
-        $totalCount = 0;
-        
-        try {
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 30
+                'resumed_from_index' => $fromIndex,
+                'result' => $result
             ]);
             
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-
-            foreach ($maintenanceForms as $form) {
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/100", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 20
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                        if ($details && isset($details['fields']['code_agence']['value']) && 
-                            $details['fields']['code_agence']['value'] === $agency) {
-                            $totalCount++;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    error_log("Erreur comptage form {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
         } catch (\Exception $e) {
-            error_log("Erreur comptage général: " . $e->getMessage());
+            $this->logError("Erreur reprise traitement $agency: " . $e->getMessage());
+            return new JsonResponse([
+                'status' => 'error',
+                'agency' => $agency,
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return $totalCount;
     }
 
     /**
-     * NOUVELLE MÉTHODE : Récupération par lots avec offset
+     * Route pour vider la base de données d'une agence (utile pour les tests)
      */
-    private function getFormsBatchForAgency(string $agency, int $batchSize, int $offset): array
+    #[Route('/api/forms/clear/{agency}', name: 'app_forms_clear_agency', methods: ['DELETE'])]
+    public function clearAgencyData(string $agency, EntityManagerInterface $entityManager): JsonResponse
     {
-        $forms = [];
-        $currentOffset = 0;
+        if (!in_array($agency, self::AGENCIES)) {
+            return new JsonResponse(['error' => 'Agence non valide'], 400);
+        }
         
         try {
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
+            $entityClass = $this->getEntityClassByAgency($agency);
+            if (!$entityClass) {
+                return new JsonResponse(['error' => 'Classe d\'entité non trouvée pour l\'agence'], 400);
+            }
+            
+            $repository = $entityManager->getRepository($entityClass);
+            $allEquipments = $repository->findAll();
+            
+            $count = count($allEquipments);
+            
+            foreach ($allEquipments as $equipment) {
+                $entityManager->remove($equipment);
+            }
+            
+            $entityManager->flush();
+            
+            $this->logProgress("🗑️ [$agency] $count équipements supprimés");
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'agency' => $agency,
+                'deleted_count' => $count,
+                'message' => "Tous les équipements de l'agence $agency ont été supprimés"
             ]);
             
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-
-            foreach ($maintenanceForms as $form) {
-                if (count($forms) >= $batchSize) {
-                    break;
-                }
-                
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/50", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        if (count($forms) >= $batchSize) {
-                            break 2;
-                        }
-                        
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                        if ($details && isset($details['fields']['code_agence']['value']) && 
-                            $details['fields']['code_agence']['value'] === $agency) {
-                            
-                            if ($currentOffset >= $offset) {
-                                $forms[] = [
-                                    'form_id' => $formData['_form_id'],
-                                    'data_id' => $formData['_id']
-                                ];
-                            }
-                            $currentOffset++;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    error_log("Erreur récupération batch form {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
         } catch (\Exception $e) {
-            error_log("Erreur récupération batch général: " . $e->getMessage());
+            $this->logError("Erreur suppression données $agency: " . $e->getMessage());
+            return new JsonResponse([
+                'status' => 'error',
+                'agency' => $agency,
+                'error' => $e->getMessage()
+            ], 500);
         }
-        
-        return $forms;
     }
 
     /**
-     * NOUVELLE MÉTHODE : Traitement détaillé des équipements avec comptage
+     * Route de diagnostic pour identifier les problèmes
      */
-    private function processFormEquipmentsDetailed(array $fields, EntityManagerInterface $entityManager): array
+    #[Route('/api/forms/diagnostic/{agency?}', name: 'app_forms_diagnostic', methods: ['GET'])]
+    public function diagnosticAgency(?string $agency = null): JsonResponse
     {
-        $results = [
-            'contract_equipment' => 0,
-            'off_contract_equipment' => 0
-        ];
+        $agenciesToCheck = $agency ? [$agency] : array_slice(self::AGENCIES, 0, 3); // Limiter à 3 pour le diagnostic
         
-        if (!isset($fields['code_agence']['value'])) {
-            return $results;
-        }
-
-        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
-        if (!$entityClass) {
-            return $results;
-        }
-
-        // Traitement des équipements AU CONTRAT
-        if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-            $contractCount = $this->processContractEquipmentsWithCount($fields, $entityClass, $entityManager);
-            $results['contract_equipment'] = $contractCount;
-        }
-
-        // Traitement des équipements HORS CONTRAT
-        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-            $offContractCount = $this->processOffContractEquipmentsWithCount($fields, $entityClass, $entityManager);
-            $results['off_contract_equipment'] = $offContractCount;
-        }
-        
-        return $results;
-    }
-
-    /**
-     * NOUVELLE MÉTHODE : Traitement équipements au contrat avec comptage
-     */
-    private function processContractEquipmentsWithCount(array $fields, string $entityClass, EntityManagerInterface $entityManager): int
-    {
-        $count = 0;
-        
-        foreach ($fields['contrat_de_maintenance']['value'] as $additionalEquipment) {
-            try {
-                $equipement = new $entityClass();
-                
-                $this->setCommonEquipmentData($equipement, $fields);
-                
-                $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
-                $equipement->setIfExistDB($additionalEquipment['equipement']['columns']);
-                $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
-                $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
-                $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
-                $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
-                $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
-                $equipement->setMarque($additionalEquipment['reference5']['value']);
-                
-                $equipement->setLargeur($additionalEquipment['reference3']['value'] ?? '');
-                $equipement->setHauteur($additionalEquipment['reference1']['value'] ?? '');
-                $equipement->setLongueur($additionalEquipment['longueur']['value'] ?? 'NC');
-                
-                $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
-                $equipement->setEtat($additionalEquipment['etat']['value']);
-                
-                $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value'] ?? '');
-                $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value'] ?? '');
-                
-                $equipement->setStatutDeMaintenance($this->getMaintenanceContractStatus($additionalEquipment['etat']['value']));
-                $equipement->setVisite($this->getVisitType($additionalEquipment['equipement']['path']));
-                
-                $equipement->setEnMaintenance(true);
-                $equipement->setIsArchive(false);
-                
-                $entityManager->persist($equipement);
-                $count++;
-                
-            } catch (\Exception $e) {
-                error_log("Erreur équipement au contrat: " . $e->getMessage());
-            }
-        }
-        
-        $entityManager->flush();
-        return $count;
-    }
-
-    /**
-     * NOUVELLE MÉTHODE : Traitement équipements hors contrat avec comptage
-     */
-    private function processOffContractEquipmentsWithCount(array $fields, string $entityClass, EntityManagerInterface $entityManager): int
-    {
-        $count = 0;
-        
-        foreach ($fields['tableau2']['value'] as $equipementsHorsContrat) {
-            try {
-                $equipement = new $entityClass();
-                
-                // Données communes
-                $this->setCommonEquipmentData($equipement, $fields);
-                
-                // Attribution automatique du numéro d'équipement
-                $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
-                $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-                $idClient = $fields['id_client_']['value'];
-                $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
-                $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-                
-                $equipement->setNumeroEquipement($numeroFormate);
-                $equipement->setLibelleEquipement($typeLibelle);
-                $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
-                $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
-                $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
-                $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
-                $equipement->setMarque($equipementsHorsContrat['marque']['value']);
-                
-                // Dimensions (optionnelles)
-                $equipement->setLargeur($equipementsHorsContrat['largeur']['value'] ?? '');
-                $equipement->setHauteur($equipementsHorsContrat['hauteur']['value'] ?? '');
-                
-                $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
-                $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
-                
-                // Statut de maintenance pour équipements hors contrat
-                $equipement->setStatutDeMaintenance($this->getOffContractMaintenanceStatus($equipementsHorsContrat['etat1']['value']));
-                
-                // Type de visite basé sur le premier équipement au contrat
-                $equipement->setVisite($this->getDefaultVisitType($fields));
-                
-                $equipement->setEnMaintenance(false);
-                $equipement->setIsArchive(false);
-                
-                $entityManager->persist($equipement);
-                $count++;
-                
-            } catch (\Exception $e) {
-                error_log("Erreur équipement hors contrat: " . $e->getMessage());
-            }
-        }
-        
-        $entityManager->flush();
-        return $count;
-    }
-
-    /**
-     * Route de diagnostic pour identifier les équipements manquants
-     */
-    #[Route('/api/forms/diagnostic/agency/{agency}', name: 'app_diagnostic_agency', methods: ['GET'])]
-    public function diagnosticAgency(string $agency, CacheInterface $cache): JsonResponse
-    {
         $diagnostics = [
-            'agency' => $agency,
-            'forms_found' => 0,
-            'total_contract_equipment' => 0,
-            'total_off_contract_equipment' => 0,
-            'forms_details' => [],
-            'errors' => []
+            'timestamp' => date('Y-m-d H:i:s'),
+            'agencies' => []
         ];
         
-        try {
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]);
+        foreach ($agenciesToCheck as $agencyCode) {
+            if (!in_array($agencyCode, self::AGENCIES)) {
+                continue;
+            }
             
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-
-            foreach ($maintenanceForms as $form) {
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/bienrecu/100", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+            $agencyDiag = [
+                'agency' => $agencyCode,
+                'forms_found' => 0,
+                'contract_equipment_total' => 0,
+                'off_contract_equipment_total' => 0,
+                'sample_forms' => [],
+                'errors' => []
+            ];
+            
+            try {
+                $forms = $this->getAllFormsForAgency($agencyCode);
+                $agencyDiag['forms_found'] = count($forms);
+                
+                // Analyser un échantillon de formulaires
+                $sampleSize = min(3, count($forms));
+                for ($i = 0; $i < $sampleSize; $i++) {
+                    try {
+                        $formData = $forms[$i];
+                        $details = $this->getFormDetails($formData['form_id'], $formData['data_id']);
                         
-                        if ($details && isset($details['fields']['code_agence']['value']) && 
-                            $details['fields']['code_agence']['value'] === $agency) {
+                        if ($details && isset($details['fields'])) {
+                            $contractCount = isset($details['fields']['contrat_de_maintenance']['value']) 
+                                ? count($details['fields']['contrat_de_maintenance']['value']) : 0;
+                            $offContractCount = isset($details['fields']['tableau2']['value']) 
+                                ? count($details['fields']['tableau2']['value']) : 0;
                             
-                            $diagnostics['forms_found']++;
+                            $agencyDiag['contract_equipment_total'] += $contractCount;
+                            $agencyDiag['off_contract_equipment_total'] += $offContractCount;
                             
-                            $contractEquipment = 0;
-                            $offContractEquipment = 0;
-                            
-                            // Compter équipements au contrat
-                            if (isset($details['fields']['contrat_de_maintenance']['value'])) {
-                                $contractEquipment = count($details['fields']['contrat_de_maintenance']['value']);
-                            }
-                            
-                            // Compter équipements hors contrat
-                            if (isset($details['fields']['tableau2']['value'])) {
-                                $offContractEquipment = count($details['fields']['tableau2']['value']);
-                            }
-                            
-                            $diagnostics['total_contract_equipment'] += $contractEquipment;
-                            $diagnostics['total_off_contract_equipment'] += $offContractEquipment;
-                            
-                            $diagnostics['forms_details'][] = [
-                                'form_id' => $formData['_form_id'],
-                                'data_id' => $formData['_id'],
+                            $agencyDiag['sample_forms'][] = [
+                                'form_id' => $formData['form_id'],
+                                'data_id' => $formData['data_id'],
                                 'client_name' => $details['fields']['nom_client']['value'] ?? 'N/A',
-                                'contract_equipment_count' => $contractEquipment,
-                                'off_contract_equipment_count' => $offContractEquipment,
+                                'contract_equipment' => $contractCount,
+                                'off_contract_equipment' => $offContractCount,
                                 'visit_date' => $details['fields']['date_et_heure1']['value'] ?? 'N/A'
                             ];
                         }
+                    } catch (\Exception $e) {
+                        $agencyDiag['errors'][] = [
+                            'form_index' => $i,
+                            'error' => $e->getMessage()
+                        ];
                     }
-                } catch (\Exception $e) {
-                    $diagnostics['errors'][] = [
-                        'form_id' => $form['id'],
-                        'error' => $e->getMessage()
-                    ];
-                    continue;
                 }
+                
+            } catch (\Exception $e) {
+                $agencyDiag['critical_error'] = $e->getMessage();
             }
             
-        } catch (\Exception $e) {
-            $diagnostics['critical_error'] = $e->getMessage();
+            $diagnostics['agencies'][$agencyCode] = $agencyDiag;
         }
         
         return new JsonResponse($diagnostics);
     }
 
     /**
-     * 1. DIAGNOSTIC RAPIDE : Compter seulement les formulaires
+     * Logging et gestion des erreurs
      */
-    #[Route('/api/forms/quick-count/agency/{agency}', name: 'app_quick_count_agency', methods: ['GET'])]
-    public function quickCountAgency(string $agency): JsonResponse
+    private function logProgress(string $message): void
     {
-        set_time_limit(300); // 5 minutes max
-        
-        $stats = [
-            'agency' => $agency,
-            'maintenance_forms_total' => 0,
-            'agency_forms_found' => 0,
-            'start_time' => time()
-        ];
-        
-        try {
-            // Récupérer la liste des formulaires MAINTENANCE
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 30
-            ]);
-            
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-            
-            $stats['maintenance_forms_total'] = count($maintenanceForms);
-            
-            // Compter rapidement les formulaires de l'agence (limité à 5 par form)
-            foreach ($maintenanceForms as $form) {
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/5", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 10
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        // Vérification rapide de l'agence (sans récupérer tous les détails)
-                        try {
-                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                            if ($details && isset($details['fields']['code_agence']['value']) && 
-                                $details['fields']['code_agence']['value'] === $agency) {
-                                $stats['agency_forms_found']++;
-                            }
-                        } catch (\Exception $e) {
-                            // Ignorer les erreurs individuelles
-                            continue;
-                        }
-                        
-                        // Limite de sécurité
-                        if ((time() - $stats['start_time']) > 240) { // 4 minutes max
-                            break 2;
-                        }
-                    }
-                } catch (\Exception $e) {
-                    continue;
-                }
-            }
-            
-        } catch (\Exception $e) {
-            $stats['error'] = $e->getMessage();
-        }
-        
-        $stats['execution_time'] = time() - $stats['start_time'];
-        
-        return new JsonResponse($stats);
+        error_log("[" . date('Y-m-d H:i:s') . "] " . $message);
     }
 
-    /**
-     * 2. TRAITEMENT INCRÉMENTAL : Traiter par petits lots avec sauvegarde du progrès
-     */
-    #[Route('/api/forms/incremental/agency/{agency}', name: 'app_incremental_agency', methods: ['GET'])]
-    public function incrementalProcessingAgency(
-        string $agency,
-        EntityManagerInterface $entityManager,
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
-        set_time_limit(480); // 8 minutes
-        ini_set('memory_limit', '1024M');
-        
-        $batchSize = 2; // TRÈS PETIT pour éviter les timeouts
-        $startOffset = $request->query->get('offset', 0);
-        $maxTime = 420; // 7 minutes max
-        
-        $stats = [
-            'agency' => $agency,
-            'start_offset' => $startOffset,
-            'processed_forms' => 0,
-            'processed_contract_equipment' => 0,
-            'processed_off_contract_equipment' => 0,
-            'errors' => 0,
-            'start_time' => time(),
-            'processed_details' => []
-        ];
-        
-        try {
-            $currentOffset = $startOffset;
-            $formsProcessed = 0;
-            
-            // Récupérer les formulaires MAINTENANCE
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-            ]);
-            
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-            
-            $totalFormsChecked = 0;
-            
-            foreach ($maintenanceForms as $form) {
-                if ((time() - $stats['start_time']) > $maxTime) {
-                    break;
-                }
-                
-                if ($formsProcessed >= $batchSize) {
-                    break;
-                }
-                
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/10", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 15
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        if ((time() - $stats['start_time']) > $maxTime) {
-                            break 2;
-                        }
-                        
-                        if ($formsProcessed >= $batchSize) {
-                            break 2;
-                        }
-                        
-                        // Ignorer les formulaires avant l'offset
-                        if ($totalFormsChecked < $currentOffset) {
-                            $totalFormsChecked++;
-                            continue;
-                        }
-                        
-                        try {
-                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                            
-                            if ($details && isset($details['fields']['code_agence']['value']) && 
-                                $details['fields']['code_agence']['value'] === $agency) {
-                                
-                                error_log("🔄 Traitement formulaire {$formData['_form_id']}/{$formData['_id']} pour $agency");
-                                
-                                // Traitement complet
-                                $this->uploadPicturesInDatabase($details, $entityManager);
-                                $equipmentResults = $this->processFormEquipmentsDetailed($details['fields'], $entityManager);
-                                $this->markFormAsRead($formData['_form_id'], $formData['_id']);
-                                
-                                $stats['processed_contract_equipment'] += $equipmentResults['contract_equipment'];
-                                $stats['processed_off_contract_equipment'] += $equipmentResults['off_contract_equipment'];
-                                $stats['processed_forms']++;
-                                $formsProcessed++;
-                                
-                                $stats['processed_details'][] = [
-                                    'form_id' => $formData['_form_id'],
-                                    'data_id' => $formData['_id'],
-                                    'client_name' => $details['fields']['nom_client']['value'] ?? 'N/A',
-                                    'contract_equipment' => $equipmentResults['contract_equipment'],
-                                    'off_contract_equipment' => $equipmentResults['off_contract_equipment']
-                                ];
-                                
-                                error_log("✅ Traité: AU CONTRAT={$equipmentResults['contract_equipment']}, HORS CONTRAT={$equipmentResults['off_contract_equipment']}");
-                            }
-                            
-                            $totalFormsChecked++;
-                            
-                        } catch (\Exception $e) {
-                            $stats['errors']++;
-                            error_log("❌ Erreur formulaire {$formData['_form_id']}: " . $e->getMessage());
-                            $totalFormsChecked++;
-                            continue;
-                        }
-                    }
-                    
-                } catch (\Exception $e) {
-                    error_log("❌ Erreur form {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
-        } catch (\Exception $e) {
-            $stats['critical_error'] = $e->getMessage();
-        }
-        
-        $stats['execution_time'] = time() - $stats['start_time'];
-        $stats['final_offset'] = $currentOffset + $totalFormsChecked;
-        $stats['continue_url'] = null;
-        
-        // Si on a traité des formulaires, proposer de continuer
-        if ($formsProcessed > 0) {
-            $stats['continue_url'] = $this->generateUrl('app_incremental_agency', [
-                'agency' => $agency,
-                'offset' => $stats['final_offset']
-            ]);
-        }
-        
-        return new JsonResponse($stats);
-    }
-
-    /**
-     * 3. VÉRIFICATION DES ENDPOINTS KIZEO : Tester la connectivité
-     */
-    #[Route('/api/forms/test-connectivity/{agency}', name: 'app_test_connectivity', methods: ['GET'])]
-    public function testConnectivityAgency(string $agency): JsonResponse
+    private function logError(string $message): void
     {
-        $tests = [
-            'agency' => $agency,
-            'tests' => []
-        ];
-        
-        try {
-            // Test 1: Liste des formulaires
-            $start = microtime(true);
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 10
-            ]);
-            $time1 = round((microtime(true) - $start) * 1000, 2);
-            $tests['tests']['forms_list'] = [
-                'status' => 'success',
-                'time_ms' => $time1,
-                'forms_count' => count($response->toArray()['forms'])
-            ];
-            
-            // Test 2: Premier formulaire MAINTENANCE
-            $content = $response->toArray();
-            $maintenanceForm = null;
-            foreach ($content['forms'] as $form) {
-                if ($form['class'] == "MAINTENANCE") {
-                    $maintenanceForm = $form;
-                    break;
-                }
-            }
-            
-            if ($maintenanceForm) {
-                // Test 3: Data du premier formulaire
-                $start = microtime(true);
-                $response = $this->client->request('GET', 
-                    "https://forms.kizeo.com/rest/v3/forms/{$maintenanceForm['id']}/data/unread/read/1", [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'timeout' => 10
-                ]);
-                $time2 = round((microtime(true) - $start) * 1000, 2);
-                $result = $response->toArray();
-                $tests['tests']['form_data'] = [
-                    'status' => 'success',
-                    'time_ms' => $time2,
-                    'form_id' => $maintenanceForm['id'],
-                    'unread_count' => count($result['data'])
-                ];
-                
-                // Test 4: Détails d'un formulaire
-                if (!empty($result['data'])) {
-                    $firstData = $result['data'][0];
-                    $start = microtime(true);
-                    $detailResponse = $this->client->request('GET',
-                        "https://forms.kizeo.com/rest/v3/forms/{$firstData['_form_id']}/data/{$firstData['_id']}", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 10
-                    ]);
-                    $time3 = round((microtime(true) - $start) * 1000, 2);
-                    $detailResult = $detailResponse->toArray();
-                    $tests['tests']['form_details'] = [
-                        'status' => 'success',
-                        'time_ms' => $time3,
-                        'has_agency_field' => isset($detailResult['data']['fields']['code_agence']['value']),
-                        'agency_value' => $detailResult['data']['fields']['code_agence']['value'] ?? 'N/A'
-                    ];
-                }
-            }
-            
-        } catch (\Exception $e) {
-            $tests['error'] = $e->getMessage();
-        }
-        
-        return new JsonResponse($tests);
-    }
-
-    /**
-     * 4. STATUT DE LA BASE DE DONNÉES pour l'agence
-     */
-    #[Route('/api/forms/db-status/agency/{agency}', name: 'app_db_status_agency', methods: ['GET'])]
-    public function dbStatusAgency(string $agency, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $entityClass = $this->getEntityClassByAgency($agency);
-        if (!$entityClass) {
-            return new JsonResponse(['error' => 'Agence non valide'], 400);
-        }
-        
-        try {
-            // Compter les équipements en base
-            $totalEquipments = $entityManager->getRepository($entityClass)
-                ->createQueryBuilder('e')
-                ->select('COUNT(e.id)')
-                ->getQuery()
-                ->getSingleScalarResult();
-                
-            $contractEquipments = $entityManager->getRepository($entityClass)
-                ->createQueryBuilder('e')
-                ->select('COUNT(e.id)')
-                ->where('e.enMaintenance = true')
-                ->getQuery()
-                ->getSingleScalarResult();
-                
-            $offContractEquipments = $entityManager->getRepository($entityClass)
-                ->createQueryBuilder('e')
-                ->select('COUNT(e.id)')
-                ->where('e.enMaintenance = false')
-                ->getQuery()
-                ->getSingleScalarResult();
-                
-            // Dernière mise à jour
-            $lastUpdate = $entityManager->getRepository($entityClass)
-                ->createQueryBuilder('e')
-                ->select('MAX(e.derniereVisite)')
-                ->getQuery()
-                ->getSingleScalarResult();
-                
-            return new JsonResponse([
-                'agency' => $agency,
-                'database_stats' => [
-                    'total_equipment' => $totalEquipments,
-                    'contract_equipment' => $contractEquipments,
-                    'off_contract_equipment' => $offContractEquipments,
-                    'last_update' => $lastUpdate
-                ]
-            ]);
-            
-        } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 500);
-        }
-    }
-
-    /**
-     * CORRECTION : Adaptation des noms de méthodes selon votre structure BDD
-     */
-    private function processFormEquipmentsMemoryOptimizedFixed(array $fields, EntityManagerInterface $entityManager, string $agency): array
-    {
-        $results = [
-            'contract_equipment' => 0,
-            'off_contract_equipment' => 0
-        ];
-        
-        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
-        if (!$entityClass) {
-            return $results;
-        }
-
-        // Traitement des équipements AU CONTRAT
-        if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-            foreach ($fields['contrat_de_maintenance']['value'] as $additionalEquipment) {
-                try {
-                    $equipement = new $entityClass();
-                    
-                    $this->setCommonEquipmentDataFixed($equipement, $fields);
-                    
-                    $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
-                    $equipement->setIfExistDb($additionalEquipment['equipement']['columns']); // Correction: IfExistDb au lieu de IfExistDB
-                    $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
-                    $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
-                    $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
-                    $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
-                    $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
-                    $equipement->setMarque($additionalEquipment['reference5']['value']);
-                    
-                    $equipement->setLargeur($additionalEquipment['reference3']['value'] ?? '');
-                    $equipement->setHauteur($additionalEquipment['reference1']['value'] ?? '');
-                    $equipement->setLongueur($additionalEquipment['longueur']['value'] ?? 'NC');
-                    
-                    $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
-                    $equipement->setEtat($additionalEquipment['etat']['value']);
-                    
-                    $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value'] ?? '');
-                    $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value'] ?? '');
-                    
-                    $equipement->setStatutDeMaintenance($this->getMaintenanceContractStatus($additionalEquipment['etat']['value']));
-                    $equipement->setVisite($this->getVisitType($additionalEquipment['equipement']['path']));
-                    
-                    // CORRECTION : Utiliser les bons noms de méthodes
-                    if (method_exists($equipement, 'setIsEnMaintenance')) {
-                        $equipement->setIsEnMaintenance(true);
-                    } elseif (method_exists($equipement, 'setEnMaintenance')) {
-                        $equipement->setEnMaintenance(true);
-                    }
-                    
-                    if (method_exists($equipement, 'setIsArchive')) {
-                        $equipement->setIsArchive(false);
-                    }
-                    
-                    $entityManager->persist($equipement);
-                    $results['contract_equipment']++;
-                    
-                    // Libérer la mémoire immédiatement
-                    unset($equipement);
-                    
-                } catch (\Exception $e) {
-                    error_log("Erreur équipement au contrat: " . $e->getMessage());
-                }
-            }
-            
-            $entityManager->flush();
-            $entityManager->clear(); // Important pour libérer la mémoire
-        }
-
-        // Traitement des équipements HORS CONTRAT
-        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-            foreach ($fields['tableau2']['value'] as $equipementsHorsContrat) {
-                try {
-                    $equipement = new $entityClass();
-                    
-                    $this->setCommonEquipmentDataFixed($equipement, $fields);
-                    
-                    // Attribution automatique du numéro d'équipement
-                    $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
-                    $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-                    $idClient = $fields['id_client_']['value'];
-                    $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
-                    $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-                    
-                    $equipement->setNumeroEquipement($numeroFormate);
-                    $equipement->setLibelleEquipement($typeLibelle);
-                    $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
-                    $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
-                    $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
-                    $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
-                    $equipement->setMarque($equipementsHorsContrat['marque']['value']);
-                    
-                    $equipement->setLargeur($equipementsHorsContrat['largeur']['value'] ?? '');
-                    $equipement->setHauteur($equipementsHorsContrat['hauteur']['value'] ?? '');
-                    
-                    $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
-                    $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
-                    
-                    $equipement->setStatutDeMaintenance($this->getOffContractMaintenanceStatus($equipementsHorsContrat['etat1']['value']));
-                    $equipement->setVisite($this->getDefaultVisitType($fields));
-                    
-                    // CORRECTION : Utiliser les bons noms de méthodes pour HORS CONTRAT
-                    if (method_exists($equipement, 'setIsEnMaintenance')) {
-                        $equipement->setIsEnMaintenance(false); // HORS contrat = false
-                    } elseif (method_exists($equipement, 'setEnMaintenance')) {
-                        $equipement->setEnMaintenance(false);
-                    }
-                    
-                    if (method_exists($equipement, 'setIsArchive')) {
-                        $equipement->setIsArchive(false);
-                    }
-                    
-                    $entityManager->persist($equipement);
-                    $results['off_contract_equipment']++;
-                    
-                    // Libérer la mémoire immédiatement
-                    unset($equipement);
-                    
-                } catch (\Exception $e) {
-                    error_log("Erreur équipement hors contrat: " . $e->getMessage());
-                }
-            }
-            
-            $entityManager->flush();
-            $entityManager->clear(); // Important pour libérer la mémoire
-        }
-        
-        return $results;
-    }
-
-    /**
-     * CORRECTION : Définition des données communes avec les bons noms de méthodes
-     */
-    private function setCommonEquipmentDataFixed($equipement, array $fields): void
-    {
-        $equipement->setIdContact($fields['id_client_']['value']);
-        $equipement->setRaisonSociale($fields['nom_client']['value']);
-        $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
-        $equipement->setCodeSociete($fields['id_societe']['value'] ?? '');
-        $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
-        $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
-        $equipement->setTrigrammeTech($fields['trigramme']['value']);
-        $equipement->setSignatureTech($fields['signature3']['value']);
-        
-        if (isset($fields['test_']['value'])) {
-            $equipement->setTest($fields['test_']['value']);
-        }
-    }
-
-    /**
-     * ROUTE CORRIGÉE avec les bonnes méthodes
-     */
-    #[Route('/api/forms/fixed-memory/agency/{agency}', name: 'app_fixed_memory_agency', methods: ['GET'])]
-    public function fixedMemoryAgency(
-        string $agency,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        // Configuration mémoire
-        ini_set('memory_limit', '512M');
-        set_time_limit(600); // 10 minutes
-        
-        $batchSize = 1; // UN SEUL formulaire à la fois
-        $startOffset = $request->query->get('offset', 0);
-        
-        $stats = [
-            'agency' => $agency,
-            'start_offset' => $startOffset,
-            'processed_forms' => 0,
-            'processed_contract_equipment' => 0,
-            'processed_off_contract_equipment' => 0,
-            'errors' => 0,
-            'start_time' => time()
-        ];
-        
-        try {
-            error_log("🚀 [FIXED-MEMORY] Début traitement $agency depuis offset $startOffset");
-            
-            // Récupérer les formulaires MAINTENANCE
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 30
-            ]);
-            
-            $content = $response->toArray();
-            $maintenanceForms = array_filter($content['forms'], function($form) {
-                return $form['class'] == "MAINTENANCE";
-            });
-            
-            error_log("📊 [FIXED-MEMORY] " . count($maintenanceForms) . " formulaires MAINTENANCE trouvés");
-            
-            $currentFormIndex = 0;
-            $processedInThisBatch = 0;
-            
-            foreach ($maintenanceForms as $form) {
-                if ($processedInThisBatch >= $batchSize) {
-                    break; // Un seul formulaire par appel
-                }
-                
-                try {
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/5", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 20
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        if ($processedInThisBatch >= $batchSize) {
-                            break 2;
-                        }
-                        
-                        // Ignorer jusqu'à l'offset
-                        if ($currentFormIndex < $startOffset) {
-                            $currentFormIndex++;
-                            continue;
-                        }
-                        
-                        try {
-                            error_log("🔍 [FIXED-MEMORY] Vérification formulaire {$formData['_form_id']}/{$formData['_id']}");
-                            
-                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
-                            
-                            if ($details && isset($details['fields']['code_agence']['value']) && 
-                                $details['fields']['code_agence']['value'] === $agency) {
-                                
-                                error_log("✅ [FIXED-MEMORY] Formulaire $agency trouvé - Traitement en cours...");
-                                
-                                // 1. Photos d'abord
-                                $this->uploadPicturesInDatabase($details, $entityManager);
-                                error_log("📸 [FIXED-MEMORY] Photos enregistrées");
-                                
-                                // 2. Équipements ensuite AVEC MÉTHODES CORRIGÉES
-                                $equipmentResults = $this->processFormEquipmentsMemoryOptimizedFixed($details['fields'], $entityManager, $agency);
-                                error_log("🔧 [FIXED-MEMORY] Équipements traités: AU CONTRAT={$equipmentResults['contract_equipment']}, HORS CONTRAT={$equipmentResults['off_contract_equipment']}");
-                                
-                                // 3. Marquer comme lu
-                                $this->markFormAsRead($formData['_form_id'], $formData['_id']);
-                                error_log("📝 [FIXED-MEMORY] Formulaire marqué comme lu");
-                                
-                                $stats['processed_contract_equipment'] += $equipmentResults['contract_equipment'];
-                                $stats['processed_off_contract_equipment'] += $equipmentResults['off_contract_equipment'];
-                                $stats['processed_forms']++;
-                                $processedInThisBatch++;
-                                
-                                // Libérer la mémoire
-                                unset($details);
-                                $entityManager->clear(); // Important : vider le cache Doctrine
-                                
-                            } else {
-                                error_log("⏭️ [FIXED-MEMORY] Formulaire ignoré (agence: " . ($details['fields']['code_agence']['value'] ?? 'N/A') . ")");
-                            }
-                            
-                            $currentFormIndex++;
-                            
-                        } catch (\Exception $e) {
-                            $stats['errors']++;
-                            error_log("❌ [FIXED-MEMORY] Erreur formulaire {$formData['_form_id']}: " . $e->getMessage());
-                            $currentFormIndex++;
-                            
-                            // Libérer la mémoire même en cas d'erreur
-                            $entityManager->clear();
-                            continue;
-                        }
-                    }
-                    
-                } catch (\Exception $e) {
-                    error_log("❌ [FIXED-MEMORY] Erreur form {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
-        } catch (\Exception $e) {
-            $stats['critical_error'] = $e->getMessage();
-            error_log("💥 [FIXED-MEMORY] Erreur critique: " . $e->getMessage());
-        }
-        
-        $stats['execution_time'] = time() - $stats['start_time'];
-        $stats['final_offset'] = $startOffset + $processedInThisBatch;
-        $stats['continue_url'] = null;
-        $stats['memory_usage'] = memory_get_usage(true);
-        $stats['memory_peak'] = memory_get_peak_usage(true);
-        
-        // URL pour continuer si nécessaire
-        if ($processedInThisBatch > 0) {
-            $stats['continue_url'] = $this->generateUrl('app_fixed_memory_agency', [
-                'agency' => $agency,
-                'offset' => $stats['final_offset']
-            ]);
-        }
-        
-        error_log("🎯 [FIXED-MEMORY] Terminé - Mémoire: " . round($stats['memory_usage']/1024/1024, 2) . "MB");
-        
-        return new JsonResponse($stats);
-    }
-
-    
-    /**
-     * ROUTE ULTRA-LÉGÈRE : Traitement minimal en mémoire
-     */
-    #[Route('/api/forms/ultra-light/agency/{agency}', name: 'app_ultra_light_agency', methods: ['GET'])]
-    public function ultraLightAgency(
-        string $agency,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        // Configuration mémoire très restrictive
-        ini_set('memory_limit', '256M'); // Réduire à 256MB
-        set_time_limit(300); // 5 minutes max
-        
-        $startOffset = $request->query->get('offset', 0);
-        
-        $stats = [
-            'agency' => $agency,
-            'start_offset' => $startOffset,
-            'processed_forms' => 0,
-            'processed_contract_equipment' => 0,
-            'processed_off_contract_equipment' => 0,
-            'errors' => 0,
-            'start_time' => time(),
-            'memory_start' => memory_get_usage(true)
-        ];
-        
-        try {
-            error_log("🚀 [ULTRA-LIGHT] Début traitement $agency depuis offset $startOffset");
-            error_log("💾 [ULTRA-LIGHT] Mémoire initiale: " . round($stats['memory_start']/1024/1024, 2) . "MB");
-            
-            // OPTIMISATION 1: Récupérer UN SEUL formulaire à la fois
-            $formFound = $this->getSingleFormForAgency($agency, $startOffset);
-            
-            if (!$formFound) {
-                return new JsonResponse([
-                    'status' => 'completed',
-                    'message' => 'Aucun formulaire trouvé à cet offset',
-                    'agency' => $agency,
-                    'start_offset' => $startOffset
-                ]);
-            }
-            
-            error_log("🔍 [ULTRA-LIGHT] Formulaire trouvé: {$formFound['form_id']}/{$formFound['data_id']}");
-            
-            try {
-                // OPTIMISATION 2: Traitement minimal sans stockage intermédiaire
-                $this->processFormMinimal($formFound, $entityManager, $stats);
-                
-                // OPTIMISATION 3: Nettoyage immédiat après traitement
-                $entityManager->clear();
-                unset($formFound);
-                
-                // Forcer le garbage collector
-                if (function_exists('gc_collect_cycles')) {
-                    gc_collect_cycles();
-                }
-                
-            } catch (\Exception $e) {
-                $stats['errors']++;
-                error_log("❌ [ULTRA-LIGHT] Erreur formulaire: " . $e->getMessage());
-                
-                // Nettoyage même en cas d'erreur
-                $entityManager->clear();
-            }
-            
-        } catch (\Exception $e) {
-            $stats['critical_error'] = $e->getMessage();
-            error_log("💥 [ULTRA-LIGHT] Erreur critique: " . $e->getMessage());
-        }
-        
-        $stats['execution_time'] = time() - $stats['start_time'];
-        $stats['final_offset'] = $startOffset + 1;
-        $stats['memory_end'] = memory_get_usage(true);
-        $stats['memory_peak'] = memory_get_peak_usage(true);
-        $stats['memory_used_mb'] = round($stats['memory_end']/1024/1024, 2);
-        $stats['memory_peak_mb'] = round($stats['memory_peak']/1024/1024, 2);
-        
-        // URL pour continuer
-        $stats['continue_url'] = $this->generateUrl('app_ultra_light_agency', [
-            'agency' => $agency,
-            'offset' => $stats['final_offset']
-        ]);
-        
-        error_log("🎯 [ULTRA-LIGHT] Terminé - Mémoire utilisée: {$stats['memory_used_mb']}MB / Peak: {$stats['memory_peak_mb']}MB");
-        
-        return new JsonResponse($stats);
-    }
-
-    /**
-     * OPTIMISATION: Récupération d'UN SEUL formulaire
-     */
-    private function getSingleFormForAgency(string $agency, int $offset): ?array
-    {
-        $currentIndex = 0;
-        
-        try {
-            // Récupérer la liste des formulaires
-            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 20
-            ]);
-            
-            $content = $response->toArray();
-            
-            // Filtrer seulement les MAINTENANCE
-            foreach ($content['forms'] as $form) {
-                if ($form['class'] !== "MAINTENANCE") {
-                    continue;
-                }
-                
-                try {
-                    // Récupérer seulement les 3 premiers non lus
-                    $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/3", [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 15
-                    ]);
-
-                    $result = $response->toArray();
-                    
-                    foreach ($result['data'] as $formData) {
-                        // Vérifier l'agence RAPIDEMENT
-                        if ($this->isFormForAgency($formData['_form_id'], $formData['_id'], $agency)) {
-                            if ($currentIndex === $offset) {
-                                return [
-                                    'form_id' => $formData['_form_id'],
-                                    'data_id' => $formData['_id']
-                                ];
-                            }
-                            $currentIndex++;
-                        }
-                    }
-                    
-                } catch (\Exception $e) {
-                    error_log("Erreur form {$form['id']}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
-        } catch (\Exception $e) {
-            error_log("Erreur getSingleFormForAgency: " . $e->getMessage());
-        }
-        
-        return null;
-    }
-
-    /**
-     * OPTIMISATION: Vérification rapide de l'agence
-     */
-    private function isFormForAgency(string $formId, string $dataId, string $agency): bool
-    {
-        try {
-            $details = $this->getFormDetails($formId, $dataId);
-            return $details && 
-                isset($details['fields']['code_agence']['value']) && 
-                $details['fields']['code_agence']['value'] === $agency;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
-     * OPTIMISATION: Traitement minimal d'un formulaire
-     */
-    private function processFormMinimal(array $formData, EntityManagerInterface $entityManager, array &$stats): void
-    {
-        $formId = $formData['form_id'];
-        $dataId = $formData['data_id'];
-        
-        error_log("🔄 [ULTRA-LIGHT] Traitement formulaire $formId/$dataId");
-        
-        // Récupérer les détails
-        $details = $this->getFormDetails($formId, $dataId);
-        if (!$details || !isset($details['fields'])) {
-            throw new \Exception("Détails formulaire non récupérés");
-        }
-        
-        $fields = $details['fields'];
-        $agency = $fields['code_agence']['value'];
-        
-        // 1. Photos (plus léger en premier)
-        $this->uploadPicturesInDatabaseLight($details, $entityManager);
-        error_log("📸 [ULTRA-LIGHT] Photos enregistrées");
-        
-        // Nettoyage intermédiaire
-        $entityManager->flush();
-        $entityManager->clear();
-        
-        // 2. Équipements AU CONTRAT
-        $contractCount = $this->processContractEquipmentsLight($fields, $entityManager);
-        $stats['processed_contract_equipment'] += $contractCount;
-        error_log("🔧 [ULTRA-LIGHT] Équipements AU CONTRAT: $contractCount");
-        
-        // Nettoyage intermédiaire
-        $entityManager->flush();
-        $entityManager->clear();
-        
-        // 3. Équipements HORS CONTRAT
-        $offContractCount = $this->processOffContractEquipmentsLight($fields, $entityManager);
-        $stats['processed_off_contract_equipment'] += $offContractCount;
-        error_log("🔧 [ULTRA-LIGHT] Équipements HORS CONTRAT: $offContractCount");
-        
-        // Nettoyage final
-        $entityManager->flush();
-        $entityManager->clear();
-        
-        // 4. Marquer comme lu
-        $this->markFormAsRead($formId, $dataId);
-        error_log("📝 [ULTRA-LIGHT] Formulaire marqué comme lu");
-        
-        $stats['processed_forms']++;
-        
-        // Libération mémoire
-        unset($details, $fields);
-    }
-
-    /**
-     * OPTIMISATION: Upload photos léger
-     */
-    private function uploadPicturesInDatabaseLight(array $formData, EntityManagerInterface $entityManager): void
-    {
-        try {
-            // Traiter les équipements AU CONTRAT (minimal)
-            if (isset($formData['fields']['contrat_de_maintenance']['value'])) {
-                foreach ($formData['fields']['contrat_de_maintenance']['value'] as $equipment) {
-                    $form = new \App\Entity\Form();
-                    $form->setFormId($formData['form_id']);
-                    $form->setDataId($formData['id']);
-                    $form->setUpdateTime($formData['update_time']);
-                    $form->setCodeEquipement($equipment['equipement']['value']);
-                    $form->setRaisonSocialeVisite($equipment['equipement']['path']);
-                    
-                    // Seulement les photos principales pour économiser la mémoire
-                    if (isset($equipment['photo_plaque']['value'])) {
-                        $form->setPhotoPlaque($equipment['photo_plaque']['value']);
-                    }
-                    if (isset($equipment['photo_choc']['value'])) {
-                        $form->setPhotoChoc($equipment['photo_choc']['value']);
-                    }
-                    
-                    $entityManager->persist($form);
-                    unset($form); // Libération immédiate
-                }
-            }
-            
-            // Traiter les équipements HORS CONTRAT (minimal)
-            if (isset($formData['fields']['tableau2']['value'])) {
-                foreach ($formData['fields']['tableau2']['value'] as $equipment) {
-                    $form = new \App\Entity\Form();
-                    $form->setFormId($formData['form_id']);
-                    $form->setDataId($formData['id']);
-                    $form->setUpdateTime($formData['update_time']);
-                    
-                    if (isset($equipment['photo3']['value'])) {
-                        $form->setPhotoCompteRendu($equipment['photo3']['value']);
-                    }
-                    
-                    $entityManager->persist($form);
-                    unset($form); // Libération immédiate
-                }
-            }
-            
-        } catch (\Exception $e) {
-            error_log("Erreur upload photos light: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * OPTIMISATION: Traitement équipements AU CONTRAT léger
-     */
-    private function processContractEquipmentsLight(array $fields, EntityManagerInterface $entityManager): int
-    {
-        $count = 0;
-        
-        if (!isset($fields['contrat_de_maintenance']['value'])) {
-            return 0;
-        }
-        
-        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
-        if (!$entityClass) {
-            return 0;
-        }
-        
-        foreach ($fields['contrat_de_maintenance']['value'] as $equipment) {
-            try {
-                $equipement = new $entityClass();
-                
-                // Données essentielles seulement
-                $equipement->setIdContact($fields['id_client_']['value']);
-                $equipement->setRaisonSociale($fields['nom_client']['value']);
-                $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
-                $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
-                $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
-                
-                $equipement->setNumeroEquipement($equipment['equipement']['value']);
-                $equipement->setIfExistDb($equipment['equipement']['columns']);
-                $equipement->setLibelleEquipement(strtolower($equipment['reference7']['value']));
-                $equipement->setEtat($equipment['etat']['value']);
-                $equipement->setVisite($this->getVisitType($equipment['equipement']['path']));
-                
-                // Champs booléens
-                if (method_exists($equipement, 'setIsEnMaintenance')) {
-                    $equipement->setIsEnMaintenance(true);
-                }
-                if (method_exists($equipement, 'setIsArchive')) {
-                    $equipement->setIsArchive(false);
-                }
-                
-                $entityManager->persist($equipement);
-                $count++;
-                
-                unset($equipement); // Libération immédiate
-                
-            } catch (\Exception $e) {
-                error_log("Erreur équipement contrat: " . $e->getMessage());
-            }
-        }
-        
-        return $count;
-    }
-
-    /**
-     * OPTIMISATION: Traitement équipements HORS CONTRAT léger
-     */
-    private function processOffContractEquipmentsLight(array $fields, EntityManagerInterface $entityManager): int
-    {
-        $count = 0;
-        
-        if (!isset($fields['tableau2']['value'])) {
-            return 0;
-        }
-        
-        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
-        if (!$entityClass) {
-            return 0;
-        }
-        
-        foreach ($fields['tableau2']['value'] as $equipment) {
-            try {
-                $equipement = new $entityClass();
-                
-                // Données essentielles seulement
-                $equipement->setIdContact($fields['id_client_']['value']);
-                $equipement->setRaisonSociale($fields['nom_client']['value']);
-                $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
-                $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
-                $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
-                
-                // Numéro automatique
-                $typeLibelle = strtolower($equipment['nature']['value']);
-                $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-                $idClient = $fields['id_client_']['value'];
-                $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
-                $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-                
-                $equipement->setNumeroEquipement($numeroFormate);
-                $equipement->setLibelleEquipement($typeLibelle);
-                $equipement->setEtat($equipment['etat1']['value']);
-                $equipement->setVisite($this->getDefaultVisitType($fields));
-                
-                // Champs booléens
-                if (method_exists($equipement, 'setIsEnMaintenance')) {
-                    $equipement->setIsEnMaintenance(false); // HORS contrat
-                }
-                if (method_exists($equipement, 'setIsArchive')) {
-                    $equipement->setIsArchive(false);
-                }
-                
-                $entityManager->persist($equipement);
-                $count++;
-                
-                unset($equipement); // Libération immédiate
-                
-            } catch (\Exception $e) {
-                error_log("Erreur équipement hors contrat: " . $e->getMessage());
-            }
-        }
-        
-        return $count;
+        error_log("[ERROR " . date('Y-m-d H:i:s') . "] " . $message);
     }
 }
