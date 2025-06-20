@@ -2412,4 +2412,392 @@ class OptimizedFormController extends AbstractController
         
         return new JsonResponse($stats);
     }
+
+    
+    /**
+     * ROUTE ULTRA-LÉGÈRE : Traitement minimal en mémoire
+     */
+    #[Route('/api/forms/ultra-light/agency/{agency}', name: 'app_ultra_light_agency', methods: ['GET'])]
+    public function ultraLightAgency(
+        string $agency,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        // Configuration mémoire très restrictive
+        ini_set('memory_limit', '256M'); // Réduire à 256MB
+        set_time_limit(300); // 5 minutes max
+        
+        $startOffset = $request->query->get('offset', 0);
+        
+        $stats = [
+            'agency' => $agency,
+            'start_offset' => $startOffset,
+            'processed_forms' => 0,
+            'processed_contract_equipment' => 0,
+            'processed_off_contract_equipment' => 0,
+            'errors' => 0,
+            'start_time' => time(),
+            'memory_start' => memory_get_usage(true)
+        ];
+        
+        try {
+            error_log("🚀 [ULTRA-LIGHT] Début traitement $agency depuis offset $startOffset");
+            error_log("💾 [ULTRA-LIGHT] Mémoire initiale: " . round($stats['memory_start']/1024/1024, 2) . "MB");
+            
+            // OPTIMISATION 1: Récupérer UN SEUL formulaire à la fois
+            $formFound = $this->getSingleFormForAgency($agency, $startOffset);
+            
+            if (!$formFound) {
+                return new JsonResponse([
+                    'status' => 'completed',
+                    'message' => 'Aucun formulaire trouvé à cet offset',
+                    'agency' => $agency,
+                    'start_offset' => $startOffset
+                ]);
+            }
+            
+            error_log("🔍 [ULTRA-LIGHT] Formulaire trouvé: {$formFound['form_id']}/{$formFound['data_id']}");
+            
+            try {
+                // OPTIMISATION 2: Traitement minimal sans stockage intermédiaire
+                $this->processFormMinimal($formFound, $entityManager, $stats);
+                
+                // OPTIMISATION 3: Nettoyage immédiat après traitement
+                $entityManager->clear();
+                unset($formFound);
+                
+                // Forcer le garbage collector
+                if (function_exists('gc_collect_cycles')) {
+                    gc_collect_cycles();
+                }
+                
+            } catch (\Exception $e) {
+                $stats['errors']++;
+                error_log("❌ [ULTRA-LIGHT] Erreur formulaire: " . $e->getMessage());
+                
+                // Nettoyage même en cas d'erreur
+                $entityManager->clear();
+            }
+            
+        } catch (\Exception $e) {
+            $stats['critical_error'] = $e->getMessage();
+            error_log("💥 [ULTRA-LIGHT] Erreur critique: " . $e->getMessage());
+        }
+        
+        $stats['execution_time'] = time() - $stats['start_time'];
+        $stats['final_offset'] = $startOffset + 1;
+        $stats['memory_end'] = memory_get_usage(true);
+        $stats['memory_peak'] = memory_get_peak_usage(true);
+        $stats['memory_used_mb'] = round($stats['memory_end']/1024/1024, 2);
+        $stats['memory_peak_mb'] = round($stats['memory_peak']/1024/1024, 2);
+        
+        // URL pour continuer
+        $stats['continue_url'] = $this->generateUrl('app_ultra_light_agency', [
+            'agency' => $agency,
+            'offset' => $stats['final_offset']
+        ]);
+        
+        error_log("🎯 [ULTRA-LIGHT] Terminé - Mémoire utilisée: {$stats['memory_used_mb']}MB / Peak: {$stats['memory_peak_mb']}MB");
+        
+        return new JsonResponse($stats);
+    }
+
+    /**
+     * OPTIMISATION: Récupération d'UN SEUL formulaire
+     */
+    private function getSingleFormForAgency(string $agency, int $offset): ?array
+    {
+        $currentIndex = 0;
+        
+        try {
+            // Récupérer la liste des formulaires
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 20
+            ]);
+            
+            $content = $response->toArray();
+            
+            // Filtrer seulement les MAINTENANCE
+            foreach ($content['forms'] as $form) {
+                if ($form['class'] !== "MAINTENANCE") {
+                    continue;
+                }
+                
+                try {
+                    // Récupérer seulement les 3 premiers non lus
+                    $response = $this->client->request('GET', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/3", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 15
+                    ]);
+
+                    $result = $response->toArray();
+                    
+                    foreach ($result['data'] as $formData) {
+                        // Vérifier l'agence RAPIDEMENT
+                        if ($this->isFormForAgency($formData['_form_id'], $formData['_id'], $agency)) {
+                            if ($currentIndex === $offset) {
+                                return [
+                                    'form_id' => $formData['_form_id'],
+                                    'data_id' => $formData['_id']
+                                ];
+                            }
+                            $currentIndex++;
+                        }
+                    }
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur form {$form['id']}: " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur getSingleFormForAgency: " . $e->getMessage());
+        }
+        
+        return null;
+    }
+
+    /**
+     * OPTIMISATION: Vérification rapide de l'agence
+     */
+    private function isFormForAgency(string $formId, string $dataId, string $agency): bool
+    {
+        try {
+            $details = $this->getFormDetails($formId, $dataId);
+            return $details && 
+                isset($details['fields']['code_agence']['value']) && 
+                $details['fields']['code_agence']['value'] === $agency;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * OPTIMISATION: Traitement minimal d'un formulaire
+     */
+    private function processFormMinimal(array $formData, EntityManagerInterface $entityManager, array &$stats): void
+    {
+        $formId = $formData['form_id'];
+        $dataId = $formData['data_id'];
+        
+        error_log("🔄 [ULTRA-LIGHT] Traitement formulaire $formId/$dataId");
+        
+        // Récupérer les détails
+        $details = $this->getFormDetails($formId, $dataId);
+        if (!$details || !isset($details['fields'])) {
+            throw new \Exception("Détails formulaire non récupérés");
+        }
+        
+        $fields = $details['fields'];
+        $agency = $fields['code_agence']['value'];
+        
+        // 1. Photos (plus léger en premier)
+        $this->uploadPicturesInDatabaseLight($details, $entityManager);
+        error_log("📸 [ULTRA-LIGHT] Photos enregistrées");
+        
+        // Nettoyage intermédiaire
+        $entityManager->flush();
+        $entityManager->clear();
+        
+        // 2. Équipements AU CONTRAT
+        $contractCount = $this->processContractEquipmentsLight($fields, $entityManager);
+        $stats['processed_contract_equipment'] += $contractCount;
+        error_log("🔧 [ULTRA-LIGHT] Équipements AU CONTRAT: $contractCount");
+        
+        // Nettoyage intermédiaire
+        $entityManager->flush();
+        $entityManager->clear();
+        
+        // 3. Équipements HORS CONTRAT
+        $offContractCount = $this->processOffContractEquipmentsLight($fields, $entityManager);
+        $stats['processed_off_contract_equipment'] += $offContractCount;
+        error_log("🔧 [ULTRA-LIGHT] Équipements HORS CONTRAT: $offContractCount");
+        
+        // Nettoyage final
+        $entityManager->flush();
+        $entityManager->clear();
+        
+        // 4. Marquer comme lu
+        $this->markFormAsRead($formId, $dataId);
+        error_log("📝 [ULTRA-LIGHT] Formulaire marqué comme lu");
+        
+        $stats['processed_forms']++;
+        
+        // Libération mémoire
+        unset($details, $fields);
+    }
+
+    /**
+     * OPTIMISATION: Upload photos léger
+     */
+    private function uploadPicturesInDatabaseLight(array $formData, EntityManagerInterface $entityManager): void
+    {
+        try {
+            // Traiter les équipements AU CONTRAT (minimal)
+            if (isset($formData['fields']['contrat_de_maintenance']['value'])) {
+                foreach ($formData['fields']['contrat_de_maintenance']['value'] as $equipment) {
+                    $form = new \App\Entity\Form();
+                    $form->setFormId($formData['form_id']);
+                    $form->setDataId($formData['id']);
+                    $form->setUpdateTime($formData['update_time']);
+                    $form->setCodeEquipement($equipment['equipement']['value']);
+                    $form->setRaisonSocialeVisite($equipment['equipement']['path']);
+                    
+                    // Seulement les photos principales pour économiser la mémoire
+                    if (isset($equipment['photo_plaque']['value'])) {
+                        $form->setPhotoPlaque($equipment['photo_plaque']['value']);
+                    }
+                    if (isset($equipment['photo_choc']['value'])) {
+                        $form->setPhotoChoc($equipment['photo_choc']['value']);
+                    }
+                    
+                    $entityManager->persist($form);
+                    unset($form); // Libération immédiate
+                }
+            }
+            
+            // Traiter les équipements HORS CONTRAT (minimal)
+            if (isset($formData['fields']['tableau2']['value'])) {
+                foreach ($formData['fields']['tableau2']['value'] as $equipment) {
+                    $form = new \App\Entity\Form();
+                    $form->setFormId($formData['form_id']);
+                    $form->setDataId($formData['id']);
+                    $form->setUpdateTime($formData['update_time']);
+                    
+                    if (isset($equipment['photo3']['value'])) {
+                        $form->setPhotoCompteRendu($equipment['photo3']['value']);
+                    }
+                    
+                    $entityManager->persist($form);
+                    unset($form); // Libération immédiate
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur upload photos light: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * OPTIMISATION: Traitement équipements AU CONTRAT léger
+     */
+    private function processContractEquipmentsLight(array $fields, EntityManagerInterface $entityManager): int
+    {
+        $count = 0;
+        
+        if (!isset($fields['contrat_de_maintenance']['value'])) {
+            return 0;
+        }
+        
+        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
+        if (!$entityClass) {
+            return 0;
+        }
+        
+        foreach ($fields['contrat_de_maintenance']['value'] as $equipment) {
+            try {
+                $equipement = new $entityClass();
+                
+                // Données essentielles seulement
+                $equipement->setIdContact($fields['id_client_']['value']);
+                $equipement->setRaisonSociale($fields['nom_client']['value']);
+                $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
+                $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
+                $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
+                
+                $equipement->setNumeroEquipement($equipment['equipement']['value']);
+                $equipement->setIfExistDb($equipment['equipement']['columns']);
+                $equipement->setLibelleEquipement(strtolower($equipment['reference7']['value']));
+                $equipement->setEtat($equipment['etat']['value']);
+                $equipement->setVisite($this->getVisitType($equipment['equipement']['path']));
+                
+                // Champs booléens
+                if (method_exists($equipement, 'setIsEnMaintenance')) {
+                    $equipement->setIsEnMaintenance(true);
+                }
+                if (method_exists($equipement, 'setIsArchive')) {
+                    $equipement->setIsArchive(false);
+                }
+                
+                $entityManager->persist($equipement);
+                $count++;
+                
+                unset($equipement); // Libération immédiate
+                
+            } catch (\Exception $e) {
+                error_log("Erreur équipement contrat: " . $e->getMessage());
+            }
+        }
+        
+        return $count;
+    }
+
+    /**
+     * OPTIMISATION: Traitement équipements HORS CONTRAT léger
+     */
+    private function processOffContractEquipmentsLight(array $fields, EntityManagerInterface $entityManager): int
+    {
+        $count = 0;
+        
+        if (!isset($fields['tableau2']['value'])) {
+            return 0;
+        }
+        
+        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
+        if (!$entityClass) {
+            return 0;
+        }
+        
+        foreach ($fields['tableau2']['value'] as $equipment) {
+            try {
+                $equipement = new $entityClass();
+                
+                // Données essentielles seulement
+                $equipement->setIdContact($fields['id_client_']['value']);
+                $equipement->setRaisonSociale($fields['nom_client']['value']);
+                $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
+                $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
+                $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
+                
+                // Numéro automatique
+                $typeLibelle = strtolower($equipment['nature']['value']);
+                $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+                $idClient = $fields['id_client_']['value'];
+                $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
+                $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+                
+                $equipement->setNumeroEquipement($numeroFormate);
+                $equipement->setLibelleEquipement($typeLibelle);
+                $equipement->setEtat($equipment['etat1']['value']);
+                $equipement->setVisite($this->getDefaultVisitType($fields));
+                
+                // Champs booléens
+                if (method_exists($equipement, 'setIsEnMaintenance')) {
+                    $equipement->setIsEnMaintenance(false); // HORS contrat
+                }
+                if (method_exists($equipement, 'setIsArchive')) {
+                    $equipement->setIsArchive(false);
+                }
+                
+                $entityManager->persist($equipement);
+                $count++;
+                
+                unset($equipement); // Libération immédiate
+                
+            } catch (\Exception $e) {
+                error_log("Erreur équipement hors contrat: " . $e->getMessage());
+            }
+        }
+        
+        return $count;
+    }
 }
