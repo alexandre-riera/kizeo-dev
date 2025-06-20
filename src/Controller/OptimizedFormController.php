@@ -1739,4 +1739,372 @@ class OptimizedFormController extends AbstractController
         
         return new JsonResponse($diagnostics);
     }
+
+    /**
+     * 1. DIAGNOSTIC RAPIDE : Compter seulement les formulaires
+     */
+    #[Route('/api/forms/quick-count/agency/{agency}', name: 'app_quick_count_agency', methods: ['GET'])]
+    public function quickCountAgency(string $agency): JsonResponse
+    {
+        set_time_limit(300); // 5 minutes max
+        
+        $stats = [
+            'agency' => $agency,
+            'maintenance_forms_total' => 0,
+            'agency_forms_found' => 0,
+            'start_time' => time()
+        ];
+        
+        try {
+            // Récupérer la liste des formulaires MAINTENANCE
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
+            ]);
+            
+            $content = $response->toArray();
+            $maintenanceForms = array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+            
+            $stats['maintenance_forms_total'] = count($maintenanceForms);
+            
+            // Compter rapidement les formulaires de l'agence (limité à 5 par form)
+            foreach ($maintenanceForms as $form) {
+                try {
+                    $response = $this->client->request('GET', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/5", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 10
+                    ]);
+
+                    $result = $response->toArray();
+                    
+                    foreach ($result['data'] as $formData) {
+                        // Vérification rapide de l'agence (sans récupérer tous les détails)
+                        try {
+                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                            if ($details && isset($details['fields']['code_agence']['value']) && 
+                                $details['fields']['code_agence']['value'] === $agency) {
+                                $stats['agency_forms_found']++;
+                            }
+                        } catch (\Exception $e) {
+                            // Ignorer les erreurs individuelles
+                            continue;
+                        }
+                        
+                        // Limite de sécurité
+                        if ((time() - $stats['start_time']) > 240) { // 4 minutes max
+                            break 2;
+                        }
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $stats['error'] = $e->getMessage();
+        }
+        
+        $stats['execution_time'] = time() - $stats['start_time'];
+        
+        return new JsonResponse($stats);
+    }
+
+    /**
+     * 2. TRAITEMENT INCRÉMENTAL : Traiter par petits lots avec sauvegarde du progrès
+     */
+    #[Route('/api/forms/incremental/agency/{agency}', name: 'app_incremental_agency', methods: ['GET'])]
+    public function incrementalProcessingAgency(
+        string $agency,
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache,
+        Request $request
+    ): JsonResponse {
+        set_time_limit(480); // 8 minutes
+        ini_set('memory_limit', '1024M');
+        
+        $batchSize = 2; // TRÈS PETIT pour éviter les timeouts
+        $startOffset = $request->query->get('offset', 0);
+        $maxTime = 420; // 7 minutes max
+        
+        $stats = [
+            'agency' => $agency,
+            'start_offset' => $startOffset,
+            'processed_forms' => 0,
+            'processed_contract_equipment' => 0,
+            'processed_off_contract_equipment' => 0,
+            'errors' => 0,
+            'start_time' => time(),
+            'processed_details' => []
+        ];
+        
+        try {
+            $currentOffset = $startOffset;
+            $formsProcessed = 0;
+            
+            // Récupérer les formulaires MAINTENANCE
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+            ]);
+            
+            $content = $response->toArray();
+            $maintenanceForms = array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+            
+            $totalFormsChecked = 0;
+            
+            foreach ($maintenanceForms as $form) {
+                if ((time() - $stats['start_time']) > $maxTime) {
+                    break;
+                }
+                
+                if ($formsProcessed >= $batchSize) {
+                    break;
+                }
+                
+                try {
+                    $response = $this->client->request('GET', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/10", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 15
+                    ]);
+
+                    $result = $response->toArray();
+                    
+                    foreach ($result['data'] as $formData) {
+                        if ((time() - $stats['start_time']) > $maxTime) {
+                            break 2;
+                        }
+                        
+                        if ($formsProcessed >= $batchSize) {
+                            break 2;
+                        }
+                        
+                        // Ignorer les formulaires avant l'offset
+                        if ($totalFormsChecked < $currentOffset) {
+                            $totalFormsChecked++;
+                            continue;
+                        }
+                        
+                        try {
+                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                            
+                            if ($details && isset($details['fields']['code_agence']['value']) && 
+                                $details['fields']['code_agence']['value'] === $agency) {
+                                
+                                error_log("🔄 Traitement formulaire {$formData['_form_id']}/{$formData['_id']} pour $agency");
+                                
+                                // Traitement complet
+                                $this->uploadPicturesInDatabase($details, $entityManager);
+                                $equipmentResults = $this->processFormEquipmentsDetailed($details['fields'], $entityManager);
+                                $this->markFormAsRead($formData['_form_id'], $formData['_id']);
+                                
+                                $stats['processed_contract_equipment'] += $equipmentResults['contract_equipment'];
+                                $stats['processed_off_contract_equipment'] += $equipmentResults['off_contract_equipment'];
+                                $stats['processed_forms']++;
+                                $formsProcessed++;
+                                
+                                $stats['processed_details'][] = [
+                                    'form_id' => $formData['_form_id'],
+                                    'data_id' => $formData['_id'],
+                                    'client_name' => $details['fields']['nom_client']['value'] ?? 'N/A',
+                                    'contract_equipment' => $equipmentResults['contract_equipment'],
+                                    'off_contract_equipment' => $equipmentResults['off_contract_equipment']
+                                ];
+                                
+                                error_log("✅ Traité: AU CONTRAT={$equipmentResults['contract_equipment']}, HORS CONTRAT={$equipmentResults['off_contract_equipment']}");
+                            }
+                            
+                            $totalFormsChecked++;
+                            
+                        } catch (\Exception $e) {
+                            $stats['errors']++;
+                            error_log("❌ Erreur formulaire {$formData['_form_id']}: " . $e->getMessage());
+                            $totalFormsChecked++;
+                            continue;
+                        }
+                    }
+                    
+                } catch (\Exception $e) {
+                    error_log("❌ Erreur form {$form['id']}: " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $stats['critical_error'] = $e->getMessage();
+        }
+        
+        $stats['execution_time'] = time() - $stats['start_time'];
+        $stats['final_offset'] = $currentOffset + $totalFormsChecked;
+        $stats['continue_url'] = null;
+        
+        // Si on a traité des formulaires, proposer de continuer
+        if ($formsProcessed > 0) {
+            $stats['continue_url'] = $this->generateUrl('app_incremental_agency', [
+                'agency' => $agency,
+                'offset' => $stats['final_offset']
+            ]);
+        }
+        
+        return new JsonResponse($stats);
+    }
+
+    /**
+     * 3. VÉRIFICATION DES ENDPOINTS KIZEO : Tester la connectivité
+     */
+    #[Route('/api/forms/test-connectivity/{agency}', name: 'app_test_connectivity', methods: ['GET'])]
+    public function testConnectivityAgency(string $agency): JsonResponse
+    {
+        $tests = [
+            'agency' => $agency,
+            'tests' => []
+        ];
+        
+        try {
+            // Test 1: Liste des formulaires
+            $start = microtime(true);
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 10
+            ]);
+            $time1 = round((microtime(true) - $start) * 1000, 2);
+            $tests['tests']['forms_list'] = [
+                'status' => 'success',
+                'time_ms' => $time1,
+                'forms_count' => count($response->toArray()['forms'])
+            ];
+            
+            // Test 2: Premier formulaire MAINTENANCE
+            $content = $response->toArray();
+            $maintenanceForm = null;
+            foreach ($content['forms'] as $form) {
+                if ($form['class'] == "MAINTENANCE") {
+                    $maintenanceForm = $form;
+                    break;
+                }
+            }
+            
+            if ($maintenanceForm) {
+                // Test 3: Data du premier formulaire
+                $start = microtime(true);
+                $response = $this->client->request('GET', 
+                    "https://forms.kizeo.com/rest/v3/forms/{$maintenanceForm['id']}/data/unread/read/1", [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 10
+                ]);
+                $time2 = round((microtime(true) - $start) * 1000, 2);
+                $result = $response->toArray();
+                $tests['tests']['form_data'] = [
+                    'status' => 'success',
+                    'time_ms' => $time2,
+                    'form_id' => $maintenanceForm['id'],
+                    'unread_count' => count($result['data'])
+                ];
+                
+                // Test 4: Détails d'un formulaire
+                if (!empty($result['data'])) {
+                    $firstData = $result['data'][0];
+                    $start = microtime(true);
+                    $detailResponse = $this->client->request('GET',
+                        "https://forms.kizeo.com/rest/v3/forms/{$firstData['_form_id']}/data/{$firstData['_id']}", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 10
+                    ]);
+                    $time3 = round((microtime(true) - $start) * 1000, 2);
+                    $detailResult = $detailResponse->toArray();
+                    $tests['tests']['form_details'] = [
+                        'status' => 'success',
+                        'time_ms' => $time3,
+                        'has_agency_field' => isset($detailResult['data']['fields']['code_agence']['value']),
+                        'agency_value' => $detailResult['data']['fields']['code_agence']['value'] ?? 'N/A'
+                    ];
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $tests['error'] = $e->getMessage();
+        }
+        
+        return new JsonResponse($tests);
+    }
+
+    /**
+     * 4. STATUT DE LA BASE DE DONNÉES pour l'agence
+     */
+    #[Route('/api/forms/db-status/agency/{agency}', name: 'app_db_status_agency', methods: ['GET'])]
+    public function dbStatusAgency(string $agency, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $entityClass = $this->getEntityClassByAgency($agency);
+        if (!$entityClass) {
+            return new JsonResponse(['error' => 'Agence non valide'], 400);
+        }
+        
+        try {
+            // Compter les équipements en base
+            $totalEquipments = $entityManager->getRepository($entityClass)
+                ->createQueryBuilder('e')
+                ->select('COUNT(e.id)')
+                ->getQuery()
+                ->getSingleScalarResult();
+                
+            $contractEquipments = $entityManager->getRepository($entityClass)
+                ->createQueryBuilder('e')
+                ->select('COUNT(e.id)')
+                ->where('e.enMaintenance = true')
+                ->getQuery()
+                ->getSingleScalarResult();
+                
+            $offContractEquipments = $entityManager->getRepository($entityClass)
+                ->createQueryBuilder('e')
+                ->select('COUNT(e.id)')
+                ->where('e.enMaintenance = false')
+                ->getQuery()
+                ->getSingleScalarResult();
+                
+            // Dernière mise à jour
+            $lastUpdate = $entityManager->getRepository($entityClass)
+                ->createQueryBuilder('e')
+                ->select('MAX(e.derniereVisite)')
+                ->getQuery()
+                ->getSingleScalarResult();
+                
+            return new JsonResponse([
+                'agency' => $agency,
+                'database_stats' => [
+                    'total_equipment' => $totalEquipments,
+                    'contract_equipment' => $contractEquipments,
+                    'off_contract_equipment' => $offContractEquipments,
+                    'last_update' => $lastUpdate
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
 }
