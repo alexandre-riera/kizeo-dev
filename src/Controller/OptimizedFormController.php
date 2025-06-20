@@ -23,7 +23,7 @@ use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
-class OptimizedMaintenanceController extends AbstractController
+class OptimizedFormController extends AbstractController
 {
     private const ULTRA_SMALL_BATCH_SIZE = 1; // 1 seul formulaire à la fois
     private const MAX_EXECUTION_TIME = 45; // 45 secondes maximum
