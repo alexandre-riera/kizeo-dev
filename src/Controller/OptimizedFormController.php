@@ -259,6 +259,7 @@ class OptimizedFormController extends AbstractController
 
     /**
      * Récupération de tous les formulaires (LUS ET NON LUS) pour une agence
+     * NOUVELLE APPROCHE: Utiliser /data/unread avec LIMIT au lieu de /data/advanced
      */
     private function getAllFormsForAgency(string $agency): array
     {
@@ -279,11 +280,16 @@ class OptimizedFormController extends AbstractController
                 return $form['class'] == "MAINTENANCE";
             });
 
+            $this->logProgress("🔍 Trouvé " . count($maintenanceForms) . " formulaires MAINTENANCE");
+
             foreach ($maintenanceForms as $form) {
                 try {
-                    // MODIFICATION: Récupérer TOUS les formulaires (pas seulement les non lus)
-                    $response = $this->client->request('POST', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/advanced", [
+                    $this->logProgress("📋 Traitement formulaire: {$form['name']} (ID: {$form['id']})");
+                    
+                    // MODIFICATION CRITIQUE: Utiliser /data/unread avec LIMIT au lieu de /data/advanced
+                    // Cela évite de charger TOUTES les données en mémoire
+                    $response = $this->client->request('GET', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/50", [
                         'headers' => [
                             'Accept' => 'application/json',
                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
@@ -292,10 +298,11 @@ class OptimizedFormController extends AbstractController
                     ]);
 
                     $result = $response->toArray();
+                    $this->logProgress("📊 Formulaire {$form['id']}: " . count($result['data']) . " entrées trouvées");
                     
                     foreach ($result['data'] as $formData) {
-                        // Vérifier si c'est la bonne agence
-                        $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                        // Vérifier si c'est la bonne agence en récupérant juste les métadonnées
+                        $details = $this->getFormDetailsLight($formData['_form_id'], $formData['_id']);
                         if ($details && isset($details['fields']['code_agence']['value']) && 
                             $details['fields']['code_agence']['value'] === $agency) {
                             
@@ -306,16 +313,46 @@ class OptimizedFormController extends AbstractController
                         }
                     }
                 } catch (\Exception $e) {
-                    $this->logError("Erreur récupération formulaire {$form['id']}: " . $e->getMessage());
+                    $this->logError("⚠️ Erreur formulaire {$form['id']} ({$form['name']}): " . $e->getMessage());
                     continue;
                 }
             }
             
         } catch (\Exception $e) {
-            $this->logError("Erreur récupération formulaires généraux: " . $e->getMessage());
+            $this->logError("💥 Erreur récupération formulaires généraux: " . $e->getMessage());
         }
         
+        $this->logProgress("✅ Total formulaires pour agence $agency: " . count($allForms));
         return $allForms;
+    }
+
+    /**
+     * NOUVELLE MÉTHODE: Récupération légère des détails (juste pour vérifier l'agence)
+     */
+    private function getFormDetailsLight(string $formId, string $dataId): ?array
+    {
+        try {
+            $response = $this->client->request('GET', 
+                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$dataId}", [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 15 // Timeout réduit pour la vérification
+            ]);
+
+            $result = $response->toArray();
+            // Retourner seulement les fields nécessaires pour éviter le surcharge mémoire
+            return [
+                'fields' => [
+                    'code_agence' => $result['data']['fields']['code_agence'] ?? null
+                ]
+            ];
+        } catch (\Exception $e) {
+            // Log minimal pour éviter le spam
+            error_log("Erreur détails légers {$formId}/{$dataId}: " . $e->getMessage());
+            return null;
+        }
     }
 
     /**
@@ -337,8 +374,193 @@ class OptimizedFormController extends AbstractController
     }
 
     /**
-     * Récupère les détails d'un formulaire
+     * NOUVELLE ROUTE: Récupération INTELLIGENTE par agence (seulement les NON LUS d'abord)
      */
+    #[Route('/api/forms/process/agency-smart/{agency}', name: 'app_process_agency_smart', methods: ['GET'])]
+    public function processAgencySmart(
+        string $agency,
+        EntityManagerInterface $entityManager, 
+        CacheInterface $cache,
+        Request $request
+    ): JsonResponse {
+        if (!in_array($agency, self::AGENCIES)) {
+            return new JsonResponse(['error' => 'Agence non valide'], 400);
+        }
+        
+        set_time_limit(480); // 8 minutes
+        ini_set('memory_limit', '512M'); // Mémoire réduite
+        
+        $maxForms = (int)$request->query->get('max_forms', 10);
+        $onlyUnread = $request->query->get('only_unread', 'true') === 'true';
+        
+        $this->logProgress("🧠 TRAITEMENT INTELLIGENT agence $agency - Max: $maxForms, Non lus seulement: " . ($onlyUnread ? 'OUI' : 'NON'));
+        
+        try {
+            $result = $this->processAgencySmartMode($agency, $entityManager, $maxForms, $onlyUnread);
+            
+            return new JsonResponse([
+                'status' => 'completed',
+                'agency' => $agency,
+                'mode' => $onlyUnread ? 'unread_only' : 'all_forms',
+                'result' => $result
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->logError("💥 Erreur traitement intelligent $agency: " . $e->getMessage());
+            return new JsonResponse([
+                'status' => 'error',
+                'agency' => $agency,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Traitement intelligent : NON LUS d'abord, puis optionnellement TOUS
+     */
+    private function processAgencySmartMode(
+        string $agency, 
+        EntityManagerInterface $entityManager, 
+        int $maxForms,
+        bool $onlyUnread
+    ): array {
+        $startTime = time();
+        
+        $stats = [
+            'agency' => $agency,
+            'mode' => $onlyUnread ? 'unread_only' : 'all_forms',
+            'processed_contract' => 0,
+            'processed_off_contract' => 0,
+            'total_processed' => 0,
+            'errors' => 0,
+            'processed_forms' => 0,
+            'forms_by_type' => [],
+            'error_details' => []
+        ];
+        
+        try {
+            // Récupérer tous les formulaires MAINTENANCE
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
+            ]);
+            
+            $content = $response->toArray();
+            $maintenanceForms = array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+
+            $this->logProgress("📋 [$agency] " . count($maintenanceForms) . " formulaires MAINTENANCE trouvés");
+            $processedFormsCount = 0;
+
+            foreach ($maintenanceForms as $form) {
+                if ($processedFormsCount >= $maxForms) {
+                    $this->logProgress("📈 [$agency] Limite de $maxForms formulaires atteinte");
+                    break;
+                }
+                
+                // Vérifier le timeout
+                if ((time() - $startTime) > self::MAX_EXECUTION_TIME) {
+                    $this->logProgress("⏰ [$agency] TIMEOUT atteint");
+                    $stats['timeout_reached'] = true;
+                    break;
+                }
+                
+                try {
+                    $this->logProgress("📝 [$agency] Traitement formulaire: {$form['name']} (ID: {$form['id']})");
+                    
+                    // Choisir l'endpoint en fonction du mode
+                    $endpoint = $onlyUnread 
+                        ? "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/20"
+                        : "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/50"; // Plus large si pas que non lus
+                    
+                    $response = $this->client->request('GET', $endpoint, [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 45
+                    ]);
+
+                    $result = $response->toArray();
+                    $formEntriesCount = count($result['data']);
+                    
+                    $this->logProgress("📊 [$agency] Formulaire {$form['name']}: $formEntriesCount entrées");
+                    
+                    if ($formEntriesCount === 0) {
+                        $this->logProgress("⚠️ [$agency] Aucune entrée pour {$form['name']}, passage au suivant");
+                        continue;
+                    }
+                    
+                    $stats['forms_by_type'][$form['name']] = [
+                        'form_id' => $form['id'],
+                        'entries_found' => $formEntriesCount,
+                        'processed' => 0,
+                        'errors' => 0
+                    ];
+                    
+                    $processedFormsThisType = 0;
+                    
+                    foreach ($result['data'] as $formData) {
+                        if ($processedFormsThisType >= 5) { // Max 5 par type de formulaire
+                            break;
+                        }
+                        
+                        try {
+                            // Vérifier l'agence rapidement
+                            $details = $this->getFormDetailsLight($formData['_form_id'], $formData['_id']);
+                            if ($details && isset($details['fields']['code_agence']['value']) && 
+                                $details['fields']['code_agence']['value'] === $agency) {
+                                
+                                // Traitement complet
+                                $fullDetails = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                                if ($fullDetails) {
+                                    $equipmentResult = $this->processFormEquipmentsDetailed($fullDetails['fields'], $entityManager);
+                                    
+                                    $stats['processed_contract'] += $equipmentResult['contract_equipment'];
+                                    $stats['processed_off_contract'] += $equipmentResult['off_contract_equipment'];
+                                    $stats['total_processed'] += $equipmentResult['contract_equipment'] + $equipmentResult['off_contract_equipment'];
+                                    
+                                    $stats['forms_by_type'][$form['name']]['processed']++;
+                                    $processedFormsThisType++;
+                                    $processedFormsCount++;
+                                    
+                                    $this->logProgress("✅ [$agency] Formulaire traité - AU CONTRAT: {$equipmentResult['contract_equipment']}, HORS CONTRAT: {$equipmentResult['off_contract_equipment']}");
+                                }
+                            }
+                        } catch (\Exception $e) {
+                            $stats['errors']++;
+                            $stats['forms_by_type'][$form['name']]['errors']++;
+                            $this->logError("❌ [$agency] Erreur formulaire {$formData['_form_id']}: " . $e->getMessage());
+                        }
+                    }
+                    
+                } catch (\Exception $e) {
+                    $stats['errors']++;
+                    $this->logError("❌ [$agency] Erreur formulaire {$form['id']} ({$form['name']}): " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $this->logError("💥 [$agency] ERREUR CRITIQUE: " . $e->getMessage());
+            $stats['critical_error'] = $e->getMessage();
+            $stats['errors']++;
+        }
+        
+        $stats['execution_time'] = time() - $startTime;
+        $stats['processed_forms'] = $processedFormsCount;
+        
+        $this->logProgress("🎯 [$agency] TRAITEMENT INTELLIGENT TERMINÉ");
+        $this->logProgress("   - Formulaires traités: $processedFormsCount");
+        $this->logProgress("   - Équipements total: {$stats['total_processed']}");
+        $this->logProgress("   - Erreurs: {$stats['errors']}");
+        
+        return $stats;
+    }
     private function getFormDetails(string $formId, string $dataId): ?array
     {
         try {
