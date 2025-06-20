@@ -2107,4 +2107,309 @@ class OptimizedFormController extends AbstractController
             return new JsonResponse(['error' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * CORRECTION : Adaptation des noms de méthodes selon votre structure BDD
+     */
+    private function processFormEquipmentsMemoryOptimizedFixed(array $fields, EntityManagerInterface $entityManager, string $agency): array
+    {
+        $results = [
+            'contract_equipment' => 0,
+            'off_contract_equipment' => 0
+        ];
+        
+        $entityClass = $this->getEntityClassByAgency($fields['code_agence']['value']);
+        if (!$entityClass) {
+            return $results;
+        }
+
+        // Traitement des équipements AU CONTRAT
+        if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+            foreach ($fields['contrat_de_maintenance']['value'] as $additionalEquipment) {
+                try {
+                    $equipement = new $entityClass();
+                    
+                    $this->setCommonEquipmentDataFixed($equipement, $fields);
+                    
+                    $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
+                    $equipement->setIfExistDb($additionalEquipment['equipement']['columns']); // Correction: IfExistDb au lieu de IfExistDB
+                    $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
+                    $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
+                    $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
+                    $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
+                    $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
+                    $equipement->setMarque($additionalEquipment['reference5']['value']);
+                    
+                    $equipement->setLargeur($additionalEquipment['reference3']['value'] ?? '');
+                    $equipement->setHauteur($additionalEquipment['reference1']['value'] ?? '');
+                    $equipement->setLongueur($additionalEquipment['longueur']['value'] ?? 'NC');
+                    
+                    $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
+                    $equipement->setEtat($additionalEquipment['etat']['value']);
+                    
+                    $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value'] ?? '');
+                    $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value'] ?? '');
+                    
+                    $equipement->setStatutDeMaintenance($this->getMaintenanceContractStatus($additionalEquipment['etat']['value']));
+                    $equipement->setVisite($this->getVisitType($additionalEquipment['equipement']['path']));
+                    
+                    // CORRECTION : Utiliser les bons noms de méthodes
+                    if (method_exists($equipement, 'setIsEnMaintenance')) {
+                        $equipement->setIsEnMaintenance(true);
+                    } elseif (method_exists($equipement, 'setEnMaintenance')) {
+                        $equipement->setEnMaintenance(true);
+                    }
+                    
+                    if (method_exists($equipement, 'setIsArchive')) {
+                        $equipement->setIsArchive(false);
+                    }
+                    
+                    $entityManager->persist($equipement);
+                    $results['contract_equipment']++;
+                    
+                    // Libérer la mémoire immédiatement
+                    unset($equipement);
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur équipement au contrat: " . $e->getMessage());
+                }
+            }
+            
+            $entityManager->flush();
+            $entityManager->clear(); // Important pour libérer la mémoire
+        }
+
+        // Traitement des équipements HORS CONTRAT
+        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+            foreach ($fields['tableau2']['value'] as $equipementsHorsContrat) {
+                try {
+                    $equipement = new $entityClass();
+                    
+                    $this->setCommonEquipmentDataFixed($equipement, $fields);
+                    
+                    // Attribution automatique du numéro d'équipement
+                    $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
+                    $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+                    $idClient = $fields['id_client_']['value'];
+                    $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityClass, $entityManager);
+                    $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+                    
+                    $equipement->setNumeroEquipement($numeroFormate);
+                    $equipement->setLibelleEquipement($typeLibelle);
+                    $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
+                    $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
+                    $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
+                    $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
+                    $equipement->setMarque($equipementsHorsContrat['marque']['value']);
+                    
+                    $equipement->setLargeur($equipementsHorsContrat['largeur']['value'] ?? '');
+                    $equipement->setHauteur($equipementsHorsContrat['hauteur']['value'] ?? '');
+                    
+                    $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
+                    $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
+                    
+                    $equipement->setStatutDeMaintenance($this->getOffContractMaintenanceStatus($equipementsHorsContrat['etat1']['value']));
+                    $equipement->setVisite($this->getDefaultVisitType($fields));
+                    
+                    // CORRECTION : Utiliser les bons noms de méthodes pour HORS CONTRAT
+                    if (method_exists($equipement, 'setIsEnMaintenance')) {
+                        $equipement->setIsEnMaintenance(false); // HORS contrat = false
+                    } elseif (method_exists($equipement, 'setEnMaintenance')) {
+                        $equipement->setEnMaintenance(false);
+                    }
+                    
+                    if (method_exists($equipement, 'setIsArchive')) {
+                        $equipement->setIsArchive(false);
+                    }
+                    
+                    $entityManager->persist($equipement);
+                    $results['off_contract_equipment']++;
+                    
+                    // Libérer la mémoire immédiatement
+                    unset($equipement);
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur équipement hors contrat: " . $e->getMessage());
+                }
+            }
+            
+            $entityManager->flush();
+            $entityManager->clear(); // Important pour libérer la mémoire
+        }
+        
+        return $results;
+    }
+
+    /**
+     * CORRECTION : Définition des données communes avec les bons noms de méthodes
+     */
+    private function setCommonEquipmentDataFixed($equipement, array $fields): void
+    {
+        $equipement->setIdContact($fields['id_client_']['value']);
+        $equipement->setRaisonSociale($fields['nom_client']['value']);
+        $equipement->setDateEnregistrement($fields['date_et_heure1']['value']);
+        $equipement->setCodeSociete($fields['id_societe']['value'] ?? '');
+        $equipement->setCodeAgence($fields['id_agence']['value'] ?? '');
+        $equipement->setDerniereVisite($fields['date_et_heure1']['value']);
+        $equipement->setTrigrammeTech($fields['trigramme']['value']);
+        $equipement->setSignatureTech($fields['signature3']['value']);
+        
+        if (isset($fields['test_']['value'])) {
+            $equipement->setTest($fields['test_']['value']);
+        }
+    }
+
+    /**
+     * ROUTE CORRIGÉE avec les bonnes méthodes
+     */
+    #[Route('/api/forms/fixed-memory/agency/{agency}', name: 'app_fixed_memory_agency', methods: ['GET'])]
+    public function fixedMemoryAgency(
+        string $agency,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        // Configuration mémoire
+        ini_set('memory_limit', '512M');
+        set_time_limit(600); // 10 minutes
+        
+        $batchSize = 1; // UN SEUL formulaire à la fois
+        $startOffset = $request->query->get('offset', 0);
+        
+        $stats = [
+            'agency' => $agency,
+            'start_offset' => $startOffset,
+            'processed_forms' => 0,
+            'processed_contract_equipment' => 0,
+            'processed_off_contract_equipment' => 0,
+            'errors' => 0,
+            'start_time' => time()
+        ];
+        
+        try {
+            error_log("🚀 [FIXED-MEMORY] Début traitement $agency depuis offset $startOffset");
+            
+            // Récupérer les formulaires MAINTENANCE
+            $response = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
+            ]);
+            
+            $content = $response->toArray();
+            $maintenanceForms = array_filter($content['forms'], function($form) {
+                return $form['class'] == "MAINTENANCE";
+            });
+            
+            error_log("📊 [FIXED-MEMORY] " . count($maintenanceForms) . " formulaires MAINTENANCE trouvés");
+            
+            $currentFormIndex = 0;
+            $processedInThisBatch = 0;
+            
+            foreach ($maintenanceForms as $form) {
+                if ($processedInThisBatch >= $batchSize) {
+                    break; // Un seul formulaire par appel
+                }
+                
+                try {
+                    $response = $this->client->request('GET', 
+                        "https://forms.kizeo.com/rest/v3/forms/{$form['id']}/data/unread/read/5", [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 20
+                    ]);
+
+                    $result = $response->toArray();
+                    
+                    foreach ($result['data'] as $formData) {
+                        if ($processedInThisBatch >= $batchSize) {
+                            break 2;
+                        }
+                        
+                        // Ignorer jusqu'à l'offset
+                        if ($currentFormIndex < $startOffset) {
+                            $currentFormIndex++;
+                            continue;
+                        }
+                        
+                        try {
+                            error_log("🔍 [FIXED-MEMORY] Vérification formulaire {$formData['_form_id']}/{$formData['_id']}");
+                            
+                            $details = $this->getFormDetails($formData['_form_id'], $formData['_id']);
+                            
+                            if ($details && isset($details['fields']['code_agence']['value']) && 
+                                $details['fields']['code_agence']['value'] === $agency) {
+                                
+                                error_log("✅ [FIXED-MEMORY] Formulaire $agency trouvé - Traitement en cours...");
+                                
+                                // 1. Photos d'abord
+                                $this->uploadPicturesInDatabase($details, $entityManager);
+                                error_log("📸 [FIXED-MEMORY] Photos enregistrées");
+                                
+                                // 2. Équipements ensuite AVEC MÉTHODES CORRIGÉES
+                                $equipmentResults = $this->processFormEquipmentsMemoryOptimizedFixed($details['fields'], $entityManager, $agency);
+                                error_log("🔧 [FIXED-MEMORY] Équipements traités: AU CONTRAT={$equipmentResults['contract_equipment']}, HORS CONTRAT={$equipmentResults['off_contract_equipment']}");
+                                
+                                // 3. Marquer comme lu
+                                $this->markFormAsRead($formData['_form_id'], $formData['_id']);
+                                error_log("📝 [FIXED-MEMORY] Formulaire marqué comme lu");
+                                
+                                $stats['processed_contract_equipment'] += $equipmentResults['contract_equipment'];
+                                $stats['processed_off_contract_equipment'] += $equipmentResults['off_contract_equipment'];
+                                $stats['processed_forms']++;
+                                $processedInThisBatch++;
+                                
+                                // Libérer la mémoire
+                                unset($details);
+                                $entityManager->clear(); // Important : vider le cache Doctrine
+                                
+                            } else {
+                                error_log("⏭️ [FIXED-MEMORY] Formulaire ignoré (agence: " . ($details['fields']['code_agence']['value'] ?? 'N/A') . ")");
+                            }
+                            
+                            $currentFormIndex++;
+                            
+                        } catch (\Exception $e) {
+                            $stats['errors']++;
+                            error_log("❌ [FIXED-MEMORY] Erreur formulaire {$formData['_form_id']}: " . $e->getMessage());
+                            $currentFormIndex++;
+                            
+                            // Libérer la mémoire même en cas d'erreur
+                            $entityManager->clear();
+                            continue;
+                        }
+                    }
+                    
+                } catch (\Exception $e) {
+                    error_log("❌ [FIXED-MEMORY] Erreur form {$form['id']}: " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+        } catch (\Exception $e) {
+            $stats['critical_error'] = $e->getMessage();
+            error_log("💥 [FIXED-MEMORY] Erreur critique: " . $e->getMessage());
+        }
+        
+        $stats['execution_time'] = time() - $stats['start_time'];
+        $stats['final_offset'] = $startOffset + $processedInThisBatch;
+        $stats['continue_url'] = null;
+        $stats['memory_usage'] = memory_get_usage(true);
+        $stats['memory_peak'] = memory_get_peak_usage(true);
+        
+        // URL pour continuer si nécessaire
+        if ($processedInThisBatch > 0) {
+            $stats['continue_url'] = $this->generateUrl('app_fixed_memory_agency', [
+                'agency' => $agency,
+                'offset' => $stats['final_offset']
+            ]);
+        }
+        
+        error_log("🎯 [FIXED-MEMORY] Terminé - Mémoire: " . round($stats['memory_usage']/1024/1024, 2) . "MB");
+        
+        return new JsonResponse($stats);
+    }
 }
