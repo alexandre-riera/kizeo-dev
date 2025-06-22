@@ -2398,4 +2398,382 @@ class SimplifiedMaintenanceController extends AbstractController
             ];
         }
     }
+
+    /**
+     * SOLUTION OPTIMISÉE : Traitement par lots d'équipements pour éviter les timeouts
+     */
+
+    /**
+     * Route pour traiter un formulaire S140 par lots d'équipements
+     */
+    #[Route('/api/maintenance/process-chunked/{agencyCode}', name: 'app_maintenance_process_chunked', methods: ['GET'])]
+    public function processMaintenanceChunked(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Configuration optimisée
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 120);
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 15); // 15 équipements par lot
+        $startOffset = (int) $request->query->get('offset', 0);
+
+        if (!$entryId) {
+            return new JsonResponse([
+                'error' => 'Paramètre entry_id requis',
+                'available_entries' => [
+                    '232647438', '232647488' // Les 2 qui fonctionnaient
+                ]
+            ], 400);
+        }
+
+        try {
+            // 1. Récupérer SEULEMENT les métadonnées du formulaire
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            if (!isset($detailData['data']['fields'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Formulaire sans données valides'
+                ], 400);
+            }
+
+            $fields = $detailData['data']['fields'];
+
+            // 2. Analyser le contenu SANS traiter
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+            
+            $totalContractEquipments = count($contractEquipments);
+            $totalOffContractEquipments = count($offContractEquipments);
+            $totalEquipments = $totalContractEquipments + $totalOffContractEquipments;
+
+            // 3. Si trop d'équipements, découper en lots
+            if ($totalEquipments > $chunkSize) {
+                return $this->processEquipmentChunk(
+                    $fields, 
+                    $contractEquipments, 
+                    $offContractEquipments, 
+                    $chunkSize, 
+                    $startOffset, 
+                    $entityManager,
+                    $formId,
+                    $entryId
+                );
+            }
+
+            // 4. Si moins que la limite, traiter normalement
+            return $this->processAllEquipments(
+                $fields, 
+                $contractEquipments, 
+                $offContractEquipments, 
+                $entityManager,
+                $formId,
+                $entryId
+            );
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'memory_used' => memory_get_usage(true) / 1024 / 1024 . ' MB'
+            ], 500);
+        }
+    }
+
+    /**
+     * Traiter un lot d'équipements
+     */
+    private function processEquipmentChunk(
+        array $fields,
+        array $contractEquipments,
+        array $offContractEquipments,
+        int $chunkSize,
+        int $startOffset,
+        EntityManagerInterface $entityManager,
+        string $formId,
+        string $entryId
+    ): JsonResponse {
+        
+        $processedEquipments = 0;
+        $contractProcessed = 0;
+        $offContractProcessed = 0;
+        $errors = [];
+
+        // Combiner tous les équipements avec leur type
+        $allEquipments = [];
+        
+        foreach ($contractEquipments as $index => $equipment) {
+            $allEquipments[] = [
+                'type' => 'contract',
+                'data' => $equipment,
+                'index' => $index
+            ];
+        }
+        
+        foreach ($offContractEquipments as $index => $equipment) {
+            $allEquipments[] = [
+                'type' => 'off_contract',
+                'data' => $equipment,
+                'index' => $index
+            ];
+        }
+
+        // Découper en lots
+        $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+        
+        if (empty($chunk)) {
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Lot vide - traitement terminé',
+                'total_equipments' => count($allEquipments),
+                'processed_offset' => $startOffset,
+                'chunk_size' => $chunkSize,
+                'is_complete' => true
+            ]);
+        }
+
+        // Traiter le lot
+        foreach ($chunk as $equipmentData) {
+            try {
+                $equipement = new EquipementS140();
+                $this->setRealCommonData($equipement, $fields);
+                
+                if ($equipmentData['type'] === 'contract') {
+                    $this->setRealContractData($equipement, $equipmentData['data']);
+                    $contractProcessed++;
+                } else {
+                    $this->setRealOffContractData($equipement, $equipmentData['data'], $fields, $entityManager);
+                    $offContractProcessed++;
+                }
+                
+                $entityManager->persist($equipement);
+                $processedEquipments++;
+                
+                // Sauvegarder tous les 5 équipements pour éviter la surcharge
+                if ($processedEquipments % 5 === 0) {
+                    $entityManager->flush();
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                }
+                
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'equipment_index' => $equipmentData['index'],
+                    'type' => $equipmentData['type'],
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        // Sauvegarde finale
+        $entityManager->flush();
+        $entityManager->clear();
+
+        $nextOffset = $startOffset + $chunkSize;
+        $isComplete = $nextOffset >= count($allEquipments);
+        
+        // Marquer comme lu seulement si c'est le dernier lot
+        if ($isComplete) {
+            $this->markFormAsRead($formId, $entryId);
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'agency' => 'S140',
+            'form_id' => $formId,
+            'entry_id' => $entryId,
+            'client_name' => $fields['nom_du_client']['value'] ?? '',
+            'batch_info' => [
+                'total_equipments' => count($allEquipments),
+                'processed_in_this_batch' => $processedEquipments,
+                'contract_processed' => $contractProcessed,
+                'off_contract_processed' => $offContractProcessed,
+                'start_offset' => $startOffset,
+                'chunk_size' => $chunkSize,
+                'next_offset' => $nextOffset,
+                'is_complete' => $isComplete
+            ],
+            'errors' => $errors,
+            'next_call' => $isComplete ? null : 
+                "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+            'message' => $isComplete ? 
+                "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
+                "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
+        ]);
+    }
+
+    /**
+     * Traiter tous les équipements si le nombre est gérable
+     */
+    private function processAllEquipments(
+        array $fields,
+        array $contractEquipments,
+        array $offContractEquipments,
+        EntityManagerInterface $entityManager,
+        string $formId,
+        string $entryId
+    ): JsonResponse {
+        
+        $contractProcessed = 0;
+        $offContractProcessed = 0;
+        $errors = [];
+
+        // Traiter équipements sous contrat
+        foreach ($contractEquipments as $index => $equipmentContrat) {
+            try {
+                $equipement = new EquipementS140();
+                $this->setRealCommonData($equipement, $fields);
+                $this->setRealContractData($equipement, $equipmentContrat);
+                
+                $entityManager->persist($equipement);
+                $contractProcessed++;
+                
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'type' => 'contract',
+                    'index' => $index,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        // Traiter équipements hors contrat
+        foreach ($offContractEquipments as $index => $equipmentHorsContrat) {
+            try {
+                $equipement = new EquipementS140();
+                $this->setRealCommonData($equipement, $fields);
+                $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
+                
+                $entityManager->persist($equipement);
+                $offContractProcessed++;
+                
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'type' => 'off_contract',
+                    'index' => $index,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        // Sauvegarder
+        $entityManager->flush();
+        
+        // Marquer comme lu
+        $this->markFormAsRead($formId, $entryId);
+
+        return new JsonResponse([
+            'success' => true,
+            'agency' => 'S140',
+            'form_id' => $formId,
+            'entry_id' => $entryId,
+            'client_name' => $fields['nom_du_client']['value'] ?? '',
+            'contract_equipments' => $contractProcessed,
+            'off_contract_equipments' => $offContractProcessed,
+            'total_equipments' => $contractProcessed + $offContractProcessed,
+            'errors' => $errors,
+            'message' => "Formulaire traité entièrement: " . 
+                        ($contractProcessed + $offContractProcessed) . " équipements ajoutés"
+        ]);
+    }
+
+    /**
+     * Route pour analyser un formulaire AVANT traitement
+     */
+    #[Route('/api/maintenance/analyze/{agencyCode}', name: 'app_maintenance_analyze', methods: ['GET'])]
+    public function analyzeMaintenanceForm(
+        string $agencyCode,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id');
+
+        if (!$entryId) {
+            return new JsonResponse(['error' => 'Paramètre entry_id requis'], 400);
+        }
+
+        try {
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            if (!isset($detailData['data']['fields'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Formulaire sans données valides'
+                ], 400);
+            }
+
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+            
+            $totalEquipments = count($contractEquipments) + count($offContractEquipments);
+            $recommendedChunkSize = max(10, min(20, intval($totalEquipments / 4)));
+
+            return new JsonResponse([
+                'success' => true,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'client_name' => $fields['nom_du_client']['value'] ?? '',
+                'technician' => $fields['technicien']['value'] ?? '',
+                'date' => $fields['date_et_heure']['value'] ?? '',
+                'equipment_analysis' => [
+                    'contract_equipments' => count($contractEquipments),
+                    'off_contract_equipments' => count($offContractEquipments),
+                    'total_equipments' => $totalEquipments,
+                    'memory_risk' => $totalEquipments > 30 ? 'HIGH' : ($totalEquipments > 15 ? 'MEDIUM' : 'LOW'),
+                    'recommended_chunk_size' => $recommendedChunkSize,
+                    'estimated_batches' => ceil($totalEquipments / $recommendedChunkSize)
+                ],
+                'processing_recommendation' => $totalEquipments > 20 ? 
+                    "Utiliser le traitement par lots avec chunk_size={$recommendedChunkSize}" :
+                    "Traitement normal possible",
+                'next_call' => $totalEquipments > 20 ?
+                    "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}&chunk_size={$recommendedChunkSize}" :
+                    "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
