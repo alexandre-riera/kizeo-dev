@@ -459,7 +459,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($allFormsKeyId as $key) {
             $responseUnread = $this->client->request(
                 'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' .  $key . '/data/unread/read/5', [
+                'https://forms.kizeo.com/rest/v3/forms/' .  $key . '/data/unread/enfintraite/5', [
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
