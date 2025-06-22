@@ -2099,4 +2099,303 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * SOLUTION FINALE : Traitement intelligent avec filtrage des entrées valides
+     */
+
+    /**
+     * Route améliorée pour récupérer SEULEMENT les formulaires S140 valides
+     */
+    #[Route('/api/maintenance/check-valid-s140', name: 'app_maintenance_check_valid_s140', methods: ['GET'])]
+    public function checkValidS140Entries(Request $request): JsonResponse
+    {
+        try {
+            $validEntries = [];
+            $invalidEntries = [];
+            $totalChecked = 0;
+
+            // 1. Récupérer la liste des formulaires MAINTENANCE
+            $formsResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $allForms = $formsResponse->toArray();
+            $maintenanceForms = array_filter($allForms['forms'], function($form) {
+                return $form['class'] === 'MAINTENANCE';
+            });
+
+            // 2. Pour chaque formulaire, chercher les entrées S140 VALIDES
+            foreach ($maintenanceForms as $form) {
+                try {
+                    // Récupérer les entrées non lues
+                    $unreadResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/unread/read/20',
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                        ]
+                    );
+
+                    $unreadData = $unreadResponse->toArray();
+                    $totalChecked += count($unreadData['data'] ?? []);
+
+                    // 3. Vérifier chaque entrée
+                    foreach ($unreadData['data'] ?? [] as $entry) {
+                        try {
+                            $detailResponse = $this->client->request(
+                                'GET',
+                                'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                                [
+                                    'headers' => [
+                                        'Accept' => 'application/json',
+                                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                                    ],
+                                ]
+                            );
+
+                            $detailData = $detailResponse->toArray();
+                            
+                            // 4. VALIDATION DE STRUCTURE
+                            if (!isset($detailData['data']['fields'])) {
+                                $invalidEntries[] = [
+                                    'form_id' => $form['id'],
+                                    'entry_id' => $entry['_id'],
+                                    'reason' => 'no_fields_data'
+                                ];
+                                continue;
+                            }
+
+                            $fields = $detailData['data']['fields'];
+
+                            // 5. Vérifier si c'est S140 ET valide
+                            if (isset($fields['code_agence']['value']) && 
+                                $fields['code_agence']['value'] === 'S140') {
+                                
+                                $validEntries[] = [
+                                    'form_id' => $form['id'],
+                                    'form_name' => $form['name'],
+                                    'entry_id' => $entry['_id'],
+                                    'client_id' => $fields['id_client_']['value'] ?? '',
+                                    'client_name' => $fields['nom_du_client']['value'] ?? '',
+                                    'technician' => $fields['technicien']['value'] ?? '',
+                                    'date' => $fields['date_et_heure']['value'] ?? '',
+                                    'has_contract_equipment' => !empty($fields['contrat_de_maintenance']['value'] ?? []),
+                                    'has_offcontract_equipment' => !empty($fields['hors_contrat']['value'] ?? []),
+                                    'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
+                                    'offcontract_count' => count($fields['hors_contrat']['value'] ?? [])
+                                ];
+                            }
+
+                        } catch (\Exception $e) {
+                            $invalidEntries[] = [
+                                'form_id' => $form['id'],
+                                'entry_id' => $entry['_id'] ?? 'unknown',
+                                'reason' => 'api_error: ' . $e->getMessage()
+                            ];
+                        }
+                    }
+
+                } catch (\Exception $e) {
+                    error_log("Erreur formulaire {$form['id']}: " . $e->getMessage());
+                }
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'total_maintenance_forms' => count($maintenanceForms),
+                'total_entries_checked' => $totalChecked,
+                'valid_s140_entries' => count($validEntries),
+                'invalid_entries' => count($invalidEntries),
+                'valid_entries' => $validEntries,
+                'invalid_entries_details' => $invalidEntries,
+                'ready_to_process' => count($validEntries) > 0,
+                'recommendation' => count($validEntries) > 0 ? 
+                    'Utiliser /process-valid-s140 pour traiter les ' . count($validEntries) . ' entrées valides' :
+                    'Aucune entrée S140 valide trouvée'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Route pour traiter SEULEMENT les entrées S140 valides
+     */
+    #[Route('/api/maintenance/process-valid-s140', name: 'app_maintenance_process_valid_s140', methods: ['GET'])]
+    public function processValidS140Entries(
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        try {
+            // 1. D'abord récupérer les entrées valides
+            $checkRequest = Request::create('/api/maintenance/check-valid-s140', 'GET');
+            $checkResponse = $this->checkValidS140Entries($checkRequest);
+            $checkData = json_decode($checkResponse->getContent(), true);
+
+            if (!$checkData['success'] || empty($checkData['valid_entries'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Aucune entrée S140 valide trouvée',
+                    'details' => $checkData
+                ], 400);
+            }
+
+            $validEntries = $checkData['valid_entries'];
+            $results = [];
+            $totalSuccess = 0;
+            $totalErrors = 0;
+            $totalEquipments = 0;
+
+            // 2. Traiter chaque entrée valide
+            foreach ($validEntries as $entry) {
+                try {
+                    $result = $this->processSingleValidEntry(
+                        $entry['form_id'], 
+                        $entry['entry_id'], 
+                        $entityManager
+                    );
+
+                    if ($result['success']) {
+                        $totalSuccess++;
+                        $totalEquipments += $result['total_equipments'];
+                        $results[] = [
+                            'entry_id' => $entry['entry_id'],
+                            'client_name' => $entry['client_name'],
+                            'status' => 'success',
+                            'equipments' => $result['total_equipments'],
+                            'contract_equipments' => $result['contract_equipments'],
+                            'off_contract_equipments' => $result['off_contract_equipments']
+                        ];
+                    } else {
+                        $totalErrors++;
+                        $results[] = [
+                            'entry_id' => $entry['entry_id'],
+                            'client_name' => $entry['client_name'],
+                            'status' => 'error',
+                            'error' => $result['error']
+                        ];
+                    }
+
+                    // Pause entre traitements
+                    sleep(1);
+
+                } catch (\Exception $e) {
+                    $totalErrors++;
+                    $results[] = [
+                        'entry_id' => $entry['entry_id'],
+                        'client_name' => $entry['client_name'],
+                        'status' => 'error',
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => 'S140',
+                'total_valid_entries' => count($validEntries),
+                'successful' => $totalSuccess,
+                'errors' => $totalErrors,
+                'total_equipments_added' => $totalEquipments,
+                'processing_details' => $results,
+                'message' => "Traitement filtré terminé: {$totalSuccess}/" . count($validEntries) . 
+                            " entrées valides traitées, {$totalEquipments} équipements ajoutés"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Traiter une entrée valide spécifique
+     */
+    private function processSingleValidEntry(
+        string $formId, 
+        string $entryId, 
+        EntityManagerInterface $entityManager
+    ): array {
+        
+        try {
+            // Récupérer les données
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+
+            $contractEquipments = 0;
+            $offContractEquipments = 0;
+
+            // Traiter équipements sous contrat
+            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
+                    $equipement = new EquipementS140();
+                    $this->setRealCommonData($equipement, $fields);
+                    $this->setRealContractData($equipement, $equipmentContrat);
+                    
+                    $entityManager->persist($equipement);
+                    $contractEquipments++;
+                }
+            }
+
+            // Traiter équipements hors contrat
+            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
+                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+                    $equipement = new EquipementS140();
+                    $this->setRealCommonData($equipement, $fields);
+                    $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
+                    
+                    $entityManager->persist($equipement);
+                    $offContractEquipments++;
+                }
+            }
+
+            // Sauvegarder
+            $entityManager->flush();
+
+            // Marquer comme lu
+            $this->markFormAsRead($formId, $entryId);
+
+            return [
+                'success' => true,
+                'total_equipments' => $contractEquipments + $offContractEquipments,
+                'contract_equipments' => $contractEquipments,
+                'off_contract_equipments' => $offContractEquipments
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }
