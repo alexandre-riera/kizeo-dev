@@ -3048,4 +3048,371 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * SETTERS CORRIGÉS pour la vraie structure des données S140
+     */
+
+    /**
+     * Données communes corrigées selon la vraie structure
+     */
+    private function setRealCommonDataFixed($equipement, array $fields): void
+    {
+        // CORRECTION : Utiliser les vrais noms de champs
+        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+        $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+        $equipement->setRaisonSociale($fields['nom_client']['value'] ?? ''); // CORRIGÉ
+        $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? ''); // CORRIGÉ
+        $equipement->setDateEnregistrement($fields['date_et_heure1']['value'] ?? ''); // CORRIGÉ
+        
+        // Valeurs par défaut
+        $equipement->setEtatDesLieuxFait(false);
+        $equipement->setIsArchive(false);
+    }
+
+    /**
+     * Données contrat corrigées selon la vraie structure S140
+     */
+    private function setRealContractDataFixed($equipement, array $equipmentContrat): void
+    {
+        // CORRECTION : Utiliser la vraie structure S140
+        
+        // 1. Type de visite depuis le path
+        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        $equipement->setVisite($visite);
+        
+        // 2. Numéro d'équipement (simple valeur, pas de parsing)
+        $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
+        $equipement->setNumeroEquipement($numeroEquipement);
+        
+        // 3. Libellé depuis reference7
+        $libelle = $equipmentContrat['reference7']['value'] ?? '';
+        $equipement->setLibelleEquipement($libelle);
+        
+        // 4. Année mise en service depuis reference2
+        $miseEnService = $equipmentContrat['reference2']['value'] ?? '';
+        $equipement->setMiseEnService($miseEnService);
+        
+        // 5. Numéro de série depuis reference6
+        $numeroSerie = $equipmentContrat['reference6']['value'] ?? '';
+        $equipement->setNumeroDeSerie($numeroSerie);
+        
+        // 6. Marque depuis reference5
+        $marque = $equipmentContrat['reference5']['value'] ?? '';
+        $equipement->setMarque($marque);
+        
+        // 7. Hauteur depuis reference1
+        $hauteur = $equipmentContrat['reference1']['value'] ?? '';
+        $equipement->setHauteur($hauteur);
+        
+        // 8. Largeur depuis reference3 (si disponible)
+        $largeur = $equipmentContrat['reference3']['value'] ?? '';
+        $equipement->setLargeur($largeur);
+        
+        // 9. Localisation depuis localisation_site_client
+        $localisation = $equipmentContrat['localisation_site_client']['value'] ?? '';
+        $equipement->setRepereSiteClient($localisation);
+        
+        // 10. Mode fonctionnement corrigé
+        $modeFonctionnement = $equipmentContrat['mode_fonctionnement_2']['value'] ?? '';
+        $equipement->setModeFonctionnement($modeFonctionnement);
+        
+        // 11. Plaque signalétique
+        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+        
+        // 12. État
+        $etat = $equipmentContrat['etat']['value'] ?? '';
+        $equipement->setEtat($etat);
+        
+        // 13. Longueur (peut ne pas exister pour certains équipements)
+        $longueur = $equipmentContrat['longueur']['value'] ?? '';
+        $equipement->setLongueur($longueur);
+        
+        // 14. Statut de maintenance basé sur l'état
+        $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
+        $equipement->setStatutDeMaintenance($statut);
+        
+        $equipement->setEnMaintenance(true);
+    }
+
+    /**
+     * Correspondance états pour S140
+     */
+    private function getMaintenanceStatusFromEtatFixed(string $etat): string
+    {
+        switch ($etat) {
+            case "F": // Fonctionnel
+                return "RAS";
+            case "C": // À réparer/Conforme avec remarques
+                return "A_REPARER";
+            case "A": // À l'arrêt
+                return "HS";
+            case "B": // Bon état
+                return "RAS";
+            default:
+                return "RAS";
+        }
+    }
+
+    /**
+     * Route de test avec les setters corrigés pour S140
+     */
+    #[Route('/api/maintenance/test-s140-fixed/{entryId}', name: 'app_maintenance_test_s140_fixed', methods: ['GET'])]
+    public function testS140FixedSetters(
+        string $entryId,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id', '1088761');
+        
+        try {
+            // Récupérer les données
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+
+            if (empty($contractEquipments)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Aucun équipement sous contrat trouvé'
+                ], 400);
+            }
+
+            // Traiter SEULEMENT le premier équipement pour test
+            $firstEquipment = $contractEquipments[0];
+            
+            $equipement = new EquipementS140();
+            $this->setRealCommonDataFixed($equipement, $fields);
+            $this->setRealContractDataFixed($equipement, $firstEquipment);
+            
+            // Sauvegarder
+            $entityManager->persist($equipement);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Équipement S140 créé avec setters corrigés',
+                'equipment_id' => $equipement->getId(),
+                'saved_data' => [
+                    'numero_equipement' => $equipement->getNumeroEquipement(),
+                    'libelle_equipement' => $equipement->getLibelleEquipement(),
+                    'mode_fonctionnement' => $equipement->getModeFonctionnement(),
+                    'mise_en_service' => $equipement->getMiseEnService(),
+                    'numero_de_serie' => $equipement->getNumeroDeSerie(),
+                    'marque' => $equipement->getMarque(),
+                    'hauteur' => $equipement->getHauteur(),
+                    'largeur' => $equipement->getLargeur(),
+                    'etat' => $equipement->getEtat(),
+                    'visite' => $equipement->getVisite(),
+                    'code_agence' => $equipement->getCodeAgence(),
+                    'raison_sociale' => $equipement->getRaisonSociale(),
+                    'trigramme_tech' => $equipement->getTrigrammeTech()
+                ],
+                'original_data_mapping' => [
+                    'numero_equipement' => $firstEquipment['equipement']['value'],
+                    'libelle_from_reference7' => $firstEquipment['reference7']['value'],
+                    'mise_en_service_from_reference2' => $firstEquipment['reference2']['value'],
+                    'numero_serie_from_reference6' => $firstEquipment['reference6']['value'],
+                    'marque_from_reference5' => $firstEquipment['reference5']['value'],
+                    'hauteur_from_reference1' => $firstEquipment['reference1']['value'],
+                    'largeur_from_reference3' => $firstEquipment['reference3']['value'],
+                    'mode_fonctionnement_2' => $firstEquipment['mode_fonctionnement_2']['value'],
+                    'etat' => $firstEquipment['etat']['value']
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Version finale pour traiter par lots avec les setters corrigés
+     */
+    #[Route('/api/maintenance/process-chunked-fixed/{agencyCode}', name: 'app_maintenance_process_chunked_fixed', methods: ['GET'])]
+    public function processMaintenanceChunkedFixed(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Configuration optimisée
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 120);
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 15);
+        $startOffset = (int) $request->query->get('offset', 0);
+
+        if (!$entryId) {
+            return new JsonResponse([
+                'error' => 'Paramètre entry_id requis',
+                'example' => '/api/maintenance/process-chunked-fixed/S140?entry_id=233668811&chunk_size=15&offset=0'
+            ], 400);
+        }
+
+        try {
+            // Récupérer les données
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            if (!isset($detailData['data']['fields'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Formulaire sans données valides'
+                ], 400);
+            }
+
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            $offContractEquipments = $fields['tableau2']['value'] ?? []; // Équipements hors contrat
+            
+            $totalEquipments = count($contractEquipments) + count($offContractEquipments);
+
+            // Traitement par lots
+            $allEquipments = [];
+            
+            foreach ($contractEquipments as $index => $equipment) {
+                $allEquipments[] = [
+                    'type' => 'contract',
+                    'data' => $equipment,
+                    'index' => $index
+                ];
+            }
+            
+            foreach ($offContractEquipments as $index => $equipment) {
+                $allEquipments[] = [
+                    'type' => 'off_contract',
+                    'data' => $equipment,
+                    'index' => $index
+                ];
+            }
+
+            $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+            
+            if (empty($chunk)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Lot vide - traitement terminé',
+                    'total_equipments' => $totalEquipments,
+                    'processed_offset' => $startOffset,
+                    'is_complete' => true
+                ]);
+            }
+
+            $processedEquipments = 0;
+            $contractProcessed = 0;
+            $offContractProcessed = 0;
+            $errors = [];
+
+            // Traiter le lot
+            foreach ($chunk as $equipmentData) {
+                try {
+                    $equipement = new EquipementS140();
+                    $this->setRealCommonDataFixed($equipement, $fields);
+                    
+                    if ($equipmentData['type'] === 'contract') {
+                        $this->setRealContractDataFixed($equipement, $equipmentData['data']);
+                        $contractProcessed++;
+                    } else {
+                        // Pour les équipements hors contrat, adapter selon la structure
+                        // (à implémenter si nécessaire)
+                        $offContractProcessed++;
+                    }
+                    
+                    $entityManager->persist($equipement);
+                    $processedEquipments++;
+                    
+                    // Sauvegarder tous les 5 équipements
+                    if ($processedEquipments % 5 === 0) {
+                        $entityManager->flush();
+                        $entityManager->clear();
+                        gc_collect_cycles();
+                    }
+                    
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'equipment_index' => $equipmentData['index'],
+                        'type' => $equipmentData['type'],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // Sauvegarde finale
+            $entityManager->flush();
+            $entityManager->clear();
+
+            $nextOffset = $startOffset + $chunkSize;
+            $isComplete = $nextOffset >= $totalEquipments;
+            
+            // Marquer comme lu seulement si c'est le dernier lot
+            if ($isComplete) {
+                $this->markFormAsRead($formId, $entryId);
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'client_name' => $fields['nom_client']['value'] ?? '',
+                'batch_info' => [
+                    'total_equipments' => $totalEquipments,
+                    'processed_in_this_batch' => $processedEquipments,
+                    'contract_processed' => $contractProcessed,
+                    'off_contract_processed' => $offContractProcessed,
+                    'start_offset' => $startOffset,
+                    'chunk_size' => $chunkSize,
+                    'next_offset' => $nextOffset,
+                    'is_complete' => $isComplete
+                ],
+                'errors' => $errors,
+                'next_call' => $isComplete ? null : 
+                    "/api/maintenance/process-chunked-fixed/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+                'message' => $isComplete ? 
+                    "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
+                    "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
