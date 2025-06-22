@@ -2776,4 +2776,276 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * Route de debug pour analyser exactement les données reçues de Kizeo
+     */
+    #[Route('/api/maintenance/debug-equipment-data/{entryId}', name: 'app_maintenance_debug_equipment_data', methods: ['GET'])]
+    public function debugEquipmentData(
+        string $entryId,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id', '1088761');
+        
+        try {
+            // Récupérer les données brutes
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+
+            // Analyser la structure des équipements
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+
+            $analysis = [
+                'form_fields' => [
+                    'code_agence' => $fields['code_agence']['value'] ?? 'MISSING',
+                    'id_client_' => $fields['id_client_']['value'] ?? 'MISSING',
+                    'nom_du_client' => $fields['nom_du_client']['value'] ?? 'MISSING',
+                    'technicien' => $fields['technicien']['value'] ?? 'MISSING',
+                    'date_et_heure' => $fields['date_et_heure']['value'] ?? 'MISSING'
+                ],
+                'contract_equipment_sample' => [],
+                'off_contract_equipment_sample' => [],
+                'available_field_keys' => array_keys($fields)
+            ];
+
+            // Analyser le premier équipement contrat
+            if (!empty($contractEquipments)) {
+                $firstContract = $contractEquipments[0];
+                $analysis['contract_equipment_sample'] = [
+                    'raw_structure' => $firstContract,
+                    'equipement_path' => $firstContract['equipement']['path'] ?? 'MISSING',
+                    'equipement_value' => $firstContract['equipement']['value'] ?? 'MISSING',
+                    'mode_fonctionnement' => $firstContract['mode_fonctionnement']['value'] ?? 'MISSING',
+                    'longueur' => $firstContract['longueur']['value'] ?? 'MISSING',
+                    'plaque_signaletique' => $firstContract['plaque_signaletique']['value'] ?? 'MISSING',
+                    'etat' => $firstContract['etat']['value'] ?? 'MISSING',
+                    'available_keys' => array_keys($firstContract)
+                ];
+
+                // Analyser parseEquipmentInfo
+                $equipmentValue = $firstContract['equipement']['value'] ?? '';
+                $parsedInfo = $this->debugParseEquipmentInfo($equipmentValue);
+                $analysis['contract_equipment_sample']['parsed_equipment_info'] = $parsedInfo;
+            }
+
+            // Analyser le premier équipement hors contrat
+            if (!empty($offContractEquipments)) {
+                $firstOffContract = $offContractEquipments[0];
+                $analysis['off_contract_equipment_sample'] = [
+                    'raw_structure' => $firstOffContract,
+                    'available_keys' => array_keys($firstOffContract)
+                ];
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'entry_id' => $entryId,
+                'total_contract_equipments' => count($contractEquipments),
+                'total_off_contract_equipments' => count($offContractEquipments),
+                'analysis' => $analysis
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Version debug de parseEquipmentInfo pour voir le parsing
+     */
+    private function debugParseEquipmentInfo(string $equipmentValue): array
+    {
+        if (empty($equipmentValue)) {
+            return ['error' => 'equipmentValue is empty'];
+        }
+
+        // Parse de la structure "ATEIS\CEA\SEC01|Porte sectionnelle|..."
+        $parts = explode('|', $equipmentValue);
+        
+        return [
+            'original_value' => $equipmentValue,
+            'parts_count' => count($parts),
+            'parts' => $parts,
+            'parsed_result' => [
+                'numero' => $parts[0] ?? 'MISSING',
+                'libelle' => $parts[1] ?? 'MISSING',
+                'mise_en_service' => $parts[2] ?? 'MISSING',
+                'numero_serie' => $parts[3] ?? 'MISSING',
+                'marque' => $parts[4] ?? 'MISSING',
+                'hauteur' => $parts[5] ?? 'MISSING',
+                'largeur' => $parts[6] ?? 'MISSING',
+                'repere' => $parts[7] ?? 'MISSING'
+            ]
+        ];
+    }
+
+    /**
+     * Setters corrigés basés sur l'analyse des données
+     */
+    private function setRealCommonDataCorrected($equipement, array $fields): void
+    {
+        // Logging pour debug
+        error_log("=== DEBUG COMMON DATA ===");
+        error_log("code_agence: " . ($fields['code_agence']['value'] ?? 'NULL'));
+        error_log("id_client_: " . ($fields['id_client_']['value'] ?? 'NULL'));
+        error_log("nom_du_client: " . ($fields['nom_du_client']['value'] ?? 'NULL'));
+        error_log("technicien: " . ($fields['technicien']['value'] ?? 'NULL'));
+        
+        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+        $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
+        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
+        $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+        
+        // Valeurs par défaut
+        $equipement->setEtatDesLieuxFait(false);
+        $equipement->setIsArchive(false);
+    }
+
+    /**
+     * Setters contrat corrigés
+     */
+    private function setRealContractDataCorrected($equipement, array $equipmentContrat): void
+    {
+        // Logging pour debug
+        error_log("=== DEBUG CONTRACT DATA ===");
+        error_log("equipement path: " . ($equipmentContrat['equipement']['path'] ?? 'NULL'));
+        error_log("equipement value: " . ($equipmentContrat['equipement']['value'] ?? 'NULL'));
+        error_log("mode_fonctionnement: " . ($equipmentContrat['mode_fonctionnement']['value'] ?? 'NULL'));
+        error_log("etat: " . ($equipmentContrat['etat']['value'] ?? 'NULL'));
+        
+        // Extraction du path et value
+        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+        $equipementValue = $equipmentContrat['equipement']['value'] ?? '';
+        
+        // Type de visite depuis le path
+        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        $equipement->setVisite($visite);
+        
+        // Parse des infos équipement
+        $equipmentInfo = $this->parseEquipmentInfo($equipementValue);
+        
+        // CORRECTION: Ajouter des vérifications null/empty
+        $numeroEquipement = !empty($equipmentInfo['numero']) ? $equipmentInfo['numero'] : 'AUTO_' . uniqid();
+        $equipement->setNumeroEquipement($numeroEquipement);
+        
+        $libelleEquipement = !empty($equipmentInfo['libelle']) ? $equipmentInfo['libelle'] : 'Équipement';
+        $equipement->setLibelleEquipement($libelleEquipement);
+        
+        $equipement->setMiseEnService($equipmentInfo['mise_en_service'] ?? '');
+        $equipement->setNumeroDeSerie($equipmentInfo['numero_serie'] ?? '');
+        $equipement->setMarque($equipmentInfo['marque'] ?? '');
+        $equipement->setHauteur($equipmentInfo['hauteur'] ?? '');
+        $equipement->setLargeur($equipmentInfo['largeur'] ?? '');
+        $equipement->setRepereSiteClient($equipmentInfo['repere'] ?? '');
+        
+        // Données du formulaire avec vérifications
+        $modeFonctionnement = $equipmentContrat['mode_fonctionnement']['value'] ?? '';
+        $equipement->setModeFonctionnement($modeFonctionnement);
+        
+        $longueur = $equipmentContrat['longueur']['value'] ?? '';
+        $equipement->setLongueur($longueur);
+        
+        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+        
+        $etat = $equipmentContrat['etat']['value'] ?? '';
+        $equipement->setEtat($etat);
+        
+        // Statut de maintenance
+        $statut = $this->getMaintenanceStatusFromEtat($etat);
+        $equipement->setStatutDeMaintenance($statut);
+        
+        $equipement->setEnMaintenance(true);
+        
+        // Logging des valeurs définies
+        error_log("Set values - numero: $numeroEquipement, libelle: $libelleEquipement, mode: $modeFonctionnement, etat: $etat");
+    }
+
+    /**
+     * Route de test avec les setters corrigés
+     */
+    #[Route('/api/maintenance/test-corrected/{entryId}', name: 'app_maintenance_test_corrected', methods: ['GET'])]
+    public function testCorrectedSetters(
+        string $entryId,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id', '1088761');
+        
+        try {
+            // Récupérer les données
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+
+            if (empty($contractEquipments)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Aucun équipement sous contrat trouvé'
+                ], 400);
+            }
+
+            // Traiter SEULEMENT le premier équipement pour test
+            $firstEquipment = $contractEquipments[0];
+            
+            $equipement = new EquipementS140();
+            $this->setRealCommonDataCorrected($equipement, $fields);
+            $this->setRealContractDataCorrected($equipement, $firstEquipment);
+            
+            // Sauvegarder
+            $entityManager->persist($equipement);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Équipement test créé avec setters corrigés',
+                'equipment_id' => $equipement->getId(),
+                'saved_data' => [
+                    'numero_equipement' => $equipement->getNumeroEquipement(),
+                    'libelle_equipement' => $equipement->getLibelleEquipement(),
+                    'mode_fonctionnement' => $equipement->getModeFonctionnement(),
+                    'etat' => $equipement->getEtat(),
+                    'visite' => $equipement->getVisite(),
+                    'code_agence' => $equipement->getCodeAgence(),
+                    'raison_sociale' => $equipement->getRaisonSociale()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
 }
