@@ -1435,4 +1435,337 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * CONTROLLER PRÊT POUR LA PRODUCTION - Traitement des vraies données S140
+     */
+
+    /**
+     * Route pour traiter UN formulaire S140 spécifique avec ses vrais équipements
+     */
+    #[Route('/api/maintenance/process-real/{agencyCode}', name: 'app_maintenance_process_real', methods: ['GET'])]
+    public function processRealMaintenanceEntry(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id', '232647438');
+
+        try {
+            // 1. Récupérer l'entrée spécifique
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+
+            // 2. Vérifier que c'est bien S140
+            if ($fields['code_agence']['value'] !== 'S140') {
+                return new JsonResponse([
+                    'error' => 'Cette entrée n\'est pas S140',
+                    'actual_agency' => $fields['code_agence']['value']
+                ], 400);
+            }
+
+            $contractEquipments = 0;
+            $offContractEquipments = 0;
+            $processedEquipments = [];
+
+            // 3. Traiter les équipements sous contrat
+            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                foreach ($fields['contrat_de_maintenance']['value'] as $index => $equipmentContrat) {
+                    try {
+                        $equipement = new EquipementS140();
+                        
+                        // Données communes
+                        $this->setRealCommonData($equipement, $fields);
+                        
+                        // Données spécifiques contrat
+                        $this->setRealContractData($equipement, $equipmentContrat);
+                        
+                        $entityManager->persist($equipement);
+                        $contractEquipments++;
+                        
+                        $processedEquipments[] = [
+                            'type' => 'contract',
+                            'numero' => $equipement->getNumeroEquipement(),
+                            'libelle' => $equipement->getLibelleEquipement(),
+                            'etat' => $equipement->getEtat()
+                        ];
+                        
+                    } catch (\Exception $e) {
+                        error_log("Erreur équipement contrat $index: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // 4. Traiter les équipements hors contrat
+            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
+                foreach ($fields['hors_contrat']['value'] as $index => $equipmentHorsContrat) {
+                    try {
+                        $equipement = new EquipementS140();
+                        
+                        // Données communes
+                        $this->setRealCommonData($equipement, $fields);
+                        
+                        // Données spécifiques hors contrat
+                        $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
+                        
+                        $entityManager->persist($equipement);
+                        $offContractEquipments++;
+                        
+                        $processedEquipments[] = [
+                            'type' => 'off_contract',
+                            'numero' => $equipement->getNumeroEquipement(),
+                            'libelle' => $equipement->getLibelleEquipement(),
+                            'etat' => $equipement->getEtat()
+                        ];
+                        
+                    } catch (\Exception $e) {
+                        error_log("Erreur équipement hors contrat $index: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // 5. Sauvegarder
+            $entityManager->flush();
+
+            // 6. Marquer comme lu
+            $this->markFormAsRead($formId, $entryId);
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'processed_entry' => [
+                    'form_id' => $formId,
+                    'entry_id' => $entryId,
+                    'client_id' => $fields['id_client_']['value'] ?? '',
+                    'client_name' => $fields['nom_du_client']['value'] ?? '',
+                    'technician' => $fields['technicien']['value'] ?? '',
+                    'date' => $fields['date_et_heure']['value'] ?? ''
+                ],
+                'contract_equipments' => $contractEquipments,
+                'off_contract_equipments' => $offContractEquipments,
+                'total_equipments' => $contractEquipments + $offContractEquipments,
+                'processed_equipments' => $processedEquipments,
+                'message' => "Formulaire {$entryId} traité: " . 
+                            ($contractEquipments + $offContractEquipments) . " équipements ajoutés"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Définir les données communes - VERSION FINALE
+     */
+    private function setRealCommonData($equipement, array $fields): void
+    {
+        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+        $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
+        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
+        $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+        
+        // Valeurs par défaut
+        $equipement->setEtatDesLieuxFait(false);
+        $equipement->setIsArchive(false);
+    }
+
+    /**
+     * Données spécifiques contrat - VERSION FINALE
+     */
+    private function setRealContractData($equipement, array $equipmentContrat): void
+    {
+        // Extraction du path et value
+        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+        $equipementValue = $equipmentContrat['equipement']['value'] ?? '';
+        
+        // Type de visite depuis le path
+        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        $equipement->setVisite($visite);
+        
+        // Parse des infos équipement
+        $equipmentInfo = $this->parseEquipmentInfo($equipementValue);
+        
+        $equipement->setNumeroEquipement($equipmentInfo['numero'] ?? '');
+        $equipement->setLibelleEquipement($equipmentInfo['libelle'] ?? '');
+        $equipement->setMiseEnService($equipmentInfo['mise_en_service'] ?? '');
+        $equipement->setNumeroDeSerie($equipmentInfo['numero_serie'] ?? '');
+        $equipement->setMarque($equipmentInfo['marque'] ?? '');
+        $equipement->setHauteur($equipmentInfo['hauteur'] ?? '');
+        $equipement->setLargeur($equipmentInfo['largeur'] ?? '');
+        $equipement->setRepereSiteClient($equipmentInfo['repere'] ?? '');
+        
+        // Données du formulaire
+        $equipement->setModeFonctionnement($equipmentContrat['mode_fonctionnement']['value'] ?? '');
+        $equipement->setLongueur($equipmentContrat['longueur']['value'] ?? '');
+        $equipement->setPlaqueSignaletique($equipmentContrat['plaque_signaletique']['value'] ?? '');
+        $equipement->setEtat($equipmentContrat['etat']['value'] ?? '');
+        
+        // Statut de maintenance
+        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentContrat['etat']['value'] ?? ''));
+        
+        $equipement->setEnMaintenance(true);
+    }
+
+    /**
+     * Données spécifiques hors contrat - VERSION FINALE
+     */
+    private function setRealOffContractData($equipement, array $equipmentHorsContrat, array $fields, EntityManagerInterface $entityManager): void
+    {
+        $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
+        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+        $idClient = $fields['id_client_']['value'] ?? '';
+        
+        // Génération du numéro
+        $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityManager);
+        $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+        
+        $equipement->setNumeroEquipement($numeroFormate);
+        $equipement->setLibelleEquipement($typeLibelle);
+        $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
+        $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
+        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+        $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
+        $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
+        $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
+        $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
+        $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
+        $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
+        
+        $equipement->setVisite($this->getDefaultVisitType($fields));
+        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? ''));
+        
+        $equipement->setEnMaintenance(false);
+    }
+
+    /**
+     * Récupération du prochain numéro - VERSION FINALE
+     */
+    private function getNextEquipmentNumberReal(string $typeCode, string $idClient, EntityManagerInterface $entityManager): int
+    {
+        $repository = $entityManager->getRepository(EquipementS140::class);
+        
+        $equipments = $repository->createQueryBuilder('e')
+            ->where('e.id_contact = :idClient')
+            ->andWhere('e.numero_equipement LIKE :typeCode')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('typeCode', $typeCode . '%')
+            ->getQuery()
+            ->getResult();
+        
+        $lastNumber = 0;
+        
+        foreach ($equipments as $equipment) {
+            $numeroEquipement = $equipment->getNumeroEquipement();
+            
+            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
+                $number = (int)$matches[1];
+                if ($number > $lastNumber) {
+                    $lastNumber = $number;
+                }
+            }
+        }
+        
+        return $lastNumber + 1;
+    }
+
+    /**
+     * Route pour traiter TOUS les formulaires S140 trouvés
+     */
+    #[Route('/api/maintenance/process-all-s140', name: 'app_maintenance_process_all_s140', methods: ['GET'])]
+    public function processAllS140Maintenance(
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // IDs trouvés lors du check
+        $entries = [
+            ['form_id' => '1088761', 'entry_id' => '232647438'],
+            ['form_id' => '1088761', 'entry_id' => '232647490'],  
+            ['form_id' => '1088761', 'entry_id' => '232647488'],
+            ['form_id' => '1088761', 'entry_id' => '232647486'],
+            ['form_id' => '1088761', 'entry_id' => '232647484']
+        ];
+
+        $results = [];
+        $totalSuccess = 0;
+        $totalErrors = 0;
+        $totalEquipments = 0;
+
+        foreach ($entries as $entry) {
+            try {
+                // Simuler l'appel à process-real
+                $subRequest = Request::create('/api/maintenance/process-real/S140', 'GET', [
+                    'form_id' => $entry['form_id'],
+                    'entry_id' => $entry['entry_id']
+                ]);
+
+                $response = $this->processRealMaintenanceEntry('S140', $entityManager, $subRequest);
+                $data = json_decode($response->getContent(), true);
+
+                if ($data['success']) {
+                    $totalSuccess++;
+                    $totalEquipments += $data['total_equipments'];
+                    $results[] = [
+                        'entry_id' => $entry['entry_id'],
+                        'status' => 'success',
+                        'equipments' => $data['total_equipments'],
+                        'client_name' => $data['processed_entry']['client_name']
+                    ];
+                } else {
+                    $totalErrors++;
+                    $results[] = [
+                        'entry_id' => $entry['entry_id'],
+                        'status' => 'error',
+                        'error' => $data['error']
+                    ];
+                }
+
+                // Pause pour éviter surcharge
+                sleep(1);
+
+            } catch (\Exception $e) {
+                $totalErrors++;
+                $results[] = [
+                    'entry_id' => $entry['entry_id'],
+                    'status' => 'error',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'agency' => 'S140',
+            'total_entries' => count($entries),
+            'successful' => $totalSuccess,
+            'errors' => $totalErrors,
+            'total_equipments_added' => $totalEquipments,
+            'details' => $results,
+            'message' => "Traitement terminé: {$totalSuccess}/" . count($entries) . " formulaires traités, {$totalEquipments} équipements ajoutés"
+        ]);
+    }
 }
