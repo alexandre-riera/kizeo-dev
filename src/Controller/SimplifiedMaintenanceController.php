@@ -1121,4 +1121,217 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * SOLUTION ULTRA-LÉGÈRE: Traiter UN SEUL formulaire S140 à la fois
+     * Usage: GET /api/maintenance/single/S140?form_id=1088761&entry_id=232647438
+     */
+    #[Route('/api/maintenance/single/{agencyCode}', name: 'app_maintenance_single', methods: ['GET'])]
+    public function processSingleMaintenanceEntry(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration mémoire minimale
+        ini_set('memory_limit', '256M');
+        ini_set('max_execution_time', 60);
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        $formId = $request->query->get('form_id');
+        $entryId = $request->query->get('entry_id');
+
+        if (!$formId || !$entryId) {
+            return new JsonResponse([
+                'error' => 'Paramètres manquants',
+                'required' => 'form_id et entry_id',
+                'available_entries' => [
+                    ['form_id' => '1088761', 'entry_id' => '232647438'],
+                    ['form_id' => '1088761', 'entry_id' => '232647490'],
+                    ['form_id' => '1088761', 'entry_id' => '232647488'],
+                    ['form_id' => '1088761', 'entry_id' => '232647486'],
+                    ['form_id' => '1088761', 'entry_id' => '232647484']
+                ]
+            ], 400);
+        }
+
+        try {
+            // 1. Récupérer UNIQUEMENT cette entrée spécifique
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+
+            // 2. Vérifier que c'est bien S140
+            if (!isset($fields['code_agence']['value']) || 
+                $fields['code_agence']['value'] !== $agencyCode) {
+                return new JsonResponse([
+                    'error' => 'Cette entrée n\'est pas pour l\'agence ' . $agencyCode,
+                    'actual_agency' => $fields['code_agence']['value'] ?? 'unknown'
+                ], 400);
+            }
+
+            // 3. Traiter cette entrée unique
+            $entityClass = $this->getEntityClassByAgency($agencyCode);
+            if (!$entityClass) {
+                throw new \Exception("Classe d'entité non trouvée pour: " . $agencyCode);
+            }
+
+            $contractEquipments = 0;
+            $offContractEquipments = 0;
+
+            // Traitement des équipements sous contrat
+            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
+                    $equipement = new $entityClass();
+                    $this->setCommonEquipmentData($equipement, $fields);
+                    $this->setContractEquipmentData($equipement, $equipmentContrat);
+                    
+                    $entityManager->persist($equipement);
+                    $contractEquipments++;
+                }
+            }
+
+            // Traitement des équipements hors contrat
+            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
+                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+                    $equipement = new $entityClass();
+                    $this->setCommonEquipmentData($equipement, $fields);
+                    $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
+                    
+                    $entityManager->persist($equipement);
+                    $offContractEquipments++;
+                }
+            }
+
+            // 4. Sauvegarder
+            $entityManager->flush();
+
+            // 5. Marquer comme lu
+            $this->markFormAsRead($formId, $entryId);
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'processed_entry' => [
+                    'form_id' => $formId,
+                    'entry_id' => $entryId,
+                    'client_name' => $fields['nom_du_client']['value'] ?? 'N/A',
+                    'technician' => $fields['technicien']['value'] ?? 'N/A',
+                    'date' => $fields['date_et_heure']['value'] ?? 'N/A'
+                ],
+                'contract_equipments' => $contractEquipments,
+                'off_contract_equipments' => $offContractEquipments,
+                'total_equipments' => $contractEquipments + $offContractEquipments,
+                'message' => "Entrée {$entryId} traitée avec succès: " . 
+                            ($contractEquipments + $offContractEquipments) . " équipements ajoutés"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * ROUTE DE TRAITEMENT EN BATCH: Traiter tous les formulaires S140 un par un
+     */
+    #[Route('/api/maintenance/batch/{agencyCode}', name: 'app_maintenance_batch', methods: ['GET'])]
+    public function processBatchMaintenance(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Liste des entrées trouvées par la route check
+        $entries = [
+            ['form_id' => '1088761', 'entry_id' => '232647438'],
+            ['form_id' => '1088761', 'entry_id' => '232647490'],
+            ['form_id' => '1088761', 'entry_id' => '232647488'],
+            ['form_id' => '1088761', 'entry_id' => '232647486'],
+            ['form_id' => '1088761', 'entry_id' => '232647484']
+        ];
+
+        $results = [];
+        $totalSuccess = 0;
+        $totalErrors = 0;
+        $totalEquipments = 0;
+
+        foreach ($entries as $entry) {
+            try {
+                // Faire un appel interne à la route single
+                $subRequest = Request::create(
+                    '/api/maintenance/single/' . $agencyCode,
+                    'GET',
+                    [
+                        'form_id' => $entry['form_id'],
+                        'entry_id' => $entry['entry_id']
+                    ]
+                );
+
+                $response = $this->processSingleMaintenanceEntry($agencyCode, $entityManager, $subRequest);
+                $data = json_decode($response->getContent(), true);
+
+                if ($data['success']) {
+                    $totalSuccess++;
+                    $totalEquipments += $data['total_equipments'];
+                    $results[] = [
+                        'entry_id' => $entry['entry_id'],
+                        'status' => 'success',
+                        'equipments' => $data['total_equipments']
+                    ];
+                } else {
+                    $totalErrors++;
+                    $results[] = [
+                        'entry_id' => $entry['entry_id'],
+                        'status' => 'error',
+                        'error' => $data['error']
+                    ];
+                }
+
+                // Pause entre chaque traitement pour éviter la surcharge
+                sleep(1);
+
+            } catch (\Exception $e) {
+                $totalErrors++;
+                $results[] = [
+                    'entry_id' => $entry['entry_id'],
+                    'status' => 'error',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return new JsonResponse([
+            'success' => true,
+            'agency' => $agencyCode,
+            'total_entries' => count($entries),
+            'successful' => $totalSuccess,
+            'errors' => $totalErrors,
+            'total_equipments_added' => $totalEquipments,
+            'details' => $results,
+            'message' => "Traitement batch terminé: {$totalSuccess}/{" . count($entries) . "} entrées traitées, {$totalEquipments} équipements ajoutés"
+        ]);
+    }
 }
