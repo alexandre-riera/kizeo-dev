@@ -282,20 +282,25 @@ class SimplifiedMaintenanceController extends AbstractController
     // ... Le reste des méthodes reste identique (setCommonEquipmentData, setContractEquipmentData, etc.) ...
     
     /**
-     * Définir les données communes à tous les équipements
+     * Définir les données communes à tous les équipements - ADAPTÉE AUX PROPRIÉTÉS EXISTANTES
      */
     private function setCommonEquipmentData($equipement, array $fields): void
     {
-        $equipement->setAgence($fields['code_agence']['value'] ?? '');
-        $equipement->setIdClientMaintenance($fields['id_client_']['value'] ?? '');
-        $equipement->setNomClientMaintenance($fields['nom_du_client']['value'] ?? '');
-        $equipement->setAdresseClientMaintenance($fields['adresse_du_client']['value'] ?? '');
-        $equipement->setVilleClientMaintenance($fields['ville_du_client']['value'] ?? '');
-        $equipement->setCodePostalClientMaintenance($fields['code_postal_du_client']['value'] ?? '');
-        $equipement->setTechnicienMaintenance($fields['technicien']['value'] ?? '');
-        $equipement->setDateInterventionMaintenance(new \DateTime($fields['date_et_heure']['value'] ?? 'now'));
-        $equipement->setDateSauvegarde(new \DateTime());
-        $equipement->setDateModification(new \DateTime());
+        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+        $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
+        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
+        
+        // Convertir la date au format string si nécessaire
+        $dateIntervention = $fields['date_et_heure']['value'] ?? '';
+        $equipement->setDateEnregistrement($dateIntervention);
+        
+        // Stocker les informations client dans des champs existants ou les ignorer
+        // Les champs adresse, ville, code postal n'existent pas dans l'entité actuelle
+        
+        // Valeurs par défaut
+        $equipement->setEtatDesLieuxFait(false);
+        $equipement->setIsArchive(false);
     }
 
     /**
@@ -461,13 +466,17 @@ class SimplifiedMaintenanceController extends AbstractController
         return 'EQU';
     }
 
+    /**
+     * Méthode pour récupérer le prochain numéro d'équipement - ADAPTÉE
+     */
     private function getNextEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
         $repository = $entityManager->getRepository($entityClass);
         
+        // Utiliser id_contact qui correspond au champ existant
         $equipments = $repository->createQueryBuilder('e')
-            ->where('e.idClientMaintenance = :idClient')
-            ->andWhere('e.numeroEquipement LIKE :typeCode')
+            ->where('e.id_contact = :idClient')
+            ->andWhere('e.numero_equipement LIKE :typeCode')
             ->setParameter('idClient', $idClient)
             ->setParameter('typeCode', $typeCode . '%')
             ->getQuery()
@@ -1333,5 +1342,97 @@ class SimplifiedMaintenanceController extends AbstractController
             'details' => $results,
             'message' => "Traitement batch terminé: {$totalSuccess}/{" . count($entries) . "} entrées traitées, {$totalEquipments} équipements ajoutés"
         ]);
+    }
+
+    /**
+     * Route de test ultra-simple pour S140
+     */
+    #[Route('/api/maintenance/test/{agencyCode}', name: 'app_maintenance_test', methods: ['GET'])]
+    public function testMaintenanceProcessing(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Test avec les IDs trouvés précédemment
+        $formId = '1088761';
+        $entryId = '232647438'; // Premier ID trouvé
+
+        try {
+            // 1. Récupérer l'entrée spécifique
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+
+            // 2. Vérifier que c'est bien S140
+            if ($fields['code_agence']['value'] !== 'S140') {
+                return new JsonResponse(['error' => 'Cette entrée n\'est pas S140'], 400);
+            }
+
+            // 3. Créer un équipement de test
+            $equipement = new EquipementS140();
+            
+            // Données de base
+            $equipement->setCodeAgence($fields['code_agence']['value']);
+            $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+            $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
+            $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
+            $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+            
+            // Données d'équipement de test
+            $equipement->setNumeroEquipement('TEST_S140_001');
+            $equipement->setLibelleEquipement('Équipement de test');
+            $equipement->setVisite('CE1');
+            $equipement->setEtat('Test');
+            $equipement->setStatutDeMaintenance('TEST');
+            
+            // Valeurs par défaut
+            $equipement->setEtatDesLieuxFait(false);
+            $equipement->setEnMaintenance(true);
+            $equipement->setIsArchive(false);
+
+            // 4. Sauvegarder
+            $entityManager->persist($equipement);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Équipement de test S140 créé avec succès',
+                'equipment_id' => $equipement->getId(),
+                'equipment_number' => $equipement->getNumeroEquipement(),
+                'client_name' => $equipement->getRaisonSociale(),
+                'technician' => $equipement->getTrigrammeTech(),
+                'form_data' => [
+                    'form_id' => $formId,
+                    'entry_id' => $entryId,
+                    'agency' => $fields['code_agence']['value'],
+                    'client_id' => $fields['id_client_']['value'] ?? '',
+                    'client_name' => $fields['nom_du_client']['value'] ?? '',
+                    'technician' => $fields['technicien']['value'] ?? '',
+                    'date' => $fields['date_et_heure']['value'] ?? ''
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
     }
 }
