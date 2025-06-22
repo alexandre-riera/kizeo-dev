@@ -1768,4 +1768,335 @@ class SimplifiedMaintenanceController extends AbstractController
             'message' => "Traitement terminé: {$totalSuccess}/" . count($entries) . " formulaires traités, {$totalEquipments} équipements ajoutés"
         ]);
     }
+
+    /**
+     * Route de debug pour analyser la structure des entrées qui posent problème
+     */
+    #[Route('/api/maintenance/debug-entry/{formId}/{entryId}', name: 'app_maintenance_debug_entry', methods: ['GET'])]
+    public function debugEntryStructure(
+        string $formId,
+        string $entryId,
+        Request $request
+    ): JsonResponse {
+        
+        try {
+            // Récupérer l'entrée spécifique
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            return new JsonResponse([
+                'success' => true,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'raw_structure' => $detailData,
+                'has_data_key' => isset($detailData['data']),
+                'has_fields_key' => isset($detailData['data']['fields']),
+                'data_keys' => isset($detailData['data']) ? array_keys($detailData['data']) : null,
+                'fields_keys' => isset($detailData['data']['fields']) ? array_keys($detailData['data']['fields']) : null,
+                'analysis' => [
+                    'structure_type' => $this->analyzeStructure($detailData),
+                    'is_valid_maintenance_form' => $this->isValidMaintenanceForm($detailData)
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    /**
+     * Analyser la structure des données
+     */
+    private function analyzeStructure(array $data): string
+    {
+        if (!isset($data['data'])) {
+            return 'missing_data_key';
+        }
+        
+        if (!isset($data['data']['fields'])) {
+            return 'missing_fields_key';
+        }
+        
+        if (empty($data['data']['fields'])) {
+            return 'empty_fields';
+        }
+        
+        return 'valid_structure';
+    }
+
+    /**
+     * Vérifier si c'est un formulaire de maintenance valide
+     */
+    private function isValidMaintenanceForm(array $data): bool
+    {
+        if (!isset($data['data']['fields'])) {
+            return false;
+        }
+        
+        $fields = $data['data']['fields'];
+        
+        // Vérifier la présence des champs essentiels
+        $requiredFields = ['code_agence', 'nom_du_client', 'technicien'];
+        
+        foreach ($requiredFields as $field) {
+            if (!isset($fields[$field]['value'])) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Route de debug rapide pour les 3 entrées en erreur
+     */
+    #[Route('/api/maintenance/debug-failed-entries', name: 'app_maintenance_debug_failed', methods: ['GET'])]
+    public function debugFailedEntries(Request $request): JsonResponse
+    {
+        $failedEntries = [
+            '232647490',
+            '232647486', 
+            '232647484'
+        ];
+        
+        $results = [];
+        
+        foreach ($failedEntries as $entryId) {
+            try {
+                $detailResponse = $this->client->request(
+                    'GET',
+                    'https://forms.kizeo.com/rest/v3/forms/1088761/data/' . $entryId,
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                    ]
+                );
+
+                $detailData = $detailResponse->toArray();
+                
+                $results[$entryId] = [
+                    'status' => 'api_success',
+                    'has_data' => isset($detailData['data']),
+                    'has_fields' => isset($detailData['data']['fields']),
+                    'structure' => $this->analyzeStructure($detailData),
+                    'data_keys' => isset($detailData['data']) ? array_keys($detailData['data']) : null,
+                    'sample_data' => isset($detailData['data']) ? 
+                        array_slice($detailData['data'], 0, 3, true) : null
+                ];
+
+            } catch (\Exception $e) {
+                $results[$entryId] = [
+                    'status' => 'api_error',
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        return new JsonResponse([
+            'success' => true,
+            'failed_entries_analysis' => $results,
+            'recommendation' => $this->getRecommendation($results)
+        ]);
+    }
+
+    /**
+     * Générer une recommandation basée sur l'analyse
+     */
+    private function getRecommendation(array $results): string
+    {
+        $hasApiErrors = false;
+        $hasStructureIssues = false;
+        
+        foreach ($results as $entryId => $result) {
+            if ($result['status'] === 'api_error') {
+                $hasApiErrors = true;
+            } elseif ($result['structure'] !== 'valid_structure') {
+                $hasStructureIssues = true;
+            }
+        }
+        
+        if ($hasApiErrors) {
+            return 'Certaines entrées ne sont plus accessibles via l\'API - elles ont peut-être été supprimées';
+        }
+        
+        if ($hasStructureIssues) {
+            return 'Certaines entrées ont une structure différente - ajouter une validation avant traitement';
+        }
+        
+        return 'Toutes les entrées semblent valides - vérifier la logique de traitement';
+    }
+
+    /**
+     * Version corrigée du traitement avec validation de structure
+     */
+    #[Route('/api/maintenance/process-real-safe/{agencyCode}', name: 'app_maintenance_process_real_safe', methods: ['GET'])]
+    public function processRealMaintenanceEntrySafe(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id', '232647438');
+
+        try {
+            // 1. Récupérer l'entrée spécifique
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            // 2. VALIDATION DE STRUCTURE
+            if (!isset($detailData['data'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Structure invalide: clé "data" manquante',
+                    'structure' => array_keys($detailData)
+                ], 400);
+            }
+            
+            if (!isset($detailData['data']['fields'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Structure invalide: clé "fields" manquante',
+                    'data_structure' => array_keys($detailData['data'])
+                ], 400);
+            }
+            
+            $fields = $detailData['data']['fields'];
+            
+            // 3. Validation des champs obligatoires
+            if (!isset($fields['code_agence']['value'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Champ code_agence manquant',
+                    'available_fields' => array_keys($fields)
+                ], 400);
+            }
+
+            // 4. Vérifier que c'est bien S140
+            if ($fields['code_agence']['value'] !== 'S140') {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Cette entrée n\'est pas S140',
+                    'actual_agency' => $fields['code_agence']['value']
+                ], 400);
+            }
+
+            // 5. Traitement normal à partir d'ici
+            $contractEquipments = 0;
+            $offContractEquipments = 0;
+            $processedEquipments = [];
+
+            // Traiter les équipements sous contrat
+            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                foreach ($fields['contrat_de_maintenance']['value'] as $index => $equipmentContrat) {
+                    try {
+                        $equipement = new EquipementS140();
+                        $this->setRealCommonData($equipement, $fields);
+                        $this->setRealContractData($equipement, $equipmentContrat);
+                        
+                        $entityManager->persist($equipement);
+                        $contractEquipments++;
+                        
+                        $processedEquipments[] = [
+                            'type' => 'contract',
+                            'numero' => $equipement->getNumeroEquipement(),
+                            'libelle' => $equipement->getLibelleEquipement()
+                        ];
+                        
+                    } catch (\Exception $e) {
+                        error_log("Erreur équipement contrat $index: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Traiter les équipements hors contrat
+            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
+                foreach ($fields['hors_contrat']['value'] as $index => $equipmentHorsContrat) {
+                    try {
+                        $equipement = new EquipementS140();
+                        $this->setRealCommonData($equipement, $fields);
+                        $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
+                        
+                        $entityManager->persist($equipement);
+                        $offContractEquipments++;
+                        
+                        $processedEquipments[] = [
+                            'type' => 'off_contract',
+                            'numero' => $equipement->getNumeroEquipement(),
+                            'libelle' => $equipement->getLibelleEquipement()
+                        ];
+                        
+                    } catch (\Exception $e) {
+                        error_log("Erreur équipement hors contrat $index: " . $e->getMessage());
+                    }
+                }
+            }
+
+            // Sauvegarder
+            $entityManager->flush();
+
+            // Marquer comme lu
+            $this->markFormAsRead($formId, $entryId);
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'processed_entry' => [
+                    'form_id' => $formId,
+                    'entry_id' => $entryId,
+                    'client_id' => $fields['id_client_']['value'] ?? '',
+                    'client_name' => $fields['nom_du_client']['value'] ?? '',
+                    'technician' => $fields['technicien']['value'] ?? '',
+                    'date' => $fields['date_et_heure']['value'] ?? ''
+                ],
+                'contract_equipments' => $contractEquipments,
+                'off_contract_equipments' => $offContractEquipments,
+                'total_equipments' => $contractEquipments + $offContractEquipments,
+                'processed_equipments' => $processedEquipments,
+                'message' => "Formulaire {$entryId} traité: " . 
+                            ($contractEquipments + $offContractEquipments) . " équipements ajoutés"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
 }
