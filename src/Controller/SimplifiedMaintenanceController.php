@@ -45,9 +45,13 @@ class SimplifiedMaintenanceController extends AbstractController
         Request $request
     ): JsonResponse {
         
-        // Configuration pour éviter les timeouts
-        ini_set('memory_limit', '1G');
-        set_time_limit(300);
+        // Configuration pour éviter les timeouts et problèmes mémoire
+        ini_set('memory_limit', '2G'); // Augmentation à 2G
+        ini_set('max_execution_time', 0); // Pas de limite de temps
+        set_time_limit(0); // Pas de limite de temps
+        
+        // Forcer le garbage collector
+        gc_enable();
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
@@ -74,7 +78,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $errors = [];
 
             // Filtrer et traiter par agence
-            foreach ($maintenanceData as $formData) {
+            foreach ($maintenanceData as $index => $formData) {
                 try {
                     if (!isset($formData['data']['fields'])) {
                         continue;
@@ -97,6 +101,14 @@ class SimplifiedMaintenanceController extends AbstractController
 
                     // Marquer comme lu
                     $this->markFormAsRead($formData['form_id'], $formData['id']);
+
+                    // Libérer la mémoire après chaque traitement
+                    unset($maintenanceData[$index]);
+                    
+                    // Forcer le garbage collector toutes les 5 itérations
+                    if ($processed % 5 === 0) {
+                        gc_collect_cycles();
+                    }
 
                 } catch (\Exception $e) {
                     $errors[] = [
