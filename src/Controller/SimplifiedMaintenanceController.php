@@ -503,7 +503,7 @@ class SimplifiedMaintenanceController extends AbstractController
      * SOLUTION 3: Route pour marquer tous les formulaires S140 comme "non lus"
      * Pour forcer leur retraitement
      */
-    #[Route('/api/maintenance/markasunread/{agencyCode}', name: 'app_maintenance_markasunread', methods: ['POST'])]
+    #[Route('/api/maintenance/markasunread/{agencyCode}', name: 'app_maintenance_markasunread', methods: ['GET','POST'])]
     public function markAsUnreadForAgency(
         string $agencyCode,
         Request $request
