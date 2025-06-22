@@ -144,7 +144,7 @@ class MaintenanceEquipmentController extends AbstractController
                     
                     // Récupérer les données non lues - CORRECTION: utiliser GET au lieu de POST
                     $response = $this->client->request('GET', 
-                        "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/unread/lu/{$limit}", [
+                        "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/unread/saved/{$limit}", [
                         'headers' => [
                             'Accept' => 'application/json',
                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
@@ -386,7 +386,7 @@ class MaintenanceEquipmentController extends AbstractController
     {
         try {
             $this->client->request('POST', 
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/markasreadbyaction/lu", [
+                "https://forms.kizeo.com/rest/v3/forms/{$formId}/markasreadbyaction/saved", [
                 'headers' => [
                     'Accept' => 'application/json',
                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
