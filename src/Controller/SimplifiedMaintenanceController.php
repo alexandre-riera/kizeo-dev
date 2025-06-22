@@ -819,4 +819,306 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * SOLUTION OPTIMISÉE: Route qui traite formulaire par formulaire pour éviter les problèmes de mémoire
+     */
+    #[Route('/api/maintenance/force-lite/{agencyCode}', name: 'app_maintenance_force_lite', methods: ['GET'])]
+    public function forceProcessMaintenanceLite(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration mémoire conservatrice
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 120); // 2 minutes max
+        
+        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+        if (!in_array($agencyCode, $validAgencies)) {
+            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+        }
+
+        try {
+            $processed = 0;
+            $errors = [];
+            $contractEquipments = 0;
+            $offContractEquipments = 0;
+            $foundForms = [];
+
+            // 1. Récupérer SEULEMENT la liste des formulaires (pas les données)
+            $formsResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $allForms = $formsResponse->toArray();
+            $maintenanceForms = array_filter($allForms['forms'], function($form) {
+                return $form['class'] === 'MAINTENANCE';
+            });
+
+            // 2. Traiter chaque formulaire INDIVIDUELLEMENT pour économiser la mémoire
+            foreach ($maintenanceForms as $formIndex => $form) {
+                try {
+                    error_log("Traitement formulaire {$form['id']} ({$form['name']})");
+                    
+                    // Récupérer UNIQUEMENT les formulaires non lus pour commencer (plus léger)
+                    $unreadResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/unread/read/10',
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'timeout' => 20
+                        ]
+                    );
+
+                    $unreadData = $unreadResponse->toArray();
+                    
+                    if (empty($unreadData['data'])) {
+                        error_log("Aucune donnée non lue pour le formulaire {$form['id']}");
+                        continue;
+                    }
+
+                    // 3. Traiter chaque entrée NON LUE une par une
+                    foreach ($unreadData['data'] as $entry) {
+                        try {
+                            // Récupérer les détails de l'entrée
+                            $detailResponse = $this->client->request(
+                                'GET',
+                                'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                                [
+                                    'headers' => [
+                                        'Accept' => 'application/json',
+                                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                                    ],
+                                    'timeout' => 15
+                                ]
+                            );
+
+                            $detailData = $detailResponse->toArray();
+                            $fields = $detailData['data']['fields'];
+
+                            // 4. Vérifier si c'est la bonne agence
+                            if (!isset($fields['code_agence']['value']) || 
+                                $fields['code_agence']['value'] !== $agencyCode) {
+                                continue;
+                            }
+
+                            error_log("Trouvé entrée {$agencyCode}: {$entry['_id']}");
+                            
+                            // 5. Traiter cette entrée S140
+                            $entityClass = $this->getEntityClassByAgency($agencyCode);
+                            if (!$entityClass) {
+                                throw new \Exception("Classe d'entité non trouvée pour: " . $agencyCode);
+                            }
+
+                            $foundForms[] = [
+                                'form_id' => $form['id'],
+                                'form_name' => $form['name'],
+                                'entry_id' => $entry['_id'],
+                                'client_name' => $fields['nom_du_client']['value'] ?? 'N/A'
+                            ];
+
+                            // Traitement des équipements sous contrat
+                            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                                foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
+                                    $equipement = new $entityClass();
+                                    $this->setCommonEquipmentData($equipement, $fields);
+                                    $this->setContractEquipmentData($equipement, $equipmentContrat);
+                                    
+                                    $entityManager->persist($equipement);
+                                    $contractEquipments++;
+                                }
+                            }
+
+                            // Traitement des équipements hors contrat
+                            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
+                                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+                                    $equipement = new $entityClass();
+                                    $this->setCommonEquipmentData($equipement, $fields);
+                                    $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
+                                    
+                                    $entityManager->persist($equipement);
+                                    $offContractEquipments++;
+                                }
+                            }
+
+                            $processed++;
+
+                            // Sauvegarder et nettoyer la mémoire après chaque entrée
+                            $entityManager->flush();
+                            $entityManager->clear();
+                            
+                            // Forcer le garbage collector
+                            gc_collect_cycles();
+
+                            // NE PAS marquer comme lu pour l'instant - laisser en non lu pour debug
+
+                        } catch (\Exception $e) {
+                            $errors[] = [
+                                'entry_id' => $entry['_id'] ?? 'unknown',
+                                'error' => $e->getMessage()
+                            ];
+                            error_log("Erreur traitement entrée: " . $e->getMessage());
+                        }
+                    }
+
+                    // Nettoyer la mémoire après chaque formulaire
+                    unset($unreadData);
+                    gc_collect_cycles();
+
+                    // Arrêter après avoir trouvé des données pour éviter la surcharge
+                    if ($processed > 0) {
+                        break;
+                    }
+
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'form_id' => $form['id'],
+                        'error' => $e->getMessage()
+                    ];
+                    error_log("Erreur formulaire {$form['id']}: " . $e->getMessage());
+                }
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'processed' => $processed,
+                'contract_equipments' => $contractEquipments,
+                'off_contract_equipments' => $offContractEquipments,
+                'total_equipments' => $contractEquipments + $offContractEquipments,
+                'found_forms' => $foundForms,
+                'errors' => $errors,
+                'message' => $processed > 0 ? 
+                    "Traitement réussi pour {$agencyCode}: {$processed} formulaires, " . 
+                    ($contractEquipments + $offContractEquipments) . " équipements traités" :
+                    "Aucun formulaire non lu trouvé pour {$agencyCode}"
+            ]);
+
+        } catch (\Exception $e) {
+            error_log("Erreur générale: " . $e->getMessage());
+            return new JsonResponse([
+                'success' => false,
+                'agency' => $agencyCode,
+                'error' => $e->getMessage(),
+                'recommendation' => 'Essayer la route de debug pour vérifier l\'existence des données'
+            ], 500);
+        }
+    }
+
+    /**
+     * VERSION ENCORE PLUS SIMPLE: Juste vérifier s'il y a des données S140 non lues
+     */
+    #[Route('/api/maintenance/check/{agencyCode}', name: 'app_maintenance_check', methods: ['GET'])]
+    public function checkMaintenanceData(
+        string $agencyCode,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        try {
+            $foundData = [];
+            $totalChecked = 0;
+
+            // 1. Récupérer la liste des formulaires
+            $formsResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $allForms = $formsResponse->toArray();
+            $maintenanceForms = array_filter($allForms['forms'], function($form) {
+                return $form['class'] === 'MAINTENANCE';
+            });
+
+            // 2. Pour chaque formulaire, vérifier s'il y a des données non lues
+            foreach ($maintenanceForms as $form) {
+                try {
+                    $unreadResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/unread/read/5',
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                        ]
+                    );
+
+                    $unreadData = $unreadResponse->toArray();
+                    $totalChecked += count($unreadData['data'] ?? []);
+
+                    // Vérifier s'il y a du S140 dans les non lus
+                    foreach ($unreadData['data'] ?? [] as $entry) {
+                        $detailResponse = $this->client->request(
+                            'GET',
+                            'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                            [
+                                'headers' => [
+                                    'Accept' => 'application/json',
+                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                                ],
+                            ]
+                        );
+
+                        $detailData = $detailResponse->toArray();
+                        
+                        if (isset($detailData['data']['fields']['code_agence']['value']) && 
+                            $detailData['data']['fields']['code_agence']['value'] === 'S140') {
+                            
+                            $foundData[] = [
+                                'form_id' => $form['id'],
+                                'form_name' => $form['name'],
+                                'entry_id' => $entry['_id'],
+                                'client_name' => $detailData['data']['fields']['nom_du_client']['value'] ?? 'N/A',
+                                'date' => $detailData['data']['fields']['date_et_heure']['value'] ?? 'N/A'
+                            ];
+                        }
+                    }
+
+                } catch (\Exception $e) {
+                    error_log("Erreur vérification formulaire {$form['id']}: " . $e->getMessage());
+                }
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'total_maintenance_forms' => count($maintenanceForms),
+                'total_unread_entries_checked' => $totalChecked,
+                'found_s140_unread' => count($foundData),
+                's140_data' => $foundData,
+                'conclusion' => count($foundData) > 0 ? 
+                    'Des données S140 non lues existent - utilisez la route force-lite' : 
+                    'Aucune donnée S140 non lue - toutes déjà traitées ou inexistantes'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
