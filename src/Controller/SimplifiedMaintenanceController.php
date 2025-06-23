@@ -471,6 +471,7 @@ class SimplifiedMaintenanceController extends AbstractController
             'rideau métallique' => 'RID',
             'rideau métalliques' => 'RID',
             'porte pietonne' => 'PPV',
+            'porte piétonne' => 'PPV',
             'porte coupe feu' => 'CFE',
             'porte coupe -- feu' => 'CFE',
             'mini pont' => 'MIP',
