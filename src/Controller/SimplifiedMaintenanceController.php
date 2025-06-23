@@ -5109,7 +5109,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Numéro formaté généré: '" . $numeroFormate . "'");
             
             // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
-            if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+            if ($this->offContractEquipmentExistsDisabled($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
                 error_log("Équipement hors contrat existe déjà - skip");
                 return false; // Skip car déjà existe
             }
@@ -5218,45 +5218,111 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
+        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT ===");
+        error_log("ID Client: " . $idClient);
+        error_log("Données équipement: " . json_encode($equipmentHorsContrat, JSON_UNESCAPED_UNICODE));
+        
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // Vérifier par combinaison de critères uniques pour les équipements hors contrat
+            // Récupérer les critères de recherche
             $numeroSerie = $equipmentHorsContrat['n_de_serie']['value'] ?? '';
             $marque = $equipmentHorsContrat['marque']['value'] ?? '';
             $localisation = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
+            $nature = $equipmentHorsContrat['nature']['value'] ?? '';
             
-            if (!empty($numeroSerie)) {
-                // Si on a un numéro de série, c'est le critère le plus fiable
+            error_log("Critères de recherche:");
+            error_log("- Numéro de série: '" . $numeroSerie . "'");
+            error_log("- Marque: '" . $marque . "'");
+            error_log("- Localisation: '" . $localisation . "'");
+            error_log("- Nature: '" . $nature . "'");
+            
+            $existing = null;
+            
+            // Stratégie 1: Si on a un numéro de série NON VIDE, c'est le critère le plus fiable
+            if (!empty($numeroSerie) && trim($numeroSerie) !== '') {
+                error_log("Recherche par numéro de série...");
+                
                 $existing = $repository->createQueryBuilder('e')
                     ->where('e.numero_de_serie = :numeroSerie')
                     ->andWhere('e.id_contact = :idClient')
-                    ->andWhere('e.en_maintenance = false') // Spécifique aux hors contrat
+                    // SUPPRIMÉ: ->andWhere('e.en_maintenance = false') // Ne pas filtrer par en_maintenance
                     ->setParameter('numeroSerie', $numeroSerie)
                     ->setParameter('idClient', $idClient)
                     ->setMaxResults(1)
                     ->getQuery()
                     ->getOneOrNullResult();
-            } else {
-                // Sinon, vérifier par combinaison marque + localisation
+                    
+                error_log("Résultat recherche par numéro de série: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
+            }
+            
+            // Stratégie 2: Si pas de numéro de série OU pas trouvé, vérifier par combinaison marque + localisation + nature
+            if (!$existing && !empty($marque) && !empty($localisation) && !empty($nature)) {
+                error_log("Recherche par combinaison marque + localisation + nature...");
+                
                 $existing = $repository->createQueryBuilder('e')
                     ->where('e.marque = :marque')
                     ->andWhere('e.repere_site_client = :localisation')
+                    ->andWhere('e.libelle_equipement = :nature')
                     ->andWhere('e.id_contact = :idClient')
-                    ->andWhere('e.en_maintenance = false') // Spécifique aux hors contrat
+                    // SUPPRIMÉ: ->andWhere('e.en_maintenance = false') // Ne pas filtrer par en_maintenance
                     ->setParameter('marque', $marque)
                     ->setParameter('localisation', $localisation)
+                    ->setParameter('nature', strtolower($nature))
                     ->setParameter('idClient', $idClient)
                     ->setMaxResults(1)
                     ->getQuery()
                     ->getOneOrNullResult();
+                    
+                error_log("Résultat recherche par combinaison: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
             }
             
-            return $existing !== null;
+            // Stratégie 3: Si toujours pas trouvé et qu'on a au moins la marque, recherche moins stricte
+            if (!$existing && !empty($marque) && !empty($nature)) {
+                error_log("Recherche moins stricte par marque + nature...");
+                
+                $existing = $repository->createQueryBuilder('e')
+                    ->where('e.marque = :marque')
+                    ->andWhere('e.libelle_equipement = :nature')
+                    ->andWhere('e.id_contact = :idClient')
+                    ->setParameter('marque', $marque)
+                    ->setParameter('nature', strtolower($nature))
+                    ->setParameter('idClient', $idClient)
+                    ->setMaxResults(1)
+                    ->getQuery()
+                    ->getOneOrNullResult();
+                    
+                error_log("Résultat recherche moins stricte: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
+            }
+            
+            $result = $existing !== null;
+            error_log("DÉCISION FINALE: " . ($result ? "EXISTE DÉJÀ (SKIP)" : "N'EXISTE PAS (TRAITER)"));
+            error_log("=== FIN VÉRIFICATION EXISTENCE ===");
+            
+            return $result;
             
         } catch (\Exception $e) {
-            return false;
+            error_log("Erreur dans offContractEquipmentExists: " . $e->getMessage());
+            error_log("En cas d'erreur, on considère que l'équipement n'existe pas (false)");
+            return false; // En cas d'erreur, considérer que l'équipement n'existe pas
         }
+    }
+
+    private function offContractEquipmentExistsDisabled(
+        array $equipmentHorsContrat, 
+        string $idClient, 
+        string $entityClass, 
+        EntityManagerInterface $entityManager
+    ): bool {
+        
+        error_log("=== VÉRIFICATION DÉSACTIVÉE - TOUS LES ÉQUIPEMENTS SERONT TRAITÉS ===");
+        error_log("ID Client: " . $idClient);
+        error_log("Nature: " . ($equipmentHorsContrat['nature']['value'] ?? 'NULL'));
+        error_log("Numéro série: " . ($equipmentHorsContrat['n_de_serie']['value'] ?? 'NULL'));
+        error_log("Marque: " . ($equipmentHorsContrat['marque']['value'] ?? 'NULL'));
+        
+        // TEMPORAIRE: Toujours retourner false pour traiter tous les équipements
+        return false;
     }
 
     /**
