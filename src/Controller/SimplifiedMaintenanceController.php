@@ -3949,4 +3949,427 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * Fonction pour récupérer et traiter toutes les soumissions par agence avec chunks
+     * À ajouter dans SimplifiedMaintenanceController.php
+     */
+
+    /**
+     * Route pour lister toutes les soumissions par agence et créer un tableau d'IDs
+     */
+    #[Route('/api/maintenance/list-submissions/{agencyCode}', name: 'app_maintenance_list_submissions', methods: ['GET'])]
+    public function listSubmissionsByAgency(
+        string $agencyCode,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $includeProcessed = $request->query->getBoolean('include_processed', false);
+        
+        try {
+            // 1. Récupérer toutes les soumissions de l'agence
+            $submissions = $this->getSubmissionsByAgency($agencyCode, $formId, $includeProcessed);
+            
+            // 2. Créer le tableau des IDs groupés
+            $submissionIds = array_map(function($submission) {
+                return [
+                    'entry_id' => $submission['entry_id'],
+                    'form_id' => $submission['form_id'],
+                    'client_name' => $submission['client_name'] ?? 'N/A',
+                    'technician' => $submission['technician'] ?? 'N/A',
+                    'date' => $submission['date'] ?? 'N/A',
+                    'equipment_count' => $submission['equipment_count'] ?? 0,
+                    'is_processed' => $submission['is_processed'] ?? false
+                ];
+            }, $submissions);
+            
+            // 3. Statistiques
+            $unprocessedCount = count(array_filter($submissionIds, fn($s) => !$s['is_processed']));
+            $totalEquipments = array_sum(array_column($submissionIds, 'equipment_count'));
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'submissions' => $submissionIds,
+                'statistics' => [
+                    'total_submissions' => count($submissionIds),
+                    'unprocessed_submissions' => $unprocessedCount,
+                    'processed_submissions' => count($submissionIds) - $unprocessedCount,
+                    'total_equipments' => $totalEquipments
+                ],
+                'processing_urls' => [
+                    'process_all_unprocessed' => "/api/maintenance/process-agency-chunks/{$agencyCode}?mode=unprocessed",
+                    'process_specific' => "/api/maintenance/process-agency-chunks/{$agencyCode}?entry_ids=ID1,ID2,ID3"
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Route principale pour traiter les soumissions par agence en chunks avec photos
+     */
+    #[Route('/api/maintenance/process-agency-chunks/{agencyCode}', name: 'app_maintenance_process_agency_chunks', methods: ['GET'])]
+    public function processAgencySubmissionsInChunks(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration
+        ini_set('memory_limit', '1G');
+        ini_set('max_execution_time', 300); // 5 minutes
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $mode = $request->query->get('mode', 'unprocessed'); // 'unprocessed', 'all', 'specific'
+        $entryIds = $request->query->get('entry_ids'); // IDs séparés par virgule
+        $chunkSize = (int) $request->query->get('chunk_size', 10); // Nombre d'équipements par chunk
+        $submissionOffset = (int) $request->query->get('submission_offset', 0);
+        $equipmentOffset = (int) $request->query->get('equipment_offset', 0);
+        $currentSubmissionId = $request->query->get('current_submission_id');
+        
+        try {
+            // 1. Récupérer la liste des soumissions à traiter
+            $submissionsToProcess = $this->getSubmissionsToProcess($agencyCode, $formId, $mode, $entryIds);
+            
+            if (empty($submissionsToProcess)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission à traiter',
+                    'agency' => $agencyCode
+                ]);
+            }
+            
+            // 2. Déterminer la soumission actuelle à traiter
+            if ($currentSubmissionId) {
+                $currentSubmission = array_filter($submissionsToProcess, 
+                    fn($s) => $s['entry_id'] === $currentSubmissionId);
+                $currentSubmission = reset($currentSubmission);
+            } else {
+                $currentSubmission = $submissionsToProcess[$submissionOffset] ?? null;
+            }
+            
+            if (!$currentSubmission) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Traitement terminé pour toutes les soumissions',
+                    'agency' => $agencyCode,
+                    'total_processed' => $submissionOffset
+                ]);
+            }
+            
+            // 3. Traiter la soumission actuelle par chunks
+            $result = $this->processSubmissionInChunks(
+                $currentSubmission,
+                $entityManager,
+                $equipmentOffset,
+                $chunkSize
+            );
+            
+            // 4. Déterminer la prochaine étape
+            $nextCall = $this->determineNextProcessingStep(
+                $submissionsToProcess,
+                $submissionOffset,
+                $currentSubmission,
+                $result,
+                $agencyCode,
+                $formId,
+                $chunkSize
+            );
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'current_submission' => [
+                    'entry_id' => $currentSubmission['entry_id'],
+                    'client_name' => $currentSubmission['client_name'],
+                    'progress' => $result['progress']
+                ],
+                'processing_result' => $result,
+                'overall_progress' => [
+                    'current_submission_index' => $submissionOffset + 1,
+                    'total_submissions' => count($submissionsToProcess),
+                    'percentage' => round((($submissionOffset + ($result['is_complete'] ? 1 : 0)) / count($submissionsToProcess)) * 100, 2)
+                ],
+                'next_call' => $nextCall,
+                'message' => $result['message']
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'agency' => $agencyCode
+            ], 500);
+        }
+    }
+
+    /**
+     * Méthode pour récupérer les soumissions par agence
+     */
+    private function getSubmissionsByAgency(string $agencyCode, string $formId, bool $includeProcessed = false): array
+    {
+        $submissions = [];
+        
+        try {
+            // Récupérer toutes les données du formulaire
+            $response = $this->client->request(
+                'POST',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 60
+                ]
+            );
+
+            $formData = $response->toArray();
+            
+            if (isset($formData['data']) && !empty($formData['data'])) {
+                foreach ($formData['data'] as $entry) {
+                    // Récupérer les détails de chaque entrée
+                    $detailResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'timeout' => 20
+                        ]
+                    );
+
+                    $detailData = $detailResponse->toArray();
+                    $fields = $detailData['data']['fields'] ?? [];
+                    
+                    // Vérifier si c'est la bonne agence
+                    if (isset($fields['code_agence']['value']) && $fields['code_agence']['value'] === $agencyCode) {
+                        
+                        // Vérifier si déjà traité (optionnel)
+                        $isProcessed = $this->isSubmissionProcessed($entry['_id']);
+                        
+                        if ($includeProcessed || !$isProcessed) {
+                            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+                            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+                            
+                            $submissions[] = [
+                                'entry_id' => $entry['_id'],
+                                'form_id' => $entry['_form_id'],
+                                'client_name' => $fields['nom_du_client']['value'] ?? 'N/A',
+                                'technician' => $fields['technicien']['value'] ?? 'N/A',
+                                'date' => $fields['date_et_heure']['value'] ?? 'N/A',
+                                'equipment_count' => count($contractEquipments) + count($offContractEquipments),
+                                'is_processed' => $isProcessed,
+                                'data' => $detailData['data']
+                            ];
+                        }
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur getSubmissionsByAgency: " . $e->getMessage());
+            throw $e;
+        }
+        
+        return $submissions;
+    }
+
+    /**
+     * Traiter une soumission en chunks d'équipements
+     */
+    private function processSubmissionInChunks(
+        array $submission,
+        EntityManagerInterface $entityManager,
+        int $equipmentOffset,
+        int $chunkSize
+    ): array {
+        
+        $fields = $submission['data']['fields'];
+        $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+        $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+        
+        // Combiner tous les équipements avec leur type
+        $allEquipments = [];
+        foreach ($contractEquipments as $index => $equipment) {
+            $allEquipments[] = ['data' => $equipment, 'type' => 'contract', 'index' => $index];
+        }
+        foreach ($offContractEquipments as $index => $equipment) {
+            $allEquipments[] = ['data' => $equipment, 'type' => 'off_contract', 'index' => $index];
+        }
+        
+        // Prendre le chunk actuel
+        $currentChunk = array_slice($allEquipments, $equipmentOffset, $chunkSize);
+        
+        $processedEquipments = 0;
+        $processedPhotos = 0;
+        $errors = [];
+        
+        foreach ($currentChunk as $equipmentData) {
+            try {
+                $equipement = new EquipementS140();
+                $this->setRealCommonData($equipement, $fields);
+                
+                if ($equipmentData['type'] === 'contract') {
+                    $this->setRealContractData($equipement, $equipmentData['data']);
+                } else {
+                    $this->setRealOffContractData($equipement, $equipmentData['data'], $fields, $entityManager);
+                }
+                
+                $entityManager->persist($equipement);
+                $processedEquipments++;
+                
+                // Traiter les photos de cet équipement
+                $photoCount = $this->processEquipmentPhotos($equipmentData['data'], $submission['entry_id'], $entityManager);
+                $processedPhotos += $photoCount;
+                
+                // Sauvegarder périodiquement
+                if ($processedEquipments % 3 === 0) {
+                    $entityManager->flush();
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                }
+                
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'equipment_index' => $equipmentData['index'],
+                    'type' => $equipmentData['type'],
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        // Sauvegarde finale
+        $entityManager->flush();
+        $entityManager->clear();
+        
+        $nextEquipmentOffset = $equipmentOffset + $chunkSize;
+        $isComplete = $nextEquipmentOffset >= count($allEquipments);
+        
+        // Marquer comme lu si c'est le dernier chunk de cette soumission
+        if ($isComplete) {
+            $this->markFormAsRead($submission['form_id'], $submission['entry_id']);
+        }
+        
+        return [
+            'processed_equipments' => $processedEquipments,
+            'processed_photos' => $processedPhotos,
+            'total_equipments' => count($allEquipments),
+            'current_offset' => $equipmentOffset,
+            'next_offset' => $nextEquipmentOffset,
+            'chunk_size' => $chunkSize,
+            'is_complete' => $isComplete,
+            'errors' => $errors,
+            'progress' => [
+                'percentage' => round(($nextEquipmentOffset / count($allEquipments)) * 100, 2),
+                'equipment_progress' => min($nextEquipmentOffset, count($allEquipments)) . '/' . count($allEquipments)
+            ],
+            'message' => $isComplete ? 
+                "Soumission {$submission['entry_id']} terminée: {$processedEquipments} équipements traités" :
+                "Chunk traité: {$processedEquipments} équipements. {$processedPhotos} photos."
+        ];
+    }
+
+    /**
+     * Traiter les photos d'un équipement
+     */
+    private function processEquipmentPhotos(array $equipmentData, string $entryId, EntityManagerInterface $entityManager): int
+    {
+        $photoCount = 0;
+        
+        // Chercher les champs photo dans les données de l'équipement
+        foreach ($equipmentData as $fieldName => $fieldData) {
+            if (strpos($fieldName, 'photo') !== false && isset($fieldData['value']) && !empty($fieldData['value'])) {
+                try {
+                    // Créer une entité Form avec les photos
+                    $form = new Form();
+                    $form->setEntryId($entryId);
+                    $form->setPhotos(json_encode($fieldData['value']));
+                    $form->setCreatedAt(new \DateTime());
+                    
+                    $entityManager->persist($form);
+                    $photoCount++;
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur traitement photo {$fieldName}: " . $e->getMessage());
+                }
+            }
+        }
+        
+        return $photoCount;
+    }
+
+    /**
+     * Déterminer la prochaine étape de traitement
+     */
+    private function determineNextProcessingStep(
+        array $submissionsToProcess,
+        int $submissionOffset,
+        array $currentSubmission,
+        array $result,
+        string $agencyCode,
+        string $formId,
+        int $chunkSize
+    ): ?string {
+        
+        if (!$result['is_complete']) {
+            // Continuer avec la même soumission, chunk suivant
+            return "/api/maintenance/process-agency-chunks/{$agencyCode}?" . http_build_query([
+                'form_id' => $formId,
+                'current_submission_id' => $currentSubmission['entry_id'],
+                'equipment_offset' => $result['next_offset'],
+                'chunk_size' => $chunkSize,
+                'submission_offset' => $submissionOffset
+            ]);
+        }
+        
+        // Passer à la soumission suivante
+        $nextSubmissionOffset = $submissionOffset + 1;
+        if ($nextSubmissionOffset < count($submissionsToProcess)) {
+            return "/api/maintenance/process-agency-chunks/{$agencyCode}?" . http_build_query([
+                'form_id' => $formId,
+                'submission_offset' => $nextSubmissionOffset,
+                'equipment_offset' => 0,
+                'chunk_size' => $chunkSize
+            ]);
+        }
+        
+        // Toutes les soumissions sont terminées
+        return null;
+    }
+
+    /**
+     * Obtenir les soumissions à traiter selon le mode
+     */
+    private function getSubmissionsToProcess(string $agencyCode, string $formId, string $mode, ?string $entryIds): array
+    {
+        $allSubmissions = $this->getSubmissionsByAgency($agencyCode, $formId, $mode === 'all');
+        
+        if ($mode === 'specific' && $entryIds) {
+            $targetIds = explode(',', $entryIds);
+            return array_filter($allSubmissions, fn($s) => in_array($s['entry_id'], $targetIds));
+        }
+        
+        return $allSubmissions;
+    }
+
+    /**
+     * Vérifier si une soumission a déjà été traitée
+     */
+    private function isSubmissionProcessed(string $entryId): bool
+    {
+        // Cette méthode dépend de votre logique de marquage
+        // Vous pourriez vérifier dans une table de traitement ou utiliser un autre mécanisme
+        return false; // À implémenter selon vos besoins
+    }
 }
