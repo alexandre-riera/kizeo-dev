@@ -570,43 +570,80 @@ class SimplifiedMaintenanceController extends AbstractController
     private function getFormSubmissions(string $formId, string $mode = 'all_unprocessed'): array
     {
         try {
-            $endpoint = $mode === 'all_unprocessed' 
-                ? 'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread'
-                : 'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced';
-
             if ($mode === 'all_unprocessed') {
-                // Pour les non lus, simple GET
-                $response = $this->client->request('GET', $endpoint, [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'timeout' => 60
-                ]);
+                // Pour les non lus, utiliser l'endpoint unread avec action par défaut
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread/default/1000?includeupdated', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
             } else {
-                // Pour toutes les données, utiliser POST avec filtre
-                $response = $this->client->request('POST', $endpoint, [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        'Content-Type' => 'application/json',
-                    ],
-                    'body' => json_encode([
-                        'filters' => [],
-                        'order_by' => '_record_date',
-                        'order' => 'desc',
-                        'limit' => 1000 // Limite pour éviter les timeouts
-                    ]),
-                    'timeout' => 60
-                ]);
+                // Pour toutes les données, utiliser POST avec filtre vide
+                $response = $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            'Content-Type' => 'application/json',
+                        ],
+                        'body' => json_encode([
+                            'filters' => [],
+                            'order_by' => '_record_date',
+                            'order' => 'desc',
+                            'limit' => 1000
+                        ]),
+                        'timeout' => 60
+                    ]
+                );
             }
 
             $data = $response->toArray();
+            
+            // Log pour debugging
+            error_log("API Response for form {$formId} (mode: {$mode}): " . json_encode([
+                'status_code' => $response->getStatusCode(),
+                'has_data' => isset($data['data']),
+                'data_count' => isset($data['data']) ? count($data['data']) : 0,
+                'response_keys' => array_keys($data)
+            ]));
+            
             return $data['data'] ?? [];
 
         } catch (\Exception $e) {
-            error_log("Erreur getFormSubmissions: " . $e->getMessage());
-            return [];
+            error_log("Erreur getFormSubmissions pour form {$formId}: " . $e->getMessage());
+            
+            // Fallback: essayer l'endpoint simple data/all
+            try {
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/all', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
+                
+                $data = $response->toArray();
+                error_log("Fallback API Response for form {$formId}: " . json_encode([
+                    'status_code' => $response->getStatusCode(),
+                    'has_data' => isset($data['data']),
+                    'data_count' => isset($data['data']) ? count($data['data']) : 0
+                ]));
+                
+                return $data['data'] ?? [];
+                
+            } catch (\Exception $fallbackError) {
+                error_log("Erreur fallback getFormSubmissions: " . $fallbackError->getMessage());
+                return [];
+            }
         }
     }
 
@@ -633,6 +670,189 @@ class SimplifiedMaintenanceController extends AbstractController
         } catch (\Exception $e) {
             error_log("Erreur getSubmissionData pour {$entryId}: " . $e->getMessage());
             return null;
+        }
+    }
+
+    /**
+     * Marquer des formulaires comme lus (API corrigée)
+     */
+    private function markFormAsRead(string $formId, string $entryId): void
+    {
+        try {
+            // Utiliser la bonne API markasreadbyaction avec action par défaut
+            $this->client->request(
+                'POST',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/markasreadbyaction/default',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => json_encode([
+                        'data_ids' => [$entryId]
+                    ]),
+                    'timeout' => 30
+                ]
+            );
+            
+            error_log("Formulaire marqué comme lu: form_id={$formId}, entry_id={$entryId}");
+            
+        } catch (\Exception $e) {
+            error_log("Erreur markFormAsRead: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Route de diagnostic pour vérifier l'API Kizeo
+     */
+    #[Route('/api/maintenance/debug-kizeo/{formId}', name: 'app_maintenance_debug_kizeo', methods: ['GET'])]
+    public function debugKizeoApi(string $formId, Request $request): JsonResponse
+    {
+        $mode = $request->query->get('mode', 'all_unprocessed');
+        
+        try {
+            // Test 1: Vérifier l'existence du formulaire
+            error_log("=== DEBUT DEBUG KIZEO FORM {$formId} ===");
+            
+            $formsResponse = $this->client->request('GET', 'https://forms.kizeo.com/rest/v3/forms', [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 30
+            ]);
+
+            $allForms = $formsResponse->toArray();
+            $targetForm = null;
+            
+            foreach ($allForms['forms'] as $form) {
+                if ($form['id'] == $formId) {
+                    $targetForm = $form;
+                    break;
+                }
+            }
+
+            if (!$targetForm) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Formulaire non trouvé',
+                    'form_id' => $formId,
+                    'available_forms' => array_map(function($f) {
+                        return ['id' => $f['id'], 'name' => $f['name'], 'class' => $f['class']];
+                    }, $allForms['forms'])
+                ], 404);
+            }
+
+            // Test 2: Essayer différents endpoints pour récupérer les données
+            $results = [];
+            
+            // Test endpoint unread
+            try {
+                $unreadResponse = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread/default/100?includeupdated',
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 30
+                    ]
+                );
+                $unreadData = $unreadResponse->toArray();
+                $results['unread_endpoint'] = [
+                    'success' => true,
+                    'status_code' => $unreadResponse->getStatusCode(),
+                    'data_count' => count($unreadData['data'] ?? []),
+                    'sample_entry' => !empty($unreadData['data']) ? $unreadData['data'][0] : null
+                ];
+            } catch (\Exception $e) {
+                $results['unread_endpoint'] = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+
+            // Test endpoint data/all
+            try {
+                $allDataResponse = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/all',
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 30
+                    ]
+                );
+                $allData = $allDataResponse->toArray();
+                $results['all_endpoint'] = [
+                    'success' => true,
+                    'status_code' => $allDataResponse->getStatusCode(),
+                    'data_count' => count($allData['data'] ?? []),
+                    'sample_entry' => !empty($allData['data']) ? $allData['data'][0] : null
+                ];
+            } catch (\Exception $e) {
+                $results['all_endpoint'] = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+
+            // Test endpoint advanced
+            try {
+                $advancedResponse = $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            'Content-Type' => 'application/json',
+                        ],
+                        'body' => json_encode([
+                            'filters' => [],
+                            'limit' => 10
+                        ]),
+                        'timeout' => 30
+                    ]
+                );
+                $advancedData = $advancedResponse->toArray();
+                $results['advanced_endpoint'] = [
+                    'success' => true,
+                    'status_code' => $advancedResponse->getStatusCode(),
+                    'data_count' => count($advancedData['data'] ?? []),
+                    'sample_entry' => !empty($advancedData['data']) ? $advancedData['data'][0] : null
+                ];
+            } catch (\Exception $e) {
+                $results['advanced_endpoint'] = [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'form_info' => [
+                    'id' => $targetForm['id'],
+                    'name' => $targetForm['name'],
+                    'class' => $targetForm['class'],
+                    'create_time' => $targetForm['create_time'] ?? null,
+                    'update_time' => $targetForm['update_time'] ?? null
+                ],
+                'api_tests' => $results,
+                'recommendations' => [
+                    'Si unread_endpoint.data_count = 0' => 'Toutes les données ont déjà été marquées comme lues',
+                    'Si all_endpoint.data_count > 0' => 'Le formulaire contient des données, utiliser mode=all',
+                    'Si tous les endpoints retournent 0' => 'Le formulaire est vide ou les permissions sont insuffisantes'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'form_id' => $formId
+            ], 500);
         }
     }
 
@@ -880,24 +1100,6 @@ class SimplifiedMaintenanceController extends AbstractController
         } catch (\Exception $e) {
             error_log("Erreur getNextEquipmentNumber: " . $e->getMessage());
             return 1;
-        }
-    }
-
-    private function markFormAsRead(string $formId, string $entryId): void
-    {
-        try {
-            $this->client->request(
-                'PUT',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/markasread/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-        } catch (\Exception $e) {
-            error_log("Erreur markFormAsRead: " . $e->getMessage());
         }
     }
 }
