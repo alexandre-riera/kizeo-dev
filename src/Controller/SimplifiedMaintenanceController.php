@@ -525,27 +525,25 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function getNextEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        // Rechercher le dernier numéro utilisé pour ce type et ce client
         $repository = $entityManager->getRepository($entityClass);
-        
-        // Requête corrigée avec le bon nom de champ camelCase
+    
+        // CORRECTION FINALE: Utiliser les noms des propriétés PHP (snake_case)
         $qb = $repository->createQueryBuilder('e')
-            ->where('e.idContact = :idClient')  // CORRIGÉ: idContact au lieu de id_contact
-            ->andWhere('e.numeroEquipement LIKE :typePattern')  // CORRIGÉ: numeroEquipement au lieu de numero_equipement
-            ->andWhere('e.enMaintenance = false') // CORRIGÉ: enMaintenance au lieu de en_maintenance
+            ->where('e.id_contact = :idClient')              // ✅ PROPRIÉTÉ: id_contact
+            ->andWhere('e.numero_equipement LIKE :typePattern')  // ✅ PROPRIÉTÉ: numero_equipement  
+            ->andWhere('e.isEnMaintenance = false')          // ✅ PROPRIÉTÉ: isEnMaintenance
             ->setParameter('idClient', $idClient)
             ->setParameter('typePattern', $typeCode . '%')
-            ->orderBy('e.numeroEquipement', 'DESC')
-            ->setMaxResults(50); // Limite pour éviter de charger trop de données
+            ->orderBy('e.numero_equipement', 'DESC')
+            ->setMaxResults(50);
         
         $equipments = $qb->getQuery()->getResult();
         
         $dernierNumero = 0;
         
         foreach ($equipments as $equipement) {
-            $numeroEquipement = $equipement->getNumeroEquipement();
+            $numeroEquipement = $equipement->getNumeroEquipement(); // Getter en camelCase
             
-            // Extraire le numéro de la fin du code équipement (ex: SEC01 → 1)
             if (preg_match('/^' . preg_quote($typeCode, '/') . '(\d+)$/', $numeroEquipement, $matches)) {
                 $numero = (int)$matches[1];
                 if ($numero > $dernierNumero) {
@@ -554,7 +552,6 @@ class SimplifiedMaintenanceController extends AbstractController
             }
         }
         
-        // Retourner le numéro suivant
         return $dernierNumero + 1;
     }
     
@@ -4486,8 +4483,8 @@ class SimplifiedMaintenanceController extends AbstractController
             $repository = $entityManager->getRepository($entityClass);
             
             $existing = $repository->createQueryBuilder('e')
-                ->where('e.numeroEquipement = :numero')  // CORRIGÉ: numeroEquipement
-                ->andWhere('e.idContact = :idClient')    // CORRIGÉ: idContact
+                ->where('e.numero_equipement = :numero')    // ✅ PROPRIÉTÉ: numero_equipement
+                ->andWhere('e.id_contact = :idClient')      // ✅ PROPRIÉTÉ: id_contact
                 ->setParameter('numero', $numeroEquipement)
                 ->setParameter('idClient', $idClient)
                 ->setMaxResults(1)
@@ -4497,6 +4494,7 @@ class SimplifiedMaintenanceController extends AbstractController
             return $existing !== null;
             
         } catch (\Exception $e) {
+            error_log("Erreur equipmentExists: " . $e->getMessage());
             return false;
         }
     }
@@ -5108,7 +5106,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Numéro formaté généré: '" . $numeroFormate . "'");
             
             // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
-            if ($this->offContractEquipmentExistsDisabled($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+            if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
                 error_log("Équipement hors contrat existe déjà - skip");
                 return false; // Skip car déjà existe
             }
@@ -5217,13 +5215,11 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT (CORRIGÉE) ===");
-        error_log("ID Client: " . $idClient);
+        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT (NOMS CORRECTS) ===");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // Récupérer les critères de recherche
             $numeroSerie = $equipmentHorsContrat['n_de_serie']['value'] ?? '';
             $marque = $equipmentHorsContrat['marque']['value'] ?? '';
             $localisation = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
@@ -5233,13 +5229,13 @@ class SimplifiedMaintenanceController extends AbstractController
             
             $existing = null;
             
-            // Stratégie 1: Si on a un numéro de série NON VIDE
+            // Stratégie 1: Numéro de série (sauf si "NC")
             if (!empty($numeroSerie) && trim($numeroSerie) !== '' && $numeroSerie !== 'NC') {
                 error_log("Recherche par numéro de série...");
                 
                 $existing = $repository->createQueryBuilder('e')
-                    ->where('e.numeroDeSerie = :numeroSerie')  // CORRIGÉ: numeroDeSerie
-                    ->andWhere('e.idContact = :idClient')     // CORRIGÉ: idContact
+                    ->where('e.numero_de_serie = :numeroSerie')  // ✅ PROPRIÉTÉ: numero_de_serie
+                    ->andWhere('e.id_contact = :idClient')       // ✅ PROPRIÉTÉ: id_contact
                     ->setParameter('numeroSerie', $numeroSerie)
                     ->setParameter('idClient', $idClient)
                     ->setMaxResults(1)
@@ -5249,15 +5245,15 @@ class SimplifiedMaintenanceController extends AbstractController
                 error_log("Résultat recherche par numéro de série: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
             }
             
-            // Stratégie 2: Vérifier par combinaison marque + localisation + nature
+            // Stratégie 2: Combinaison marque + localisation + nature
             if (!$existing && !empty($marque) && !empty($localisation) && !empty($nature)) {
                 error_log("Recherche par combinaison marque + localisation + nature...");
                 
                 $existing = $repository->createQueryBuilder('e')
                     ->where('e.marque = :marque')
-                    ->andWhere('e.repereSiteClient = :localisation')  // CORRIGÉ: repereSiteClient
-                    ->andWhere('e.libelleEquipement = :nature')       // CORRIGÉ: libelleEquipement
-                    ->andWhere('e.idContact = :idClient')             // CORRIGÉ: idContact
+                    ->andWhere('e.repere_site_client = :localisation')   // ✅ PROPRIÉTÉ: repere_site_client
+                    ->andWhere('e.libelle_equipement = :nature')         // ✅ PROPRIÉTÉ: libelle_equipement
+                    ->andWhere('e.id_contact = :idClient')               // ✅ PROPRIÉTÉ: id_contact
                     ->setParameter('marque', $marque)
                     ->setParameter('localisation', $localisation)
                     ->setParameter('nature', strtolower($nature))
@@ -5336,4 +5332,37 @@ class SimplifiedMaintenanceController extends AbstractController
             }
         }
     }
+
+    /**
+     * Mapping complet des noms de champs pour référence future
+     * 
+     * PROPRIÉTÉ PHP (dans DQL)          → GETTER/SETTER (dans le code)
+     * ================================     ==========================
+     * id_contact                       → getIdContact() / setIdContact()
+     * numero_equipement                → getNumeroEquipement() / setNumeroEquipement()
+     * libelle_equipement               → getLibelleEquipement() / setLibelleEquipement()
+     * mode_fonctionnement              → getModeFonctionnement() / setModeFonctionnement()
+     * repere_site_client               → getRepereSiteClient() / setRepereSiteClient()
+     * mise_en_service                  → getMiseEnService() / setMiseEnService()
+     * numero_de_serie                  → getNumeroDeSerie() / setNumeroDeSerie()
+     * marque                           → getMarque() / setMarque()
+     * hauteur                          → getHauteur() / setHauteur()
+     * largeur                          → getLargeur() / setLargeur()
+     * longueur                         → getLongueur() / setLongueur()
+     * plaque_signaletique              → getPlaqueSignaletique() / setPlaqueSignaletique()
+     * anomalies                        → getAnomalies() / setAnomalies()
+     * etat                             → getEtat() / setEtat()
+     * derniere_visite                  → getDerniereVisite() / setDerniereVisite()
+     * trigramme_tech                   → getTrigrammeTech() / setTrigrammeTech()
+     * code_societe                     → getCodeSociete() / setCodeSociete()
+     * raison_sociale                   → getRaisonSociale() / setRaisonSociale()
+     * signature_tech                   → getSignatureTech() / setSignatureTech()
+     * code_agence                      → getCodeAgence() / setCodeAgence()
+     * statut_de_maintenance            → getStatutDeMaintenance() / setStatutDeMaintenance()
+     * date_enregistrement              → getDateEnregistrement() / setDateEnregistrement()
+     * isEtatDesLieuxFait              → isEtatDesLieuxFait() / setEtatDesLieuxFait()
+     * isEnMaintenance                 → isEnMaintenance() / setEnMaintenance()
+     * visite                          → getVisite() / setVisite()
+     * is_archive                      → isArchive() / setIsArchive()
+     */
 }
