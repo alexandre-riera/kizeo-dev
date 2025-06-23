@@ -5183,7 +5183,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Libellé final: " . $equipement->getLibelleEquipement());
             error_log("Mode fonctionnement final: " . $equipement->getModeFonctionnement());
             error_log("En maintenance final: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-            error_log("Is archive final: " . ($equipement->getIsArchive() ? 'true' : 'false'));
+            error_log("Is archive final: " . ($equipement->isArchive() ? 'true' : 'false'));
             
             // 5. Sauvegarder les photos SEULEMENT si pas de doublon
             try {
