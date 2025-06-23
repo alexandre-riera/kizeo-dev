@@ -3176,7 +3176,7 @@ class SimplifiedMaintenanceController extends AbstractController
     private function setRealCommonDataFixed($equipement, array $fields): void
     {
         error_log("=== setRealCommonDataFixed START ===");
-        
+
         // CORRECTION : Utiliser les vrais noms de champs
         $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
         $equipement->setIdContact($fields['id_client_']['value'] ?? '');
@@ -4998,7 +4998,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             // Étape 1: Données communes SANS setEnMaintenance
                             $this->setRealCommonDataFixed($equipement, $fields);
                             error_log("Données communes définies pour équipement hors contrat");
-                            error_log("État en_maintenance après données communes: " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+                            error_log("État en_maintenance après données communes: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
                             
                             // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
@@ -5016,7 +5016,7 @@ class SimplifiedMaintenanceController extends AbstractController
                                 error_log("VÉRIFICATION AVANT PERSIST:");
                                 error_log("- Numéro: " . $equipement->getNumeroEquipement());
                                 error_log("- Libellé: " . $equipement->getLibelleEquipement());
-                                error_log("- En maintenance: " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+                                error_log("- En maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
                                 
                                 $entityManager->persist($equipement);
                                 $equipmentsProcessed++;
@@ -5118,7 +5118,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("=== DÉBUT ATTRIBUTION DES DONNÉES ===");
             
             // Vérifier l'état initial de l'objet
-            error_log("État initial en_maintenance: " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+            error_log("État initial en_maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
             
             $equipement->setNumeroEquipement($numeroFormate);
             error_log("Numéro équipement défini: " . $numeroFormate);
@@ -5173,9 +5173,9 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Statut maintenance défini: '" . $statutMaintenance . "'");
             
             // CRITIQUE: Équipements hors contrat ne sont PAS en maintenance
-            error_log("AVANT setEnMaintenance(false): " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+            error_log("AVANT setEnMaintenance(false): " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
             $equipement->setEnMaintenance(false);
-            error_log("APRÈS setEnMaintenance(false): " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+            error_log("APRÈS setEnMaintenance(false): " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
             
             $equipement->setIsArchive(false);
             error_log("Is archive défini: false");
@@ -5185,7 +5185,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Numéro équipement final: " . $equipement->getNumeroEquipement());
             error_log("Libellé final: " . $equipement->getLibelleEquipement());
             error_log("Mode fonctionnement final: " . $equipement->getModeFonctionnement());
-            error_log("En maintenance final: " . ($equipement->getEnMaintenance() ? 'true' : 'false'));
+            error_log("En maintenance final: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
             error_log("Is archive final: " . ($equipement->getIsArchive() ? 'true' : 'false'));
             
             // 5. Sauvegarder les photos SEULEMENT si pas de doublon
