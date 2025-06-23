@@ -356,7 +356,75 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Traitement automatique de toutes les soumissions d'un formulaire par agence
+     * Récupérer toutes les soumissions d'un formulaire
+     */
+    private function getFormSubmissions(string $formId, string $mode = 'all_unprocessed'): array
+    {
+        try {
+            if ($mode === 'all_unprocessed') {
+                // Pour les non lus, utiliser l'endpoint unread avec action par défaut
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread/default/1000?includeupdated', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
+            } else {
+                // Pour toutes les données, utiliser l'endpoint simple data/all
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/all', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
+            }
+
+            $data = $response->toArray();
+            $submissions = $data['data'] ?? [];
+            
+            // Normaliser la structure des données selon l'endpoint
+            $normalizedSubmissions = [];
+            foreach ($submissions as $submission) {
+                // L'endpoint 'unread' utilise '_id', l'endpoint 'all' utilise 'id'
+                $entryId = $submission['_id'] ?? $submission['id'] ?? null;
+                $recordDate = $submission['_record_date'] ?? $submission['create_time'] ?? $submission['_create_time'] ?? null;
+                
+                if ($entryId) {
+                    $normalizedSubmissions[] = [
+                        '_id' => $entryId,
+                        '_record_date' => $recordDate,
+                        '_form_id' => $formId,
+                        'original_data' => $submission
+                    ];
+                }
+            }
+            
+            // Log pour debugging
+            error_log("API Response for form {$formId} (mode: {$mode}): " . json_encode([
+                'status_code' => $response->getStatusCode(),
+                'raw_data_count' => count($submissions),
+                'normalized_count' => count($normalizedSubmissions),
+                'sample_keys' => !empty($submissions) ? array_keys($submissions[0]) : []
+            ]));
+            
+            return $normalizedSubmissions;
+
+        } catch (\Exception $e) {
+            error_log("Erreur getFormSubmissions pour form {$formId}: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Traitement automatique de toutes les soumissions d'un formulaire par agence (VERSION CORRIGÉE)
      */
     #[Route('/api/maintenance/process-auto-chunked-all/{agencyCode}', name: 'app_maintenance_process_auto_chunked_all', methods: ['GET'])]
     public function processMaintenanceAutoChunkedAll(
@@ -365,9 +433,9 @@ class SimplifiedMaintenanceController extends AbstractController
         Request $request
     ): JsonResponse {
         
-        // Configuration pour traitement de masse
-        ini_set('memory_limit', '2G');
-        ini_set('max_execution_time', 1800); // 30 minutes max
+        // Configuration pour traitement de masse avec gestion mémoire améliorée
+        ini_set('memory_limit', '1G'); // Réduction pour éviter l'épuisement
+        ini_set('max_execution_time', 900); // 15 minutes max
         set_time_limit(0);
         gc_enable();
         
@@ -378,10 +446,12 @@ class SimplifiedMaintenanceController extends AbstractController
         }
 
         $formId = $request->query->get('form_id', '1088761');
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
-        $mode = $request->query->get('mode', 'all_unprocessed'); // all_unprocessed ou all
+        $chunkSize = (int) $request->query->get('chunk_size', 10); // Réduction pour éviter les problèmes mémoire
+        $mode = $request->query->get('mode', 'all_unprocessed');
 
         try {
+            error_log("=== DEBUT TRAITEMENT AGENCE {$agencyCode} - FORM {$formId} ===");
+            
             // 1. Récupérer toutes les soumissions du formulaire
             $submissions = $this->getFormSubmissions($formId, $mode);
             
@@ -390,51 +460,88 @@ class SimplifiedMaintenanceController extends AbstractController
                     'success' => true,
                     'message' => 'Aucune soumission à traiter pour le formulaire ' . $formId,
                     'agency' => $agencyCode,
-                    'total_submissions' => 0
+                    'total_submissions' => 0,
+                    'mode' => $mode
                 ]);
             }
 
-            // 2. Filtrer par agence et compter les équipements
+            error_log("Soumissions récupérées: " . count($submissions));
+
+            // 2. Filtrer par agence et compter les équipements (traitement par lots pour économiser la mémoire)
             $relevantSubmissions = [];
             $totalEquipments = 0;
+            $processedCount = 0;
 
-            foreach ($submissions as $submission) {
-                $submissionData = $this->getSubmissionData($formId, $submission['_id']);
-                
-                if (!$submissionData || !isset($submissionData['data']['fields'])) {
+            foreach ($submissions as $index => $submission) {
+                try {
+                    $entryId = $submission['_id'];
+                    $submissionData = $this->getSubmissionData($formId, $entryId);
+                    
+                    if (!$submissionData || !isset($submissionData['data']['fields'])) {
+                        error_log("Soumission {$entryId} : pas de données valides");
+                        continue;
+                    }
+
+                    $fields = $submissionData['data']['fields'];
+                    
+                    // Vérifier si c'est la bonne agence
+                    $submissionAgency = $fields['code_agence']['value'] ?? $fields['id_agence']['value'] ?? null;
+                    
+                    if ($submissionAgency === $agencyCode) {
+                        $contractCount = count($fields['contrat_de_maintenance']['value'] ?? []);
+                        $offContractCount = count($fields['tableau2']['value'] ?? $fields['hors_contrat']['value'] ?? []);
+                        $equipmentCount = $contractCount + $offContractCount;
+                        
+                        $relevantSubmissions[] = [
+                            'entry_id' => $entryId,
+                            'equipment_count' => $equipmentCount,
+                            'client_name' => $fields['nom_du_client']['value'] ?? $fields['nom_client']['value'] ?? 'N/A',
+                            'date' => $submission['_record_date'] ?? 'N/A'
+                        ];
+                        
+                        $totalEquipments += $equipmentCount;
+                        
+                        error_log("Soumission retenue: {$entryId} - Client: " . ($fields['nom_du_client']['value'] ?? 'N/A') . " - Équipements: {$equipmentCount}");
+                    }
+                    
+                    $processedCount++;
+                    
+                    // Nettoyage mémoire périodique
+                    if ($processedCount % 10 === 0) {
+                        gc_collect_cycles();
+                        $memoryUsage = memory_get_usage(true) / 1024 / 1024;
+                        error_log("Progression: {$processedCount}/" . count($submissions) . " - Mémoire: {$memoryUsage}MB");
+                        
+                        // Protection contre l'épuisement mémoire
+                        if ($memoryUsage > 800) {
+                            error_log("ATTENTION: Utilisation mémoire élevée ({$memoryUsage}MB), arrêt du préfiltrage");
+                            break;
+                        }
+                    }
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur traitement soumission {$index}: " . $e->getMessage());
                     continue;
                 }
-
-                $fields = $submissionData['data']['fields'];
-                
-                // Vérifier si c'est la bonne agence
-                if (isset($fields['code_agence']['value']) && $fields['code_agence']['value'] === $agencyCode) {
-                    $contractCount = count($fields['contrat_de_maintenance']['value'] ?? []);
-                    $offContractCount = count($fields['tableau2']['value'] ?? []);
-                    $equipmentCount = $contractCount + $offContractCount;
-                    
-                    $relevantSubmissions[] = [
-                        'entry_id' => $submission['_id'],
-                        'equipment_count' => $equipmentCount,
-                        'client_name' => $fields['nom_du_client']['value'] ?? 'N/A',
-                        'date' => $submission['_record_date'] ?? 'N/A'
-                    ];
-                    
-                    $totalEquipments += $equipmentCount;
-                }
             }
+
+            // Libérer la mémoire des soumissions non pertinentes
+            unset($submissions);
+            gc_collect_cycles();
 
             if (empty($relevantSubmissions)) {
                 return new JsonResponse([
                     'success' => true,
                     'message' => 'Aucune soumission trouvée pour l\'agence ' . $agencyCode,
                     'agency' => $agencyCode,
-                    'total_submissions_checked' => count($submissions),
+                    'total_submissions_checked' => $processedCount,
                     'relevant_submissions' => 0
                 ]);
             }
 
-            // 3. Traitement de toutes les soumissions
+            error_log("Soumissions pertinentes pour {$agencyCode}: " . count($relevantSubmissions) . " (total équipements: {$totalEquipments})");
+
+            // 3. Traitement de toutes les soumissions pertinentes
             $startTime = time();
             $allResults = [];
             $totalProcessed = 0;
@@ -445,10 +552,18 @@ class SimplifiedMaintenanceController extends AbstractController
 
             foreach ($relevantSubmissions as $index => $submissionInfo) {
                 try {
+                    $currentMemory = memory_get_usage(true) / 1024 / 1024;
                     error_log("Traitement soumission " . ($index + 1) . "/" . count($relevantSubmissions) . 
                              " - Entry ID: " . $submissionInfo['entry_id'] . 
                              " - Client: " . $submissionInfo['client_name'] . 
-                             " - Équipements: " . $submissionInfo['equipment_count']);
+                             " - Équipements: " . $submissionInfo['equipment_count'] .
+                             " - Mémoire: {$currentMemory}MB");
+
+                    // Protection mémoire avant traitement
+                    if ($currentMemory > 900) {
+                        error_log("ARRÊT: Limite mémoire atteinte ({$currentMemory}MB)");
+                        break;
+                    }
 
                     // Appel au traitement automatique par chunks pour cette soumission
                     $submissionRequest = Request::create(
@@ -502,11 +617,12 @@ class SimplifiedMaintenanceController extends AbstractController
                                  ($submissionData['error'] ?? 'Erreur inconnue'));
                     }
 
-                    // Nettoyage mémoire après chaque soumission
+                    // Nettoyage mémoire intensif après chaque soumission
+                    $entityManager->clear();
                     gc_collect_cycles();
                     
-                    // Pause courte pour éviter la surcharge
-                    usleep(100000); // 0.1 seconde
+                    // Pause pour éviter la surcharge
+                    usleep(200000); // 0.2 seconde
 
                 } catch (\Exception $e) {
                     $submissionsWithErrors++;
@@ -518,10 +634,17 @@ class SimplifiedMaintenanceController extends AbstractController
                         'status' => 'exception'
                     ];
                     error_log("Exception traitement soumission " . $submissionInfo['entry_id'] . ": " . $e->getMessage());
+                    
+                    // Nettoyage d'urgence en cas d'erreur
+                    $entityManager->clear();
+                    gc_collect_cycles();
                 }
             }
             
             $processingTime = time() - $startTime;
+            $finalMemory = memory_get_usage(true) / 1024 / 1024;
+            
+            error_log("=== FIN TRAITEMENT {$agencyCode} - Temps: {$processingTime}s - Mémoire finale: {$finalMemory}MB ===");
             
             return new JsonResponse([
                 'success' => true,
@@ -529,7 +652,6 @@ class SimplifiedMaintenanceController extends AbstractController
                 'form_id' => $formId,
                 'mode' => $mode,
                 'global_summary' => [
-                    'total_submissions_found' => count($submissions),
                     'relevant_submissions' => count($relevantSubmissions),
                     'submissions_processed' => $submissionsProcessed,
                     'submissions_with_errors' => $submissionsWithErrors,
@@ -539,19 +661,21 @@ class SimplifiedMaintenanceController extends AbstractController
                     'total_errors' => $totalErrors,
                     'total_processing_time_seconds' => $processingTime,
                     'chunk_size_used' => $chunkSize,
-                    'success_rate' => round(($submissionsProcessed / count($relevantSubmissions)) * 100, 2)
+                    'success_rate' => count($relevantSubmissions) > 0 ? round(($submissionsProcessed / count($relevantSubmissions)) * 100, 2) : 0,
+                    'memory_usage_mb' => $finalMemory
                 ],
                 'submission_details' => $allResults,
                 'status' => $submissionsWithErrors === 0 ? 'completed_success' : 'completed_with_errors',
                 'message' => sprintf(
-                    "Traitement terminé pour l'agence %s: %d/%d soumissions traitées, %d/%d équipements traités, %d photos en %ds",
+                    "Traitement terminé pour l'agence %s: %d/%d soumissions traitées, %d/%d équipements traités, %d photos en %ds (Mémoire: %.1fMB)",
                     $agencyCode,
                     $submissionsProcessed,
                     count($relevantSubmissions),
                     $totalProcessed,
                     $totalEquipments,
                     $totalPhotos,
-                    $processingTime
+                    $processingTime,
+                    $finalMemory
                 )
             ]);
 
@@ -559,7 +683,8 @@ class SimplifiedMaintenanceController extends AbstractController
             return new JsonResponse([
                 'success' => false,
                 'error' => $e->getMessage(),
-                'agency' => $agencyCode
+                'agency' => $agencyCode,
+                'memory_usage_mb' => memory_get_usage(true) / 1024 / 1024
             ], 500);
         }
     }
@@ -1102,4 +1227,5 @@ class SimplifiedMaintenanceController extends AbstractController
             return 1;
         }
     }
+
 }
