@@ -690,6 +690,89 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
+     * Récupérer toutes les soumissions d'un formulaire
+     */
+    private function getFormSubmissions(string $formId, string $mode = 'all_unprocessed'): array
+    {
+        try {
+            if ($mode === 'all_unprocessed') {
+                // Pour les non lus, utiliser l'endpoint unread avec action par défaut
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread/default/1000?includeupdated', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
+            } else {
+                // Pour toutes les données, utiliser POST avec filtre vide
+                $response = $this->client->request('POST', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            'Content-Type' => 'application/json',
+                        ],
+                        'body' => json_encode([
+                            'filters' => [],
+                            'order_by' => '_record_date',
+                            'order' => 'desc',
+                            'limit' => 1000
+                        ]),
+                        'timeout' => 60
+                    ]
+                );
+            }
+
+            $data = $response->toArray();
+            
+            // Log pour debugging
+            error_log("API Response for form {$formId} (mode: {$mode}): " . json_encode([
+                'status_code' => $response->getStatusCode(),
+                'has_data' => isset($data['data']),
+                'data_count' => isset($data['data']) ? count($data['data']) : 0,
+                'response_keys' => array_keys($data)
+            ]));
+            
+            return $data['data'] ?? [];
+
+        } catch (\Exception $e) {
+            error_log("Erreur getFormSubmissions pour form {$formId}: " . $e->getMessage());
+            
+            // Fallback: essayer l'endpoint simple data/all
+            try {
+                $response = $this->client->request('GET', 
+                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/all', 
+                    [
+                        'headers' => [
+                            'Accept' => 'application/json',
+                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        ],
+                        'timeout' => 60
+                    ]
+                );
+                
+                $data = $response->toArray();
+                error_log("Fallback API Response for form {$formId}: " . json_encode([
+                    'status_code' => $response->getStatusCode(),
+                    'has_data' => isset($data['data']),
+                    'data_count' => isset($data['data']) ? count($data['data']) : 0
+                ]));
+                
+                return $data['data'] ?? [];
+                
+            } catch (\Exception $fallbackError) {
+                error_log("Erreur fallback getFormSubmissions: " . $fallbackError->getMessage());
+                return [];
+            }
+        }
+    }
+
+    /**
      * Récupérer les données détaillées d'une soumission
      */
     private function getSubmissionData(string $formId, string $entryId): ?array
@@ -746,8 +829,309 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Route de diagnostic pour vérifier l'API Kizeo
+     * Traitement par micro-lots pour éviter l'épuisement mémoire
      */
+    #[Route('/api/maintenance/process-micro-batch/{agencyCode}', name: 'app_maintenance_process_micro_batch', methods: ['GET'])]
+    public function processMaintenanceMicroBatch(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration ultra-conservative
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 600);
+        set_time_limit(0);
+        gc_enable();
+        
+        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+        if (!in_array($agencyCode, $validAgencies)) {
+            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+        }
+
+        $formId = $request->query->get('form_id', '1052966');
+        $batchSize = (int) $request->query->get('batch_size', 5); // Traiter 5 soumissions à la fois
+        $startIndex = (int) $request->query->get('start_index', 0);
+        $mode = $request->query->get('mode', 'all');
+
+        try {
+            error_log("=== MICRO-BATCH {$agencyCode} - Form: {$formId} - Start: {$startIndex} ===");
+            
+            // 1. Récupérer les soumissions par petits groupes
+            $allSubmissions = $this->getFormSubmissions($formId, $mode);
+            
+            if (empty($allSubmissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission disponible',
+                    'agency' => $agencyCode,
+                    'total_submissions' => 0
+                ]);
+            }
+
+            // 2. Découper en micro-lot
+            $batchSubmissions = array_slice($allSubmissions, $startIndex, $batchSize);
+            $totalSubmissions = count($allSubmissions);
+            
+            if (empty($batchSubmissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Fin du traitement - tous les micro-lots traités',
+                    'agency' => $agencyCode,
+                    'start_index' => $startIndex,
+                    'total_submissions' => $totalSubmissions,
+                    'is_complete' => true
+                ]);
+            }
+
+            error_log("Micro-lot: " . count($batchSubmissions) . " soumissions ({$startIndex} à " . ($startIndex + count($batchSubmissions) - 1) . "/{$totalSubmissions})");
+
+            // 3. Traiter uniquement ce micro-lot
+            $results = [];
+            $totalProcessed = 0;
+            $totalEquipments = 0;
+            $totalPhotos = 0;
+            $errors = [];
+
+            foreach ($batchSubmissions as $index => $submission) {
+                $currentIndex = $startIndex + $index;
+                $entryId = $submission['_id'];
+                
+                try {
+                    $memoryBefore = memory_get_usage(true) / 1024 / 1024;
+                    error_log("Traitement soumission {$currentIndex}: {$entryId} - Mémoire avant: {$memoryBefore}MB");
+
+                    // Récupérer et vérifier les données
+                    $submissionData = $this->getSubmissionData($formId, $entryId);
+                    
+                    if (!$submissionData || !isset($submissionData['data']['fields'])) {
+                        error_log("Soumission {$entryId}: données invalides");
+                        continue;
+                    }
+
+                    $fields = $submissionData['data']['fields'];
+                    $submissionAgency = $fields['code_agence']['value'] ?? $fields['id_agence']['value'] ?? null;
+                    
+                    if ($submissionAgency !== $agencyCode) {
+                        error_log("Soumission {$entryId}: agence {$submissionAgency} ≠ {$agencyCode}");
+                        continue;
+                    }
+
+                    // Traitement de cette soumission
+                    $submissionRequest = Request::create(
+                        '/api/maintenance/process-auto-chunked/' . $agencyCode,
+                        'GET',
+                        [
+                            'form_id' => $formId,
+                            'entry_id' => $entryId,
+                            'chunk_size' => 3 // Chunk ultra-petit
+                        ]
+                    );
+                    
+                    $submissionResponse = $this->processMaintenanceAutoChunked($agencyCode, $entityManager, $submissionRequest);
+                    $submissionResult = json_decode($submissionResponse->getContent(), true);
+                    
+                    if ($submissionResult['success']) {
+                        $processed = $submissionResult['summary']['total_processed'];
+                        $photos = $submissionResult['summary']['total_photos'];
+                        
+                        $totalProcessed++;
+                        $totalEquipments += $processed;
+                        $totalPhotos += $photos;
+                        
+                        $results[] = [
+                            'index' => $currentIndex,
+                            'entry_id' => $entryId,
+                            'client_name' => $fields['nom_du_client']['value'] ?? $fields['nom_client']['value'] ?? 'N/A',
+                            'equipments_processed' => $processed,
+                            'photos_processed' => $photos,
+                            'status' => 'success'
+                        ];
+                        
+                        error_log("Soumission {$entryId}: SUCCESS - {$processed} équipements, {$photos} photos");
+                    } else {
+                        $errors[] = [
+                            'index' => $currentIndex,
+                            'entry_id' => $entryId,
+                            'error' => $submissionResult['error'] ?? 'Erreur inconnue'
+                        ];
+                        error_log("Soumission {$entryId}: ERROR - " . ($submissionResult['error'] ?? 'Erreur inconnue'));
+                    }
+
+                    // Nettoyage intensif après chaque soumission
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                    
+                    $memoryAfter = memory_get_usage(true) / 1024 / 1024;
+                    error_log("Soumission {$entryId}: terminée - Mémoire après: {$memoryAfter}MB");
+                    
+                    // Protection mémoire
+                    if ($memoryAfter > 400) {
+                        error_log("ATTENTION: Mémoire élevée ({$memoryAfter}MB), arrêt du micro-lot");
+                        break;
+                    }
+                    
+                    // Pause entre soumissions
+                    usleep(300000); // 0.3 seconde
+
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'index' => $currentIndex,
+                        'entry_id' => $entryId,
+                        'error' => $e->getMessage()
+                    ];
+                    error_log("Exception soumission {$entryId}: " . $e->getMessage());
+                    
+                    // Nettoyage d'urgence
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                }
+            }
+
+            // 4. Calculer les infos pour le prochain micro-lot
+            $nextIndex = $startIndex + $batchSize;
+            $isComplete = $nextIndex >= $totalSubmissions;
+            $nextUrl = $isComplete ? null : 
+                "/api/maintenance/process-micro-batch/{$agencyCode}?form_id={$formId}&start_index={$nextIndex}&batch_size={$batchSize}&mode={$mode}";
+
+            $finalMemory = memory_get_usage(true) / 1024 / 1024;
+            error_log("=== FIN MICRO-BATCH - Processed: {$totalProcessed}, Mémoire finale: {$finalMemory}MB ===");
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'micro_batch_info' => [
+                    'start_index' => $startIndex,
+                    'batch_size' => $batchSize,
+                    'total_submissions' => $totalSubmissions,
+                    'processed_in_batch' => $totalProcessed,
+                    'total_equipments' => $totalEquipments,
+                    'total_photos' => $totalPhotos,
+                    'errors_count' => count($errors),
+                    'is_complete' => $isComplete,
+                    'next_index' => $nextIndex,
+                    'progress_percent' => round(($nextIndex / $totalSubmissions) * 100, 1),
+                    'memory_usage_mb' => $finalMemory
+                ],
+                'results' => $results,
+                'errors' => $errors,
+                'next_call' => $nextUrl,
+                'message' => $isComplete ? 
+                    "Micro-lots terminés: {$totalProcessed} soumissions, {$totalEquipments} équipements traités" :
+                    "Micro-lot {$startIndex}-{$nextIndex} terminé: {$totalProcessed} soumissions, {$totalEquipments} équipements. Appeler next_call pour continuer"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'agency' => $agencyCode,
+                'memory_usage_mb' => memory_get_usage(true) / 1024 / 1024
+            ], 500);
+        }
+    }
+
+    /**
+     * Route de traitement automatique des micro-lots
+     */
+    #[Route('/api/maintenance/process-all-micro-batches/{agencyCode}', name: 'app_maintenance_process_all_micro_batches', methods: ['GET'])]
+    public function processAllMicroBatches(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id', '1052966');
+        $batchSize = (int) $request->query->get('batch_size', 3);
+        $maxBatches = (int) $request->query->get('max_batches', 20); // Limite de sécurité
+        
+        $allResults = [];
+        $currentIndex = 0;
+        $batchCount = 0;
+        $totalProcessed = 0;
+        $totalEquipments = 0;
+        $startTime = time();
+        
+        error_log("=== DEBUT TRAITEMENT AUTO MICRO-BATCHES {$agencyCode} ===");
+        
+        while ($batchCount < $maxBatches) {
+            try {
+                error_log("Lancement micro-batch {$batchCount} à partir de l'index {$currentIndex}");
+                
+                // Appel au micro-batch
+                $batchRequest = Request::create(
+                    '/api/maintenance/process-micro-batch/' . $agencyCode,
+                    'GET',
+                    [
+                        'form_id' => $formId,
+                        'start_index' => $currentIndex,
+                        'batch_size' => $batchSize,
+                        'mode' => 'all'
+                    ]
+                );
+                
+                $batchResponse = $this->processMaintenanceMicroBatch($agencyCode, $entityManager, $batchRequest);
+                $batchData = json_decode($batchResponse->getContent(), true);
+                
+                if (!$batchData['success']) {
+                    error_log("Erreur micro-batch {$batchCount}: " . ($batchData['error'] ?? 'Erreur inconnue'));
+                    break;
+                }
+                
+                $batchInfo = $batchData['micro_batch_info'];
+                $totalProcessed += $batchInfo['processed_in_batch'];
+                $totalEquipments += $batchInfo['total_equipments'];
+                
+                $allResults[] = [
+                    'batch_number' => $batchCount,
+                    'start_index' => $currentIndex,
+                    'processed' => $batchInfo['processed_in_batch'],
+                    'equipments' => $batchInfo['total_equipments'],
+                    'photos' => $batchInfo['total_photos'],
+                    'errors' => $batchInfo['errors_count'],
+                    'memory_mb' => $batchInfo['memory_usage_mb']
+                ];
+                
+                error_log("Micro-batch {$batchCount} terminé: {$batchInfo['processed_in_batch']} soumissions, {$batchInfo['total_equipments']} équipements");
+                
+                if ($batchInfo['is_complete']) {
+                    error_log("Tous les micro-lots terminés après {$batchCount} batches");
+                    break;
+                }
+                
+                $currentIndex = $batchInfo['next_index'];
+                $batchCount++;
+                
+                // Pause entre micro-lots
+                sleep(1);
+                
+            } catch (\Exception $e) {
+                error_log("Exception micro-batch {$batchCount}: " . $e->getMessage());
+                break;
+            }
+        }
+        
+        $totalTime = time() - $startTime;
+        error_log("=== FIN TRAITEMENT AUTO MICRO-BATCHES - {$totalProcessed} soumissions en {$totalTime}s ===");
+        
+        return new JsonResponse([
+            'success' => true,
+            'agency' => $agencyCode,
+            'form_id' => $formId,
+            'final_summary' => [
+                'total_batches_processed' => $batchCount,
+                'total_submissions_processed' => $totalProcessed,
+                'total_equipments_created' => $totalEquipments,
+                'total_processing_time_seconds' => $totalTime,
+                'batch_size_used' => $batchSize,
+                'completed' => $batchCount < $maxBatches
+            ],
+            'batch_details' => $allResults,
+            'message' => "Traitement par micro-lots terminé: {$totalProcessed} soumissions, {$totalEquipments} équipements en {$totalTime}s"
+        ]);
+    }
     #[Route('/api/maintenance/debug-kizeo/{formId}', name: 'app_maintenance_debug_kizeo', methods: ['GET'])]
     public function debugKizeoApi(string $formId, Request $request): JsonResponse
     {
