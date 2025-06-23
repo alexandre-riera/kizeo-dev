@@ -4351,4 +4351,538 @@ class SimplifiedMaintenanceController extends AbstractController
             'message' => "Traitement global terminé: {$totalSubmissions} soumissions, {$totalEquipments} équipements, {$totalPhotos} photos en {$totalTime}s"
         ]);
     }
+
+    /**
+     * PROCESSEUR OPTIMISÉ avec déduplication et gestion mémoire améliorée
+     */
+
+    /**
+     * Vérifier si un équipement existe déjà en base
+     */
+    private function equipmentExists(string $numeroEquipement, string $idClient, string $entityClass, EntityManagerInterface $entityManager): bool
+    {
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            
+            $existing = $repository->createQueryBuilder('e')
+                ->where('e.numero_equipement = :numero')
+                ->andWhere('e.id_contact = :idClient')
+                ->setParameter('numero', $numeroEquipement)
+                ->setParameter('idClient', $idClient)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            return $existing !== null;
+            
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Vérifier si une entrée Form existe déjà
+     */
+    private function formEntryExists(string $formId, string $entryId, string $equipmentCode, EntityManagerInterface $entityManager): bool
+    {
+        try {
+            $repository = $entityManager->getRepository(\App\Entity\Form::class);
+            
+            $existing = $repository->createQueryBuilder('f')
+                ->where('f.form_id = :formId')
+                ->andWhere('f.data_id = :entryId')
+                ->andWhere('f.equipment_id = :equipmentCode')
+                ->setParameter('formId', $formId)
+                ->setParameter('entryId', $entryId)
+                ->setParameter('equipmentCode', $equipmentCode)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            return $existing !== null;
+            
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Setters avec vérification de doublons
+     */
+    private function setRealContractDataWithFormPhotosAndDeduplication(
+        $equipement, 
+        array $equipmentContrat, 
+        array $fields, 
+        string $formId, 
+        string $entryId, 
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): bool {
+        
+        // 1. Données de base
+        $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
+        $idClient = $fields['id_client_']['value'] ?? '';
+        
+        // 2. Vérifier si l'équipement existe déjà
+        if ($this->equipmentExists($numeroEquipement, $idClient, $entityClass, $entityManager)) {
+            return false; // Skip car déjà existe
+        }
+        
+        // 3. Continuer avec le traitement normal
+        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        $equipement->setVisite($visite);
+        
+        $equipement->setNumeroEquipement($numeroEquipement);
+        
+        $libelle = $equipmentContrat['reference7']['value'] ?? '';
+        $equipement->setLibelleEquipement($libelle);
+        
+        $miseEnService = $equipmentContrat['reference2']['value'] ?? '';
+        $equipement->setMiseEnService($miseEnService);
+        
+        $numeroSerie = $equipmentContrat['reference6']['value'] ?? '';
+        $equipement->setNumeroDeSerie($numeroSerie);
+        
+        $marque = $equipmentContrat['reference5']['value'] ?? '';
+        $equipement->setMarque($marque);
+        
+        $hauteur = $equipmentContrat['reference1']['value'] ?? '';
+        $equipement->setHauteur($hauteur);
+        
+        $largeur = $equipmentContrat['reference3']['value'] ?? '';
+        $equipement->setLargeur($largeur);
+        
+        $localisation = $equipmentContrat['localisation_site_client']['value'] ?? '';
+        $equipement->setRepereSiteClient($localisation);
+        
+        $modeFonctionnement = $equipmentContrat['mode_fonctionnement_2']['value'] ?? '';
+        $equipement->setModeFonctionnement($modeFonctionnement);
+        
+        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+        
+        $etat = $equipmentContrat['etat']['value'] ?? '';
+        $equipement->setEtat($etat);
+        
+        $longueur = $equipmentContrat['longueur']['value'] ?? '';
+        $equipement->setLongueur($longueur);
+        
+        $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
+        $equipement->setStatutDeMaintenance($statut);
+        
+        $equipement->setEnMaintenance(true);
+        
+        // 4. Sauvegarder les photos SEULEMENT si pas de doublon
+        $this->savePhotosToFormEntityWithDeduplication($equipmentContrat, $fields, $formId, $entryId, $numeroEquipement, $entityManager);
+        
+        return true; // Équipement traité avec succès
+    }
+
+    /**
+     * Sauvegarder les photos avec vérification de doublons
+     */
+    private function savePhotosToFormEntityWithDeduplication(
+        array $equipmentData, 
+        array $fields, 
+        string $formId, 
+        string $entryId, 
+        string $equipmentCode, 
+        EntityManagerInterface $entityManager
+    ): void {
+        
+        // Vérifier si l'entrée Form existe déjà
+        if ($this->formEntryExists($formId, $entryId, $equipmentCode, $entityManager)) {
+            return; // Skip car déjà existe
+        }
+        
+        try {
+            // Créer une nouvelle entrée Form
+            $form = new \App\Entity\Form();
+            
+            // Informations de référence
+            $form->setFormId($formId);
+            $form->setDataId($entryId);
+            $form->setEquipmentId($equipmentCode);
+            $form->setCodeEquipement($equipmentCode);
+            $form->setRaisonSocialeVisite($fields['nom_client']['value'] ?? '');
+            $form->setUpdateTime(date('Y-m-d H:i:s'));
+            
+            // Photos (même logique que précédemment)
+            if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
+                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
+            }
+            
+            if (!empty($equipmentData['photo2']['value'])) {
+                $form->setPhoto2($equipmentData['photo2']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
+                $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
+            }
+            
+            // Autres photos...
+            $this->setAllPhotosToForm($form, $equipmentData);
+            
+            // Sauvegarder l'entité Form
+            $entityManager->persist($form);
+            
+        } catch (\Exception $e) {
+            error_log("Erreur sauvegarde photos Form: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Route optimisée pour traitement par form_id avec déduplication
+     */
+    #[Route('/api/maintenance/process-form-optimized/{agencyCode}', name: 'app_maintenance_process_form_optimized', methods: ['GET'])]
+    public function processMaintenanceByFormIdOptimized(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration mémoire très conservatrice
+        ini_set('memory_limit', '1G');
+        ini_set('max_execution_time', 300); // 5 minutes max
+        
+        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+        if (!in_array($agencyCode, $validAgencies)) {
+            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+        }
+
+        $formId = $request->query->get('form_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 10); // Réduire à 10 par défaut
+        $maxSubmissions = (int) $request->query->get('max_submissions', 20); // Limiter à 20 soumissions max
+        
+        // Si pas de form_id fourni, utiliser le mapping par défaut
+        if (!$formId) {
+            $agencyMapping = $this->getAgencyFormMapping();
+            $formId = $agencyMapping[$agencyCode] ?? null;
+            
+            if (!$formId) {
+                return new JsonResponse([
+                    'error' => 'Aucun form_id trouvé pour l\'agence ' . $agencyCode,
+                    'available_agencies' => array_keys($agencyMapping)
+                ], 400);
+            }
+        }
+
+        try {
+            $startTime = time();
+            
+            // 1. Récupérer les soumissions avec limite stricte
+            $submissions = $this->getFormSubmissionsOptimized($formId, $agencyCode, $maxSubmissions);
+            
+            if (empty($submissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
+                    'agency' => $agencyCode,
+                    'form_id' => $formId,
+                    'processed_submissions' => 0
+                ]);
+            }
+            
+            // 2. Traiter par petits lots
+            $results = [];
+            $totalEquipments = 0;
+            $totalPhotos = 0;
+            $totalSkipped = 0;
+            $totalErrors = 0;
+            $processedSubmissions = 0;
+            
+            $entityClass = $this->getEntityClassByAgency($agencyCode);
+            
+            foreach ($submissions as $submissionIndex => $submission) {
+                try {
+                    $submissionStartTime = time();
+                    
+                    // Traitement d'une soumission avec déduplication
+                    $result = $this->processSingleSubmissionWithDeduplication(
+                        $submission, 
+                        $agencyCode, 
+                        $entityClass, 
+                        $chunkSize, 
+                        $entityManager
+                    );
+                    
+                    $totalEquipments += $result['equipments_processed'];
+                    $totalPhotos += $result['photos_saved'];
+                    $totalSkipped += $result['equipments_skipped'];
+                    $totalErrors += $result['errors'];
+                    $processedSubmissions++;
+                    
+                    $submissionTime = time() - $submissionStartTime;
+                    
+                    $results[] = [
+                        'entry_id' => $submission['entry_id'],
+                        'client_name' => $submission['client_name'],
+                        'status' => 'success',
+                        'equipments_processed' => $result['equipments_processed'],
+                        'equipments_skipped' => $result['equipments_skipped'],
+                        'photos_saved' => $result['photos_saved'],
+                        'errors' => $result['errors'],
+                        'processing_time' => $submissionTime
+                    ];
+                    
+                    // Pause entre soumissions et nettoyage mémoire
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                    sleep(1);
+                    
+                    // Sécurité : vérifier le temps écoulé
+                    if ((time() - $startTime) > 280) { // 4m40s max
+                        break;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $totalErrors++;
+                    $results[] = [
+                        'entry_id' => $submission['entry_id'],
+                        'client_name' => $submission['client_name'] ?? 'N/A',
+                        'status' => 'error',
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            $endTime = time();
+            $totalProcessingTime = $endTime - $startTime;
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'processing_summary' => [
+                    'total_submissions_found' => count($submissions),
+                    'processed_submissions' => $processedSubmissions,
+                    'failed_submissions' => $totalErrors,
+                    'total_equipments_processed' => $totalEquipments,
+                    'total_equipments_skipped' => $totalSkipped,
+                    'total_photos_saved' => $totalPhotos,
+                    'total_processing_time_seconds' => $totalProcessingTime,
+                    'chunk_size_used' => $chunkSize,
+                    'max_submissions_limit' => $maxSubmissions
+                ],
+                'submission_details' => $results,
+                'message' => "Traitement optimisé terminé: {$processedSubmissions}/" . count($submissions) . 
+                            " soumissions, {$totalEquipments} équipements nouveaux, {$totalSkipped} doublons évités, {$totalPhotos} photos en {$totalProcessingTime}s"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupération optimisée des soumissions
+     */
+    private function getFormSubmissionsOptimized(string $formId, string $agencyCode, int $maxSubmissions = 20): array
+    {
+        try {
+            // Récupérer seulement un petit lot à la fois
+            $response = $this->client->request(
+                'POST',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        'limit' => $maxSubmissions,
+                        'offset' => 0
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $formData = $response->toArray();
+            $validSubmissions = [];
+            
+            if (!isset($formData['data']) || empty($formData['data'])) {
+                return [];
+            }
+            
+            // Traiter SEULEMENT les premières entrées pour éviter la surcharge
+            $entriesToProcess = array_slice($formData['data'], 0, min($maxSubmissions, count($formData['data'])));
+            
+            foreach ($entriesToProcess as $entry) {
+                try {
+                    // Récupération rapide des détails
+                    $detailResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'timeout' => 15
+                        ]
+                    );
+
+                    $detailData = $detailResponse->toArray();
+                    
+                    // Vérification rapide de l'agence
+                    if (isset($detailData['data']['fields']['code_agence']['value']) && 
+                        $detailData['data']['fields']['code_agence']['value'] === $agencyCode) {
+                        
+                        $validSubmissions[] = [
+                            'form_id' => $entry['_form_id'],
+                            'entry_id' => $entry['_id'],
+                            'client_name' => $detailData['data']['fields']['nom_client']['value'] ?? 'N/A',
+                            'date' => $detailData['data']['fields']['date_et_heure1']['value'] ?? 'N/A',
+                            'technician' => $detailData['data']['fields']['trigramme']['value'] ?? 'N/A'
+                        ];
+                    }
+                    
+                } catch (\Exception $e) {
+                    error_log("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+            return $validSubmissions;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur lors de la récupération des soumissions: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Traiter une soumission avec déduplication
+     */
+    private function processSingleSubmissionWithDeduplication(
+        array $submission, 
+        string $agencyCode, 
+        string $entityClass, 
+        int $chunkSize, 
+        EntityManagerInterface $entityManager
+    ): array {
+        
+        $equipmentsProcessed = 0;
+        $equipmentsSkipped = 0;
+        $photosSaved = 0;
+        $errors = 0;
+        
+        try {
+            // Récupérer les données de la soumission
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $submission['form_id'] . '/data/' . $submission['entry_id'],
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            
+            // Traiter par petits lots
+            $chunks = array_chunk($contractEquipments, $chunkSize);
+            
+            foreach ($chunks as $chunk) {
+                foreach ($chunk as $equipmentContrat) {
+                    try {
+                        $equipement = new $entityClass();
+                        $this->setRealCommonDataFixed($equipement, $fields);
+                        
+                        // Traitement avec déduplication
+                        $wasProcessed = $this->setRealContractDataWithFormPhotosAndDeduplication(
+                            $equipement, 
+                            $equipmentContrat, 
+                            $fields, 
+                            $submission['form_id'], 
+                            $submission['entry_id'], 
+                            $entityClass,
+                            $entityManager
+                        );
+                        
+                        if ($wasProcessed) {
+                            $entityManager->persist($equipement);
+                            $equipmentsProcessed++;
+                            $photosSaved++;
+                        } else {
+                            $equipmentsSkipped++;
+                        }
+                        
+                    } catch (\Exception $e) {
+                        $errors++;
+                        error_log("Erreur traitement équipement: " . $e->getMessage());
+                    }
+                }
+                
+                // Sauvegarder et nettoyer après chaque chunk
+                $entityManager->flush();
+                $entityManager->clear();
+                gc_collect_cycles();
+            }
+            
+        } catch (\Exception $e) {
+            $errors++;
+            error_log("Erreur traitement soumission: " . $e->getMessage());
+        }
+        
+        return [
+            'equipments_processed' => $equipmentsProcessed,
+            'equipments_skipped' => $equipmentsSkipped,
+            'photos_saved' => $photosSaved,
+            'errors' => $errors
+        ];
+    }
+
+    /**
+     * Utilitaire pour définir toutes les photos sur Form
+     */
+    private function setAllPhotosToForm($form, array $equipmentData): void
+    {
+        // Mappage complet des photos
+        $photoMapping = [
+            'photo_deformation_plateau' => 'setPhotoDeformationPlateau',
+            'photo_deformation_plaque' => 'setPhotoDeformationPlaque',
+            'photo_deformation_structure' => 'setPhotoDeformationStructure',
+            'photo_deformation_chassis' => 'setPhotoDeformationChassis',
+            'photo_deformation_levre' => 'setPhotoDeformationLevre',
+            'photo_joue' => 'setPhotoJoue',
+            'photo_moteur' => 'setPhotoMoteur',
+            'photo_coffret_de_commande' => 'setPhotoCoffretDeCommande',
+            'photo_carte' => 'setPhotoCarte',
+            'photo_choc' => 'setPhotoChoc',
+            'photo_choc_tablier' => 'setPhotoChocTablier',
+            'photo_choc_tablier_porte' => 'setPhotoChocTablierPorte',
+            'photo_plaque' => 'setPhotoPlaque',
+            'photo_serrure' => 'setPhotoSerrure',
+            'photo_serrure1' => 'setPhotoSerrure1',
+            'photo_rail' => 'setPhotoRail',
+            'photo_equerre_rail' => 'setPhotoEquerreRail',
+            'photo_fixation_coulisse' => 'setPhotoFixationCoulisse',
+            'photo_axe' => 'setPhotoAxe',
+            'photo_feux' => 'setPhotoFeux',
+            'photo_bache' => 'setPhotoBache',
+            'photo_marquage_au_sol' => 'setPhotoMarquageAuSol',
+            'photo_butoir' => 'setPhotoButoir',
+            'photo_vantail' => 'setPhotoVantail',
+            'photo_linteau' => 'setPhotoLinteau'
+        ];
+        
+        foreach ($photoMapping as $field => $setter) {
+            if (!empty($equipmentData[$field]['value']) && method_exists($form, $setter)) {
+                $form->$setter($equipmentData[$field]['value']);
+            }
+        }
+    }
 }
