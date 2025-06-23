@@ -356,6 +356,287 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
+     * Traitement automatique de toutes les soumissions d'un formulaire par agence
+     */
+    #[Route('/api/maintenance/process-auto-chunked-all/{agencyCode}', name: 'app_maintenance_process_auto_chunked_all', methods: ['GET'])]
+    public function processMaintenanceAutoChunkedAll(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration pour traitement de masse
+        ini_set('memory_limit', '2G');
+        ini_set('max_execution_time', 1800); // 30 minutes max
+        set_time_limit(0);
+        gc_enable();
+        
+        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+        if (!in_array($agencyCode, $validAgencies)) {
+            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+        }
+
+        $formId = $request->query->get('form_id', '1088761');
+        $chunkSize = (int) $request->query->get('chunk_size', 15);
+        $mode = $request->query->get('mode', 'all_unprocessed'); // all_unprocessed ou all
+
+        try {
+            // 1. Récupérer toutes les soumissions du formulaire
+            $submissions = $this->getFormSubmissions($formId, $mode);
+            
+            if (empty($submissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission à traiter pour le formulaire ' . $formId,
+                    'agency' => $agencyCode,
+                    'total_submissions' => 0
+                ]);
+            }
+
+            // 2. Filtrer par agence et compter les équipements
+            $relevantSubmissions = [];
+            $totalEquipments = 0;
+
+            foreach ($submissions as $submission) {
+                $submissionData = $this->getSubmissionData($formId, $submission['_id']);
+                
+                if (!$submissionData || !isset($submissionData['data']['fields'])) {
+                    continue;
+                }
+
+                $fields = $submissionData['data']['fields'];
+                
+                // Vérifier si c'est la bonne agence
+                if (isset($fields['code_agence']['value']) && $fields['code_agence']['value'] === $agencyCode) {
+                    $contractCount = count($fields['contrat_de_maintenance']['value'] ?? []);
+                    $offContractCount = count($fields['tableau2']['value'] ?? []);
+                    $equipmentCount = $contractCount + $offContractCount;
+                    
+                    $relevantSubmissions[] = [
+                        'entry_id' => $submission['_id'],
+                        'equipment_count' => $equipmentCount,
+                        'client_name' => $fields['nom_du_client']['value'] ?? 'N/A',
+                        'date' => $submission['_record_date'] ?? 'N/A'
+                    ];
+                    
+                    $totalEquipments += $equipmentCount;
+                }
+            }
+
+            if (empty($relevantSubmissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission trouvée pour l\'agence ' . $agencyCode,
+                    'agency' => $agencyCode,
+                    'total_submissions_checked' => count($submissions),
+                    'relevant_submissions' => 0
+                ]);
+            }
+
+            // 3. Traitement de toutes les soumissions
+            $startTime = time();
+            $allResults = [];
+            $totalProcessed = 0;
+            $totalPhotos = 0;
+            $totalErrors = 0;
+            $submissionsProcessed = 0;
+            $submissionsWithErrors = 0;
+
+            foreach ($relevantSubmissions as $index => $submissionInfo) {
+                try {
+                    error_log("Traitement soumission " . ($index + 1) . "/" . count($relevantSubmissions) . 
+                             " - Entry ID: " . $submissionInfo['entry_id'] . 
+                             " - Client: " . $submissionInfo['client_name'] . 
+                             " - Équipements: " . $submissionInfo['equipment_count']);
+
+                    // Appel au traitement automatique par chunks pour cette soumission
+                    $submissionRequest = Request::create(
+                        '/api/maintenance/process-auto-chunked/' . $agencyCode,
+                        'GET',
+                        [
+                            'form_id' => $formId,
+                            'entry_id' => $submissionInfo['entry_id'],
+                            'chunk_size' => $chunkSize
+                        ]
+                    );
+                    
+                    $submissionResponse = $this->processMaintenanceAutoChunked($agencyCode, $entityManager, $submissionRequest);
+                    $submissionData = json_decode($submissionResponse->getContent(), true);
+                    
+                    if ($submissionData['success']) {
+                        $processed = $submissionData['summary']['total_processed'];
+                        $photos = $submissionData['summary']['total_photos'];
+                        $errors = $submissionData['summary']['total_errors'];
+                        
+                        $totalProcessed += $processed;
+                        $totalPhotos += $photos;
+                        $totalErrors += $errors;
+                        $submissionsProcessed++;
+                        
+                        if ($errors > 0) {
+                            $submissionsWithErrors++;
+                        }
+                        
+                        $allResults[] = [
+                            'submission_index' => $index + 1,
+                            'entry_id' => $submissionInfo['entry_id'],
+                            'client_name' => $submissionInfo['client_name'],
+                            'equipment_count' => $submissionInfo['equipment_count'],
+                            'processed' => $processed,
+                            'photos' => $photos,
+                            'errors' => $errors,
+                            'processing_time' => $submissionData['summary']['processing_time_seconds'],
+                            'status' => $submissionData['status']
+                        ];
+                    } else {
+                        $submissionsWithErrors++;
+                        $allResults[] = [
+                            'submission_index' => $index + 1,
+                            'entry_id' => $submissionInfo['entry_id'],
+                            'client_name' => $submissionInfo['client_name'],
+                            'error' => $submissionData['error'] ?? 'Erreur inconnue',
+                            'status' => 'failed'
+                        ];
+                        error_log("Erreur traitement soumission " . $submissionInfo['entry_id'] . ": " . 
+                                 ($submissionData['error'] ?? 'Erreur inconnue'));
+                    }
+
+                    // Nettoyage mémoire après chaque soumission
+                    gc_collect_cycles();
+                    
+                    // Pause courte pour éviter la surcharge
+                    usleep(100000); // 0.1 seconde
+
+                } catch (\Exception $e) {
+                    $submissionsWithErrors++;
+                    $allResults[] = [
+                        'submission_index' => $index + 1,
+                        'entry_id' => $submissionInfo['entry_id'],
+                        'client_name' => $submissionInfo['client_name'],
+                        'error' => $e->getMessage(),
+                        'status' => 'exception'
+                    ];
+                    error_log("Exception traitement soumission " . $submissionInfo['entry_id'] . ": " . $e->getMessage());
+                }
+            }
+            
+            $processingTime = time() - $startTime;
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'mode' => $mode,
+                'global_summary' => [
+                    'total_submissions_found' => count($submissions),
+                    'relevant_submissions' => count($relevantSubmissions),
+                    'submissions_processed' => $submissionsProcessed,
+                    'submissions_with_errors' => $submissionsWithErrors,
+                    'total_equipments_expected' => $totalEquipments,
+                    'total_equipments_processed' => $totalProcessed,
+                    'total_photos_processed' => $totalPhotos,
+                    'total_errors' => $totalErrors,
+                    'total_processing_time_seconds' => $processingTime,
+                    'chunk_size_used' => $chunkSize,
+                    'success_rate' => round(($submissionsProcessed / count($relevantSubmissions)) * 100, 2)
+                ],
+                'submission_details' => $allResults,
+                'status' => $submissionsWithErrors === 0 ? 'completed_success' : 'completed_with_errors',
+                'message' => sprintf(
+                    "Traitement terminé pour l'agence %s: %d/%d soumissions traitées, %d/%d équipements traités, %d photos en %ds",
+                    $agencyCode,
+                    $submissionsProcessed,
+                    count($relevantSubmissions),
+                    $totalProcessed,
+                    $totalEquipments,
+                    $totalPhotos,
+                    $processingTime
+                )
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'agency' => $agencyCode
+            ], 500);
+        }
+    }
+
+    /**
+     * Récupérer toutes les soumissions d'un formulaire
+     */
+    private function getFormSubmissions(string $formId, string $mode = 'all_unprocessed'): array
+    {
+        try {
+            $endpoint = $mode === 'all_unprocessed' 
+                ? 'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/unread'
+                : 'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced';
+
+            if ($mode === 'all_unprocessed') {
+                // Pour les non lus, simple GET
+                $response = $this->client->request('GET', $endpoint, [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 60
+                ]);
+            } else {
+                // Pour toutes les données, utiliser POST avec filtre
+                $response = $this->client->request('POST', $endpoint, [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => json_encode([
+                        'filters' => [],
+                        'order_by' => '_record_date',
+                        'order' => 'desc',
+                        'limit' => 1000 // Limite pour éviter les timeouts
+                    ]),
+                    'timeout' => 60
+                ]);
+            }
+
+            $data = $response->toArray();
+            return $data['data'] ?? [];
+
+        } catch (\Exception $e) {
+            error_log("Erreur getFormSubmissions: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Récupérer les données détaillées d'une soumission
+     */
+    private function getSubmissionData(string $formId, string $entryId): ?array
+    {
+        try {
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            return $response->toArray();
+
+        } catch (\Exception $e) {
+            error_log("Erreur getSubmissionData pour {$entryId}: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Méthodes utilitaires simplifiées
      */
     
