@@ -3415,4 +3415,538 @@ class SimplifiedMaintenanceController extends AbstractController
             ], 500);
         }
     }
+
+    /**
+     * GESTIONNAIRE DE PHOTOS utilisant l'entité Form existante
+     */
+
+    /**
+     * Setters corrigés avec sauvegarde des photos dans l'entité Form
+     */
+    private function setRealContractDataWithFormPhotos($equipement, array $equipmentContrat, array $fields, string $formId, string $entryId, EntityManagerInterface $entityManager): void
+    {
+        // 1. Données de base (comme avant)
+        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        $equipement->setVisite($visite);
+        
+        $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
+        $equipement->setNumeroEquipement($numeroEquipement);
+        
+        $libelle = $equipmentContrat['reference7']['value'] ?? '';
+        $equipement->setLibelleEquipement($libelle);
+        
+        $miseEnService = $equipmentContrat['reference2']['value'] ?? '';
+        $equipement->setMiseEnService($miseEnService);
+        
+        $numeroSerie = $equipmentContrat['reference6']['value'] ?? '';
+        $equipement->setNumeroDeSerie($numeroSerie);
+        
+        $marque = $equipmentContrat['reference5']['value'] ?? '';
+        $equipement->setMarque($marque);
+        
+        $hauteur = $equipmentContrat['reference1']['value'] ?? '';
+        $equipement->setHauteur($hauteur);
+        
+        $largeur = $equipmentContrat['reference3']['value'] ?? '';
+        $equipement->setLargeur($largeur);
+        
+        $localisation = $equipmentContrat['localisation_site_client']['value'] ?? '';
+        $equipement->setRepereSiteClient($localisation);
+        
+        $modeFonctionnement = $equipmentContrat['mode_fonctionnement_2']['value'] ?? '';
+        $equipement->setModeFonctionnement($modeFonctionnement);
+        
+        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+        
+        $etat = $equipmentContrat['etat']['value'] ?? '';
+        $equipement->setEtat($etat);
+        
+        $longueur = $equipmentContrat['longueur']['value'] ?? '';
+        $equipement->setLongueur($longueur);
+        
+        $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
+        $equipement->setStatutDeMaintenance($statut);
+        
+        $equipement->setEnMaintenance(true);
+        
+        // 2. NOUVEAU : Sauvegarder les photos dans l'entité Form
+        $this->savePhotosToFormEntity($equipmentContrat, $fields, $formId, $entryId, $numeroEquipement, $entityManager);
+    }
+
+    /**
+     * Sauvegarder les photos dans l'entité Form
+     */
+    private function savePhotosToFormEntity(array $equipmentData, array $fields, string $formId, string $entryId, string $equipmentCode, EntityManagerInterface $entityManager): void
+    {
+        try {
+            // Créer une nouvelle entrée Form pour chaque équipement
+            $form = new \App\Entity\Form();
+            
+            // Informations de référence
+            $form->setFormId($formId);
+            $form->setDataId($entryId);
+            $form->setEquipmentId($equipmentCode);
+            $form->setCodeEquipement($equipmentCode);
+            $form->setRaisonSocialeVisite($fields['nom_client']['value'] ?? '');
+            $form->setUpdateTime(date('Y-m-d H:i:s'));
+            
+            // Photo étiquette SOMAFI
+            if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
+                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
+            }
+            
+            // Photos principales de l'équipement
+            if (!empty($equipmentData['photo2']['value'])) {
+                $form->setPhoto2($equipmentData['photo2']['value']);
+            }
+            
+            // Photos complémentaires
+            if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
+                $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
+            }
+            
+            // Photos de déformation (pour niveleurs)
+            if (!empty($equipmentData['photo_deformation_levre']['value'])) {
+                $form->setPhotoDeformationLevre($equipmentData['photo_deformation_levre']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_joue']['value'])) {
+                $form->setPhotoJoue($equipmentData['photo_joue']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_deformation_plateau']['value'])) {
+                $form->setPhotoDeformationPlateau($equipmentData['photo_deformation_plateau']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_deformation_plaque']['value'])) {
+                $form->setPhotoDeformationPlaque($equipmentData['photo_deformation_plaque']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_deformation_structure']['value'])) {
+                $form->setPhotoDeformationStructure($equipmentData['photo_deformation_structure']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_deformation_chassis']['value'])) {
+                $form->setPhotoDeformationChassis($equipmentData['photo_deformation_chassis']['value']);
+            }
+            
+            // Photos techniques
+            if (!empty($equipmentData['photo_moteur']['value'])) {
+                $form->setPhotoMoteur($equipmentData['photo_moteur']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_coffret_de_commande']['value'])) {
+                $form->setPhotoCoffretDeCommande($equipmentData['photo_coffret_de_commande']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_carte']['value'])) {
+                $form->setPhotoCarte($equipmentData['photo_carte']['value']);
+            }
+            
+            // Photos de chocs et anomalies
+            if (!empty($equipmentData['photo_choc']['value'])) {
+                $form->setPhotoChoc($equipmentData['photo_choc']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_choc_tablier']['value'])) {
+                $form->setPhotoChocTablier($equipmentData['photo_choc_tablier']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_choc_tablier_porte']['value'])) {
+                $form->setPhotoChocTablierPorte($equipmentData['photo_choc_tablier_porte']['value']);
+            }
+            
+            // Photos de plaques et serrures
+            if (!empty($equipmentData['photo_plaque']['value'])) {
+                $form->setPhotoPlaque($equipmentData['photo_plaque']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_serrure']['value'])) {
+                $form->setPhotoSerrure($equipmentData['photo_serrure']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_serrure1']['value'])) {
+                $form->setPhotoSerrure1($equipmentData['photo_serrure1']['value']);
+            }
+            
+            // Photos de rails et fixations
+            if (!empty($equipmentData['photo_rail']['value'])) {
+                $form->setPhotoRail($equipmentData['photo_rail']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_equerre_rail']['value'])) {
+                $form->setPhotoEquerreRail($equipmentData['photo_equerre_rail']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_fixation_coulisse']['value'])) {
+                $form->setPhotoFixationCoulisse($equipmentData['photo_fixation_coulisse']['value']);
+            }
+            
+            // Photos d'axe
+            if (!empty($equipmentData['photo_axe']['value'])) {
+                $form->setPhotoAxe($equipmentData['photo_axe']['value']);
+            }
+            
+            // Photos de feux
+            if (!empty($equipmentData['photo_feux']['value'])) {
+                $form->setPhotoFeux($equipmentData['photo_feux']['value']);
+            }
+            
+            // Photos diverses
+            if (!empty($equipmentData['photo_bache']['value'])) {
+                $form->setPhotoBache($equipmentData['photo_bache']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_marquage_au_sol']['value'])) {
+                $form->setPhotoMarquageAuSol($equipmentData['photo_marquage_au_sol']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_butoir']['value'])) {
+                $form->setPhotoButoir($equipmentData['photo_butoir']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_vantail']['value'])) {
+                $form->setPhotoVantail($equipmentData['photo_vantail']['value']);
+            }
+            
+            if (!empty($equipmentData['photo_linteau']['value'])) {
+                $form->setPhotoLinteau($equipmentData['photo_linteau']['value']);
+            }
+            
+            // Sauvegarder l'entité Form
+            $entityManager->persist($form);
+            
+        } catch (\Exception $e) {
+            error_log("Erreur sauvegarde photos Form: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Version améliorée du traitement par lots avec photos dans Form
+     */
+    #[Route('/api/maintenance/process-chunked-with-form-photos/{agencyCode}', name: 'app_maintenance_process_chunked_with_form_photos', methods: ['GET'])]
+    public function processMaintenanceChunkedWithFormPhotos(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Configuration optimisée
+        ini_set('memory_limit', '512M');
+        ini_set('max_execution_time', 120);
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 15);
+        $startOffset = (int) $request->query->get('offset', 0);
+
+        if (!$entryId) {
+            return new JsonResponse([
+                'error' => 'Paramètre entry_id requis',
+                'example' => '/api/maintenance/process-chunked-with-form-photos/S140?entry_id=233668811&chunk_size=15&offset=0'
+            ], 400);
+        }
+
+        try {
+            // Récupérer les données
+            $detailResponse = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+
+            $detailData = $detailResponse->toArray();
+            
+            if (!isset($detailData['data']['fields'])) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => 'Formulaire sans données valides'
+                ], 400);
+            }
+
+            $fields = $detailData['data']['fields'];
+            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+            $offContractEquipments = $fields['tableau2']['value'] ?? [];
+            
+            // Combiner tous les équipements
+            $allEquipments = [];
+            foreach ($contractEquipments as $index => $equipment) {
+                $allEquipments[] = ['type' => 'contract', 'data' => $equipment, 'index' => $index];
+            }
+            foreach ($offContractEquipments as $index => $equipment) {
+                $allEquipments[] = ['type' => 'off_contract', 'data' => $equipment, 'index' => $index];
+            }
+
+            $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+            
+            if (empty($chunk)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Lot vide - traitement terminé',
+                    'total_equipments' => count($allEquipments),
+                    'processed_offset' => $startOffset,
+                    'is_complete' => true
+                ]);
+            }
+
+            $processedEquipments = 0;
+            $contractProcessed = 0;
+            $offContractProcessed = 0;
+            $photosProcessed = 0;
+            $errors = [];
+
+            // Traiter le lot
+            foreach ($chunk as $equipmentData) {
+                try {
+                    // 1. Créer l'équipement
+                    $equipement = new EquipementS140();
+                    $this->setRealCommonDataFixed($equipement, $fields);
+                    
+                    if ($equipmentData['type'] === 'contract') {
+                        // Utiliser la version avec photos
+                        $this->setRealContractDataWithFormPhotos(
+                            $equipement, 
+                            $equipmentData['data'], 
+                            $fields, 
+                            $formId, 
+                            $entryId, 
+                            $entityManager
+                        );
+                        $contractProcessed++;
+                    } else {
+                        // Pour les équipements hors contrat (à adapter si nécessaire)
+                        $this->setRealContractDataFixed($equipement, $equipmentData['data']);
+                        $offContractProcessed++;
+                    }
+                    
+                    $entityManager->persist($equipement);
+                    $processedEquipments++;
+                    $photosProcessed++; // Compter les photos traitées
+                    
+                    // Sauvegarder tous les 5 équipements
+                    if ($processedEquipments % 5 === 0) {
+                        $entityManager->flush();
+                        $entityManager->clear();
+                        gc_collect_cycles();
+                    }
+                    
+                } catch (\Exception $e) {
+                    $errors[] = [
+                        'equipment_index' => $equipmentData['index'],
+                        'type' => $equipmentData['type'],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            // Sauvegarde finale
+            $entityManager->flush();
+            $entityManager->clear();
+
+            $nextOffset = $startOffset + $chunkSize;
+            $isComplete = $nextOffset >= count($allEquipments);
+            
+            // Marquer comme lu seulement si terminé
+            if ($isComplete) {
+                $this->markFormAsRead($formId, $entryId);
+            }
+
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'client_name' => $fields['nom_client']['value'] ?? '',
+                'batch_info' => [
+                    'total_equipments' => count($allEquipments),
+                    'processed_in_this_batch' => $processedEquipments,
+                    'contract_processed' => $contractProcessed,
+                    'off_contract_processed' => $offContractProcessed,
+                    'photos_processed' => $photosProcessed,
+                    'start_offset' => $startOffset,
+                    'chunk_size' => $chunkSize,
+                    'next_offset' => $nextOffset,
+                    'is_complete' => $isComplete
+                ],
+                'errors' => $errors,
+                'next_call' => $isComplete ? null : 
+                    "/api/maintenance/process-chunked-with-form-photos/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+                'message' => $isComplete ? 
+                    "Traitement terminé: {$processedEquipments} équipements et {$photosProcessed} sets de photos" :
+                    "Lot traité: {$processedEquipments} équipements et {$photosProcessed} sets de photos. Appeler next_call pour continuer"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Version automatique complète avec photos dans Form
+     */
+    #[Route('/api/maintenance/process-auto-with-form-photos/{agencyCode}', name: 'app_maintenance_process_auto_with_form_photos', methods: ['GET'])]
+    public function processMaintenanceAutoWithFormPhotos(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        if ($agencyCode !== 'S140') {
+            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+        }
+
+        // Configuration optimisée
+        ini_set('memory_limit', '1G');
+        ini_set('max_execution_time', 600); // 10 minutes max
+        
+        $formId = $request->query->get('form_id', '1088761');
+        $entryId = $request->query->get('entry_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 15);
+
+        if (!$entryId) {
+            return new JsonResponse([
+                'error' => 'Paramètre entry_id requis',
+                'example' => '/api/maintenance/process-auto-with-form-photos/S140?entry_id=233668811&chunk_size=15'
+            ], 400);
+        }
+
+        try {
+            // 1. Analyser le formulaire
+            $analysisResponse = $this->analyzeMaintenanceForm($agencyCode, $request);
+            $analysisData = json_decode($analysisResponse->getContent(), true);
+            
+            if (!$analysisData['success']) {
+                return new JsonResponse(['error' => 'Erreur analyse formulaire'], 500);
+            }
+            
+            $totalEquipments = $analysisData['equipment_analysis']['total_equipments'];
+            $recommendedChunkSize = $analysisData['equipment_analysis']['recommended_chunk_size'];
+            
+            // Utiliser la taille recommandée si pas spécifiée
+            if ($request->query->get('chunk_size') === null) {
+                $chunkSize = $recommendedChunkSize;
+            }
+            
+            // 2. Traitement automatique par lots
+            $offset = 0;
+            $allResults = [];
+            $totalProcessed = 0;
+            $totalPhotos = 0;
+            $totalErrors = 0;
+            $startTime = time();
+            
+            while ($offset < $totalEquipments) {
+                try {
+                    // Appel interne au traitement par lot avec photos
+                    $batchRequest = Request::create(
+                        '/api/maintenance/process-chunked-with-form-photos/' . $agencyCode,
+                        'GET',
+                        [
+                            'form_id' => $formId,
+                            'entry_id' => $entryId,
+                            'chunk_size' => $chunkSize,
+                            'offset' => $offset
+                        ]
+                    );
+                    
+                    $batchResponse = $this->processMaintenanceChunkedWithFormPhotos($agencyCode, $entityManager, $batchRequest);
+                    $batchData = json_decode($batchResponse->getContent(), true);
+                    
+                    if ($batchData['success']) {
+                        $processed = $batchData['batch_info']['processed_in_this_batch'];
+                        $photos = $batchData['batch_info']['photos_processed'];
+                        $totalProcessed += $processed;
+                        $totalPhotos += $photos;
+                        
+                        $allResults[] = [
+                            'offset' => $offset,
+                            'processed' => $processed,
+                            'photos' => $photos,
+                            'contract_equipments' => $batchData['batch_info']['contract_processed'],
+                            'off_contract_equipments' => $batchData['batch_info']['off_contract_processed'],
+                            'errors' => count($batchData['errors'])
+                        ];
+                        
+                        $totalErrors += count($batchData['errors']);
+                        
+                        // Mettre à jour l'offset
+                        $offset = $batchData['batch_info']['next_offset'];
+                        
+                        // Pause entre lots
+                        sleep(1);
+                        
+                        // Vérifier si terminé
+                        if ($batchData['batch_info']['is_complete']) {
+                            break;
+                        }
+                        
+                    } else {
+                        $totalErrors++;
+                        $allResults[] = [
+                            'offset' => $offset,
+                            'error' => $batchData['error']
+                        ];
+                        break;
+                    }
+                    
+                    // Sécurité : éviter les boucles infinies
+                    if ((time() - $startTime) > 580) { // 9m40s max
+                        break;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $totalErrors++;
+                    $allResults[] = [
+                        'offset' => $offset,
+                        'error' => $e->getMessage()
+                    ];
+                    break;
+                }
+            }
+            
+            $endTime = time();
+            $processingTime = $endTime - $startTime;
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'entry_id' => $entryId,
+                'processing_summary' => [
+                    'total_equipments_in_form' => $totalEquipments,
+                    'total_processed' => $totalProcessed,
+                    'total_photos_saved' => $totalPhotos,
+                    'total_errors' => $totalErrors,
+                    'processing_time_seconds' => $processingTime,
+                    'chunk_size_used' => $chunkSize,
+                    'batches_processed' => count($allResults)
+                ],
+                'batch_details' => $allResults,
+                'completion_status' => $offset >= $totalEquipments ? 'completed' : 'partial',
+                'message' => $offset >= $totalEquipments ? 
+                    "Traitement automatique terminé: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s" :
+                    "Traitement partiel: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s"
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
