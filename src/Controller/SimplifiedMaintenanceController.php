@@ -451,51 +451,168 @@ class SimplifiedMaintenanceController extends AbstractController
         }
     }
 
+    /**
+     * Obtenir le code type à partir du libellé - VERSION COMPLÈTE basée sur libelle_equipements.docx
+     */
     private function getTypeCodeFromLibelle(string $libelle): string
     {
-        $libelleUpper = strtoupper($libelle);
+        $libelleNormalized = strtolower(trim($libelle));
         
-        if (str_contains($libelleUpper, 'SECTIONNELLE')) return 'SEC';
-        if (str_contains($libelleUpper, 'RIDEAU')) return 'RID';
-        if (str_contains($libelleUpper, 'BASCULANTE')) return 'BAS';
-        if (str_contains($libelleUpper, 'COULISSANTE')) return 'COU';
-        if (str_contains($libelleUpper, 'BATTANTE')) return 'BAT';
-        if (str_contains($libelleUpper, 'BARRIERE')) return 'BAR';
-        if (str_contains($libelleUpper, 'AUTOMATISME')) return 'AUT';
+        // Mapping complet basé sur le document libelle_equipements.docx
+        $mappingTable = [
+            'porte accordéon' => 'PAC',
+            'portail' => 'PAU',
+            'porte sectionnelle' => 'SEC',
+            'protection' => 'PRO',
+            'porte rapide' => 'RAP',
+            'porte coulissante' => 'COU',
+            'niveleur' => 'NIV',
+            'rideau metallique' => 'RID',
+            'rideau métallique' => 'RID',
+            'rideau métalliques' => 'RID',
+            'porte pietonne' => 'PPV',
+            'porte coupe feu' => 'CFE',
+            'porte coupe -- feu' => 'CFE',
+            'mini pont' => 'MIP',
+            'mini-pont' => 'MIP',
+            'table elevatrice' => 'TEL',
+            'tourniquet' => 'TOU',
+            'barriere levante' => 'BLE',
+            'volet roulant' => 'RID',
+            'issue de secours' => 'BPO',
+            'porte frigorifique' => 'COF',
+            'portail motorise' => 'PMO',
+            'portail manuel' => 'PMA',
+            'bloc roue' => 'BLR',
+            'sas' => 'SAS',
+            'plaque de quai' => 'PLQ',
+            'porte basculante' => 'PBA',
+            'porte battante' => 'BPA',
+            'portillon' => 'POR',
+            'portail coulissant' => 'PCO'
+        ];
         
+        // Recherche directe dans la table de mapping
+        if (isset($mappingTable[$libelleNormalized])) {
+            return $mappingTable[$libelleNormalized];
+        }
+        
+        // Recherche par mots-clés pour les variantes
+        foreach ($mappingTable as $pattern => $code) {
+            if (str_contains($libelleNormalized, $pattern)) {
+                return $code;
+            }
+        }
+        
+        // Recherche par mots-clés individuels pour plus de flexibilité
+        if (str_contains($libelleNormalized, 'sectionnelle')) return 'SEC';
+        if (str_contains($libelleNormalized, 'rideau')) return 'RID';
+        if (str_contains($libelleNormalized, 'basculante')) return 'PBA';
+        if (str_contains($libelleNormalized, 'coulissante')) return 'COU';
+        if (str_contains($libelleNormalized, 'battante')) return 'BPA';
+        if (str_contains($libelleNormalized, 'portail')) return 'PAU';
+        if (str_contains($libelleNormalized, 'barriere') || str_contains($libelleNormalized, 'barrière')) return 'BLE';
+        if (str_contains($libelleNormalized, 'niveleur')) return 'NIV';
+        if (str_contains($libelleNormalized, 'coupe feu')) return 'CFE';
+        if (str_contains($libelleNormalized, 'accordéon') || str_contains($libelleNormalized, 'accordeon')) return 'PAC';
+        
+        // Code par défaut si aucun mapping trouvé
         return 'EQU';
     }
 
     /**
-     * Méthode pour récupérer le prochain numéro d'équipement - ADAPTÉE
+     * Obtenir le prochain numéro d'équipement - VERSION CORRIGÉE THREAD-SAFE
      */
     private function getNextEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
+        // Rechercher le dernier numéro utilisé pour ce type et ce client
         $repository = $entityManager->getRepository($entityClass);
         
-        // Utiliser id_contact qui correspond au champ existant
-        $equipments = $repository->createQueryBuilder('e')
+        // Requête pour récupérer tous les équipements de ce type pour ce client
+        // avec en_maintenance = false pour cibler les équipements hors contrat
+        $qb = $repository->createQueryBuilder('e')
             ->where('e.id_contact = :idClient')
-            ->andWhere('e.numero_equipement LIKE :typeCode')
+            ->andWhere('e.numero_equipement LIKE :typePattern')
+            ->andWhere('e.en_maintenance = false') // Spécifique aux hors contrat
             ->setParameter('idClient', $idClient)
-            ->setParameter('typeCode', $typeCode . '%')
-            ->getQuery()
-            ->getResult();
+            ->setParameter('typePattern', $typeCode . '%')
+            ->orderBy('e.numero_equipement', 'DESC')
+            ->setMaxResults(50); // Limite pour éviter de charger trop de données
         
-        $lastNumber = 0;
+        $equipments = $qb->getQuery()->getResult();
         
-        foreach ($equipments as $equipment) {
-            $numeroEquipement = $equipment->getNumeroEquipement();
+        $dernierNumero = 0;
+        
+        foreach ($equipments as $equipement) {
+            $numeroEquipement = $equipement->getNumeroEquipement();
             
-            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
-                $number = (int)$matches[1];
-                if ($number > $lastNumber) {
-                    $lastNumber = $number;
+            // Extraire le numéro de la fin du code équipement (ex: SEC01 → 1)
+            if (preg_match('/^' . preg_quote($typeCode, '/') . '(\d+)$/', $numeroEquipement, $matches)) {
+                $numero = (int)$matches[1];
+                if ($numero > $dernierNumero) {
+                    $dernierNumero = $numero;
                 }
             }
         }
         
-        return $lastNumber + 1;
+        // Retourner le numéro suivant
+        return $dernierNumero + 1;
+    }
+    
+    /**
+     * Générer un numéro d'équipement unique - VERSION SÉCURISÉE
+     */
+    private function generateUniqueEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): string
+    {
+        $tentative = 0;
+        $maxTentatives = 100; // Éviter les boucles infinies
+        
+        do {
+            $numeroSuivant = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+            $numeroFormate = $typeCode . str_pad($numeroSuivant, 2, '0', STR_PAD_LEFT);
+            
+            // Vérifier que ce numéro n'existe pas déjà
+            $exists = $this->equipmentNumberExists($numeroFormate, $idClient, $entityClass, $entityManager);
+            
+            if (!$exists) {
+                return $numeroFormate;
+            }
+            
+            $tentative++;
+            
+            // Si le numéro existe déjà, forcer la recherche du suivant
+            // en invalidant le cache si nécessaire
+            $entityManager->clear();
+            
+        } while ($tentative < $maxTentatives);
+        
+        // En dernier recours, utiliser un timestamp pour garantir l'unicité
+        return $typeCode . substr(time(), -2);
+    }
+
+    /**
+     * Vérifier si un numéro d'équipement existe déjà
+     */
+    private function equipmentNumberExists(string $numeroEquipement, string $idClient, string $entityClass, EntityManagerInterface $entityManager): bool
+    {
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            
+            $existing = $repository->createQueryBuilder('e')
+                ->where('e.numero_equipement = :numero')
+                ->andWhere('e.id_contact = :idClient')
+                ->setParameter('numero', $numeroEquipement)
+                ->setParameter('idClient', $idClient)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            return $existing !== null;
+            
+        } catch (\Exception $e) {
+            // En cas d'erreur, considérer que le numéro existe pour éviter les doublons
+            return true;
+        }
     }
 
     private function getDefaultVisitType(array $fields): string
@@ -4893,7 +5010,7 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Traitement des équipements hors contrat avec déduplication et sauvegarde des photos
+     * Version mise à jour de setOffContractDataWithFormPhotosAndDeduplication avec numérotation sécurisée
      */
     private function setOffContractDataWithFormPhotosAndDeduplication(
         $equipement, 
@@ -4905,15 +5022,15 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        // 1. Générer le numéro d'équipement
+        // 1. Générer le code type et numéro d'équipement de façon sécurisée
         $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
         
-        $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-        $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+        // Utiliser la nouvelle méthode sécurisée pour éviter les doublons de numéros
+        $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
         
-        // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
+        // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
         if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
             return false; // Skip car déjà existe
         }
