@@ -4912,6 +4912,8 @@ class SimplifiedMaintenanceController extends AbstractController
             $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
             $offContractEquipments = $fields['tableau2']['value'] ?? [];
             
+            error_log("Soumission {$submission['entry_id']}: " . count($contractEquipments) . " sous contrat, " . count($offContractEquipments) . " hors contrat");
+            
             // Traitement des équipements sous contrat
             if (!empty($contractEquipments)) {
                 $contractChunks = array_chunk($contractEquipments, $chunkSize);
@@ -4943,14 +4945,19 @@ class SimplifiedMaintenanceController extends AbstractController
                             
                         } catch (\Exception $e) {
                             $errors++;
-                            error_log("Erreur traitement équipement sous contrat: " . $e->getMessage());
+                            error_log("Erreur traitement équipement sous contrat dans {$submission['entry_id']}: " . $e->getMessage());
                         }
                     }
                     
                     // Sauvegarder et nettoyer après chaque chunk d'équipements sous contrat
-                    $entityManager->flush();
-                    $entityManager->clear();
-                    gc_collect_cycles();
+                    try {
+                        $entityManager->flush();
+                        $entityManager->clear();
+                        gc_collect_cycles();
+                    } catch (\Exception $e) {
+                        $errors++;
+                        error_log("Erreur flush/clear équipements sous contrat: " . $e->getMessage());
+                    }
                 }
             }
             
@@ -4958,10 +4965,16 @@ class SimplifiedMaintenanceController extends AbstractController
             if (!empty($offContractEquipments)) {
                 $offContractChunks = array_chunk($offContractEquipments, $chunkSize);
                 
-                foreach ($offContractChunks as $chunk) {
-                    foreach ($chunk as $equipmentHorsContrat) {
+                foreach ($offContractChunks as $chunkIndex => $chunk) {
+                    error_log("Traitement chunk hors contrat " . ($chunkIndex + 1) . "/" . count($offContractChunks) . " - " . count($chunk) . " équipements");
+                    
+                    foreach ($chunk as $equipmentIndex => $equipmentHorsContrat) {
                         try {
+                            error_log("Traitement équipement hors contrat " . ($equipmentIndex + 1) . "/" . count($chunk));
+                            
                             $equipement = new $entityClass();
+                            
+                            // IMPORTANT: Appeler setRealCommonDataFixed AVANT setOffContractDataWithFormPhotosAndDeduplication
                             $this->setRealCommonDataFixed($equipement, $fields);
                             
                             // Traitement avec déduplication pour équipements hors contrat
@@ -4979,26 +4992,35 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $entityManager->persist($equipement);
                                 $equipmentsProcessed++;
                                 $photosSaved++;
+                                error_log("Équipement hors contrat traité avec succès");
                             } else {
                                 $equipmentsSkipped++;
+                                error_log("Équipement hors contrat skippé (doublon)");
                             }
                             
                         } catch (\Exception $e) {
                             $errors++;
-                            error_log("Erreur traitement équipement hors contrat: " . $e->getMessage());
+                            error_log("Erreur traitement équipement hors contrat dans {$submission['entry_id']}: " . $e->getMessage());
+                            error_log("Stack trace: " . $e->getTraceAsString());
                         }
                     }
                     
                     // Sauvegarder et nettoyer après chaque chunk d'équipements hors contrat
-                    $entityManager->flush();
-                    $entityManager->clear();
-                    gc_collect_cycles();
+                    try {
+                        $entityManager->flush();
+                        $entityManager->clear();
+                        gc_collect_cycles();
+                        error_log("Chunk hors contrat " . ($chunkIndex + 1) . " sauvegardé");
+                    } catch (\Exception $e) {
+                        $errors++;
+                        error_log("Erreur flush/clear équipements hors contrat: " . $e->getMessage());
+                    }
                 }
             }
             
         } catch (\Exception $e) {
             $errors++;
-            error_log("Erreur traitement soumission: " . $e->getMessage());
+            error_log("Erreur traitement soumission {$submission['entry_id']}: " . $e->getMessage());
         }
         
         return [
@@ -5022,43 +5044,113 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        // 1. Générer le code type et numéro d'équipement de façon sécurisée
-        $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
-        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-        $idClient = $fields['id_client_']['value'] ?? '';
+        error_log("=== DEBUG HORS CONTRAT START ===");
+        error_log("equipmentHorsContrat: " . json_encode($equipmentHorsContrat, JSON_UNESCAPED_UNICODE));
         
-        // Utiliser la nouvelle méthode sécurisée pour éviter les doublons de numéros
-        $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-        
-        // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
-        if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-            return false; // Skip car déjà existe
+        try {
+            // 1. Générer le code type et numéro d'équipement de façon sécurisée
+            $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
+            error_log("Type libellé détecté: " . $typeLibelle);
+            
+            if (empty($typeLibelle)) {
+                error_log("ERREUR: Type libellé vide pour équipement hors contrat");
+                return false;
+            }
+            
+            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+            error_log("Type code généré: " . $typeCode);
+            
+            $idClient = $fields['id_client_']['value'] ?? '';
+            error_log("ID Client: " . $idClient);
+            
+            if (empty($idClient)) {
+                error_log("ERREUR: ID Client vide");
+                return false;
+            }
+            
+            // Utiliser la nouvelle méthode sécurisée pour éviter les doublons de numéros
+            $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+            error_log("Numéro formaté généré: " . $numeroFormate);
+            
+            // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
+            if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+                error_log("Équipement hors contrat existe déjà - skip");
+                return false; // Skip car déjà existe
+            }
+            
+            // 3. Définir TOUTES les données de l'équipement hors contrat
+            $equipement->setNumeroEquipement($numeroFormate);
+            $equipement->setLibelleEquipement($typeLibelle);
+            
+            // Données spécifiques hors contrat avec vérifications
+            $modeFonctionnement = $equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '';
+            $equipement->setModeFonctionnement($modeFonctionnement);
+            error_log("Mode fonctionnement: " . $modeFonctionnement);
+            
+            $repereSite = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
+            $equipement->setRepereSiteClient($repereSite);
+            error_log("Repère site: " . $repereSite);
+            
+            $miseEnService = $equipmentHorsContrat['annee']['value'] ?? '';
+            $equipement->setMiseEnService($miseEnService);
+            error_log("Mise en service: " . $miseEnService);
+            
+            $numeroSerie = $equipmentHorsContrat['n_de_serie']['value'] ?? '';
+            $equipement->setNumeroDeSerie($numeroSerie);
+            error_log("Numéro de série: " . $numeroSerie);
+            
+            $marque = $equipmentHorsContrat['marque']['value'] ?? '';
+            $equipement->setMarque($marque);
+            error_log("Marque: " . $marque);
+            
+            $largeur = $equipmentHorsContrat['largeur']['value'] ?? '';
+            $equipement->setLargeur($largeur);
+            error_log("Largeur: " . $largeur);
+            
+            $hauteur = $equipmentHorsContrat['hauteur']['value'] ?? '';
+            $equipement->setHauteur($hauteur);
+            error_log("Hauteur: " . $hauteur);
+            
+            $plaqueSignaletique = $equipmentHorsContrat['plaque_signaletique1']['value'] ?? '';
+            $equipement->setPlaqueSignaletique($plaqueSignaletique);
+            error_log("Plaque signalétique: " . $plaqueSignaletique);
+            
+            $etat = $equipmentHorsContrat['etat1']['value'] ?? '';
+            $equipement->setEtat($etat);
+            error_log("État: " . $etat);
+            
+            // Type de visite et statut
+            $visite = $this->getDefaultVisitType($fields);
+            $equipement->setVisite($visite);
+            error_log("Visite: " . $visite);
+            
+            $statutMaintenance = $this->getMaintenanceStatusFromEtat($etat);
+            $equipement->setStatutDeMaintenance($statutMaintenance);
+            error_log("Statut maintenance: " . $statutMaintenance);
+            
+            // CRITIQUE: Équipements hors contrat ne sont PAS en maintenance
+            $equipement->setEnMaintenance(false);
+            $equipement->setIsArchive(false);
+            error_log("En maintenance défini à: false");
+            
+            // 4. Sauvegarder les photos SEULEMENT si pas de doublon
+            try {
+                $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
+                error_log("Photos sauvegardées avec succès");
+            } catch (\Exception $e) {
+                error_log("Erreur sauvegarde photos: " . $e->getMessage());
+                // Continuer même si les photos échouent
+            }
+            
+            error_log("=== DEBUG HORS CONTRAT SUCCESS ===");
+            return true; // Équipement traité avec succès
+            
+        } catch (\Exception $e) {
+            error_log("=== DEBUG HORS CONTRAT ERROR ===");
+            error_log("Erreur dans setOffContractDataWithFormPhotosAndDeduplication: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            return false;
         }
-        
-        // 3. Définir les données de l'équipement hors contrat
-        $equipement->setNumeroEquipement($numeroFormate);
-        $equipement->setLibelleEquipement($typeLibelle);
-        $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
-        $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
-        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
-        $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
-        $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
-        $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
-        $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
-        $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
-        $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
-        
-        $equipement->setVisite($this->getDefaultVisitType($fields));
-        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? ''));
-        
-        // IMPORTANT: Équipements hors contrat ne sont PAS en maintenance
-        $equipement->setEnMaintenance(false);
-        $equipement->setIsArchive(false);
-        
-        // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-        $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
-        
-        return true; // Équipement traité avec succès
     }
 
     /**
