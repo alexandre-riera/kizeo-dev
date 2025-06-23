@@ -528,15 +528,14 @@ class SimplifiedMaintenanceController extends AbstractController
         // Rechercher le dernier numéro utilisé pour ce type et ce client
         $repository = $entityManager->getRepository($entityClass);
         
-        // Requête pour récupérer tous les équipements de ce type pour ce client
-        // avec en_maintenance = false pour cibler les équipements hors contrat
+        // Requête corrigée avec le bon nom de champ camelCase
         $qb = $repository->createQueryBuilder('e')
-            ->where('e.id_contact = :idClient')
-            ->andWhere('e.numero_equipement LIKE :typePattern')
-            ->andWhere('e.en_maintenance = false') // Spécifique aux hors contrat
+            ->where('e.idContact = :idClient')  // CORRIGÉ: idContact au lieu de id_contact
+            ->andWhere('e.numeroEquipement LIKE :typePattern')  // CORRIGÉ: numeroEquipement au lieu de numero_equipement
+            ->andWhere('e.enMaintenance = false') // CORRIGÉ: enMaintenance au lieu de en_maintenance
             ->setParameter('idClient', $idClient)
             ->setParameter('typePattern', $typeCode . '%')
-            ->orderBy('e.numero_equipement', 'DESC')
+            ->orderBy('e.numeroEquipement', 'DESC')
             ->setMaxResults(50); // Limite pour éviter de charger trop de données
         
         $equipments = $qb->getQuery()->getResult();
@@ -4487,8 +4486,8 @@ class SimplifiedMaintenanceController extends AbstractController
             $repository = $entityManager->getRepository($entityClass);
             
             $existing = $repository->createQueryBuilder('e')
-                ->where('e.numero_equipement = :numero')
-                ->andWhere('e.id_contact = :idClient')
+                ->where('e.numeroEquipement = :numero')  // CORRIGÉ: numeroEquipement
+                ->andWhere('e.idContact = :idClient')    // CORRIGÉ: idContact
                 ->setParameter('numero', $numeroEquipement)
                 ->setParameter('idClient', $idClient)
                 ->setMaxResults(1)
@@ -5218,9 +5217,8 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT ===");
+        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT (CORRIGÉE) ===");
         error_log("ID Client: " . $idClient);
-        error_log("Données équipement: " . json_encode($equipmentHorsContrat, JSON_UNESCAPED_UNICODE));
         
         try {
             $repository = $entityManager->getRepository($entityClass);
@@ -5231,22 +5229,17 @@ class SimplifiedMaintenanceController extends AbstractController
             $localisation = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
             $nature = $equipmentHorsContrat['nature']['value'] ?? '';
             
-            error_log("Critères de recherche:");
-            error_log("- Numéro de série: '" . $numeroSerie . "'");
-            error_log("- Marque: '" . $marque . "'");
-            error_log("- Localisation: '" . $localisation . "'");
-            error_log("- Nature: '" . $nature . "'");
+            error_log("Critères: numeroSerie='$numeroSerie', marque='$marque', localisation='$localisation', nature='$nature'");
             
             $existing = null;
             
-            // Stratégie 1: Si on a un numéro de série NON VIDE, c'est le critère le plus fiable
-            if (!empty($numeroSerie) && trim($numeroSerie) !== '') {
+            // Stratégie 1: Si on a un numéro de série NON VIDE
+            if (!empty($numeroSerie) && trim($numeroSerie) !== '' && $numeroSerie !== 'NC') {
                 error_log("Recherche par numéro de série...");
                 
                 $existing = $repository->createQueryBuilder('e')
-                    ->where('e.numero_de_serie = :numeroSerie')
-                    ->andWhere('e.id_contact = :idClient')
-                    // SUPPRIMÉ: ->andWhere('e.en_maintenance = false') // Ne pas filtrer par en_maintenance
+                    ->where('e.numeroDeSerie = :numeroSerie')  // CORRIGÉ: numeroDeSerie
+                    ->andWhere('e.idContact = :idClient')     // CORRIGÉ: idContact
                     ->setParameter('numeroSerie', $numeroSerie)
                     ->setParameter('idClient', $idClient)
                     ->setMaxResults(1)
@@ -5256,16 +5249,15 @@ class SimplifiedMaintenanceController extends AbstractController
                 error_log("Résultat recherche par numéro de série: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
             }
             
-            // Stratégie 2: Si pas de numéro de série OU pas trouvé, vérifier par combinaison marque + localisation + nature
+            // Stratégie 2: Vérifier par combinaison marque + localisation + nature
             if (!$existing && !empty($marque) && !empty($localisation) && !empty($nature)) {
                 error_log("Recherche par combinaison marque + localisation + nature...");
                 
                 $existing = $repository->createQueryBuilder('e')
                     ->where('e.marque = :marque')
-                    ->andWhere('e.repere_site_client = :localisation')
-                    ->andWhere('e.libelle_equipement = :nature')
-                    ->andWhere('e.id_contact = :idClient')
-                    // SUPPRIMÉ: ->andWhere('e.en_maintenance = false') // Ne pas filtrer par en_maintenance
+                    ->andWhere('e.repereSiteClient = :localisation')  // CORRIGÉ: repereSiteClient
+                    ->andWhere('e.libelleEquipement = :nature')       // CORRIGÉ: libelleEquipement
+                    ->andWhere('e.idContact = :idClient')             // CORRIGÉ: idContact
                     ->setParameter('marque', $marque)
                     ->setParameter('localisation', $localisation)
                     ->setParameter('nature', strtolower($nature))
@@ -5277,34 +5269,14 @@ class SimplifiedMaintenanceController extends AbstractController
                 error_log("Résultat recherche par combinaison: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
             }
             
-            // Stratégie 3: Si toujours pas trouvé et qu'on a au moins la marque, recherche moins stricte
-            if (!$existing && !empty($marque) && !empty($nature)) {
-                error_log("Recherche moins stricte par marque + nature...");
-                
-                $existing = $repository->createQueryBuilder('e')
-                    ->where('e.marque = :marque')
-                    ->andWhere('e.libelle_equipement = :nature')
-                    ->andWhere('e.id_contact = :idClient')
-                    ->setParameter('marque', $marque)
-                    ->setParameter('nature', strtolower($nature))
-                    ->setParameter('idClient', $idClient)
-                    ->setMaxResults(1)
-                    ->getQuery()
-                    ->getOneOrNullResult();
-                    
-                error_log("Résultat recherche moins stricte: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
-            }
-            
             $result = $existing !== null;
             error_log("DÉCISION FINALE: " . ($result ? "EXISTE DÉJÀ (SKIP)" : "N'EXISTE PAS (TRAITER)"));
-            error_log("=== FIN VÉRIFICATION EXISTENCE ===");
             
             return $result;
             
         } catch (\Exception $e) {
             error_log("Erreur dans offContractEquipmentExists: " . $e->getMessage());
-            error_log("En cas d'erreur, on considère que l'équipement n'existe pas (false)");
-            return false; // En cas d'erreur, considérer que l'équipement n'existe pas
+            return false;
         }
     }
 
@@ -5315,13 +5287,12 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== VÉRIFICATION DÉSACTIVÉE - TOUS LES ÉQUIPEMENTS SERONT TRAITÉS ===");
-        error_log("ID Client: " . $idClient);
+        error_log("=== VÉRIFICATION DÉSACTIVÉE - TRAITEMENT FORCÉ ===");
         error_log("Nature: " . ($equipmentHorsContrat['nature']['value'] ?? 'NULL'));
-        error_log("Numéro série: " . ($equipmentHorsContrat['n_de_serie']['value'] ?? 'NULL'));
         error_log("Marque: " . ($equipmentHorsContrat['marque']['value'] ?? 'NULL'));
+        error_log("Numéro série: " . ($equipmentHorsContrat['n_de_serie']['value'] ?? 'NULL'));
         
-        // TEMPORAIRE: Toujours retourner false pour traiter tous les équipements
+        // TEMPORAIRE: Forcer le traitement de tous les équipements hors contrat
         return false;
     }
 
