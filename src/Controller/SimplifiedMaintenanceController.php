@@ -5110,58 +5110,43 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
-        error_log("Entry ID: " . $entryId);
+        // 1. Générer le numéro d'équipement
+        $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
+        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+        $idClient = $fields['id_client_']['value'] ?? '';
         
-        try {
-            // 1. Analyser le type d'équipement
-            $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
-            error_log("Type libellé brut: '" . ($equipmentHorsContrat['nature']['value'] ?? 'VIDE') . "'");
-            error_log("Type libellé normalisé: '" . $typeLibelle . "'");
-            
-            if (empty($typeLibelle)) {
-                error_log("ERREUR: Type libellé vide");
-                return false;
-            }
-            
-            // 2. Générer le code type
-            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-            error_log("Code type généré: '" . $typeCode . "'");
-            
-            // 3. Vérifier l'ID client
-            $idClient = $fields['id_client_']['value'] ?? '';
-            error_log("ID Client: '" . $idClient . "'");
-            
-            if (empty($idClient)) {
-                error_log("ERREUR: ID Client vide");
-                return false;
-            }
-            
-            // 4. Générer le numéro unique
-            $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-            error_log("Numéro formaté final: '" . $numeroFormate . "'");
-            
-            // 5. Vérifier la non-existence de l'équipement
-            if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-                error_log("Équipement existe déjà - SKIP");
-                return false;
-            }
-            
-            // 6. Attribuer les données
-            $equipement->setNumeroEquipement($numeroFormate);
-            $equipement->setLibelleEquipement($typeLibelle);
-            
-            // ... autres attributions de données ...
-            
-            error_log("=== SUCCÈS GÉNÉRATION PPV: " . $numeroFormate . " ===");
-            return true;
-            
-        } catch (\Exception $e) {
-            error_log("=== ERREUR TRAITEMENT PPV ===");
-            error_log("Message: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
-            return false;
+        $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+        $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+        
+        // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
+        if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+            return false; // Skip car déjà existe
         }
+        
+        // 3. Définir les données de l'équipement hors contrat
+        $equipement->setNumeroEquipement($numeroFormate);
+        $equipement->setLibelleEquipement($typeLibelle);
+        $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
+        $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
+        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+        $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
+        $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
+        $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
+        $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
+        $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
+        $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
+        
+        $equipement->setVisite($this->getDefaultVisitType($fields));
+        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? ''));
+        
+        // IMPORTANT: Équipements hors contrat ne sont PAS en maintenance
+        $equipement->setEnMaintenance(false);
+        $equipement->setIsArchive(false);
+        
+        // 4. Sauvegarder les photos SEULEMENT si pas de doublon
+        $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
+        
+        return true; // Équipement traité avec succès
     }
 
     /**
