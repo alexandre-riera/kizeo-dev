@@ -5850,5 +5850,198 @@ class SimplifiedMaintenanceController extends AbstractController
             ];
         }
     }
+    /**
+ * Diagnostic minimal pour S50 - teste uniquement l'endpoint de base
+ */
+#[Route('/api/maintenance/test-s50-basic', name: 'app_maintenance_test_s50_basic', methods: ['GET'])]
+public function testS50Basic(Request $request): JsonResponse 
+{
+    $formId = '1065302';
+    $limit = (int) $request->query->get('limit', 2); // Très petite limite
+    
+    try {
+        error_log("=== DEBUT TEST S50 BASIC ===");
+        
+        // Test 1: Vérifier la connectivité de base avec un timeout très court
+        $startTime = microtime(true);
+        
+        $response = $this->client->request(
+            'POST',
+            'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+            [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'json' => [
+                    'limit' => $limit,
+                    'offset' => 0
+                ],
+                'timeout' => 10, // Timeout très court pour test
+            ]
+        );
+        
+        $responseTime = microtime(true) - $startTime;
+        $formData = $response->toArray();
+        
+        error_log("Réponse reçue en " . round($responseTime, 2) . " secondes");
+        
+        // Analyse de base de la réponse
+        $dataCount = isset($formData['data']) ? count($formData['data']) : 0;
+        $hasData = !empty($formData['data']);
+        
+        $basicInfo = [
+            'form_id' => $formId,
+            'response_time_seconds' => round($responseTime, 2),
+            'has_data_key' => isset($formData['data']),
+            'data_count' => $dataCount,
+            'has_entries' => $hasData,
+            'raw_keys' => array_keys($formData),
+        ];
+        
+        if ($hasData) {
+            // Examiner la première entrée sans récupérer ses détails
+            $firstEntry = $formData['data'][0];
+            $basicInfo['first_entry'] = [
+                'id' => $firstEntry['_id'] ?? 'missing',
+                'form_id' => $firstEntry['_form_id'] ?? 'missing',
+                'keys' => array_keys($firstEntry),
+            ];
+        }
+        
+        return new JsonResponse([
+            'success' => true,
+            'test' => 'basic_connectivity',
+            'form_id' => $formId,
+            'limit_used' => $limit,
+            'basic_info' => $basicInfo,
+            'status' => $hasData ? 'Data found' : 'No data found',
+            'message' => $hasData ? 
+                "Formulaire S50 accessible: {$dataCount} entrées trouvées" : 
+                "Formulaire S50 accessible mais aucune entrée trouvée"
+        ]);
+        
+    } catch (\Exception $e) {
+        error_log("Erreur test S50 basic: " . $e->getMessage());
+        
+        return new JsonResponse([
+            'success' => false,
+            'test' => 'basic_connectivity',
+            'form_id' => $formId,
+            'error' => $e->getMessage(),
+            'error_type' => get_class($e),
+            'is_timeout' => strpos($e->getMessage(), 'timeout') !== false,
+            'suggestions' => [
+                'Timeout détecté' => strpos($e->getMessage(), 'timeout') !== false,
+                'Problème réseau' => strpos($e->getMessage(), 'Connection') !== false,
+                'Problème auth' => strpos($e->getMessage(), 'Unauthorized') !== false,
+                'Form inexistant' => strpos($e->getMessage(), '404') !== false,
+            ]
+        ], 500);
+    }
+}
 
+/**
+ * Test encore plus simple - juste vérifier si le formulaire existe
+ */
+#[Route('/api/maintenance/test-s50-exists', name: 'app_maintenance_test_s50_exists', methods: ['GET'])]
+public function testS50Exists(): JsonResponse 
+{
+    $formId = '1065302';
+    
+    try {
+        // Test d'existence du formulaire (plus rapide que récupérer les données)
+        $response = $this->client->request(
+            'GET',
+            'https://forms.kizeo.com/rest/v3/forms/' . $formId,
+            [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'timeout' => 10,
+            ]
+        );
+        
+        $formInfo = $response->toArray();
+        
+        return new JsonResponse([
+            'success' => true,
+            'test' => 'form_existence',
+            'form_id' => $formId,
+            'form_exists' => true,
+            'form_name' => $formInfo['name'] ?? 'Nom non disponible',
+            'form_info' => [
+                'id' => $formInfo['id'] ?? null,
+                'name' => $formInfo['name'] ?? null,
+                'status' => $formInfo['status'] ?? null,
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return new JsonResponse([
+            'success' => false,
+            'test' => 'form_existence',
+            'form_id' => $formId,
+            'form_exists' => false,
+            'error' => $e->getMessage(),
+            'error_analysis' => [
+                'is_404' => strpos($e->getMessage(), '404') !== false,
+                'is_timeout' => strpos($e->getMessage(), 'timeout') !== false,
+                'is_auth_error' => strpos($e->getMessage(), 'Unauthorized') !== false || strpos($e->getMessage(), '401') !== false,
+            ]
+        ], 500);
+    }
+}
+
+/**
+ * Test avec l'API Kizeo alternative (endpoint simple)
+ */
+#[Route('/api/maintenance/test-s50-alternative', name: 'app_maintenance_test_s50_alternative', methods: ['GET'])]
+public function testS50Alternative(): JsonResponse 
+{
+    $formId = '1065302';
+    
+    try {
+        // Essayer l'endpoint GET simple au lieu de POST advanced
+        $response = $this->client->request(
+            'GET',
+            'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data',
+            [
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                ],
+                'query' => [
+                    'limit' => 3,
+                    'offset' => 0
+                ],
+                'timeout' => 15,
+            ]
+        );
+        
+        $formData = $response->toArray();
+        $dataCount = isset($formData['data']) ? count($formData['data']) : 0;
+        
+        return new JsonResponse([
+            'success' => true,
+            'test' => 'alternative_endpoint',
+            'form_id' => $formId,
+            'endpoint_used' => 'GET /forms/' . $formId . '/data',
+            'data_count' => $dataCount,
+            'has_data' => $dataCount > 0,
+            'message' => $dataCount > 0 ? 
+                "Endpoint alternatif fonctionne: {$dataCount} entrées" : 
+                "Endpoint alternatif accessible mais pas de données"
+        ]);
+        
+    } catch (\Exception $e) {
+        return new JsonResponse([
+            'success' => false,
+            'test' => 'alternative_endpoint',
+            'form_id' => $formId,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
 }
