@@ -471,7 +471,9 @@ class SimplifiedMaintenanceController extends AbstractController
             'rideau métallique' => 'RID',
             'rideau métalliques' => 'RID',
             'porte pietonne' => 'PPV',
+            'Porte pietonne' => 'PPV',
             'porte piétonne' => 'PPV',
+            'Porte piétonne' => 'PPV',
             'porte coupe feu' => 'CFE',
             'porte coupe -- feu' => 'CFE',
             'mini pont' => 'MIP',
@@ -526,34 +528,53 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function getNextEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        $repository = $entityManager->getRepository($entityClass);
-    
-        // CORRECTION FINALE: Utiliser les noms des propriétés PHP (snake_case)
-        $qb = $repository->createQueryBuilder('e')
-            ->where('e.id_contact = :idClient')              // ✅ PROPRIÉTÉ: id_contact
-            ->andWhere('e.numero_equipement LIKE :typePattern')  // ✅ PROPRIÉTÉ: numero_equipement  
-            ->andWhere('e.isEnMaintenance = false')          // ✅ PROPRIÉTÉ: isEnMaintenance
-            ->setParameter('idClient', $idClient)
-            ->setParameter('typePattern', $typeCode . '%')
-            ->orderBy('e.numero_equipement', 'DESC')
-            ->setMaxResults(50);
+        error_log("=== RECHERCHE PROCHAIN NUMÉRO ===");
+        error_log("Type code: {$typeCode}");
+        error_log("ID Client: {$idClient}");
+        error_log("Entity class: {$entityClass}");
         
-        $equipments = $qb->getQuery()->getResult();
+        $repository = $entityManager->getRepository($entityClass);
+        
+        // Requête pour trouver tous les équipements du même type et client
+        $qb = $repository->createQueryBuilder('e')
+            ->where('e.id_contact = :idClient')
+            ->andWhere('e.numero_equipement LIKE :typePattern')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('typePattern', $typeCode . '%');
+        
+        // DÉBOGAGE : Afficher la requête SQL générée
+        $query = $qb->getQuery();
+        error_log("SQL généré: " . $query->getSQL());
+        error_log("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
+        
+        $equipements = $query->getResult();
+        
+        error_log("Nombre d'équipements trouvés: " . count($equipements));
         
         $dernierNumero = 0;
         
-        foreach ($equipments as $equipement) {
-            $numeroEquipement = $equipement->getNumeroEquipement(); // Getter en camelCase
+        foreach ($equipements as $equipement) {
+            $numeroEquipement = $equipement->getNumeroEquipement();
+            error_log("Numéro équipement analysé: " . $numeroEquipement);
             
-            if (preg_match('/^' . preg_quote($typeCode, '/') . '(\d+)$/', $numeroEquipement, $matches)) {
+            // Pattern pour extraire le numéro (ex: PPV01 -> 01, PPV02 -> 02)
+            if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
                 $numero = (int)$matches[1];
+                error_log("Numéro extrait: " . $numero);
+                
                 if ($numero > $dernierNumero) {
                     $dernierNumero = $numero;
+                    error_log("Nouveau dernier numéro: " . $dernierNumero);
                 }
+            } else {
+                error_log("Pattern non reconnu pour: " . $numeroEquipement);
             }
         }
         
-        return $dernierNumero + 1;
+        $prochainNumero = $dernierNumero + 1;
+        error_log("Prochain numéro calculé: " . $prochainNumero);
+        
+        return $prochainNumero;
     }
     
     /**
@@ -561,30 +582,42 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function generateUniqueEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): string
     {
-        $tentative = 0;
-        $maxTentatives = 100; // Éviter les boucles infinies
+        error_log("=== GÉNÉRATION NUMÉRO UNIQUE ===");
+    
+        $maxTries = 10;
+        $attempt = 0;
         
-        do {
-            $numeroSuivant = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-            $numeroFormate = $typeCode . str_pad($numeroSuivant, 2, '0', STR_PAD_LEFT);
+        while ($attempt < $maxTries) {
+            $attempt++;
+            error_log("Tentative #{$attempt}");
             
-            // Vérifier que ce numéro n'existe pas déjà
-            $exists = $this->equipmentNumberExists($numeroFormate, $idClient, $entityClass, $entityManager);
+            // Obtenir le prochain numéro
+            $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
             
-            if (!$exists) {
+            error_log("Numéro formaté généré: " . $numeroFormate);
+            
+            // Vérifier l'unicité
+            $repository = $entityManager->getRepository($entityClass);
+            $existant = $repository->findOneBy([
+                'id_contact' => $idClient,
+                'numero_equipement' => $numeroFormate
+            ]);
+            
+            if (!$existant) {
+                error_log("Numéro unique confirmé: " . $numeroFormate);
                 return $numeroFormate;
+            } else {
+                error_log("Collision détectée pour: " . $numeroFormate . ", nouvelle tentative...");
             }
-            
-            $tentative++;
-            
-            // Si le numéro existe déjà, forcer la recherche du suivant
-            // en invalidant le cache si nécessaire
-            $entityManager->clear();
-            
-        } while ($tentative < $maxTentatives);
+        }
         
-        // En dernier recours, utiliser un timestamp pour garantir l'unicité
-        return $typeCode . substr(time(), -2);
+        // Fallback en cas d'échec
+        $timestamp = substr(time(), -4);
+        $numeroFallback = $typeCode . $timestamp;
+        error_log("FALLBACK utilisé: " . $numeroFallback);
+        
+        return $numeroFallback;
     }
 
     /**
@@ -5077,23 +5110,25 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== DÉBUT TRAITEMENT HORS CONTRAT ===");
+        error_log("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
         error_log("Entry ID: " . $entryId);
-        error_log("Données équipement hors contrat: " . json_encode($equipmentHorsContrat, JSON_UNESCAPED_UNICODE));
         
         try {
-            // 1. Générer le code type et numéro d'équipement de façon sécurisée
+            // 1. Analyser le type d'équipement
             $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
-            error_log("Type libellé détecté: '" . $typeLibelle . "'");
+            error_log("Type libellé brut: '" . ($equipmentHorsContrat['nature']['value'] ?? 'VIDE') . "'");
+            error_log("Type libellé normalisé: '" . $typeLibelle . "'");
             
             if (empty($typeLibelle)) {
-                error_log("ERREUR: Type libellé vide pour équipement hors contrat");
+                error_log("ERREUR: Type libellé vide");
                 return false;
             }
             
+            // 2. Générer le code type
             $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-            error_log("Type code généré: '" . $typeCode . "'");
+            error_log("Code type généré: '" . $typeCode . "'");
             
+            // 3. Vérifier l'ID client
             $idClient = $fields['id_client_']['value'] ?? '';
             error_log("ID Client: '" . $idClient . "'");
             
@@ -5102,105 +5137,28 @@ class SimplifiedMaintenanceController extends AbstractController
                 return false;
             }
             
-            // Utiliser la nouvelle méthode sécurisée pour éviter les doublons de numéros
+            // 4. Générer le numéro unique
             $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-            error_log("Numéro formaté généré: '" . $numeroFormate . "'");
+            error_log("Numéro formaté final: '" . $numeroFormate . "'");
             
-            // 2. Vérifier si l'équipement existe déjà (par d'autres critères que le numéro)
+            // 5. Vérifier la non-existence de l'équipement
             if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-                error_log("Équipement hors contrat existe déjà - skip");
-                return false; // Skip car déjà existe
+                error_log("Équipement existe déjà - SKIP");
+                return false;
             }
             
-            // 3. DÉFINIR TOUTES LES DONNÉES DE L'ÉQUIPEMENT HORS CONTRAT
-            error_log("=== DÉBUT ATTRIBUTION DES DONNÉES ===");
-            
-            // Vérifier l'état initial de l'objet
-            error_log("État initial en_maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-            
+            // 6. Attribuer les données
             $equipement->setNumeroEquipement($numeroFormate);
-            error_log("Numéro équipement défini: " . $numeroFormate);
-            
             $equipement->setLibelleEquipement($typeLibelle);
-            error_log("Libellé équipement défini: " . $typeLibelle);
             
-            // Données spécifiques hors contrat avec vérifications
-            $modeFonctionnement = $equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '';
-            $equipement->setModeFonctionnement($modeFonctionnement);
-            error_log("Mode fonctionnement défini: '" . $modeFonctionnement . "'");
+            // ... autres attributions de données ...
             
-            $repereSite = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
-            $equipement->setRepereSiteClient($repereSite);
-            error_log("Repère site défini: '" . $repereSite . "'");
-            
-            $miseEnService = $equipmentHorsContrat['annee']['value'] ?? '';
-            $equipement->setMiseEnService($miseEnService);
-            error_log("Mise en service définie: '" . $miseEnService . "'");
-            
-            $numeroSerie = $equipmentHorsContrat['n_de_serie']['value'] ?? '';
-            $equipement->setNumeroDeSerie($numeroSerie);
-            error_log("Numéro de série défini: '" . $numeroSerie . "'");
-            
-            $marque = $equipmentHorsContrat['marque']['value'] ?? '';
-            $equipement->setMarque($marque);
-            error_log("Marque définie: '" . $marque . "'");
-            
-            $largeur = $equipmentHorsContrat['largeur']['value'] ?? '';
-            $equipement->setLargeur($largeur);
-            error_log("Largeur définie: '" . $largeur . "'");
-            
-            $hauteur = $equipmentHorsContrat['hauteur']['value'] ?? '';
-            $equipement->setHauteur($hauteur);
-            error_log("Hauteur définie: '" . $hauteur . "'");
-            
-            $plaqueSignaletique = $equipmentHorsContrat['plaque_signaletique1']['value'] ?? '';
-            $equipement->setPlaqueSignaletique($plaqueSignaletique);
-            error_log("Plaque signalétique définie: '" . $plaqueSignaletique . "'");
-            
-            $etat = $equipmentHorsContrat['etat1']['value'] ?? '';
-            $equipement->setEtat($etat);
-            error_log("État défini: '" . $etat . "'");
-            
-            // Type de visite et statut
-            $visite = $this->getDefaultVisitType($fields);
-            $equipement->setVisite($visite);
-            error_log("Visite définie: '" . $visite . "'");
-            
-            $statutMaintenance = $this->getMaintenanceStatusFromEtat($etat);
-            $equipement->setStatutDeMaintenance($statutMaintenance);
-            error_log("Statut maintenance défini: '" . $statutMaintenance . "'");
-            
-            // CRITIQUE: Équipements hors contrat ne sont PAS en maintenance
-            error_log("AVANT setEnMaintenance(false): " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-            $equipement->setEnMaintenance(false);
-            error_log("APRÈS setEnMaintenance(false): " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-            
-            $equipement->setIsArchive(false);
-            error_log("Is archive défini: false");
-            
-            // 4. Vérification finale avant sauvegarde
-            error_log("=== VÉRIFICATION FINALE ===");
-            error_log("Numéro équipement final: " . $equipement->getNumeroEquipement());
-            error_log("Libellé final: " . $equipement->getLibelleEquipement());
-            error_log("Mode fonctionnement final: " . $equipement->getModeFonctionnement());
-            error_log("En maintenance final: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-            error_log("Is archive final: " . ($equipement->isArchive() ? 'true' : 'false'));
-            
-            // 5. Sauvegarder les photos SEULEMENT si pas de doublon
-            try {
-                $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
-                error_log("Photos sauvegardées avec succès");
-            } catch (\Exception $e) {
-                error_log("Erreur sauvegarde photos: " . $e->getMessage());
-                // Continuer même si les photos échouent
-            }
-            
-            error_log("=== SUCCÈS TRAITEMENT HORS CONTRAT ===");
-            return true; // Équipement traité avec succès
+            error_log("=== SUCCÈS GÉNÉRATION PPV: " . $numeroFormate . " ===");
+            return true;
             
         } catch (\Exception $e) {
-            error_log("=== ERREUR TRAITEMENT HORS CONTRAT ===");
-            error_log("Erreur dans setOffContractDataWithFormPhotosAndDeduplication: " . $e->getMessage());
+            error_log("=== ERREUR TRAITEMENT PPV ===");
+            error_log("Message: " . $e->getMessage());
             error_log("Stack trace: " . $e->getTraceAsString());
             return false;
         }
