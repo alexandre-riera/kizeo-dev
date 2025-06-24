@@ -470,10 +470,12 @@ class SimplifiedMaintenanceController extends AbstractController
             'rideau metallique' => 'RID',
             'rideau métallique' => 'RID',
             'rideau métalliques' => 'RID',
+            // PORTES PIÉTONNES - PRIORITÉ ABSOLUE
             'porte pietonne' => 'PPV',
-            'Porte pietonne' => 'PPV',
             'porte piétonne' => 'PPV',
             'Porte piétonne' => 'PPV',
+            'porte piéton' => 'PPV',
+            'porte pieton' => 'PPV',
             'porte coupe feu' => 'CFE',
             'porte coupe -- feu' => 'CFE',
             'mini pont' => 'MIP',
@@ -506,7 +508,17 @@ class SimplifiedMaintenanceController extends AbstractController
                 return $code;
             }
         }
+        // Recherche exacte d'abord
+        if (isset($mappingTable[$libelleNormalized])) {
+            error_log("Type trouvé (exact): {$libelleNormalized} -> " . $mappingTable[$libelleNormalized]);
+            return $mappingTable[$libelleNormalized];
+        }
         
+        // Recherche par mots-clés pour les portes piétonnes
+        if (str_contains($libelleNormalized, 'pieton') || str_contains($libelleNormalized, 'piéton')) {
+            error_log("Type trouvé (mot-clé piéton): {$libelleNormalized} -> PPV");
+            return 'PPV';
+        }
         // Recherche par mots-clés individuels pour plus de flexibilité
         if (str_contains($libelleNormalized, 'sectionnelle')) return 'SEC';
         if (str_contains($libelleNormalized, 'rideau')) return 'RID';
@@ -583,7 +595,10 @@ class SimplifiedMaintenanceController extends AbstractController
     private function generateUniqueEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): string
     {
         error_log("=== GÉNÉRATION NUMÉRO UNIQUE ===");
-    
+        error_log("Type code: {$typeCode}");
+        error_log("ID Client: {$idClient}");
+        error_log("Entity class: {$entityClass}");
+        
         $maxTries = 10;
         $attempt = 0;
         
@@ -591,8 +606,8 @@ class SimplifiedMaintenanceController extends AbstractController
             $attempt++;
             error_log("Tentative #{$attempt}");
             
-            // Obtenir le prochain numéro
-            $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+            // ✅ APPEL AVEC TOUS LES PARAMÈTRES
+            $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
             $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
             
             error_log("Numéro formaté généré: " . $numeroFormate);
@@ -1811,32 +1826,55 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Récupération du prochain numéro - VERSION FINALE
      */
-    private function getNextEquipmentNumberReal(string $typeCode, string $idClient, EntityManagerInterface $entityManager): int
+    private function getNextEquipmentNumberReal(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        $repository = $entityManager->getRepository(EquipementS140::class);
+        error_log("=== RECHERCHE PROCHAIN NUMÉRO ===");
+        error_log("Type code: {$typeCode}");
+        error_log("ID Client: {$idClient}");
+        error_log("Entity class: {$entityClass}"); // ✅ Maintenant $entityClass est défini
         
-        $equipments = $repository->createQueryBuilder('e')
+        $repository = $entityManager->getRepository($entityClass); // ✅ Utilisation correcte
+        
+        // Requête pour trouver tous les équipements du même type et client
+        $qb = $repository->createQueryBuilder('e')
             ->where('e.id_contact = :idClient')
-            ->andWhere('e.numero_equipement LIKE :typeCode')
+            ->andWhere('e.numero_equipement LIKE :typePattern')
             ->setParameter('idClient', $idClient)
-            ->setParameter('typeCode', $typeCode . '%')
-            ->getQuery()
-            ->getResult();
+            ->setParameter('typePattern', $typeCode . '%');
         
-        $lastNumber = 0;
+        // DÉBOGAGE : Afficher la requête SQL générée
+        $query = $qb->getQuery();
+        error_log("SQL généré: " . $query->getSQL());
+        error_log("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
         
-        foreach ($equipments as $equipment) {
-            $numeroEquipement = $equipment->getNumeroEquipement();
+        $equipements = $query->getResult();
+        
+        error_log("Nombre d'équipements trouvés: " . count($equipements));
+        
+        $dernierNumero = 0;
+        
+        foreach ($equipements as $equipement) {
+            $numeroEquipement = $equipement->getNumeroEquipement();
+            error_log("Numéro équipement analysé: " . $numeroEquipement);
             
+            // Pattern pour extraire le numéro (ex: PPV01 -> 01, PPV02 -> 02)
             if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
-                $number = (int)$matches[1];
-                if ($number > $lastNumber) {
-                    $lastNumber = $number;
+                $numero = (int)$matches[1];
+                error_log("Numéro extrait: " . $numero);
+                
+                if ($numero > $dernierNumero) {
+                    $dernierNumero = $numero;
+                    error_log("Nouveau dernier numéro: " . $dernierNumero);
                 }
+            } else {
+                error_log("Pattern non reconnu pour: " . $numeroEquipement);
             }
         }
         
-        return $lastNumber + 1;
+        $prochainNumero = $dernierNumero + 1;
+        error_log("Prochain numéro calculé: " . $prochainNumero);
+        
+        return $prochainNumero;
     }
 
     /**
@@ -5110,13 +5148,20 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
+        error_log("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
+        error_log("Entry ID: " . $entryId);
+        error_log("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
+
         // 1. Générer le numéro d'équipement
         $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
         
-        $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-        $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+        // $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+        // $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+        // ✅ APPEL AVEC TOUS LES PARAMÈTRES Y COMPRIS $entityClass
+        $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+        error_log("Numéro formaté final: '" . $numeroFormate . "'");
         
         // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
         if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
