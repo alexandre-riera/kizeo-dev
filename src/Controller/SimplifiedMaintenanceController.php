@@ -5354,4 +5354,117 @@ class SimplifiedMaintenanceController extends AbstractController
      * visite                          → getVisite() / setVisite()
      * is_archive                      → isArchive() / setIsArchive()
      */
+
+     /**
+     * Route de debug pour analyser la structure des données S50
+     */
+    #[Route('/api/maintenance/debug-s50', name: 'app_maintenance_debug_s50', methods: ['GET'])]
+    public function debugS50Structure(Request $request): JsonResponse 
+    {
+        $formId = '1065302'; // Form ID pour S50
+        $limit = (int) $request->query->get('limit', 5);
+        
+        try {
+            // Récupérer les données brutes du formulaire
+            $response = $this->client->request(
+                'POST',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        'limit' => $limit,
+                        'offset' => 0
+                    ],
+                    'timeout' => 60
+                ]
+            );
+
+            $formData = $response->toArray();
+            $debugInfo = [];
+            
+            if (!isset($formData['data']) || empty($formData['data'])) {
+                return new JsonResponse([
+                    'error' => 'Aucune donnée trouvée dans le formulaire',
+                    'form_id' => $formId,
+                    'raw_response' => $formData
+                ]);
+            }
+            
+            // Analyser les premières entrées
+            foreach (array_slice($formData['data'], 0, $limit) as $entry) {
+                try {
+                    // Récupérer les détails de chaque entrée
+                    $detailResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'timeout' => 30
+                        ]
+                    );
+
+                    $detailData = $detailResponse->toArray();
+                    
+                    // Extraire tous les noms de champs disponibles
+                    $fieldNames = [];
+                    $agencyRelatedFields = [];
+                    
+                    if (isset($detailData['data']['fields'])) {
+                        foreach ($detailData['data']['fields'] as $fieldName => $fieldData) {
+                            $fieldNames[] = $fieldName;
+                            
+                            // Chercher des champs qui pourraient contenir le code agence
+                            if (stripos($fieldName, 'agence') !== false || 
+                                stripos($fieldName, 'code') !== false ||
+                                stripos($fieldName, 'agency') !== false ||
+                                stripos($fieldName, 'site') !== false) {
+                                $agencyRelatedFields[$fieldName] = $fieldData['value'] ?? null;
+                            }
+                        }
+                    }
+                    
+                    $debugInfo[] = [
+                        'entry_id' => $entry['_id'],
+                        'all_field_names' => $fieldNames,
+                        'agency_related_fields' => $agencyRelatedFields,
+                        'code_agence_exists' => isset($detailData['data']['fields']['code_agence']),
+                        'code_agence_value' => $detailData['data']['fields']['code_agence']['value'] ?? 'FIELD_NOT_FOUND',
+                        'sample_fields' => array_slice($detailData['data']['fields'], 0, 10, true) // Échantillon des premiers champs
+                    ];
+                    
+                } catch (\Exception $e) {
+                    $debugInfo[] = [
+                        'entry_id' => $entry['_id'],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+            
+            return new JsonResponse([
+                'success' => true,
+                'form_id' => $formId,
+                'total_entries_in_form' => count($formData['data']),
+                'analyzed_entries' => count($debugInfo),
+                'debug_info' => $debugInfo,
+                'summary' => [
+                    'entries_with_code_agence' => count(array_filter($debugInfo, fn($d) => ($d['code_agence_exists'] ?? false))),
+                    'entries_with_S50_value' => count(array_filter($debugInfo, fn($d) => ($d['code_agence_value'] ?? '') === 'S50')),
+                    'unique_agency_values' => array_unique(array_map(fn($d) => $d['code_agence_value'] ?? 'NONE', $debugInfo))
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'form_id' => $formId
+            ], 500);
+        }
+    }
 }
