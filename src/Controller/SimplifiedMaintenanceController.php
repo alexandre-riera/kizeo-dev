@@ -4897,7 +4897,6 @@ class SimplifiedMaintenanceController extends AbstractController
             );
 
             $formData = $response->toArray();
-            dd($formData);
             $validSubmissions = [];
             
             if (!isset($formData['data']) || empty($formData['data'])) {
