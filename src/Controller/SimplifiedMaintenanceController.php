@@ -4610,7 +4610,7 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-        
+        dd($equipmentContrat);
         // 1. Données de base
         $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
         $idClient = $fields['id_client_']['value'] ?? '';
