@@ -6271,10 +6271,10 @@ class SimplifiedMaintenanceController extends AbstractController
                                     $this->setOffContractDataForAgency($equipement, $equipmentData, $agencyCode);
                                     $equipement->setEnMaintenance(false);
                                 }
-                                
+                                $id_client = $fields['id_client_']['value'] ?? $fields['id_contact']['value'] ?? '';
                                 // Générer un numéro d'équipement unique
                                 $numeroEquipement = $this->generateUniqueEquipmentNumber(
-                                    $fields['id_client_']['value'] ?? '',
+                                    $id_client,
                                     $equipmentData,
                                     $entityClass,
                                     $entityManager
