@@ -1800,9 +1800,10 @@ class SimplifiedMaintenanceController extends AbstractController
         $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
-        
+        $agencyCode = $fields['code_agence']['value'] ?? 'S140';
         // Génération du numéro
-        $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityManager);
+        $entityClass = $this->getEntityClassByAgency($agencyCode);
+        $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
         $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
         
         $equipement->setNumeroEquipement($numeroFormate);
@@ -2591,297 +2592,297 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Route pour traiter un formulaire S140 par lots d'équipements
      */
-    #[Route('/api/maintenance/process-chunked/{agencyCode}', name: 'app_maintenance_process_chunked', methods: ['GET'])]
-    public function processMaintenanceChunked(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-chunked/{agencyCode}', name: 'app_maintenance_process_chunked', methods: ['GET'])]
+    // public function processMaintenanceChunked(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
+    //     if ($agencyCode !== 'S140') {
+    //         return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+    //     }
 
-        // Configuration optimisée
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 120);
+    //     // Configuration optimisée
+    //     ini_set('memory_limit', '512M');
+    //     ini_set('max_execution_time', 120);
         
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id');
-        $chunkSize = (int) $request->query->get('chunk_size', 15); // 15 équipements par lot
-        $startOffset = (int) $request->query->get('offset', 0);
+    //     $formId = $request->query->get('form_id', '1088761');
+    //     $entryId = $request->query->get('entry_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15); // 15 équipements par lot
+    //     $startOffset = (int) $request->query->get('offset', 0);
 
-        if (!$entryId) {
-            return new JsonResponse([
-                'error' => 'Paramètre entry_id requis',
-                'available_entries' => [
-                    '232647438', '232647488' // Les 2 qui fonctionnaient
-                ]
-            ], 400);
-        }
+    //     if (!$entryId) {
+    //         return new JsonResponse([
+    //             'error' => 'Paramètre entry_id requis',
+    //             'available_entries' => [
+    //                 '232647438', '232647488' // Les 2 qui fonctionnaient
+    //             ]
+    //         ], 400);
+    //     }
 
-        try {
-            // 1. Récupérer SEULEMENT les métadonnées du formulaire
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'timeout' => 30
-                ]
-            );
+    //     try {
+    //         // 1. Récupérer SEULEMENT les métadonnées du formulaire
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //                 'timeout' => 30
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
+    //         $detailData = $detailResponse->toArray();
             
-            if (!isset($detailData['data']['fields'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Formulaire sans données valides'
-                ], 400);
-            }
+    //         if (!isset($detailData['data']['fields'])) {
+    //             return new JsonResponse([
+    //                 'success' => false,
+    //                 'error' => 'Formulaire sans données valides'
+    //             ], 400);
+    //         }
 
-            $fields = $detailData['data']['fields'];
+    //         $fields = $detailData['data']['fields'];
 
-            // 2. Analyser le contenu SANS traiter
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+    //         // 2. Analyser le contenu SANS traiter
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
             
-            $totalContractEquipments = count($contractEquipments);
-            $totalOffContractEquipments = count($offContractEquipments);
-            $totalEquipments = $totalContractEquipments + $totalOffContractEquipments;
+    //         $totalContractEquipments = count($contractEquipments);
+    //         $totalOffContractEquipments = count($offContractEquipments);
+    //         $totalEquipments = $totalContractEquipments + $totalOffContractEquipments;
 
-            // 3. Si trop d'équipements, découper en lots
-            if ($totalEquipments > $chunkSize) {
-                return $this->processEquipmentChunk(
-                    $fields, 
-                    $contractEquipments, 
-                    $offContractEquipments, 
-                    $chunkSize, 
-                    $startOffset, 
-                    $entityManager,
-                    $formId,
-                    $entryId
-                );
-            }
+    //         // 3. Si trop d'équipements, découper en lots
+    //         if ($totalEquipments > $chunkSize) {
+    //             return $this->processEquipmentChunk(
+    //                 $fields, 
+    //                 $contractEquipments, 
+    //                 $offContractEquipments, 
+    //                 $chunkSize, 
+    //                 $startOffset, 
+    //                 $entityManager,
+    //                 $formId,
+    //                 $entryId
+    //             );
+    //         }
 
-            // 4. Si moins que la limite, traiter normalement
-            return $this->processAllEquipments(
-                $fields, 
-                $contractEquipments, 
-                $offContractEquipments, 
-                $entityManager,
-                $formId,
-                $entryId
-            );
+    //         // 4. Si moins que la limite, traiter normalement
+    //         return $this->processAllEquipments(
+    //             $fields, 
+    //             $contractEquipments, 
+    //             $offContractEquipments, 
+    //             $entityManager,
+    //             $formId,
+    //             $entryId
+    //         );
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'memory_used' => memory_get_usage(true) / 1024 / 1024 . ' MB'
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage(),
+    //             'memory_used' => memory_get_usage(true) / 1024 / 1024 . ' MB'
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Traiter un lot d'équipements
      */
-    private function processEquipmentChunk(
-        array $fields,
-        array $contractEquipments,
-        array $offContractEquipments,
-        int $chunkSize,
-        int $startOffset,
-        EntityManagerInterface $entityManager,
-        string $formId,
-        string $entryId
-    ): JsonResponse {
+    // private function processEquipmentChunk(
+    //     array $fields,
+    //     array $contractEquipments,
+    //     array $offContractEquipments,
+    //     int $chunkSize,
+    //     int $startOffset,
+    //     EntityManagerInterface $entityManager,
+    //     string $formId,
+    //     string $entryId
+    // ): JsonResponse {
         
-        $processedEquipments = 0;
-        $contractProcessed = 0;
-        $offContractProcessed = 0;
-        $errors = [];
+    //     $processedEquipments = 0;
+    //     $contractProcessed = 0;
+    //     $offContractProcessed = 0;
+    //     $errors = [];
 
-        // Combiner tous les équipements avec leur type
-        $allEquipments = [];
+    //     // Combiner tous les équipements avec leur type
+    //     $allEquipments = [];
         
-        foreach ($contractEquipments as $index => $equipment) {
-            $allEquipments[] = [
-                'type' => 'contract',
-                'data' => $equipment,
-                'index' => $index
-            ];
-        }
+    //     foreach ($contractEquipments as $index => $equipment) {
+    //         $allEquipments[] = [
+    //             'type' => 'contract',
+    //             'data' => $equipment,
+    //             'index' => $index
+    //         ];
+    //     }
         
-        foreach ($offContractEquipments as $index => $equipment) {
-            $allEquipments[] = [
-                'type' => 'off_contract',
-                'data' => $equipment,
-                'index' => $index
-            ];
-        }
+    //     foreach ($offContractEquipments as $index => $equipment) {
+    //         $allEquipments[] = [
+    //             'type' => 'off_contract',
+    //             'data' => $equipment,
+    //             'index' => $index
+    //         ];
+    //     }
 
-        // Découper en lots
-        $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+    //     // Découper en lots
+    //     $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
         
-        if (empty($chunk)) {
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Lot vide - traitement terminé',
-                'total_equipments' => count($allEquipments),
-                'processed_offset' => $startOffset,
-                'chunk_size' => $chunkSize,
-                'is_complete' => true
-            ]);
-        }
+    //     if (empty($chunk)) {
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'message' => 'Lot vide - traitement terminé',
+    //             'total_equipments' => count($allEquipments),
+    //             'processed_offset' => $startOffset,
+    //             'chunk_size' => $chunkSize,
+    //             'is_complete' => true
+    //         ]);
+    //     }
 
-        // Traiter le lot
-        foreach ($chunk as $equipmentData) {
-            try {
-                $equipement = new EquipementS140();
-                $this->setRealCommonData($equipement, $fields);
+    //     // Traiter le lot
+    //     foreach ($chunk as $equipmentData) {
+    //         try {
+    //             $equipement = new EquipementS140();
+    //             $this->setRealCommonData($equipement, $fields);
                 
-                if ($equipmentData['type'] === 'contract') {
-                    $this->setRealContractData($equipement, $equipmentData['data']);
-                    $contractProcessed++;
-                } else {
-                    $this->setRealOffContractData($equipement, $equipmentData['data'], $fields, $entityManager);
-                    $offContractProcessed++;
-                }
+    //             if ($equipmentData['type'] === 'contract') {
+    //                 $this->setRealContractData($equipement, $equipmentData['data']);
+    //                 $contractProcessed++;
+    //             } else {
+    //                 $this->setRealOffContractData($equipement, $equipmentData['data'], $fields, $entityManager);
+    //                 $offContractProcessed++;
+    //             }
                 
-                $entityManager->persist($equipement);
-                $processedEquipments++;
+    //             $entityManager->persist($equipement);
+    //             $processedEquipments++;
                 
-                // Sauvegarder tous les 5 équipements pour éviter la surcharge
-                if ($processedEquipments % 5 === 0) {
-                    $entityManager->flush();
-                    $entityManager->clear();
-                    gc_collect_cycles();
-                }
+    //             // Sauvegarder tous les 5 équipements pour éviter la surcharge
+    //             if ($processedEquipments % 5 === 0) {
+    //                 $entityManager->flush();
+    //                 $entityManager->clear();
+    //                 gc_collect_cycles();
+    //             }
                 
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'equipment_index' => $equipmentData['index'],
-                    'type' => $equipmentData['type'],
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         } catch (\Exception $e) {
+    //             $errors[] = [
+    //                 'equipment_index' => $equipmentData['index'],
+    //                 'type' => $equipmentData['type'],
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
 
-        // Sauvegarde finale
-        $entityManager->flush();
-        $entityManager->clear();
+    //     // Sauvegarde finale
+    //     $entityManager->flush();
+    //     $entityManager->clear();
 
-        $nextOffset = $startOffset + $chunkSize;
-        $isComplete = $nextOffset >= count($allEquipments);
+    //     $nextOffset = $startOffset + $chunkSize;
+    //     $isComplete = $nextOffset >= count($allEquipments);
         
-        // Marquer comme lu seulement si c'est le dernier lot
-        if ($isComplete) {
-            $this->markFormAsRead($formId, $entryId);
-        }
+    //     // Marquer comme lu seulement si c'est le dernier lot
+    //     if ($isComplete) {
+    //         $this->markFormAsRead($formId, $entryId);
+    //     }
 
-        return new JsonResponse([
-            'success' => true,
-            'agency' => 'S140',
-            'form_id' => $formId,
-            'entry_id' => $entryId,
-            'client_name' => $fields['nom_du_client']['value'] ?? '',
-            'batch_info' => [
-                'total_equipments' => count($allEquipments),
-                'processed_in_this_batch' => $processedEquipments,
-                'contract_processed' => $contractProcessed,
-                'off_contract_processed' => $offContractProcessed,
-                'start_offset' => $startOffset,
-                'chunk_size' => $chunkSize,
-                'next_offset' => $nextOffset,
-                'is_complete' => $isComplete
-            ],
-            'errors' => $errors,
-            'next_call' => $isComplete ? null : 
-                "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
-            'message' => $isComplete ? 
-                "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
-                "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
-        ]);
-    }
+    //     return new JsonResponse([
+    //         'success' => true,
+    //         'agency' => 'S140',
+    //         'form_id' => $formId,
+    //         'entry_id' => $entryId,
+    //         'client_name' => $fields['nom_du_client']['value'] ?? '',
+    //         'batch_info' => [
+    //             'total_equipments' => count($allEquipments),
+    //             'processed_in_this_batch' => $processedEquipments,
+    //             'contract_processed' => $contractProcessed,
+    //             'off_contract_processed' => $offContractProcessed,
+    //             'start_offset' => $startOffset,
+    //             'chunk_size' => $chunkSize,
+    //             'next_offset' => $nextOffset,
+    //             'is_complete' => $isComplete
+    //         ],
+    //         'errors' => $errors,
+    //         'next_call' => $isComplete ? null : 
+    //             "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+    //         'message' => $isComplete ? 
+    //             "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
+    //             "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
+    //     ]);
+    // }
 
     /**
      * Traiter tous les équipements si le nombre est gérable
      */
-    private function processAllEquipments(
-        array $fields,
-        array $contractEquipments,
-        array $offContractEquipments,
-        EntityManagerInterface $entityManager,
-        string $formId,
-        string $entryId
-    ): JsonResponse {
+    // private function processAllEquipments(
+    //     array $fields,
+    //     array $contractEquipments,
+    //     array $offContractEquipments,
+    //     EntityManagerInterface $entityManager,
+    //     string $formId,
+    //     string $entryId
+    // ): JsonResponse {
         
-        $contractProcessed = 0;
-        $offContractProcessed = 0;
-        $errors = [];
+    //     $contractProcessed = 0;
+    //     $offContractProcessed = 0;
+    //     $errors = [];
 
-        // Traiter équipements sous contrat
-        foreach ($contractEquipments as $index => $equipmentContrat) {
-            try {
-                $equipement = new EquipementS140();
-                $this->setRealCommonData($equipement, $fields);
-                $this->setRealContractData($equipement, $equipmentContrat);
+    //     // Traiter équipements sous contrat
+    //     foreach ($contractEquipments as $index => $equipmentContrat) {
+    //         try {
+    //             $equipement = new EquipementS140();
+    //             $this->setRealCommonData($equipement, $fields);
+    //             $this->setRealContractData($equipement, $equipmentContrat);
                 
-                $entityManager->persist($equipement);
-                $contractProcessed++;
+    //             $entityManager->persist($equipement);
+    //             $contractProcessed++;
                 
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'type' => 'contract',
-                    'index' => $index,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         } catch (\Exception $e) {
+    //             $errors[] = [
+    //                 'type' => 'contract',
+    //                 'index' => $index,
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
 
-        // Traiter équipements hors contrat
-        foreach ($offContractEquipments as $index => $equipmentHorsContrat) {
-            try {
-                $equipement = new EquipementS140();
-                $this->setRealCommonData($equipement, $fields);
-                $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
+    //     // Traiter équipements hors contrat
+    //     foreach ($offContractEquipments as $index => $equipmentHorsContrat) {
+    //         try {
+    //             $equipement = new EquipementS140();
+    //             $this->setRealCommonData($equipement, $fields);
+    //             $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
                 
-                $entityManager->persist($equipement);
-                $offContractProcessed++;
+    //             $entityManager->persist($equipement);
+    //             $offContractProcessed++;
                 
-            } catch (\Exception $e) {
-                $errors[] = [
-                    'type' => 'off_contract',
-                    'index' => $index,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         } catch (\Exception $e) {
+    //             $errors[] = [
+    //                 'type' => 'off_contract',
+    //                 'index' => $index,
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
 
-        // Sauvegarder
-        $entityManager->flush();
+    //     // Sauvegarder
+    //     $entityManager->flush();
         
-        // Marquer comme lu
-        $this->markFormAsRead($formId, $entryId);
+    //     // Marquer comme lu
+    //     $this->markFormAsRead($formId, $entryId);
 
-        return new JsonResponse([
-            'success' => true,
-            'agency' => 'S140',
-            'form_id' => $formId,
-            'entry_id' => $entryId,
-            'client_name' => $fields['nom_du_client']['value'] ?? '',
-            'contract_equipments' => $contractProcessed,
-            'off_contract_equipments' => $offContractProcessed,
-            'total_equipments' => $contractProcessed + $offContractProcessed,
-            'errors' => $errors,
-            'message' => "Formulaire traité entièrement: " . 
-                        ($contractProcessed + $offContractProcessed) . " équipements ajoutés"
-        ]);
-    }
+    //     return new JsonResponse([
+    //         'success' => true,
+    //         'agency' => 'S140',
+    //         'form_id' => $formId,
+    //         'entry_id' => $entryId,
+    //         'client_name' => $fields['nom_du_client']['value'] ?? '',
+    //         'contract_equipments' => $contractProcessed,
+    //         'off_contract_equipments' => $offContractProcessed,
+    //         'total_equipments' => $contractProcessed + $offContractProcessed,
+    //         'errors' => $errors,
+    //         'message' => "Formulaire traité entièrement: " . 
+    //                     ($contractProcessed + $offContractProcessed) . " équipements ajoutés"
+    //     ]);
+    // }
 
     /**
      * Route pour analyser un formulaire AVANT traitement
@@ -2965,274 +2966,274 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Route de debug pour analyser exactement les données reçues de Kizeo
      */
-    #[Route('/api/maintenance/debug-equipment-data/{entryId}', name: 'app_maintenance_debug_equipment_data', methods: ['GET'])]
-    public function debugEquipmentData(
-        string $entryId,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/debug-equipment-data/{entryId}', name: 'app_maintenance_debug_equipment_data', methods: ['GET'])]
+    // public function debugEquipmentData(
+    //     string $entryId,
+    //     Request $request
+    // ): JsonResponse {
         
-        $formId = $request->query->get('form_id', '1088761');
+    //     $formId = $request->query->get('form_id', '1088761');
         
-        try {
-            // Récupérer les données brutes
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
+    //     try {
+    //         // Récupérer les données brutes
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
+    //         $detailData = $detailResponse->toArray();
+    //         $fields = $detailData['data']['fields'];
 
-            // Analyser la structure des équipements
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+    //         // Analyser la structure des équipements
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
 
-            $analysis = [
-                'form_fields' => [
-                    'code_agence' => $fields['code_agence']['value'] ?? 'MISSING',
-                    'id_client_' => $fields['id_client_']['value'] ?? 'MISSING',
-                    'nom_du_client' => $fields['nom_du_client']['value'] ?? 'MISSING',
-                    'technicien' => $fields['technicien']['value'] ?? 'MISSING',
-                    'date_et_heure' => $fields['date_et_heure']['value'] ?? 'MISSING'
-                ],
-                'contract_equipment_sample' => [],
-                'off_contract_equipment_sample' => [],
-                'available_field_keys' => array_keys($fields)
-            ];
+    //         $analysis = [
+    //             'form_fields' => [
+    //                 'code_agence' => $fields['code_agence']['value'] ?? 'MISSING',
+    //                 'id_client_' => $fields['id_client_']['value'] ?? 'MISSING',
+    //                 'nom_du_client' => $fields['nom_du_client']['value'] ?? 'MISSING',
+    //                 'technicien' => $fields['technicien']['value'] ?? 'MISSING',
+    //                 'date_et_heure' => $fields['date_et_heure']['value'] ?? 'MISSING'
+    //             ],
+    //             'contract_equipment_sample' => [],
+    //             'off_contract_equipment_sample' => [],
+    //             'available_field_keys' => array_keys($fields)
+    //         ];
 
-            // Analyser le premier équipement contrat
-            if (!empty($contractEquipments)) {
-                $firstContract = $contractEquipments[0];
-                $analysis['contract_equipment_sample'] = [
-                    'raw_structure' => $firstContract,
-                    'equipement_path' => $firstContract['equipement']['path'] ?? 'MISSING',
-                    'equipement_value' => $firstContract['equipement']['value'] ?? 'MISSING',
-                    'mode_fonctionnement' => $firstContract['mode_fonctionnement']['value'] ?? 'MISSING',
-                    'longueur' => $firstContract['longueur']['value'] ?? 'MISSING',
-                    'plaque_signaletique' => $firstContract['plaque_signaletique']['value'] ?? 'MISSING',
-                    'etat' => $firstContract['etat']['value'] ?? 'MISSING',
-                    'available_keys' => array_keys($firstContract)
-                ];
+    //         // Analyser le premier équipement contrat
+    //         if (!empty($contractEquipments)) {
+    //             $firstContract = $contractEquipments[0];
+    //             $analysis['contract_equipment_sample'] = [
+    //                 'raw_structure' => $firstContract,
+    //                 'equipement_path' => $firstContract['equipement']['path'] ?? 'MISSING',
+    //                 'equipement_value' => $firstContract['equipement']['value'] ?? 'MISSING',
+    //                 'mode_fonctionnement' => $firstContract['mode_fonctionnement']['value'] ?? 'MISSING',
+    //                 'longueur' => $firstContract['longueur']['value'] ?? 'MISSING',
+    //                 'plaque_signaletique' => $firstContract['plaque_signaletique']['value'] ?? 'MISSING',
+    //                 'etat' => $firstContract['etat']['value'] ?? 'MISSING',
+    //                 'available_keys' => array_keys($firstContract)
+    //             ];
 
-                // Analyser parseEquipmentInfo
-                $equipmentValue = $firstContract['equipement']['value'] ?? '';
-                $parsedInfo = $this->debugParseEquipmentInfo($equipmentValue);
-                $analysis['contract_equipment_sample']['parsed_equipment_info'] = $parsedInfo;
-            }
+    //             // Analyser parseEquipmentInfo
+    //             $equipmentValue = $firstContract['equipement']['value'] ?? '';
+    //             $parsedInfo = $this->debugParseEquipmentInfo($equipmentValue);
+    //             $analysis['contract_equipment_sample']['parsed_equipment_info'] = $parsedInfo;
+    //         }
 
-            // Analyser le premier équipement hors contrat
-            if (!empty($offContractEquipments)) {
-                $firstOffContract = $offContractEquipments[0];
-                $analysis['off_contract_equipment_sample'] = [
-                    'raw_structure' => $firstOffContract,
-                    'available_keys' => array_keys($firstOffContract)
-                ];
-            }
+    //         // Analyser le premier équipement hors contrat
+    //         if (!empty($offContractEquipments)) {
+    //             $firstOffContract = $offContractEquipments[0];
+    //             $analysis['off_contract_equipment_sample'] = [
+    //                 'raw_structure' => $firstOffContract,
+    //                 'available_keys' => array_keys($firstOffContract)
+    //             ];
+    //         }
 
-            return new JsonResponse([
-                'success' => true,
-                'entry_id' => $entryId,
-                'total_contract_equipments' => count($contractEquipments),
-                'total_off_contract_equipments' => count($offContractEquipments),
-                'analysis' => $analysis
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'entry_id' => $entryId,
+    //             'total_contract_equipments' => count($contractEquipments),
+    //             'total_off_contract_equipments' => count($offContractEquipments),
+    //             'analysis' => $analysis
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Version debug de parseEquipmentInfo pour voir le parsing
      */
-    private function debugParseEquipmentInfo(string $equipmentValue): array
-    {
-        if (empty($equipmentValue)) {
-            return ['error' => 'equipmentValue is empty'];
-        }
+    // private function debugParseEquipmentInfo(string $equipmentValue): array
+    // {
+    //     if (empty($equipmentValue)) {
+    //         return ['error' => 'equipmentValue is empty'];
+    //     }
 
-        // Parse de la structure "ATEIS\CEA\SEC01|Porte sectionnelle|..."
-        $parts = explode('|', $equipmentValue);
+    //     // Parse de la structure "ATEIS\CEA\SEC01|Porte sectionnelle|..."
+    //     $parts = explode('|', $equipmentValue);
         
-        return [
-            'original_value' => $equipmentValue,
-            'parts_count' => count($parts),
-            'parts' => $parts,
-            'parsed_result' => [
-                'numero' => $parts[0] ?? 'MISSING',
-                'libelle' => $parts[1] ?? 'MISSING',
-                'mise_en_service' => $parts[2] ?? 'MISSING',
-                'numero_serie' => $parts[3] ?? 'MISSING',
-                'marque' => $parts[4] ?? 'MISSING',
-                'hauteur' => $parts[5] ?? 'MISSING',
-                'largeur' => $parts[6] ?? 'MISSING',
-                'repere' => $parts[7] ?? 'MISSING'
-            ]
-        ];
-    }
+    //     return [
+    //         'original_value' => $equipmentValue,
+    //         'parts_count' => count($parts),
+    //         'parts' => $parts,
+    //         'parsed_result' => [
+    //             'numero' => $parts[0] ?? 'MISSING',
+    //             'libelle' => $parts[1] ?? 'MISSING',
+    //             'mise_en_service' => $parts[2] ?? 'MISSING',
+    //             'numero_serie' => $parts[3] ?? 'MISSING',
+    //             'marque' => $parts[4] ?? 'MISSING',
+    //             'hauteur' => $parts[5] ?? 'MISSING',
+    //             'largeur' => $parts[6] ?? 'MISSING',
+    //             'repere' => $parts[7] ?? 'MISSING'
+    //         ]
+    //     ];
+    // }
 
     /**
      * Setters corrigés basés sur l'analyse des données
      */
-    private function setRealCommonDataCorrected($equipement, array $fields): void
-    {
-        // Logging pour debug
-        error_log("=== DEBUG COMMON DATA ===");
-        error_log("code_agence: " . ($fields['code_agence']['value'] ?? 'NULL'));
-        error_log("id_client_: " . ($fields['id_client_']['value'] ?? 'NULL'));
-        error_log("nom_du_client: " . ($fields['nom_du_client']['value'] ?? 'NULL'));
-        error_log("technicien: " . ($fields['technicien']['value'] ?? 'NULL'));
+    // private function setRealCommonDataCorrected($equipement, array $fields): void
+    // {
+    //     // Logging pour debug
+    //     error_log("=== DEBUG COMMON DATA ===");
+    //     error_log("code_agence: " . ($fields['code_agence']['value'] ?? 'NULL'));
+    //     error_log("id_client_: " . ($fields['id_client_']['value'] ?? 'NULL'));
+    //     error_log("nom_du_client: " . ($fields['nom_du_client']['value'] ?? 'NULL'));
+    //     error_log("technicien: " . ($fields['technicien']['value'] ?? 'NULL'));
         
-        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
-        $equipement->setIdContact($fields['id_client_']['value'] ?? '');
-        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
-        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
-        $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+    //     $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+    //     $equipement->setIdContact($fields['id_client_']['value'] ?? '');
+    //     $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
+    //     $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
+    //     $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
         
-        // Valeurs par défaut
-        $equipement->setEtatDesLieuxFait(false);
-        $equipement->setIsArchive(false);
-    }
+    //     // Valeurs par défaut
+    //     $equipement->setEtatDesLieuxFait(false);
+    //     $equipement->setIsArchive(false);
+    // }
 
     /**
      * Setters contrat corrigés
      */
-    private function setRealContractDataCorrected($equipement, array $equipmentContrat): void
-    {
-        // Logging pour debug
-        error_log("=== DEBUG CONTRACT DATA ===");
-        error_log("equipement path: " . ($equipmentContrat['equipement']['path'] ?? 'NULL'));
-        error_log("equipement value: " . ($equipmentContrat['equipement']['value'] ?? 'NULL'));
-        error_log("mode_fonctionnement: " . ($equipmentContrat['mode_fonctionnement']['value'] ?? 'NULL'));
-        error_log("etat: " . ($equipmentContrat['etat']['value'] ?? 'NULL'));
+    // private function setRealContractDataCorrected($equipement, array $equipmentContrat): void
+    // {
+    //     // Logging pour debug
+    //     error_log("=== DEBUG CONTRACT DATA ===");
+    //     error_log("equipement path: " . ($equipmentContrat['equipement']['path'] ?? 'NULL'));
+    //     error_log("equipement value: " . ($equipmentContrat['equipement']['value'] ?? 'NULL'));
+    //     error_log("mode_fonctionnement: " . ($equipmentContrat['mode_fonctionnement']['value'] ?? 'NULL'));
+    //     error_log("etat: " . ($equipmentContrat['etat']['value'] ?? 'NULL'));
         
-        // Extraction du path et value
-        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
-        $equipementValue = $equipmentContrat['equipement']['value'] ?? '';
+    //     // Extraction du path et value
+    //     $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
+    //     $equipementValue = $equipmentContrat['equipement']['value'] ?? '';
         
-        // Type de visite depuis le path
-        $visite = $this->extractVisitTypeFromPath($equipementPath);
-        $equipement->setVisite($visite);
+    //     // Type de visite depuis le path
+    //     $visite = $this->extractVisitTypeFromPath($equipementPath);
+    //     $equipement->setVisite($visite);
         
-        // Parse des infos équipement
-        $equipmentInfo = $this->parseEquipmentInfo($equipementValue);
+    //     // Parse des infos équipement
+    //     $equipmentInfo = $this->parseEquipmentInfo($equipementValue);
         
-        // CORRECTION: Ajouter des vérifications null/empty
-        $numeroEquipement = !empty($equipmentInfo['numero']) ? $equipmentInfo['numero'] : 'AUTO_' . uniqid();
-        $equipement->setNumeroEquipement($numeroEquipement);
+    //     // CORRECTION: Ajouter des vérifications null/empty
+    //     $numeroEquipement = !empty($equipmentInfo['numero']) ? $equipmentInfo['numero'] : 'AUTO_' . uniqid();
+    //     $equipement->setNumeroEquipement($numeroEquipement);
         
-        $libelleEquipement = !empty($equipmentInfo['libelle']) ? $equipmentInfo['libelle'] : 'Équipement';
-        $equipement->setLibelleEquipement($libelleEquipement);
+    //     $libelleEquipement = !empty($equipmentInfo['libelle']) ? $equipmentInfo['libelle'] : 'Équipement';
+    //     $equipement->setLibelleEquipement($libelleEquipement);
         
-        $equipement->setMiseEnService($equipmentInfo['mise_en_service'] ?? '');
-        $equipement->setNumeroDeSerie($equipmentInfo['numero_serie'] ?? '');
-        $equipement->setMarque($equipmentInfo['marque'] ?? '');
-        $equipement->setHauteur($equipmentInfo['hauteur'] ?? '');
-        $equipement->setLargeur($equipmentInfo['largeur'] ?? '');
-        $equipement->setRepereSiteClient($equipmentInfo['repere'] ?? '');
+    //     $equipement->setMiseEnService($equipmentInfo['mise_en_service'] ?? '');
+    //     $equipement->setNumeroDeSerie($equipmentInfo['numero_serie'] ?? '');
+    //     $equipement->setMarque($equipmentInfo['marque'] ?? '');
+    //     $equipement->setHauteur($equipmentInfo['hauteur'] ?? '');
+    //     $equipement->setLargeur($equipmentInfo['largeur'] ?? '');
+    //     $equipement->setRepereSiteClient($equipmentInfo['repere'] ?? '');
         
-        // Données du formulaire avec vérifications
-        $modeFonctionnement = $equipmentContrat['mode_fonctionnement']['value'] ?? '';
-        $equipement->setModeFonctionnement($modeFonctionnement);
+    //     // Données du formulaire avec vérifications
+    //     $modeFonctionnement = $equipmentContrat['mode_fonctionnement']['value'] ?? '';
+    //     $equipement->setModeFonctionnement($modeFonctionnement);
         
-        $longueur = $equipmentContrat['longueur']['value'] ?? '';
-        $equipement->setLongueur($longueur);
+    //     $longueur = $equipmentContrat['longueur']['value'] ?? '';
+    //     $equipement->setLongueur($longueur);
         
-        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
-        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+    //     $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+    //     $equipement->setPlaqueSignaletique($plaqueSignaletique);
         
-        $etat = $equipmentContrat['etat']['value'] ?? '';
-        $equipement->setEtat($etat);
+    //     $etat = $equipmentContrat['etat']['value'] ?? '';
+    //     $equipement->setEtat($etat);
         
-        // Statut de maintenance
-        $statut = $this->getMaintenanceStatusFromEtat($etat);
-        $equipement->setStatutDeMaintenance($statut);
+    //     // Statut de maintenance
+    //     $statut = $this->getMaintenanceStatusFromEtat($etat);
+    //     $equipement->setStatutDeMaintenance($statut);
         
-        $equipement->setEnMaintenance(true);
+    //     $equipement->setEnMaintenance(true);
         
-        // Logging des valeurs définies
-        error_log("Set values - numero: $numeroEquipement, libelle: $libelleEquipement, mode: $modeFonctionnement, etat: $etat");
-    }
+    //     // Logging des valeurs définies
+    //     error_log("Set values - numero: $numeroEquipement, libelle: $libelleEquipement, mode: $modeFonctionnement, etat: $etat");
+    // }
 
     /**
      * Route de test avec les setters corrigés
      */
-    #[Route('/api/maintenance/test-corrected/{entryId}', name: 'app_maintenance_test_corrected', methods: ['GET'])]
-    public function testCorrectedSetters(
-        string $entryId,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/test-corrected/{entryId}', name: 'app_maintenance_test_corrected', methods: ['GET'])]
+    // public function testCorrectedSetters(
+    //     string $entryId,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        $formId = $request->query->get('form_id', '1088761');
+    //     $formId = $request->query->get('form_id', '1088761');
         
-        try {
-            // Récupérer les données
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
+    //     try {
+    //         // Récupérer les données
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $detailData = $detailResponse->toArray();
+    //         $fields = $detailData['data']['fields'];
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
 
-            if (empty($contractEquipments)) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Aucun équipement sous contrat trouvé'
-                ], 400);
-            }
+    //         if (empty($contractEquipments)) {
+    //             return new JsonResponse([
+    //                 'success' => false,
+    //                 'error' => 'Aucun équipement sous contrat trouvé'
+    //             ], 400);
+    //         }
 
-            // Traiter SEULEMENT le premier équipement pour test
-            $firstEquipment = $contractEquipments[0];
+    //         // Traiter SEULEMENT le premier équipement pour test
+    //         $firstEquipment = $contractEquipments[0];
             
-            $equipement = new EquipementS140();
-            $this->setRealCommonDataCorrected($equipement, $fields);
-            $this->setRealContractDataCorrected($equipement, $firstEquipment);
+    //         $equipement = new EquipementS140();
+    //         $this->setRealCommonDataCorrected($equipement, $fields);
+    //         $this->setRealContractDataCorrected($equipement, $firstEquipment);
             
-            // Sauvegarder
-            $entityManager->persist($equipement);
-            $entityManager->flush();
+    //         // Sauvegarder
+    //         $entityManager->persist($equipement);
+    //         $entityManager->flush();
 
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Équipement test créé avec setters corrigés',
-                'equipment_id' => $equipement->getId(),
-                'saved_data' => [
-                    'numero_equipement' => $equipement->getNumeroEquipement(),
-                    'libelle_equipement' => $equipement->getLibelleEquipement(),
-                    'mode_fonctionnement' => $equipement->getModeFonctionnement(),
-                    'etat' => $equipement->getEtat(),
-                    'visite' => $equipement->getVisite(),
-                    'code_agence' => $equipement->getCodeAgence(),
-                    'raison_sociale' => $equipement->getRaisonSociale()
-                ]
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'message' => 'Équipement test créé avec setters corrigés',
+    //             'equipment_id' => $equipement->getId(),
+    //             'saved_data' => [
+    //                 'numero_equipement' => $equipement->getNumeroEquipement(),
+    //                 'libelle_equipement' => $equipement->getLibelleEquipement(),
+    //                 'mode_fonctionnement' => $equipement->getModeFonctionnement(),
+    //                 'etat' => $equipement->getEtat(),
+    //                 'visite' => $equipement->getVisite(),
+    //                 'code_agence' => $equipement->getCodeAgence(),
+    //                 'raison_sociale' => $equipement->getRaisonSociale()
+    //             ]
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * SETTERS CORRIGÉS pour la vraie structure des données S140
@@ -3349,262 +3350,262 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Route de test avec les setters corrigés pour S140
      */
-    #[Route('/api/maintenance/test-s140-fixed/{entryId}', name: 'app_maintenance_test_s140_fixed', methods: ['GET'])]
-    public function testS140FixedSetters(
-        string $entryId,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/test-s140-fixed/{entryId}', name: 'app_maintenance_test_s140_fixed', methods: ['GET'])]
+    // public function testS140FixedSetters(
+    //     string $entryId,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        $formId = $request->query->get('form_id', '1088761');
+    //     $formId = $request->query->get('form_id', '1088761');
         
-        try {
-            // Récupérer les données
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
+    //     try {
+    //         // Récupérer les données
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $detailData = $detailResponse->toArray();
+    //         $fields = $detailData['data']['fields'];
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
 
-            if (empty($contractEquipments)) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Aucun équipement sous contrat trouvé'
-                ], 400);
-            }
+    //         if (empty($contractEquipments)) {
+    //             return new JsonResponse([
+    //                 'success' => false,
+    //                 'error' => 'Aucun équipement sous contrat trouvé'
+    //             ], 400);
+    //         }
 
-            // Traiter SEULEMENT le premier équipement pour test
-            $firstEquipment = $contractEquipments[0];
+    //         // Traiter SEULEMENT le premier équipement pour test
+    //         $firstEquipment = $contractEquipments[0];
             
-            $equipement = new EquipementS140();
-            $this->setRealCommonDataFixed($equipement, $fields);
-            $this->setRealContractDataFixed($equipement, $firstEquipment);
+    //         $equipement = new EquipementS140();
+    //         $this->setRealCommonDataFixed($equipement, $fields);
+    //         $this->setRealContractDataFixed($equipement, $firstEquipment);
             
-            // Sauvegarder
-            $entityManager->persist($equipement);
-            $entityManager->flush();
+    //         // Sauvegarder
+    //         $entityManager->persist($equipement);
+    //         $entityManager->flush();
 
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Équipement S140 créé avec setters corrigés',
-                'equipment_id' => $equipement->getId(),
-                'saved_data' => [
-                    'numero_equipement' => $equipement->getNumeroEquipement(),
-                    'libelle_equipement' => $equipement->getLibelleEquipement(),
-                    'mode_fonctionnement' => $equipement->getModeFonctionnement(),
-                    'mise_en_service' => $equipement->getMiseEnService(),
-                    'numero_de_serie' => $equipement->getNumeroDeSerie(),
-                    'marque' => $equipement->getMarque(),
-                    'hauteur' => $equipement->getHauteur(),
-                    'largeur' => $equipement->getLargeur(),
-                    'etat' => $equipement->getEtat(),
-                    'visite' => $equipement->getVisite(),
-                    'code_agence' => $equipement->getCodeAgence(),
-                    'raison_sociale' => $equipement->getRaisonSociale(),
-                    'trigramme_tech' => $equipement->getTrigrammeTech()
-                ],
-                'original_data_mapping' => [
-                    'numero_equipement' => $firstEquipment['equipement']['value'],
-                    'libelle_from_reference7' => $firstEquipment['reference7']['value'],
-                    'mise_en_service_from_reference2' => $firstEquipment['reference2']['value'],
-                    'numero_serie_from_reference6' => $firstEquipment['reference6']['value'],
-                    'marque_from_reference5' => $firstEquipment['reference5']['value'],
-                    'hauteur_from_reference1' => $firstEquipment['reference1']['value'],
-                    'largeur_from_reference3' => $firstEquipment['reference3']['value'],
-                    'mode_fonctionnement_2' => $firstEquipment['mode_fonctionnement_2']['value'],
-                    'etat' => $firstEquipment['etat']['value']
-                ]
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'message' => 'Équipement S140 créé avec setters corrigés',
+    //             'equipment_id' => $equipement->getId(),
+    //             'saved_data' => [
+    //                 'numero_equipement' => $equipement->getNumeroEquipement(),
+    //                 'libelle_equipement' => $equipement->getLibelleEquipement(),
+    //                 'mode_fonctionnement' => $equipement->getModeFonctionnement(),
+    //                 'mise_en_service' => $equipement->getMiseEnService(),
+    //                 'numero_de_serie' => $equipement->getNumeroDeSerie(),
+    //                 'marque' => $equipement->getMarque(),
+    //                 'hauteur' => $equipement->getHauteur(),
+    //                 'largeur' => $equipement->getLargeur(),
+    //                 'etat' => $equipement->getEtat(),
+    //                 'visite' => $equipement->getVisite(),
+    //                 'code_agence' => $equipement->getCodeAgence(),
+    //                 'raison_sociale' => $equipement->getRaisonSociale(),
+    //                 'trigramme_tech' => $equipement->getTrigrammeTech()
+    //             ],
+    //             'original_data_mapping' => [
+    //                 'numero_equipement' => $firstEquipment['equipement']['value'],
+    //                 'libelle_from_reference7' => $firstEquipment['reference7']['value'],
+    //                 'mise_en_service_from_reference2' => $firstEquipment['reference2']['value'],
+    //                 'numero_serie_from_reference6' => $firstEquipment['reference6']['value'],
+    //                 'marque_from_reference5' => $firstEquipment['reference5']['value'],
+    //                 'hauteur_from_reference1' => $firstEquipment['reference1']['value'],
+    //                 'largeur_from_reference3' => $firstEquipment['reference3']['value'],
+    //                 'mode_fonctionnement_2' => $firstEquipment['mode_fonctionnement_2']['value'],
+    //                 'etat' => $firstEquipment['etat']['value']
+    //             ]
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Version finale pour traiter par lots avec les setters corrigés
      */
-    #[Route('/api/maintenance/process-chunked-fixed/{agencyCode}', name: 'app_maintenance_process_chunked_fixed', methods: ['GET'])]
-    public function processMaintenanceChunkedFixed(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-chunked-fixed/{agencyCode}', name: 'app_maintenance_process_chunked_fixed', methods: ['GET'])]
+    // public function processMaintenanceChunkedFixed(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
+    //     if ($agencyCode !== 'S140') {
+    //         return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+    //     }
 
-        // Configuration optimisée
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 120);
+    //     // Configuration optimisée
+    //     ini_set('memory_limit', '512M');
+    //     ini_set('max_execution_time', 120);
         
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id');
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
-        $startOffset = (int) $request->query->get('offset', 0);
+    //     $formId = $request->query->get('form_id', '1088761');
+    //     $entryId = $request->query->get('entry_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15);
+    //     $startOffset = (int) $request->query->get('offset', 0);
 
-        if (!$entryId) {
-            return new JsonResponse([
-                'error' => 'Paramètre entry_id requis',
-                'example' => '/api/maintenance/process-chunked-fixed/S140?entry_id=233668811&chunk_size=15&offset=0'
-            ], 400);
-        }
+    //     if (!$entryId) {
+    //         return new JsonResponse([
+    //             'error' => 'Paramètre entry_id requis',
+    //             'example' => '/api/maintenance/process-chunked-fixed/S140?entry_id=233668811&chunk_size=15&offset=0'
+    //         ], 400);
+    //     }
 
-        try {
-            // Récupérer les données
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
+    //     try {
+    //         // Récupérer les données
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
+    //         $detailData = $detailResponse->toArray();
             
-            if (!isset($detailData['data']['fields'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Formulaire sans données valides'
-                ], 400);
-            }
+    //         if (!isset($detailData['data']['fields'])) {
+    //             return new JsonResponse([
+    //                 'success' => false,
+    //                 'error' => 'Formulaire sans données valides'
+    //             ], 400);
+    //         }
 
-            $fields = $detailData['data']['fields'];
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['tableau2']['value'] ?? []; // Équipements hors contrat
+    //         $fields = $detailData['data']['fields'];
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $offContractEquipments = $fields['tableau2']['value'] ?? []; // Équipements hors contrat
             
-            $totalEquipments = count($contractEquipments) + count($offContractEquipments);
+    //         $totalEquipments = count($contractEquipments) + count($offContractEquipments);
 
-            // Traitement par lots
-            $allEquipments = [];
+    //         // Traitement par lots
+    //         $allEquipments = [];
             
-            foreach ($contractEquipments as $index => $equipment) {
-                $allEquipments[] = [
-                    'type' => 'contract',
-                    'data' => $equipment,
-                    'index' => $index
-                ];
-            }
+    //         foreach ($contractEquipments as $index => $equipment) {
+    //             $allEquipments[] = [
+    //                 'type' => 'contract',
+    //                 'data' => $equipment,
+    //                 'index' => $index
+    //             ];
+    //         }
             
-            foreach ($offContractEquipments as $index => $equipment) {
-                $allEquipments[] = [
-                    'type' => 'off_contract',
-                    'data' => $equipment,
-                    'index' => $index
-                ];
-            }
+    //         foreach ($offContractEquipments as $index => $equipment) {
+    //             $allEquipments[] = [
+    //                 'type' => 'off_contract',
+    //                 'data' => $equipment,
+    //                 'index' => $index
+    //             ];
+    //         }
 
-            $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+    //         $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
             
-            if (empty($chunk)) {
-                return new JsonResponse([
-                    'success' => true,
-                    'message' => 'Lot vide - traitement terminé',
-                    'total_equipments' => $totalEquipments,
-                    'processed_offset' => $startOffset,
-                    'is_complete' => true
-                ]);
-            }
+    //         if (empty($chunk)) {
+    //             return new JsonResponse([
+    //                 'success' => true,
+    //                 'message' => 'Lot vide - traitement terminé',
+    //                 'total_equipments' => $totalEquipments,
+    //                 'processed_offset' => $startOffset,
+    //                 'is_complete' => true
+    //             ]);
+    //         }
 
-            $processedEquipments = 0;
-            $contractProcessed = 0;
-            $offContractProcessed = 0;
-            $errors = [];
+    //         $processedEquipments = 0;
+    //         $contractProcessed = 0;
+    //         $offContractProcessed = 0;
+    //         $errors = [];
 
-            // Traiter le lot
-            foreach ($chunk as $equipmentData) {
-                try {
-                    $equipement = new EquipementS140();
-                    $this->setRealCommonDataFixed($equipement, $fields);
+    //         // Traiter le lot
+    //         foreach ($chunk as $equipmentData) {
+    //             try {
+    //                 $equipement = new EquipementS140();
+    //                 $this->setRealCommonDataFixed($equipement, $fields);
                     
-                    if ($equipmentData['type'] === 'contract') {
-                        $this->setRealContractDataFixed($equipement, $equipmentData['data']);
-                        $contractProcessed++;
-                    } else {
-                        // Pour les équipements hors contrat, adapter selon la structure
-                        // (à implémenter si nécessaire)
-                        $offContractProcessed++;
-                    }
+    //                 if ($equipmentData['type'] === 'contract') {
+    //                     $this->setRealContractDataFixed($equipement, $equipmentData['data']);
+    //                     $contractProcessed++;
+    //                 } else {
+    //                     // Pour les équipements hors contrat, adapter selon la structure
+    //                     // (à implémenter si nécessaire)
+    //                     $offContractProcessed++;
+    //                 }
                     
-                    $entityManager->persist($equipement);
-                    $processedEquipments++;
+    //                 $entityManager->persist($equipement);
+    //                 $processedEquipments++;
                     
-                    // Sauvegarder tous les 5 équipements
-                    if ($processedEquipments % 5 === 0) {
-                        $entityManager->flush();
-                        $entityManager->clear();
-                        gc_collect_cycles();
-                    }
+    //                 // Sauvegarder tous les 5 équipements
+    //                 if ($processedEquipments % 5 === 0) {
+    //                     $entityManager->flush();
+    //                     $entityManager->clear();
+    //                     gc_collect_cycles();
+    //                 }
                     
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'equipment_index' => $equipmentData['index'],
-                        'type' => $equipmentData['type'],
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
+    //             } catch (\Exception $e) {
+    //                 $errors[] = [
+    //                     'equipment_index' => $equipmentData['index'],
+    //                     'type' => $equipmentData['type'],
+    //                     'error' => $e->getMessage()
+    //                 ];
+    //             }
+    //         }
 
-            // Sauvegarde finale
-            $entityManager->flush();
-            $entityManager->clear();
+    //         // Sauvegarde finale
+    //         $entityManager->flush();
+    //         $entityManager->clear();
 
-            $nextOffset = $startOffset + $chunkSize;
-            $isComplete = $nextOffset >= $totalEquipments;
+    //         $nextOffset = $startOffset + $chunkSize;
+    //         $isComplete = $nextOffset >= $totalEquipments;
             
-            // Marquer comme lu seulement si c'est le dernier lot
-            if ($isComplete) {
-                $this->markFormAsRead($formId, $entryId);
-            }
+    //         // Marquer comme lu seulement si c'est le dernier lot
+    //         if ($isComplete) {
+    //             $this->markFormAsRead($formId, $entryId);
+    //         }
 
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'client_name' => $fields['nom_client']['value'] ?? '',
-                'batch_info' => [
-                    'total_equipments' => $totalEquipments,
-                    'processed_in_this_batch' => $processedEquipments,
-                    'contract_processed' => $contractProcessed,
-                    'off_contract_processed' => $offContractProcessed,
-                    'start_offset' => $startOffset,
-                    'chunk_size' => $chunkSize,
-                    'next_offset' => $nextOffset,
-                    'is_complete' => $isComplete
-                ],
-                'errors' => $errors,
-                'next_call' => $isComplete ? null : 
-                    "/api/maintenance/process-chunked-fixed/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
-                'message' => $isComplete ? 
-                    "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
-                    "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'entry_id' => $entryId,
+    //             'client_name' => $fields['nom_client']['value'] ?? '',
+    //             'batch_info' => [
+    //                 'total_equipments' => $totalEquipments,
+    //                 'processed_in_this_batch' => $processedEquipments,
+    //                 'contract_processed' => $contractProcessed,
+    //                 'off_contract_processed' => $offContractProcessed,
+    //                 'start_offset' => $startOffset,
+    //                 'chunk_size' => $chunkSize,
+    //                 'next_offset' => $nextOffset,
+    //                 'is_complete' => $isComplete
+    //             ],
+    //             'errors' => $errors,
+    //             'next_call' => $isComplete ? null : 
+    //                 "/api/maintenance/process-chunked-fixed/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+    //             'message' => $isComplete ? 
+    //                 "Traitement terminé: {$processedEquipments} équipements dans ce lot" :
+    //                 "Lot traité: {$processedEquipments} équipements. Appeler l'URL next_call pour continuer"
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * GESTIONNAIRE DE PHOTOS utilisant l'entité Form existante
@@ -5922,7 +5923,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $startTime = time();
             
             // 1. Récupération sécurisée par pagination
-            $submissions = $this->getFormSubmissionsSafe($formId, $agencyCode, $maxSubmissions);
+            $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
             
             if (empty($submissions)) {
                 return new JsonResponse([
@@ -6283,10 +6284,10 @@ class SimplifiedMaintenanceController extends AbstractController
                                 // Sauvegarder l'équipement
                                 $entityManager->persist($equipement);
                                 $totalEquipments++;
-                                dd($equipmentData);
+                                // dd($equipmentData);
                                 // Traiter les photos si présentes
-                                $photoCount = $this-> savePhotosToFormEntityWithDeduplication($equipement, $equipmentData, $equipmentData['equipement']['value'] ?? '', $entityManager);
-                                $totalPhotos += $photoCount;
+                                // $photoCount = $this-> savePhotosToFormEntityWithDeduplication($equipement, $equipmentData, $equipmentData['equipement']['value'] ?? '', $entityManager);
+                                // $totalPhotos += $photoCount;
                                 
                             } catch (\Exception $e) {
                                 $errors[] = [
