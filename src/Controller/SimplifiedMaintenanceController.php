@@ -5825,18 +5825,18 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * SOLUTION 2: Version optimisée pour gros volumes avec pagination
+     * SOLUTION FONCTIONNELLE : Remplacer getFormSubmissionsOptimized
      */
-    private function getFormSubmissionsSafe(string $formId, string $agencyCode, int $maxSubmissions = 20): array
+    private function getFormSubmissionsFixed(string $formId, string $agencyCode, int $maxSubmissions = 20): array
     {
         try {
             $validSubmissions = [];
             $offset = 0;
-            $batchSize = 10; // Petits lots pour éviter les timeouts
+            $batchSize = 20; // Taille raisonnable
             
-            while (count($validSubmissions) < $maxSubmissions && $offset < 100) { // Limite sécurité
+            while (count($validSubmissions) < $maxSubmissions && $offset < 200) {
                 
-                // Récupération par petits lots
+                // UTILISER L'ENDPOINT SIMPLE qui fonctionne
                 $response = $this->client->request(
                     'GET',
                     "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
@@ -5849,7 +5849,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             'limit' => $batchSize,
                             'offset' => $offset
                         ],
-                        'timeout' => 60
+                        'timeout' => 90
                     ]
                 );
 
@@ -5860,31 +5860,33 @@ class SimplifiedMaintenanceController extends AbstractController
                     break; // Plus de données
                 }
                 
-                // Traitement rapide sans récupération des détails
+                // Traitement des soumissions SANS filtrage d'agence strict
                 foreach ($batchSubmissions as $entry) {
                     if (count($validSubmissions) >= $maxSubmissions) {
                         break 2;
                     }
                     
+                    // Conversion au format attendu par le traitement
                     $validSubmissions[] = [
-                        'form_id' => $entry['_form_id'],
-                        'entry_id' => $entry['_id'],
-                        'client_name' => 'À déterminer',
-                        'date' => 'À déterminer',
-                        'technician' => 'À déterminer'
+                        'form_id' => $entry['form_id'] ?? $formId,
+                        'entry_id' => $entry['id'], // ATTENTION : 'id' pas '_id' dans l'endpoint simple
+                        'client_name' => 'À déterminer lors du traitement',
+                        'date' => $entry['answer_time'] ?? 'N/A',
+                        'technician' => 'À déterminer lors du traitement'
                     ];
                 }
                 
                 $offset += $batchSize;
                 
-                // Pause pour éviter de surcharger l'API
-                usleep(100000); // 0.1 seconde
+                // Petite pause pour éviter de surcharger l'API
+                usleep(50000); // 0.05 seconde
             }
             
+            error_log("getFormSubmissionsFixed: " . count($validSubmissions) . " soumissions récupérées pour {$agencyCode}");
             return $validSubmissions;
             
         } catch (\Exception $e) {
-            error_log("Erreur récupération sécurisée: " . $e->getMessage());
+            error_log("Erreur getFormSubmissionsFixed: " . $e->getMessage());
             return [];
         }
     }
@@ -6152,4 +6154,294 @@ class SimplifiedMaintenanceController extends AbstractController
         }
     }
 
+    /**
+     * ROUTE CORRIGÉE : Version qui fonctionne pour S40
+     */
+    #[Route('/api/maintenance/process-fixed/{agencyCode}', name: 'app_maintenance_process_fixed', methods: ['GET'])]
+    public function processMaintenanceFixed(
+        string $agencyCode,
+        EntityManagerInterface $entityManager,
+        Request $request
+    ): JsonResponse {
+        
+        // Configuration conservative
+        ini_set('memory_limit', '1G');
+        ini_set('max_execution_time', 300);
+        
+        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+        if (!in_array($agencyCode, $validAgencies)) {
+            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+        }
+
+        $formId = $request->query->get('form_id');
+        $chunkSize = (int) $request->query->get('chunk_size', 5);
+        $maxSubmissions = (int) $request->query->get('max_submissions', 10);
+        
+        if (!$formId) {
+            $agencyMapping = $this->getAgencyFormMapping();
+            $formId = $agencyMapping[$agencyCode] ?? null;
+            
+            if (!$formId) {
+                return new JsonResponse([
+                    'error' => 'Aucun form_id trouvé pour l\'agence ' . $agencyCode,
+                    'available_agencies' => array_keys($agencyMapping)
+                ], 400);
+            }
+        }
+
+        try {
+            $startTime = time();
+            
+            // 1. Récupérer les soumissions avec la méthode corrigée
+            $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
+            
+            if (empty($submissions)) {
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
+                    'agency' => $agencyCode,
+                    'form_id' => $formId,
+                    'processed_submissions' => 0
+                ]);
+            }
+            
+            // 2. Traitement par chunks
+            $processedCount = 0;
+            $totalEquipments = 0;
+            $totalPhotos = 0;
+            $errors = [];
+            
+            $entityClass = $this->getEntityClass($agencyCode);
+            if (!$entityClass) {
+                return new JsonResponse(['error' => 'Classe d\'entité non trouvée pour ' . $agencyCode], 400);
+            }
+            
+            $chunks = array_chunk($submissions, $chunkSize);
+            
+            foreach ($chunks as $chunkIndex => $chunk) {
+                
+                // Vérification timeout
+                if (time() - $startTime > 250) { // 4 minutes max
+                    break;
+                }
+                
+                foreach ($chunk as $submission) {
+                    try {
+                        // Récupération des détails de la soumission
+                        $detailResponse = $this->client->request(
+                            'GET',
+                            "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$submission['entry_id']}",
+                            [
+                                'headers' => [
+                                    'Accept' => 'application/json',
+                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                                ],
+                                'timeout' => 45
+                            ]
+                        );
+
+                        $detailData = $detailResponse->toArray();
+                        $fields = $detailData['data']['fields'] ?? [];
+                        
+                        // Vérifier s'il y a des équipements à traiter
+                        $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+                        $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+                        
+                        $allEquipments = array_merge($contractEquipments, $offContractEquipments);
+                        
+                        if (empty($allEquipments)) {
+                            continue; // Pas d'équipements dans cette soumission
+                        }
+                        
+                        // Traitement des équipements
+                        foreach ($allEquipments as $equipmentIndex => $equipmentData) {
+                            try {
+                                // Créer une nouvelle instance d'équipement
+                                $equipement = new $entityClass();
+                                
+                                // Définir les données communes (méthode existante adaptée)
+                                $this->setCommonDataForAgency($equipement, $fields, $agencyCode);
+                                
+                                // Définir les données spécifiques à l'équipement
+                                if (in_array($equipmentData, $contractEquipments)) {
+                                    $this->setContractDataForAgency($equipement, $equipmentData, $agencyCode);
+                                    $equipement->setEnMaintenance(true);
+                                } else {
+                                    $this->setOffContractDataForAgency($equipement, $equipmentData, $agencyCode);
+                                    $equipement->setEnMaintenance(false);
+                                }
+                                
+                                // Générer un numéro d'équipement unique
+                                $numeroEquipement = $this->generateUniqueEquipmentNumber(
+                                    $fields['id_client_']['value'] ?? '',
+                                    $equipmentData,
+                                    $entityClass,
+                                    $entityManager
+                                );
+                                $equipement->setNumeroEquipement($numeroEquipement);
+                                
+                                // Sauvegarder l'équipement
+                                $entityManager->persist($equipement);
+                                $totalEquipments++;
+                                
+                                // Traiter les photos si présentes
+                                $photoCount = $this->processEquipmentPhotos($equipement, $equipmentData, $entityManager);
+                                $totalPhotos += $photoCount;
+                                
+                            } catch (\Exception $e) {
+                                $errors[] = [
+                                    'submission_id' => $submission['entry_id'],
+                                    'equipment_index' => $equipmentIndex,
+                                    'error' => $e->getMessage()
+                                ];
+                            }
+                        }
+                        
+                        $processedCount++;
+                        
+                        // Flush périodique pour libérer la mémoire
+                        if ($processedCount % 3 == 0) {
+                            $entityManager->flush();
+                            $entityManager->clear();
+                            gc_collect_cycles();
+                        }
+                        
+                    } catch (\Exception $e) {
+                        $errors[] = [
+                            'submission_id' => $submission['entry_id'],
+                            'error' => $e->getMessage()
+                        ];
+                        continue;
+                    }
+                }
+                
+                // Sauvegarde après chaque chunk
+                try {
+                    $entityManager->flush();
+                    $entityManager->clear();
+                    gc_collect_cycles();
+                } catch (\Exception $e) {
+                    error_log("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
+                }
+                
+                // Pause entre chunks
+                usleep(100000); // 0.1 seconde
+            }
+            
+            // Sauvegarde finale
+            try {
+                $entityManager->flush();
+            } catch (\Exception $e) {
+                error_log("Erreur sauvegarde finale: " . $e->getMessage());
+            }
+            
+            $processingTime = time() - $startTime;
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'processing_summary' => [
+                    'processed_submissions' => $processedCount,
+                    'total_submissions_found' => count($submissions),
+                    'total_equipments_processed' => $totalEquipments,
+                    'total_photos_processed' => $totalPhotos,
+                    'processing_time' => $processingTime . 's',
+                    'errors_count' => count($errors)
+                ],
+                'chunk_info' => [
+                    'chunk_size' => $chunkSize,
+                    'total_chunks' => count($chunks),
+                    'max_submissions_limit' => $maxSubmissions
+                ],
+                'status' => $processedCount > 0 ? 'success' : 'no_data',
+                'errors' => array_slice($errors, 0, 10), // Limiter les erreurs affichées
+                'message' => $processedCount > 0 ? 
+                    "Traitement réussi: {$processedCount}/{$maxSubmissions} soumissions et {$totalEquipments} équipements traités en {$processingTime}s" :
+                    "Aucune soumission avec équipements trouvée"
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'agency' => $agencyCode,
+                'form_id' => $formId
+            ], 500);
+        }
+    }
+
+    /**
+     * Méthodes helper adaptées pour différentes agences
+     */
+    private function setCommonDataForAgency($equipement, array $fields, string $agencyCode): void
+    {
+        // Données communes selon l'agence
+        $equipement->setCodeAgence($agencyCode);
+        $equipement->setIdContact($fields['id_client_']['value'] ?? $fields['id_contact']['value'] ?? '');
+        
+        // Le nom du client peut varier selon les formulaires
+        $clientName = $fields['nom_client']['value'] ?? 
+                    $fields['nom_du_client']['value'] ?? 
+                    $fields['client_name']['value'] ?? '';
+        $equipement->setRaisonSociale($clientName);
+        
+        // Date peut varier
+        $date = $fields['date_et_heure1']['value'] ?? 
+            $fields['date_et_heure']['value'] ?? 
+            $fields['date']['value'] ?? '';
+        $equipement->setDateEnregistrement($date);
+        
+        // Technicien peut varier
+        $technicien = $fields['trigramme']['value'] ?? 
+                    $fields['technicien']['value'] ?? 
+                    $fields['tech']['value'] ?? '';
+        $equipement->setTrigrammeTech($technicien);
+        
+        // Valeurs par défaut
+        $equipement->setEtatDesLieuxFait(false);
+        $equipement->setIsArchive(false);
+    }
+
+    private function setContractDataForAgency($equipement, array $equipmentData, string $agencyCode): void
+    {
+        // À adapter selon la structure de chaque agence
+        // Pour l'instant, logique générique
+        
+        $numeroEquipement = $equipmentData['equipement']['value'] ?? 
+                        $equipmentData['numero_equipement']['value'] ?? '';
+        $equipement->setNumeroEquipement($numeroEquipement);
+        
+        $libelle = $equipmentData['libelle']['value'] ?? 
+                $equipmentData['description']['value'] ?? '';
+        $equipement->setLibelleEquipement($libelle);
+        
+        // Autres champs selon disponibilité
+        $this->setCommonEquipmentFields($equipement, $equipmentData);
+    }
+
+    private function setOffContractDataForAgency($equipement, array $equipmentData, string $agencyCode): void
+    {
+        // Même logique que contrat mais avec en_maintenance = false
+        $this->setContractDataForAgency($equipement, $equipmentData, $agencyCode);
+    }
+
+    private function setCommonEquipmentFields($equipement, array $equipmentData): void
+    {
+        // Champs communs à tous les équipements
+        if (method_exists($equipement, 'setMarque') && isset($equipmentData['marque']['value'])) {
+            $equipement->setMarque($equipmentData['marque']['value']);
+        }
+        
+        if (method_exists($equipement, 'setHauteur') && isset($equipmentData['hauteur']['value'])) {
+            $equipement->setHauteur($equipmentData['hauteur']['value']);
+        }
+        
+        if (method_exists($equipement, 'setLargeur') && isset($equipmentData['largeur']['value'])) {
+            $equipement->setLargeur($equipmentData['largeur']['value']);
+        }
+        
+        // Ajouter d'autres champs selon les besoins
+    }
 }
