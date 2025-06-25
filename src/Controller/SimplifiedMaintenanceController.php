@@ -4158,7 +4158,7 @@ class SimplifiedMaintenanceController extends AbstractController
             'S140' => '1088761', // V4 - Smp / visite de maintenance
             'S150' => '1057408', // V4- Paca / visite de maintenance
             'S160' => '1060720', // V4- Rouen / visite de maintenance
-            'S170' => '', // V4- Rennes / visite de maintenance
+            'S170' => '1090092', // V4- Rennes / visite de maintenance MEME QUE GROUP CAR PAS EN PRODUCTION
         ];
     }
 
@@ -5337,5 +5337,236 @@ class SimplifiedMaintenanceController extends AbstractController
      * visite                          → getVisite() / setVisite()
      * is_archive                      → isArchive() / setIsArchive()
      */
-  
+    
+     /**
+     * Script pour vérifier la configuration des agences
+     */
+
+    // Route de test à ajouter dans SimplifiedMaintenanceController
+    #[Route('/api/maintenance/verify-agencies', name: 'app_maintenance_verify_agencies', methods: ['GET'])]
+    public function verifyAgenciesConfiguration(): JsonResponse
+    {
+        $agencyMapping = $this->getAgencyFormMapping();
+        $results = [];
+        
+        foreach ($agencyMapping as $agencyCode => $formId) {
+            $status = [
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'configured' => !empty($formId),
+                'test_url' => !empty($formId) ? 
+                    "/api/maintenance/process-form-optimized/{$agencyCode}?chunk_size=5&max_submissions=5" : 
+                    null
+            ];
+            
+            // Test de connectivité API si configuré
+            if (!empty($formId)) {
+                try {
+                    $response = $this->client->request(
+                        'GET',
+                        "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                            'query' => ['limit' => 1]
+                        ]
+                    );
+                    
+                    $data = $response->toArray();
+                    $status['api_accessible'] = true;
+                    $status['submissions_count'] = count($data['data'] ?? []);
+                    
+                } catch (\Exception $e) {
+                    $status['api_accessible'] = false;
+                    $status['api_error'] = $e->getMessage();
+                }
+            }
+            
+            $results[] = $status;
+        }
+        
+        return new JsonResponse([
+            'success' => true,
+            'agencies_status' => $results,
+            'summary' => [
+                'total_agencies' => count($agencyMapping),
+                'configured' => count(array_filter($agencyMapping)),
+                'not_configured' => count(array_filter($agencyMapping, function($formId) {
+                    return empty($formId);
+                }))
+            ]
+        ]);
+    }
+
+    /**
+     * Route de debug pour tester une agence spécifique
+     */
+    #[Route('/api/maintenance/debug-agency/{agencyCode}', name: 'app_maintenance_debug_agency', methods: ['GET'])]
+    public function debugAgency(
+        string $agencyCode,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id');
+        $limit = (int) $request->query->get('limit', 5);
+        
+        // 1. Vérifier la configuration
+        $agencyMapping = $this->getAgencyFormMapping();
+        $configuredFormId = $agencyMapping[$agencyCode] ?? null;
+        
+        if (!$formId && !$configuredFormId) {
+            return new JsonResponse([
+                'error' => "Agence {$agencyCode} non configurée",
+                'solution' => "Ajouter le form_id dans getAgencyFormMapping()",
+                'available_agencies' => array_keys(array_filter($agencyMapping))
+            ], 400);
+        }
+        
+        $testFormId = $formId ?: $configuredFormId;
+        
+        try {
+            // 2. Test de connectivité API
+            $response = $this->client->request(
+                'GET',
+                "https://forms.kizeo.com/rest/v3/forms/{$testFormId}/data",
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'query' => ['limit' => $limit]
+                ]
+            );
+            
+            $submissionsData = $response->toArray();
+            $submissions = $submissionsData['data'] ?? [];
+            
+            $debugInfo = [
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id_used' => $testFormId,
+                'form_id_configured' => $configuredFormId,
+                'api_response_status' => 'OK',
+                'total_submissions' => count($submissions),
+                'submissions_sample' => []
+            ];
+            
+            // 3. Analyser quelques soumissions
+            foreach (array_slice($submissions, 0, 2) as $submission) {
+                try {
+                    $detailResponse = $this->client->request(
+                        'GET',
+                        "https://forms.kizeo.com/rest/v3/forms/{$testFormId}/data/{$submission['_id']}",
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ],
+                        ]
+                    );
+                    
+                    $detailData = $detailResponse->toArray();
+                    $fields = $detailData['data']['fields'] ?? [];
+                    
+                    $submissionAnalysis = [
+                        'id' => $submission['_id'],
+                        'has_contract_equipment' => isset($fields['contrat_de_maintenance']),
+                        'has_offcontract_equipment' => isset($fields['hors_contrat']),
+                        'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
+                        'offcontract_count' => count($fields['hors_contrat']['value'] ?? []),
+                        'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
+                        'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
+                        'agency_field' => $fields['code_agence']['value'] ?? $fields['id_agence']['value'] ?? 'NOT_FOUND',
+                        'form_version' => $this->detectFormVersion($fields)
+                    ];
+                    
+                    $debugInfo['submissions_sample'][] = $submissionAnalysis;
+                    
+                } catch (\Exception $e) {
+                    $debugInfo['submissions_sample'][] = [
+                        'id' => $submission['_id'],
+                        'error' => 'Impossible de récupérer les détails: ' . $e->getMessage()
+                    ];
+                }
+            }
+            
+            // 4. Recommandations
+            $debugInfo['recommendations'] = $this->generateRecommendations($debugInfo);
+            
+            return new JsonResponse($debugInfo);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'agency' => $agencyCode,
+                'form_id_tested' => $testFormId,
+                'error' => $e->getMessage(),
+                'error_type' => get_class($e),
+                'recommendations' => [
+                    'Vérifier la validité du form_id',
+                    'Vérifier les permissions API',
+                    'Tester avec un autre form_id'
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Détecter la version du formulaire
+     */
+    private function detectFormVersion(array $fields): string
+    {
+        // V5 a généralement des champs différents de V4
+        if (isset($fields['new_field_v5']) || isset($fields['updated_structure'])) {
+            return 'V5';
+        }
+        
+        // Critères spécifiques pour détecter V4 vs V5
+        $v5Indicators = ['specific_v5_field', 'another_v5_field'];
+        
+        foreach ($v5Indicators as $indicator) {
+            if (isset($fields[$indicator])) {
+                return 'V5';
+            }
+        }
+        
+        return 'V4';
+    }
+
+    /**
+     * Générer des recommandations basées sur l'analyse
+     */
+    private function generateRecommendations(array $debugInfo): array
+    {
+        $recommendations = [];
+        
+        if ($debugInfo['total_submissions'] == 0) {
+            $recommendations[] = "Aucune soumission trouvée - Vérifier si le formulaire a des données";
+        }
+        
+        if (!empty($debugInfo['submissions_sample'])) {
+            $sample = $debugInfo['submissions_sample'][0];
+            
+            if ($sample['contract_count'] == 0 && $sample['offcontract_count'] == 0) {
+                $recommendations[] = "Aucun équipement trouvé - Vérifier la structure des champs";
+            }
+            
+            if ($sample['client_field'] === 'NOT_FOUND') {
+                $recommendations[] = "Champ client non trouvé - Adapter le mapping des champs";
+            }
+            
+            if ($sample['agency_field'] === 'NOT_FOUND') {
+                $recommendations[] = "Champ agence non trouvé - Vérifier les champs d'agence";
+            }
+        }
+        
+        if (empty($recommendations)) {
+            $recommendations[] = "Configuration semble correcte - Tester avec processMaintenanceByFormIdOptimized";
+        }
+        
+        return $recommendations;
+    }
+
 }
