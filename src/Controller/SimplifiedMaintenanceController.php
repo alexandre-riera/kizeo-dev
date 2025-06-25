@@ -6283,9 +6283,9 @@ class SimplifiedMaintenanceController extends AbstractController
                                 // Sauvegarder l'équipement
                                 $entityManager->persist($equipement);
                                 $totalEquipments++;
-                                
+                                dd($equipmentData);
                                 // Traiter les photos si présentes
-                                $photoCount = $this->processEquipmentPhotos($equipement, $equipmentData, $entityManager);
+                                $photoCount = $this-> savePhotosToFormEntityWithDeduplication($equipement, $equipmentData, $equipmentData['equipement']['value'] ?? '', $entityManager);
                                 $totalPhotos += $photoCount;
                                 
                             } catch (\Exception $e) {
