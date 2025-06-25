@@ -4610,7 +4610,6 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-        dd($equipmentContrat);
         // 1. Données de base
         $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
         $idClient = $fields['id_client_']['value'] ?? '';
@@ -4627,6 +4626,15 @@ class SimplifiedMaintenanceController extends AbstractController
         
         $equipement->setNumeroEquipement($numeroEquipement);
         
+        $idSociete =  $fields['id_societe']['value'] ?? '';
+        $equipement->setCodeSociete($idSociete);
+        
+        $dateDerniereVisite =  $fields['date_et_heure1']['value'] ?? '';
+        $equipement->setDerniereVisite($dateDerniereVisite);
+        
+        $isTest =  $fields['test_']['value'] ?? '';
+        $equipement->setTest($isTest);
+
         $libelle = $equipmentContrat['reference7']['value'] ?? '';
         $equipement->setLibelleEquipement($libelle);
         
@@ -4978,7 +4986,8 @@ class SimplifiedMaintenanceController extends AbstractController
 
             $detailData = $detailResponse->toArray();
             $fields = $detailData['data']['fields'];
-            
+            $idSociete =  $fields['id_societe']['value'] ?? '';
+
             // Récupérer les équipements sous contrat et hors contrat
             $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
             $offContractEquipments = $fields['tableau2']['value'] ?? [];
@@ -5074,7 +5083,8 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $submission['form_id'], 
                                 $submission['entry_id'], 
                                 $entityClass,
-                                $entityManager
+                                $entityManager,
+                                $idSociete
                             );
                             
                             if ($wasProcessed) {
@@ -5142,7 +5152,8 @@ class SimplifiedMaintenanceController extends AbstractController
         string $formId, 
         string $entryId, 
         string $entityClass,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        string $idSociete
     ): bool {
         
         error_log("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
@@ -5167,6 +5178,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // 3. Définir les données de l'équipement hors contrat
         $equipement->setNumeroEquipement($numeroFormate);
+        $equipement->setCodeSociete($idSociete);
         $equipement->setLibelleEquipement($typeLibelle);
         $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
         $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
