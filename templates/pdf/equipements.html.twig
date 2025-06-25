@@ -376,7 +376,7 @@
                 </tr>
             </table>
 
-            {% if pictures|length > 1 %}
+            {#{% if pictures|length > 1 %}
                 <div class="photos-section">
                     <h4>Photos supplémentaires ({{ pictures|length - 1 }} photo{{ pictures|length - 1 > 1 ? 's' : '' }})</h4>
                     <div class="photos-grid">
@@ -389,7 +389,7 @@
                         {% endfor %}
                     </div>
                 </div>
-            {% endif %}
+            {% endif %}#}
         </div>
         
         {% if loop.index is divisible by(2) and not loop.last %} 

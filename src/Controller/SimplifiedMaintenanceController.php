@@ -4922,18 +4922,18 @@ class SimplifiedMaintenanceController extends AbstractController
 
                     $detailData = $detailResponse->toArray();
                     
-                    // Vérification rapide de l'agence
-                    if (isset($detailData['data']['fields']['code_agence']['value']) && 
-                        $detailData['data']['fields']['code_agence']['value'] === $agencyCode) {
+                    $validSubmissions[] = [
+                        'form_id' => $entry['_form_id'],
+                        'entry_id' => $entry['_id'],
+                        'client_name' => $detailData['data']['fields']['nom_client']['value'] ?? 'N/A',
+                        'date' => $detailData['data']['fields']['date_et_heure1']['value'] ?? 'N/A',
+                        'technician' => $detailData['data']['fields']['trigramme']['value'] ?? 'N/A'
+                    ];
+                    // // Vérification rapide de l'agence
+                    // if (isset($detailData['data']['fields']['code_agence']['value']) && 
+                    //     $detailData['data']['fields']['code_agence']['value'] === $agencyCode) {
                         
-                        $validSubmissions[] = [
-                            'form_id' => $entry['_form_id'],
-                            'entry_id' => $entry['_id'],
-                            'client_name' => $detailData['data']['fields']['nom_client']['value'] ?? 'N/A',
-                            'date' => $detailData['data']['fields']['date_et_heure1']['value'] ?? 'N/A',
-                            'technician' => $detailData['data']['fields']['trigramme']['value'] ?? 'N/A'
-                        ];
-                    }
+                    // }
                     
                 } catch (\Exception $e) {
                     error_log("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
