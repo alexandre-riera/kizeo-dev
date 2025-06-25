@@ -5569,4 +5569,196 @@ class SimplifiedMaintenanceController extends AbstractController
         return $recommendations;
     }
 
+    /**
+     * Route pour debug le filtrage des soumissions
+     */
+    #[Route('/api/maintenance/debug-submissions/{agencyCode}', name: 'app_maintenance_debug_submissions', methods: ['GET'])]
+    public function debugSubmissionsFilter(
+        string $agencyCode,
+        Request $request
+    ): JsonResponse {
+        
+        $formId = $request->query->get('form_id');
+        $limit = (int) $request->query->get('limit', 10);
+        
+        // Utiliser le mapping si pas de form_id
+        if (!$formId) {
+            $agencyMapping = $this->getAgencyFormMapping();
+            $formId = $agencyMapping[$agencyCode] ?? null;
+        }
+        
+        if (!$formId) {
+            return new JsonResponse(['error' => 'Form ID non trouvé'], 400);
+        }
+        
+        try {
+            // 1. Récupérer toutes les soumissions sans filtrage
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'json' => [
+                        'limit' => $limit,
+                        'offset' => 0
+                    ]
+                ]
+            );
+
+            $formData = $response->toArray();
+            $submissionsAnalysis = [];
+            $agencyFieldsFound = [];
+            
+            // 2. Analyser chaque soumission
+            foreach (array_slice($formData['data'] ?? [], 0, $limit) as $entry) {
+                try {
+                    $detailResponse = $this->client->request(
+                        'GET',
+                        'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
+                        [
+                            'headers' => [
+                                'Accept' => 'application/json',
+                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                            ]
+                        ]
+                    );
+
+                    $detailData = $detailResponse->toArray();
+                    $fields = $detailData['data']['fields'] ?? [];
+                    
+                    // 3. Chercher tous les champs qui pourraient contenir l'agence
+                    $agencyFields = [];
+                    foreach ($fields as $fieldName => $fieldData) {
+                        if (stripos($fieldName, 'agence') !== false || 
+                            stripos($fieldName, 'code') !== false ||
+                            (is_array($fieldData) && isset($fieldData['value']) && 
+                            is_string($fieldData['value']) && 
+                            preg_match('/S\d+/', $fieldData['value']))) {
+                            
+                            $agencyFields[$fieldName] = $fieldData['value'] ?? '';
+                            $agencyFieldsFound[$fieldName] = ($agencyFieldsFound[$fieldName] ?? 0) + 1;
+                        }
+                    }
+                    
+                    // 4. Analyser la structure
+                    $analysis = [
+                        'entry_id' => $entry['_id'],
+                        'agency_fields_found' => $agencyFields,
+                        'target_agency' => $agencyCode,
+                        'matches_target' => false,
+                        'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
+                        'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
+                        'has_equipment_contract' => isset($fields['contrat_de_maintenance']) && !empty($fields['contrat_de_maintenance']['value'] ?? []),
+                        'has_equipment_offcontract' => isset($fields['hors_contrat']) && !empty($fields['hors_contrat']['value'] ?? [])
+                    ];
+                    
+                    // 5. Vérifier si cette soumission correspond à l'agence cible
+                    foreach ($agencyFields as $fieldValue) {
+                        if ($fieldValue === $agencyCode) {
+                            $analysis['matches_target'] = true;
+                            break;
+                        }
+                    }
+                    
+                    $submissionsAnalysis[] = $analysis;
+                    
+                } catch (\Exception $e) {
+                    $submissionsAnalysis[] = [
+                        'entry_id' => $entry['_id'],
+                        'error' => 'Impossible de récupérer: ' . $e->getMessage()
+                    ];
+                }
+            }
+            
+            // 6. Générer le rapport
+            $matchingSubmissions = array_filter($submissionsAnalysis, function($s) {
+                return $s['matches_target'] ?? false;
+            });
+            
+            return new JsonResponse([
+                'success' => true,
+                'agency' => $agencyCode,
+                'form_id' => $formId,
+                'debug_info' => [
+                    'total_submissions_analyzed' => count($submissionsAnalysis),
+                    'matching_submissions' => count($matchingSubmissions),
+                    'agency_fields_found_across_all' => $agencyFieldsFound,
+                    'most_common_agency_field' => $this->getMostCommonField($agencyFieldsFound)
+                ],
+                'submissions_analysis' => $submissionsAnalysis,
+                'matching_submissions_only' => array_values($matchingSubmissions),
+                'recommendations' => $this->generateFilteringRecommendations($submissionsAnalysis, $agencyCode, $agencyFieldsFound)
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'agency' => $agencyCode,
+                'form_id' => $formId
+            ], 500);
+        }
+    }
+
+    /**
+     * Trouver le champ d'agence le plus commun
+     */
+    private function getMostCommonField(array $agencyFieldsFound): ?string
+    {
+        if (empty($agencyFieldsFound)) {
+            return null;
+        }
+        
+        return array_key_first(array_slice($agencyFieldsFound, 0, 1, true));
+    }
+
+    /**
+     * Générer des recommandations pour corriger le filtrage
+     */
+    private function generateFilteringRecommendations(array $analysis, string $targetAgency, array $agencyFields): array
+    {
+        $recommendations = [];
+        
+        if (empty($analysis)) {
+            $recommendations[] = "Aucune soumission trouvée - Vérifier l'API Kizeo";
+            return $recommendations;
+        }
+        
+        $totalAnalyzed = count($analysis);
+        $withEquipment = count(array_filter($analysis, function($a) {
+            return ($a['has_equipment_contract'] ?? false) || ($a['has_equipment_offcontract'] ?? false);
+        }));
+        
+        if ($withEquipment == 0) {
+            $recommendations[] = "Aucune soumission avec équipements trouvée - Vérifier la structure des formulaires";
+        }
+        
+        if (empty($agencyFields)) {
+            $recommendations[] = "Aucun champ d'agence détecté - Le filtrage par agence ne peut pas fonctionner";
+            $recommendations[] = "Solution: Traiter TOUTES les soumissions sans filtrage d'agence";
+        } else {
+            $mostCommon = $this->getMostCommonField($agencyFields);
+            $recommendations[] = "Champ d'agence le plus fréquent: '{$mostCommon}'";
+            $recommendations[] = "Modifier getFormSubmissionsOptimized pour utiliser ce champ";
+        }
+        
+        $matchingCount = count(array_filter($analysis, function($a) {
+            return $a['matches_target'] ?? false;
+        }));
+        
+        if ($matchingCount == 0) {
+            $recommendations[] = "PROBLÈME: Aucune soumission ne correspond à l'agence {$targetAgency}";
+            $recommendations[] = "Solution 1: Vérifier si ce formulaire contient vraiment des données pour {$targetAgency}";
+            $recommendations[] = "Solution 2: Traiter TOUTES les soumissions sans filtre d'agence";
+        } else {
+            $recommendations[] = "SUCCÈS: {$matchingCount}/{$totalAnalyzed} soumissions correspondent à {$targetAgency}";
+            $recommendations[] = "Le filtrage peut être corrigé avec les bons champs";
+        }
+        
+        return $recommendations;
+    }
+
 }
