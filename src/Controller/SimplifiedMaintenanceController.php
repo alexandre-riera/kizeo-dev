@@ -6169,6 +6169,7 @@ class SimplifiedMaintenanceController extends AbstractController
 
     /**
      * ROUTE CORRIGÉE : Version qui fonctionne pour S40
+     * usage : /api/maintenance/process-fixed/S40?chunk_size=5&max_submissions=10
      */
     #[Route('/api/maintenance/process-fixed/{agencyCode}', name: 'app_maintenance_process_fixed', methods: ['GET'])]
     public function processMaintenanceFixed(
