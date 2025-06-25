@@ -6274,8 +6274,8 @@ class SimplifiedMaintenanceController extends AbstractController
                                 
                                 // Générer un numéro d'équipement unique
                                 $numeroEquipement = $this->generateUniqueEquipmentNumber(
-                                    $fields['id_client_']['value'] ?? '',
                                     $equipmentData,
+                                    $fields['id_client_']['value'] ?? '',
                                     $entityClass,
                                     $entityManager
                                 );
