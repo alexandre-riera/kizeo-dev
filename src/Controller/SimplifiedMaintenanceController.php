@@ -5153,7 +5153,7 @@ class SimplifiedMaintenanceController extends AbstractController
         error_log("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
 
         // 1. Générer le numéro d'équipement
-        $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
+        $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
         
