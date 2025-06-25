@@ -4887,16 +4887,17 @@ class SimplifiedMaintenanceController extends AbstractController
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
                     ]
-                    // ,
-                    // 'json' => [
-                    //     'limit' => $maxSubmissions,
-                    //     'offset' => 0
-                    // ],
-                    // 'timeout' => 30
+                    ,
+                    'json' => [
+                        'limit' => $maxSubmissions,
+                        'offset' => 0
+                    ],
+                    'timeout' => 30
                 ]
             );
 
             $formData = $response->toArray();
+            dd($formData);
             $validSubmissions = [];
             
             if (!isset($formData['data']) || empty($formData['data'])) {
@@ -4930,11 +4931,6 @@ class SimplifiedMaintenanceController extends AbstractController
                         'date' => $detailData['data']['fields']['date_et_heure1']['value'] ?? 'N/A',
                         'technician' => $detailData['data']['fields']['trigramme']['value'] ?? 'N/A'
                     ];
-                    // // Vérification rapide de l'agence
-                    // if (isset($detailData['data']['fields']['code_agence']['value']) && 
-                    //     $detailData['data']['fields']['code_agence']['value'] === $agencyCode) {
-                        
-                    // }
                     
                 } catch (\Exception $e) {
                     error_log("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
