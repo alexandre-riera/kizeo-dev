@@ -4886,12 +4886,13 @@ class SimplifiedMaintenanceController extends AbstractController
                     'headers' => [
                         'Accept' => 'application/json',
                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => [
-                        'limit' => $maxSubmissions,
-                        'offset' => 0
-                    ],
-                    'timeout' => 30
+                    ]
+                    // ,
+                    // 'json' => [
+                    //     'limit' => $maxSubmissions,
+                    //     'offset' => 0
+                    // ],
+                    // 'timeout' => 30
                 ]
             );
 
