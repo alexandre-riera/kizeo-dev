@@ -6212,7 +6212,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $totalPhotos = 0;
             $errors = [];
             
-            $entityClass = $this->getEntityClass($agencyCode);
+            $entityClass = $this->getEntityClassByAgency($agencyCode);
             if (!$entityClass) {
                 return new JsonResponse(['error' => 'Classe d\'entité non trouvée pour ' . $agencyCode], 400);
             }
