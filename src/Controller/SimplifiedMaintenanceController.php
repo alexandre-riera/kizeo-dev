@@ -4987,6 +4987,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $detailData = $detailResponse->toArray();
             $fields = $detailData['data']['fields'];
             $idSociete =  $fields['id_societe']['value'] ?? '';
+            $dateDerniereVisite =  $fields['date_et_heure1']['value'] ?? '';
 
             // Récupérer les équipements sous contrat et hors contrat
             $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
@@ -5084,7 +5085,8 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $submission['entry_id'], 
                                 $entityClass,
                                 $entityManager,
-                                $idSociete
+                                $idSociete,
+                                $dateDerniereVisite
                             );
                             
                             if ($wasProcessed) {
@@ -5153,7 +5155,8 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entryId, 
         string $entityClass,
         EntityManagerInterface $entityManager,
-        string $idSociete
+        string $idSociete,
+        string $dateDerniereVisite
     ): bool {
         
         error_log("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
@@ -5179,6 +5182,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // 3. Définir les données de l'équipement hors contrat
         $equipement->setNumeroEquipement($numeroFormate);
         $equipement->setCodeSociete($idSociete);
+        $equipement->setDerniereVisite($dateDerniereVisite);
         $equipement->setLibelleEquipement($typeLibelle);
         $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
         $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
