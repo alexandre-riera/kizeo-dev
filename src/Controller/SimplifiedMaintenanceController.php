@@ -6229,83 +6229,91 @@ class SimplifiedMaintenanceController extends AbstractController
                 
                 foreach ($chunk as $submission) {
                     try {
-                        // Récupération des détails de la soumission
-                        $detailResponse = $this->client->request(
-                            'GET',
-                            "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$submission['entry_id']}",
-                            [
-                                'headers' => [
-                                    'Accept' => 'application/json',
-                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                ],
-                                'timeout' => 45
-                            ]
+                        $this->processSingleSubmissionWithDeduplication(
+                            $submission,
+                            $agencyCode,
+                            $entityClass,
+                            $chunkSize,
+                            $entityManager
                         );
+                        // // Récupération des détails de la soumission
+                        // $detailResponse = $this->client->request(
+                        //     'GET',
+                        //     "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$submission['entry_id']}",
+                        //     [
+                        //         'headers' => [
+                        //             'Accept' => 'application/json',
+                        //             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                        //         ],
+                        //         'timeout' => 45
+                        //     ]
+                        // );
 
-                        $detailData = $detailResponse->toArray();
-                        $fields = $detailData['data']['fields'] ?? [];
+                        // $detailData = $detailResponse->toArray();
+                        // $fields = $detailData['data']['fields'] ?? [];
                         
-                        // Vérifier s'il y a des équipements à traiter
-                        $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-                        $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+                        // // Vérifier s'il y a des équipements à traiter
+                        // $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+                        // $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
                         
-                        $allEquipments = array_merge($contractEquipments, $offContractEquipments);
+                        // // PAS BON CA. IL FAUT APPELER LES METHODE DE CHAUCUN POUR LES ENREGISTRER
+                        // $allEquipments = array_merge($contractEquipments, $offContractEquipments);
                         
-                        if (empty($allEquipments)) {
-                            continue; // Pas d'équipements dans cette soumission
-                        }
+                        // if (empty($allEquipments)) {
+                        //     continue; // Pas d'équipements dans cette soumission
+                        // }
                         
-                        // Traitement des équipements
-                        foreach ($allEquipments as $equipmentIndex => $equipmentData) {
-                            try {
-                                // Créer une nouvelle instance d'équipement
-                                $equipement = new $entityClass();
+                        // // Traitement des équipements
+                        // foreach ($allEquipments as $equipmentIndex => $equipmentData) {
+                        //     try {
+                        //         // Créer une nouvelle instance d'équipement
+                        //         $equipement = new $entityClass();
                                 
-                                // Définir les données communes (méthode existante adaptée)
-                                $this->setCommonDataForAgency($equipement, $fields, $agencyCode);
+                        //         // Définir les données communes (méthode existante adaptée)
+                        //         $this->setCommonDataForAgency($equipement, $fields, $agencyCode);
                                 
-                                // Définir les données spécifiques à l'équipement
-                                if (in_array($equipmentData, $contractEquipments)) {
-                                    $this->setContractDataForAgency($equipement, $equipmentData, $agencyCode);
-                                    $equipement->setEnMaintenance(true);
-                                } else {
-                                    $this->setOffContractDataForAgency($equipement, $equipmentData, $agencyCode);
-                                    $equipement->setEnMaintenance(false);
-                                }
-                                // Générer un numéro d'équipement unique
-                                $numeroEquipement = $this->generateUniqueEquipmentNumber(
-                                    $equipmentData['equipement']['value'] ?? '',
-                                    $fields['id_client_']['value'] ?? '',
-                                    $entityClass,
-                                    $entityManager
-                                );
-                                $equipement->setNumeroEquipement($numeroEquipement);
+                        //         // Définir les données spécifiques à l'équipement
+                        //         if (in_array($equipmentData, $contractEquipments)) {
+                        //             $this->setContractDataForAgency($equipement, $equipmentData, $agencyCode);
+                        //             $equipement->setEnMaintenance(true);
+                        //         } else {
+                        //             $this->setOffContractDataForAgency($equipement, $equipmentData, $agencyCode);
+                        //             $equipement->setEnMaintenance(false);
+                        //         }
+                        //         // Générer un numéro d'équipement unique
+                        //         $numeroEquipement = $this->generateUniqueEquipmentNumber(
+                        //             $equipmentData['equipement']['value'] ?? '',
+                        //             $fields['id_client_']['value'] ?? '',
+                        //             $entityClass,
+                        //             $entityManager
+                        //         );
+                        //         $equipement->setNumeroEquipement($numeroEquipement);
                                 
-                                // Sauvegarder l'équipement
-                                $entityManager->persist($equipement);
-                                $totalEquipments++;
-                                // dd($equipmentData);
-                                // Traiter les photos si présentes
-                                // $photoCount = $this-> savePhotosToFormEntityWithDeduplication($equipement, $equipmentData, $equipmentData['equipement']['value'] ?? '', $entityManager);
-                                // $totalPhotos += $photoCount;
+                        //         // Sauvegarder l'équipement
+                        //         $entityManager->persist($equipement);
+                        //         $totalEquipments++;
+                        //         // dd($equipmentData);
+                        //         // Traiter les photos si présentes
+                        //         // $photoCount = $this-> savePhotosToFormEntityWithDeduplication($equipement, $equipmentData, $equipmentData['equipement']['value'] ?? '', $entityManager);
+                        //         // $totalPhotos += $photoCount;
                                 
-                            } catch (\Exception $e) {
-                                $errors[] = [
-                                    'submission_id' => $submission['entry_id'],
-                                    'equipment_index' => $equipmentIndex,
-                                    'error' => $e->getMessage()
-                                ];
-                            }
-                        }
+                        //     } catch (\Exception $e) {
+                        //         $errors[] = [
+                        //             'submission_id' => $submission['entry_id'],
+                        //             'equipment_index' => $equipmentIndex,
+                        //             'error' => $e->getMessage()
+                        //         ];
+                        //     }
+                        // }
                         
-                        $processedCount++;
+                        // $processedCount++;
                         
-                        // Flush périodique pour libérer la mémoire
-                        if ($processedCount % 3 == 0) {
-                            $entityManager->flush();
-                            $entityManager->clear();
-                            gc_collect_cycles();
-                        }
+                        // // Flush périodique pour libérer la mémoire
+                        // if ($processedCount % 3 == 0) {
+                        //     $entityManager->flush();
+                        //     $entityManager->clear();
+                        //     gc_collect_cycles();
+                        // }
                         
                     } catch (\Exception $e) {
                         $errors[] = [
