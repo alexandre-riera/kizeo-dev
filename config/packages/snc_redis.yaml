@@ -1,38 +1,23 @@
-# config/packages/snc_redis.yaml (si vous utilisez SncRedisBundle)
+# config/packages/snc_redis.yaml
 snc_redis:
     clients:
         default:
-            type: predis
+            type: phpredis  # Changé de predis à phpredis
             alias: default
-            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/0'
+            # DSN corrigé pour socket Unix avec mot de passe
+            dsn: 'redis://:e2a9701dead496d5a9251a4a94079d5a@/home2/divi4480/.cpanel/redis/redis.sock/0'
             logging: '%kernel.debug%'
             options:
-                connection_timeout: 10
-                read_write_timeout: 30
+                connection_timeout: 10.0
+                read_write_timeout: 30.0
+                
         cache:
-            type: predis
+            type: phpredis
             alias: cache
-            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/1'
+            dsn: 'redis://:e2a9701dead496d5a9251a4a94079d5a@/home2/divi4480/.cpanel/redis/redis.sock/1'
             logging: false
             options:
-                connection_timeout: 10
-                read_write_timeout: 30
+                connection_timeout: 10.0
+                read_write_timeout: 30.0
 
-# Variables d'environnement à ajouter dans .env pour o2switch
-# REDIS_SOCKET=/home2/divi4480/.cpanel/redis/redis.sock
-# REDIS_PASSWORD=e2a9701dead496d5a9251a4a94079d5a
-# REDIS_DB=0
-
-# Note: o2switch utilise un chemin socket spécifique par utilisateur
-# Le socket se trouve généralement dans ~/.cpanel/redis/redis.sock
-
-
-# Define your clients here. The example below connects to database 0 of the default Redis server.
-#
-# See https://github.com/snc/SncRedisBundle/blob/master/docs/README.md for instructions on
-# how to configure the bundle.
-#
-#        default:
-#            type: phpredis
-#            alias: default
-#            dsn: "%env(REDIS_URL)%"
+# Format DSN pour socket Unix : redis://:password@/path/to/socket/database_number

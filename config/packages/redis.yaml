@@ -2,8 +2,8 @@
 # Configuration simplifiée pour éviter les conflits avec SncRedisBundle
 framework:
     cache:
-        app: cache.adapter.redis
-        default_redis_provider: '@snc_redis.default'
+        app: cache.adapter.filesystem  # Temporairement sur filesystem
+        # default_redis_provider: '@snc_redis.cache'  # Commenté temporairement
 
 # Note: On utilise SncRedisBundle comme provider principal
 # Suppression des services Redis custom pour éviter les conflits
