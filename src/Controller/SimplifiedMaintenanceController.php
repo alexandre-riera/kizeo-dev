@@ -6340,7 +6340,7 @@ class SimplifiedMaintenanceController extends AbstractController
         string $agencyCode,
         EntityManagerInterface $entityManager,
         Request $request,
-        MaintenanceCacheService $cacheService // Utilisation du service dédié
+        MaintenanceCacheService $cacheService // Utilisation du service dédié 
     ): JsonResponse {
         
         // Configuration conservative
