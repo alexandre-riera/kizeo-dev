@@ -22,7 +22,14 @@ when@dev:
                 type: console
                 process_psr_3_messages: false
                 channels: ["!event", "!doctrine", "!console"]
-
+        channels: ['maintenance_cache']
+        handlers:
+            maintenance_cache:
+                type: rotating_file
+                path: '%kernel.logs_dir%/maintenance_cache.log'
+                level: info
+                channels: ['maintenance_cache']
+                max_files: 10
 when@test:
     monolog:
         handlers:
@@ -60,3 +67,11 @@ when@prod:
                 channels: [deprecation]
                 path: php://stderr
                 formatter: monolog.formatter.json
+        channels: ['maintenance_cache']
+        handlers:
+            maintenance_cache:
+                type: rotating_file
+                path: '%kernel.logs_dir%/maintenance_cache.log'
+                level: warning
+                channels: ['maintenance_cache']
+                max_files: 30

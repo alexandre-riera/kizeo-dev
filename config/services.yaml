@@ -4,6 +4,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    redis.socket_path: '%env(REDIS_SOCKET)%'
+    redis.database: '%env(int:REDIS_DB)%'
 
 services:
     # default configuration for services in *this* file
@@ -26,3 +28,31 @@ services:
         class: Symfony\Component\Cache\Adapter\FilesystemAdapter
         arguments:
             - 'app.cache'
+    
+    # Configuration Redis avec socket Unix
+    redis.connection:
+        class: Redis
+        calls:
+            - connect: ['%redis.socket_path%']
+            - select: ['%redis.database%']
+            - setOption: [!php/const Redis::OPT_SERIALIZER, !php/const Redis::SERIALIZER_JSON]
+            - setOption: [!php/const Redis::OPT_COMPRESSION, !php/const Redis::COMPRESSION_LZ4]
+            - setOption: [!php/const Redis::OPT_TCP_KEEPALIVE, 1]
+
+    # Service de cache maintenance
+    App\Service\MaintenanceCacheService:
+        arguments:
+            $redis: '@redis.connection'
+            $logger: '@logger'
+        tags:
+            - { name: 'monolog.logger', channel: 'maintenance_cache' }
+
+    # Alias pour compatibilité
+    maintenance.cache:
+        alias: App\Service\MaintenanceCacheService
+        public: true
+
+    # Interface pour l'injection de dépendance
+    Redis:
+        alias: redis.connection
+        public: true

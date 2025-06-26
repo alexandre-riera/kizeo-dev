@@ -1,0 +1,36 @@
+# config/services.yaml - Section Redis pour o2switch
+
+parameters:
+    redis.socket_path: '%env(REDIS_SOCKET)%'
+    redis.password: '%env(REDIS_PASSWORD)%'
+    redis.database: '%env(int:REDIS_DB)%'
+
+services:
+    # Configuration Redis avec socket Unix o2switch
+    redis.connection:
+        class: Redis
+        calls:
+            - connect: ['%redis.socket_path%']
+            - auth: ['%redis.password%']
+            - select: ['%redis.database%']
+            - setOption: [!php/const Redis::OPT_SERIALIZER, !php/const Redis::SERIALIZER_JSON]
+            # Note: LZ4 compression pourrait ne pas être disponible sur o2switch
+            # - setOption: [!php/const Redis::OPT_COMPRESSION, !php/const Redis::COMPRESSION_LZ4]
+
+    # Service de cache maintenance
+    App\Service\MaintenanceCacheService:
+        arguments:
+            $redis: '@redis.connection'
+            $logger: '@logger'
+        tags:
+            - { name: 'monolog.logger', channel: 'maintenance_cache' }
+
+    # Alias pour compatibilité
+    maintenance.cache:
+        alias: App\Service\MaintenanceCacheService
+        public: true
+
+    # Interface pour l'injection de dépendance
+    Redis:
+        alias: redis.connection
+        public: true

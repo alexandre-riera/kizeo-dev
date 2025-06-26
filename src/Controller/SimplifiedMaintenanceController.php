@@ -6175,11 +6175,171 @@ class SimplifiedMaintenanceController extends AbstractController
      * ROUTE CORRIGÉE : Version qui fonctionne pour les agences
      * usage : /api/maintenance/process-fixed/S40?chunk_size=5&max_submissions=10
      */
+    // #[Route('/api/maintenance/process-fixed/{agencyCode}', name: 'app_maintenance_process_fixed', methods: ['GET'])]
+    // public function processMaintenanceFixed(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
+        
+    //     // Configuration conservative
+    //     ini_set('memory_limit', '1G');
+    //     ini_set('max_execution_time', 300);
+        
+    //     $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+        
+    //     if (!in_array($agencyCode, $validAgencies)) {
+    //         return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+    //     }
+
+    //     $formId = $request->query->get('form_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 5);
+    //     $maxSubmissions = (int) $request->query->get('max_submissions', 10);
+        
+    //     if (!$formId) {
+    //         $agencyMapping = $this->getAgencyFormMapping();
+    //         $formId = $agencyMapping[$agencyCode] ?? null;
+            
+    //         if (!$formId) {
+    //             return new JsonResponse([
+    //                 'error' => 'Aucun form_id trouvé pour l\'agence ' . $agencyCode,
+    //                 'available_agencies' => array_keys($agencyMapping)
+    //             ], 400);
+    //         }
+    //     }
+
+    //     try {
+    //         $startTime = time();
+            
+    //         // 1. Récupérer les soumissions avec la méthode corrigée
+    //         $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
+            
+    //         if (empty($submissions)) {
+    //             return new JsonResponse([
+    //                 'success' => true,
+    //                 'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
+    //                 'agency' => $agencyCode,
+    //                 'form_id' => $formId,
+    //                 'processed_submissions' => 0
+    //             ]);
+    //         }
+            
+    //         // 2. Traitement par chunks
+    //         $processedCount = 0;
+    //         $totalEquipments = 0;
+    //         $totalPhotos = 0;
+    //         $errors = [];
+            
+    //         $entityClass = $this->getEntityClassByAgency($agencyCode);
+    //         if (!$entityClass) {
+    //             return new JsonResponse(['error' => 'Classe d\'entité non trouvée pour ' . $agencyCode], 400);
+    //         }
+            
+    //         $chunks = array_chunk($submissions, $chunkSize);
+            
+    //         foreach ($chunks as $chunkIndex => $chunk) {
+                
+    //             // Vérification timeout
+    //             if (time() - $startTime > 250) { // 4 minutes max
+    //                 break;
+    //             }
+                
+    //             foreach ($chunk as $submission) {
+    //                 try {
+    //                     $this->processSingleSubmissionWithDeduplication(
+    //                         $submission,
+    //                         $agencyCode,
+    //                         $entityClass,
+    //                         $chunkSize,
+    //                         $entityManager
+    //                     );
+                        
+    //                     $processedCount++;
+                        
+    //                     // Flush périodique pour libérer la mémoire
+    //                     if ($processedCount % 3 == 0) {
+    //                         $entityManager->flush();
+    //                         $entityManager->clear();
+    //                         gc_collect_cycles();
+    //                     }
+                        
+    //                 } catch (\Exception $e) {
+    //                     $errors[] = [
+    //                         'submission_id' => $submission['entry_id'],
+    //                         'error' => $e->getMessage()
+    //                     ];
+    //                     continue;
+    //                 }
+    //             }
+                
+    //             // Sauvegarde après chaque chunk
+    //             try {
+    //                 $entityManager->flush();
+    //                 $entityManager->clear();
+    //                 gc_collect_cycles();
+    //             } catch (\Exception $e) {
+    //                 error_log("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
+    //             }
+                
+    //             // Pause entre chunks
+    //             usleep(100000); // 0.1 seconde
+    //         }
+            
+    //         // Sauvegarde finale
+    //         try {
+    //             $entityManager->flush();
+    //         } catch (\Exception $e) {
+    //             error_log("Erreur sauvegarde finale: " . $e->getMessage());
+    //         }
+            
+    //         $processingTime = time() - $startTime;
+            
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'processing_summary' => [
+    //                 'processed_submissions' => $processedCount,
+    //                 'total_submissions_found' => count($submissions),
+    //                 'total_equipments_processed' => $totalEquipments,
+    //                 'total_photos_processed' => $totalPhotos,
+    //                 'processing_time' => $processingTime . 's',
+    //                 'errors_count' => count($errors)
+    //             ],
+    //             'chunk_info' => [
+    //                 'chunk_size' => $chunkSize,
+    //                 'total_chunks' => count($chunks),
+    //                 'max_submissions_limit' => $maxSubmissions
+    //             ],
+    //             'status' => $processedCount > 0 ? 'success' : 'no_data',
+    //             'errors' => array_slice($errors, 0, 10), // Limiter les erreurs affichées
+    //             'message' => $processedCount > 0 ? 
+    //                 "Traitement réussi: {$processedCount}/{$maxSubmissions} soumissions et {$totalEquipments} équipements traités en {$processingTime}s" :
+    //                 "Aucune soumission avec équipements trouvée"
+    //         ]);
+            
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage(),
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId
+    //         ], 500);
+    //     }
+    // }
+
+    /////////// Traitement avec CACHE REDIS ///////////
+
+    /**
+     * ROUTE CORRIGÉE AVEC REDIS CACHE
+     * Usage : /api/maintenance/process-fixed/S40?chunk_size=5&max_submissions=300&use_cache=true
+     */
     #[Route('/api/maintenance/process-fixed/{agencyCode}', name: 'app_maintenance_process_fixed', methods: ['GET'])]
     public function processMaintenanceFixed(
         string $agencyCode,
         EntityManagerInterface $entityManager,
-        Request $request
+        Request $request,
+        MaintenanceCacheService $cacheService = null // Utilisation du service dédié
     ): JsonResponse {
         
         // Configuration conservative
@@ -6195,6 +6355,8 @@ class SimplifiedMaintenanceController extends AbstractController
         $formId = $request->query->get('form_id');
         $chunkSize = (int) $request->query->get('chunk_size', 5);
         $maxSubmissions = (int) $request->query->get('max_submissions', 10);
+        $useCache = $request->query->get('use_cache', 'true') === 'true';
+        $refreshCache = $request->query->get('refresh_cache', 'false') === 'true';
         
         if (!$formId) {
             $agencyMapping = $this->getAgencyFormMapping();
@@ -6211,8 +6373,40 @@ class SimplifiedMaintenanceController extends AbstractController
         try {
             $startTime = time();
             
-            // 1. Récupérer les soumissions avec la méthode corrigée
-            $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
+            // 1. Gestion du cache Redis pour les soumissions via le service
+            $submissions = [];
+            $fromCache = false;
+            
+            if ($useCache && $cacheService && !$refreshCache) {
+                // Essayer de récupérer depuis le cache via le service
+                $cachedSubmissions = $cacheService->getSubmissionsList($agencyCode, $formId);
+                if (!empty($cachedSubmissions)) {
+                    // Récupérer les soumissions complètes
+                    $submissions = $cacheService->getBulkSubmissions($agencyCode, $cachedSubmissions, false);
+                    if (!empty($submissions)) {
+                        $submissions = array_values($submissions); // Réindexer le tableau
+                        $fromCache = true;
+                    }
+                }
+            }
+            
+            // Si pas en cache ou cache forcé à refresh, récupérer depuis la DB
+            if (empty($submissions)) {
+                $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
+                
+                // Sauvegarder en cache si service disponible
+                if ($useCache && $cacheService && !empty($submissions)) {
+                    // Sauvegarder chaque soumission individuellement
+                    $submissionIds = [];
+                    foreach ($submissions as $submission) {
+                        $submissionId = $submission['entry_id'];
+                        $submissionIds[] = $submissionId;
+                        $cacheService->saveRawSubmission($agencyCode, $submissionId, $submission);
+                    }
+                    // Sauvegarder la liste des IDs
+                    $cacheService->saveSubmissionsList($agencyCode, $formId, $submissionIds);
+                }
+            }
             
             if (empty($submissions)) {
                 return new JsonResponse([
@@ -6220,15 +6414,17 @@ class SimplifiedMaintenanceController extends AbstractController
                     'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
                     'agency' => $agencyCode,
                     'form_id' => $formId,
-                    'processed_submissions' => 0
+                    'processed_submissions' => 0,
+                    'cache_used' => $fromCache
                 ]);
             }
             
-            // 2. Traitement par chunks
+            // 2. Traitement par chunks avec cache individuel
             $processedCount = 0;
             $totalEquipments = 0;
             $totalPhotos = 0;
             $errors = [];
+            $cacheHits = 0;
             
             $entityClass = $this->getEntityClassByAgency($agencyCode);
             if (!$entityClass) {
@@ -6238,21 +6434,42 @@ class SimplifiedMaintenanceController extends AbstractController
             $chunks = array_chunk($submissions, $chunkSize);
             
             foreach ($chunks as $chunkIndex => $chunk) {
-                
                 // Vérification timeout
                 if (time() - $startTime > 250) { // 4 minutes max
                     break;
                 }
                 
-                foreach ($chunk as $submission) {
+                foreach ($chunk as $submissionIndex => $submission) {
                     try {
-                        $this->processSingleSubmissionWithDeduplication(
-                            $submission,
-                            $agencyCode,
-                            $entityClass,
-                            $chunkSize,
-                            $entityManager
-                        );
+                        // Récupération depuis le cache individuel si disponible
+                        $submissionData = null;
+                        $submissionId = $submission['entry_id'];
+                        
+                        if ($useCache && $cacheService) {
+                            $submissionData = $cacheService->getProcessedSubmission($agencyCode, $submissionId);
+                            if ($submissionData) {
+                                $cacheHits++;
+                            }
+                        }
+                        
+                        // Si pas en cache, traiter normalement et sauvegarder
+                        if (!$submissionData) {
+                            $submissionData = $this->processSingleSubmissionWithDeduplication(
+                                $submission,
+                                $agencyCode,
+                                $entityClass,
+                                $chunkSize,
+                                $entityManager
+                            );
+                            
+                            // Sauvegarder le résultat en cache
+                            if ($useCache && $cacheService && $submissionData) {
+                                $cacheService->saveProcessedSubmission($agencyCode, $submissionId, $submissionData);
+                            }
+                        } else {
+                            // Utiliser les données du cache pour recréer les entités
+                            $this->recreateEntitiesFromCache($submissionData, $entityManager);
+                        }
                         
                         $processedCount++;
                         
@@ -6306,13 +6523,20 @@ class SimplifiedMaintenanceController extends AbstractController
                     'processing_time' => $processingTime . 's',
                     'errors_count' => count($errors)
                 ],
+                'cache_info' => [
+                    'cache_used' => $fromCache || $cacheHits > 0,
+                    'submissions_from_cache' => $fromCache ? count($submissions) : 0,
+                    'individual_cache_hits' => $cacheHits,
+                    'redis_available' => $cacheService !== null,
+                    'connection_test' => $cacheService ? $cacheService->testConnection() : null
+                ],
                 'chunk_info' => [
                     'chunk_size' => $chunkSize,
                     'total_chunks' => count($chunks),
                     'max_submissions_limit' => $maxSubmissions
                 ],
                 'status' => $processedCount > 0 ? 'success' : 'no_data',
-                'errors' => array_slice($errors, 0, 10), // Limiter les erreurs affichées
+                'errors' => array_slice($errors, 0, 10),
                 'message' => $processedCount > 0 ? 
                     "Traitement réussi: {$processedCount}/{$maxSubmissions} soumissions et {$totalEquipments} équipements traités en {$processingTime}s" :
                     "Aucune soumission avec équipements trouvée"
@@ -6324,6 +6548,69 @@ class SimplifiedMaintenanceController extends AbstractController
                 'error' => $e->getMessage(),
                 'agency' => $agencyCode,
                 'form_id' => $formId
+            ], 500);
+        }
+    }
+
+    /**
+     * Route pour vider le cache d'une agence
+     */
+    #[Route('/api/maintenance/clear-cache/{agencyCode}', name: 'app_maintenance_clear_cache', methods: ['DELETE'])]
+    public function clearAgencyCache(
+        string $agencyCode,
+        MaintenanceCacheService $cacheService,
+        Request $request
+    ): JsonResponse {
+        try {
+            $formId = $request->query->get('form_id');
+            
+            if (!$formId) {
+                $agencyMapping = $this->getAgencyFormMapping();
+                $formId = $agencyMapping[$agencyCode] ?? null;
+            }
+            
+            if (!$formId) {
+                return new JsonResponse(['error' => 'Form ID non trouvé'], 400);
+            }
+            
+            $deletedCount = $cacheService->clearAgencyCache($agencyCode, $formId);
+            
+            return new JsonResponse([
+                'success' => true,
+                'message' => "Cache vidé pour l'agence {$agencyCode}",
+                'deleted_keys' => $deletedCount,
+                'connection_test' => $cacheService->testConnection()
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Route pour obtenir les statistiques du cache
+     */
+    #[Route('/api/maintenance/cache-stats/{agencyCode}', name: 'app_maintenance_cache_stats', methods: ['GET'])]
+    public function getCacheStats(
+        string $agencyCode,
+        MaintenanceCacheService $cacheService
+    ): JsonResponse {
+        try {
+            $stats = $cacheService->getCacheStats($agencyCode);
+            
+            return new JsonResponse([
+                'success' => true,
+                'stats' => $stats,
+                'connection_test' => $cacheService->testConnection()
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
             ], 500);
         }
     }

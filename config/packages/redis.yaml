@@ -1,0 +1,27 @@
+# config/packages/redis.yaml
+framework:
+    cache:
+        app: cache.adapter.redis
+        default_redis_provider: 'redis://%env(REDIS_SOCKET)%'
+
+# Services Redis avec connexion socket o2switch
+services:
+    Redis:
+        class: Redis
+        calls:
+            - connect: ['%env(REDIS_SOCKET)%']
+            - auth: ['%env(REDIS_PASSWORD)%']
+            - select: ['%env(int:REDIS_DB)%']
+
+    redis.client:
+        alias: Redis
+        public: true
+
+    # Service Redis avec interface pour injection de dépendance
+    app.redis_client:
+        class: Redis
+        calls:
+            - connect: ['%env(REDIS_SOCKET)%']
+            - auth: ['%env(REDIS_PASSWORD)%']
+            - select: ['%env(int:REDIS_DB)%']
+            - setOption: [!php/const Redis::OPT_SERIALIZER, !php/const Redis::SERIALIZER_JSON]
