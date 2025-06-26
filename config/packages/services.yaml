@@ -29,13 +29,6 @@ services:
         alias: 'snc_redis.default'
         public: true
 
-    # Service pour les statistiques Redis
-    app.redis_stats:
-        class: App\Service\RedisStatsService
-        arguments:
-            $redis: '@snc_redis.default'
-            $logger: '@logger'
-
 # config/packages/dev/monolog.yaml - Logging spécifique
 monolog:
     channels: ['maintenance_cache']
