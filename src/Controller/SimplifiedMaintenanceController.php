@@ -4717,6 +4717,9 @@ class SimplifiedMaintenanceController extends AbstractController
             if (!empty($equipmentData['photo2']['value'])) {
                 $form->setPhoto2($equipmentData['photo2']['value']);
             }
+            if (!empty($equipmentData['photo3']['value'])) {
+                $form->setPhotoCompteRendu($equipmentData['photo3']['value']);
+            }
             
             if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
                 $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
