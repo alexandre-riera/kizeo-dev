@@ -1,52 +1,25 @@
 # config/services.yaml - Section Redis avec SncRedisBundle
 
 parameters:
-    # Paramètres pour les URLs Redis
     redis.socket_path: '/home2/divi4480/.cpanel/redis/redis.sock'
     redis.password: '%env(REDIS_PASSWORD)%'
 
 services:
-    # Utilisation du client SncRedis au lieu de Redis natif
     redis.connection:
         alias: 'snc_redis.default'
         public: true
 
-    # Service de cache maintenance avec SncRedis
     App\Service\MaintenanceCacheService:
         arguments:
-            $redis: '@snc_redis.default'  # Utilise le client SncRedis
+            $redis: '@snc_redis.default'
             $logger: '@logger'
         tags:
             - { name: 'monolog.logger', channel: 'maintenance_cache' }
 
-    # Alias pour compatibilité
     maintenance.cache:
         alias: App\Service\MaintenanceCacheService
         public: true
 
-    # Alias Redis pour injection directe
     Redis:
         alias: 'snc_redis.default'
         public: true
-
-# config/packages/dev/monolog.yaml - Logging spécifique
-monolog:
-    channels: ['maintenance_cache']
-    handlers:
-        maintenance_cache:
-            type: rotating_file
-            path: '%kernel.logs_dir%/maintenance_cache.log'
-            level: info
-            channels: ['maintenance_cache']
-            max_files: 10
-
-# config/packages/prod/monolog.yaml - Logging production
-monolog:
-    channels: ['maintenance_cache']
-    handlers:
-        maintenance_cache:
-            type: rotating_file
-            path: '%kernel.logs_dir%/maintenance_cache.log'
-            level: warning
-            channels: ['maintenance_cache']
-            max_files: 30
