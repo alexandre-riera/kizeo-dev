@@ -38,109 +38,109 @@ class SimplifiedMaintenanceController extends AbstractController
      * Traiter les formulaires de maintenance par agence - VERSION CORRIGÉE
      * Cette version récupère TOUS les formulaires, pas seulement les non lus
      */
-    #[Route('/api/maintenance/simple/{agencyCode}', name: 'app_maintenance_simple_agency', methods: ['GET'])]
-    public function processMaintenanceSimple(
-        string $agencyCode,
-        FormRepository $formRepository,
-        EntityManagerInterface $entityManager,
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/simple/{agencyCode}', name: 'app_maintenance_simple_agency', methods: ['GET'])]
+    // public function processMaintenanceSimple(
+    //     string $agencyCode,
+    //     FormRepository $formRepository,
+    //     EntityManagerInterface $entityManager,
+    //     CacheInterface $cache,
+    //     Request $request
+    // ): JsonResponse {
         
-        // Configuration pour éviter les timeouts et problèmes mémoire
-        ini_set('memory_limit', '2G');
-        ini_set('max_execution_time', 0);
-        set_time_limit(0);
-        gc_enable();
+    //     // Configuration pour éviter les timeouts et problèmes mémoire
+    //     ini_set('memory_limit', '2G');
+    //     ini_set('max_execution_time', 0);
+    //     set_time_limit(0);
+    //     gc_enable();
         
-        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+    //     $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
-        if (!in_array($agencyCode, $validAgencies)) {
-            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
-        }
+    //     if (!in_array($agencyCode, $validAgencies)) {
+    //         return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+    //     }
 
-        try {
-            // CORRECTION : Récupérer TOUS les formulaires de maintenance (pas seulement les non lus)
-            $maintenanceData = $this->getAllMaintenanceFormsData($cache);
+    //     try {
+    //         // CORRECTION : Récupérer TOUS les formulaires de maintenance (pas seulement les non lus)
+    //         $maintenanceData = $this->getAllMaintenanceFormsData($cache);
             
-            if (empty($maintenanceData)) {
-                return new JsonResponse([
-                    'success' => true,
-                    'message' => 'Aucune donnée de maintenance trouvée',
-                    'agency' => $agencyCode,
-                    'processed' => 0
-                ]);
-            }
+    //         if (empty($maintenanceData)) {
+    //             return new JsonResponse([
+    //                 'success' => true,
+    //                 'message' => 'Aucune donnée de maintenance trouvée',
+    //                 'agency' => $agencyCode,
+    //                 'processed' => 0
+    //             ]);
+    //         }
 
-            $processed = 0;
-            $contractEquipments = 0;
-            $offContractEquipments = 0;
-            $errors = [];
+    //         $processed = 0;
+    //         $contractEquipments = 0;
+    //         $offContractEquipments = 0;
+    //         $errors = [];
 
-            // Filtrer et traiter par agence
-            foreach ($maintenanceData as $index => $formData) {
-                try {
-                    if (!isset($formData['data']['fields'])) {
-                        continue;
-                    }
+    //         // Filtrer et traiter par agence
+    //         foreach ($maintenanceData as $index => $formData) {
+    //             try {
+    //                 if (!isset($formData['data']['fields'])) {
+    //                     continue;
+    //                 }
 
-                    $fields = $formData['data']['fields'];
+    //                 $fields = $formData['data']['fields'];
                     
-                    // Vérifier si c'est la bonne agence
-                    if (!isset($fields['code_agence']['value']) || 
-                        $fields['code_agence']['value'] !== $agencyCode) {
-                        continue;
-                    }
+    //                 // Vérifier si c'est la bonne agence
+    //                 if (!isset($fields['code_agence']['value']) || 
+    //                     $fields['code_agence']['value'] !== $agencyCode) {
+    //                     continue;
+    //                 }
 
-                    // Traiter ce formulaire
-                    $result = $this->processAgencyForm($fields, $agencyCode, $entityManager);
+    //                 // Traiter ce formulaire
+    //                 $result = $this->processAgencyForm($fields, $agencyCode, $entityManager);
                     
-                    $contractEquipments += $result['contract'];
-                    $offContractEquipments += $result['off_contract'];
-                    $processed++;
+    //                 $contractEquipments += $result['contract'];
+    //                 $offContractEquipments += $result['off_contract'];
+    //                 $processed++;
 
-                    // Marquer comme lu
-                    $this->markFormAsRead($formData['form_id'], $formData['id']);
+    //                 // Marquer comme lu
+    //                 $this->markFormAsRead($formData['form_id'], $formData['id']);
 
-                    // Libérer la mémoire après chaque traitement
-                    unset($maintenanceData[$index]);
+    //                 // Libérer la mémoire après chaque traitement
+    //                 unset($maintenanceData[$index]);
                     
-                    // Forcer le garbage collector toutes les 5 itérations
-                    if ($processed % 5 === 0) {
-                        gc_collect_cycles();
-                    }
+    //                 // Forcer le garbage collector toutes les 5 itérations
+    //                 if ($processed % 5 === 0) {
+    //                     gc_collect_cycles();
+    //                 }
 
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'form_id' => $formData['form_id'] ?? 'unknown',
-                        'error' => $e->getMessage()
-                    ];
-                    error_log("Erreur traitement formulaire agence {$agencyCode}: " . $e->getMessage());
-                }
-            }
+    //             } catch (\Exception $e) {
+    //                 $errors[] = [
+    //                     'form_id' => $formData['form_id'] ?? 'unknown',
+    //                     'error' => $e->getMessage()
+    //                 ];
+    //                 error_log("Erreur traitement formulaire agence {$agencyCode}: " . $e->getMessage());
+    //             }
+    //         }
 
-            // Sauvegarder en base
-            $entityManager->flush();
+    //         // Sauvegarder en base
+    //         $entityManager->flush();
 
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'processed' => $processed,
-                'contract_equipments' => $contractEquipments,
-                'off_contract_equipments' => $offContractEquipments,
-                'errors' => $errors,
-                'message' => "Traitement terminé pour l'agence {$agencyCode}: {$processed} formulaires traités"
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'processed' => $processed,
+    //             'contract_equipments' => $contractEquipments,
+    //             'off_contract_equipments' => $offContractEquipments,
+    //             'errors' => $errors,
+    //             'message' => "Traitement terminé pour l'agence {$agencyCode}: {$processed} formulaires traités"
+    //         ]);
 
-        } catch (\Exception $e) {
-            error_log("Erreur generale agence {$agencyCode}: " . $e->getMessage());
-            return new JsonResponse([
-                'success' => false,
-                'agency' => $agencyCode,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         error_log("Erreur generale agence {$agencyCode}: " . $e->getMessage());
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'agency' => $agencyCode,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * NOUVELLE MÉTHODE : Récupérer TOUS les formulaires de maintenance (pas seulement les non lus)
@@ -3818,329 +3818,329 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Version améliorée du traitement par lots avec photos dans Form
      */
-    #[Route('/api/maintenance/process-chunked-with-form-photos/{agencyCode}', name: 'app_maintenance_process_chunked_with_form_photos', methods: ['GET'])]
-    public function processMaintenanceChunkedWithFormPhotos(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-chunked-with-form-photos/{agencyCode}', name: 'app_maintenance_process_chunked_with_form_photos', methods: ['GET'])]
+    // public function processMaintenanceChunkedWithFormPhotos(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
+    //     if ($agencyCode !== 'S140') {
+    //         return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+    //     }
 
-        // Configuration optimisée
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 120);
+    //     // Configuration optimisée
+    //     ini_set('memory_limit', '512M');
+    //     ini_set('max_execution_time', 120);
         
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id');
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
-        $startOffset = (int) $request->query->get('offset', 0);
+    //     $formId = $request->query->get('form_id', '1088761');
+    //     $entryId = $request->query->get('entry_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15);
+    //     $startOffset = (int) $request->query->get('offset', 0);
 
-        if (!$entryId) {
-            return new JsonResponse([
-                'error' => 'Paramètre entry_id requis',
-                'example' => '/api/maintenance/process-chunked-with-form-photos/S140?entry_id=233668811&chunk_size=15&offset=0'
-            ], 400);
-        }
+    //     if (!$entryId) {
+    //         return new JsonResponse([
+    //             'error' => 'Paramètre entry_id requis',
+    //             'example' => '/api/maintenance/process-chunked-with-form-photos/S140?entry_id=233668811&chunk_size=15&offset=0'
+    //         ], 400);
+    //     }
 
-        try {
-            // Récupérer les données
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
+    //     try {
+    //         // Récupérer les données
+    //         $detailResponse = $this->client->request(
+    //             'GET',
+    //             'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //             ]
+    //         );
 
-            $detailData = $detailResponse->toArray();
+    //         $detailData = $detailResponse->toArray();
             
-            if (!isset($detailData['data']['fields'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Formulaire sans données valides'
-                ], 400);
-            }
+    //         if (!isset($detailData['data']['fields'])) {
+    //             return new JsonResponse([
+    //                 'success' => false,
+    //                 'error' => 'Formulaire sans données valides'
+    //             ], 400);
+    //         }
 
-            $fields = $detailData['data']['fields'];
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['tableau2']['value'] ?? [];
+    //         $fields = $detailData['data']['fields'];
+    //         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
+    //         $offContractEquipments = $fields['tableau2']['value'] ?? [];
             
-            // Combiner tous les équipements
-            $allEquipments = [];
-            foreach ($contractEquipments as $index => $equipment) {
-                $allEquipments[] = ['type' => 'contract', 'data' => $equipment, 'index' => $index];
-            }
-            foreach ($offContractEquipments as $index => $equipment) {
-                $allEquipments[] = ['type' => 'off_contract', 'data' => $equipment, 'index' => $index];
-            }
+    //         // Combiner tous les équipements
+    //         $allEquipments = [];
+    //         foreach ($contractEquipments as $index => $equipment) {
+    //             $allEquipments[] = ['type' => 'contract', 'data' => $equipment, 'index' => $index];
+    //         }
+    //         foreach ($offContractEquipments as $index => $equipment) {
+    //             $allEquipments[] = ['type' => 'off_contract', 'data' => $equipment, 'index' => $index];
+    //         }
 
-            $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
+    //         $chunk = array_slice($allEquipments, $startOffset, $chunkSize);
             
-            if (empty($chunk)) {
-                return new JsonResponse([
-                    'success' => true,
-                    'message' => 'Lot vide - traitement terminé',
-                    'total_equipments' => count($allEquipments),
-                    'processed_offset' => $startOffset,
-                    'is_complete' => true
-                ]);
-            }
+    //         if (empty($chunk)) {
+    //             return new JsonResponse([
+    //                 'success' => true,
+    //                 'message' => 'Lot vide - traitement terminé',
+    //                 'total_equipments' => count($allEquipments),
+    //                 'processed_offset' => $startOffset,
+    //                 'is_complete' => true
+    //             ]);
+    //         }
 
-            $processedEquipments = 0;
-            $contractProcessed = 0;
-            $offContractProcessed = 0;
-            $photosProcessed = 0;
-            $errors = [];
+    //         $processedEquipments = 0;
+    //         $contractProcessed = 0;
+    //         $offContractProcessed = 0;
+    //         $photosProcessed = 0;
+    //         $errors = [];
 
-            // Traiter le lot
-            foreach ($chunk as $equipmentData) {
-                try {
-                    // 1. Créer l'équipement
-                    $equipement = new EquipementS140();
-                    $this->setRealCommonDataFixed($equipement, $fields);
+    //         // Traiter le lot
+    //         foreach ($chunk as $equipmentData) {
+    //             try {
+    //                 // 1. Créer l'équipement
+    //                 $equipement = new EquipementS140();
+    //                 $this->setRealCommonDataFixed($equipement, $fields);
                     
-                    if ($equipmentData['type'] === 'contract') {
-                        // Utiliser la version avec photos
-                        $this->setRealContractDataWithFormPhotos(
-                            $equipement, 
-                            $equipmentData['data'], 
-                            $fields, 
-                            $formId, 
-                            $entryId, 
-                            $entityManager
-                        );
-                        $contractProcessed++;
-                    } else {
-                        // Pour les équipements hors contrat (à adapter si nécessaire)
-                        $this->setRealContractDataFixed($equipement, $equipmentData['data']);
-                        $offContractProcessed++;
-                    }
+    //                 if ($equipmentData['type'] === 'contract') {
+    //                     // Utiliser la version avec photos
+    //                     $this->setRealContractDataWithFormPhotos(
+    //                         $equipement, 
+    //                         $equipmentData['data'], 
+    //                         $fields, 
+    //                         $formId, 
+    //                         $entryId, 
+    //                         $entityManager
+    //                     );
+    //                     $contractProcessed++;
+    //                 } else {
+    //                     // Pour les équipements hors contrat (à adapter si nécessaire)
+    //                     $this->setRealContractDataFixed($equipement, $equipmentData['data']);
+    //                     $offContractProcessed++;
+    //                 }
                     
-                    $entityManager->persist($equipement);
-                    $processedEquipments++;
-                    $photosProcessed++; // Compter les photos traitées
+    //                 $entityManager->persist($equipement);
+    //                 $processedEquipments++;
+    //                 $photosProcessed++; // Compter les photos traitées
                     
-                    // Sauvegarder tous les 5 équipements
-                    if ($processedEquipments % 5 === 0) {
-                        $entityManager->flush();
-                        $entityManager->clear();
-                        gc_collect_cycles();
-                    }
+    //                 // Sauvegarder tous les 5 équipements
+    //                 if ($processedEquipments % 5 === 0) {
+    //                     $entityManager->flush();
+    //                     $entityManager->clear();
+    //                     gc_collect_cycles();
+    //                 }
                     
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'equipment_index' => $equipmentData['index'],
-                        'type' => $equipmentData['type'],
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
+    //             } catch (\Exception $e) {
+    //                 $errors[] = [
+    //                     'equipment_index' => $equipmentData['index'],
+    //                     'type' => $equipmentData['type'],
+    //                     'error' => $e->getMessage()
+    //                 ];
+    //             }
+    //         }
 
-            // Sauvegarde finale
-            $entityManager->flush();
-            $entityManager->clear();
+    //         // Sauvegarde finale
+    //         $entityManager->flush();
+    //         $entityManager->clear();
 
-            $nextOffset = $startOffset + $chunkSize;
-            $isComplete = $nextOffset >= count($allEquipments);
+    //         $nextOffset = $startOffset + $chunkSize;
+    //         $isComplete = $nextOffset >= count($allEquipments);
             
-            // Marquer comme lu seulement si terminé
-            if ($isComplete) {
-                $this->markFormAsRead($formId, $entryId);
-            }
+    //         // Marquer comme lu seulement si terminé
+    //         if ($isComplete) {
+    //             $this->markFormAsRead($formId, $entryId);
+    //         }
 
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'client_name' => $fields['nom_client']['value'] ?? '',
-                'batch_info' => [
-                    'total_equipments' => count($allEquipments),
-                    'processed_in_this_batch' => $processedEquipments,
-                    'contract_processed' => $contractProcessed,
-                    'off_contract_processed' => $offContractProcessed,
-                    'photos_processed' => $photosProcessed,
-                    'start_offset' => $startOffset,
-                    'chunk_size' => $chunkSize,
-                    'next_offset' => $nextOffset,
-                    'is_complete' => $isComplete
-                ],
-                'errors' => $errors,
-                'next_call' => $isComplete ? null : 
-                    "/api/maintenance/process-chunked-with-form-photos/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
-                'message' => $isComplete ? 
-                    "Traitement terminé: {$processedEquipments} équipements et {$photosProcessed} sets de photos" :
-                    "Lot traité: {$processedEquipments} équipements et {$photosProcessed} sets de photos. Appeler next_call pour continuer"
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'entry_id' => $entryId,
+    //             'client_name' => $fields['nom_client']['value'] ?? '',
+    //             'batch_info' => [
+    //                 'total_equipments' => count($allEquipments),
+    //                 'processed_in_this_batch' => $processedEquipments,
+    //                 'contract_processed' => $contractProcessed,
+    //                 'off_contract_processed' => $offContractProcessed,
+    //                 'photos_processed' => $photosProcessed,
+    //                 'start_offset' => $startOffset,
+    //                 'chunk_size' => $chunkSize,
+    //                 'next_offset' => $nextOffset,
+    //                 'is_complete' => $isComplete
+    //             ],
+    //             'errors' => $errors,
+    //             'next_call' => $isComplete ? null : 
+    //                 "/api/maintenance/process-chunked-with-form-photos/S140?form_id={$formId}&entry_id={$entryId}&offset={$nextOffset}&chunk_size={$chunkSize}",
+    //             'message' => $isComplete ? 
+    //                 "Traitement terminé: {$processedEquipments} équipements et {$photosProcessed} sets de photos" :
+    //                 "Lot traité: {$processedEquipments} équipements et {$photosProcessed} sets de photos. Appeler next_call pour continuer"
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Version automatique complète avec photos dans Form
      */
-    #[Route('/api/maintenance/process-auto-with-form-photos/{agencyCode}', name: 'app_maintenance_process_auto_with_form_photos', methods: ['GET'])]
-    public function processMaintenanceAutoWithFormPhotos(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-auto-with-form-photos/{agencyCode}', name: 'app_maintenance_process_auto_with_form_photos', methods: ['GET'])]
+    // public function processMaintenanceAutoWithFormPhotos(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
+    //     if ($agencyCode !== 'S140') {
+    //         return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
+    //     }
 
-        // Configuration optimisée
-        ini_set('memory_limit', '1G');
-        ini_set('max_execution_time', 600); // 10 minutes max
+    //     // Configuration optimisée
+    //     ini_set('memory_limit', '1G');
+    //     ini_set('max_execution_time', 600); // 10 minutes max
         
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id');
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
+    //     $formId = $request->query->get('form_id', '1088761');
+    //     $entryId = $request->query->get('entry_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15);
 
-        if (!$entryId) {
-            return new JsonResponse([
-                'error' => 'Paramètre entry_id requis',
-                'example' => '/api/maintenance/process-auto-with-form-photos/S140?entry_id=233668811&chunk_size=15'
-            ], 400);
-        }
+    //     if (!$entryId) {
+    //         return new JsonResponse([
+    //             'error' => 'Paramètre entry_id requis',
+    //             'example' => '/api/maintenance/process-auto-with-form-photos/S140?entry_id=233668811&chunk_size=15'
+    //         ], 400);
+    //     }
 
-        try {
-            // 1. Analyser le formulaire
-            $analysisResponse = $this->analyzeMaintenanceForm($agencyCode, $request);
-            $analysisData = json_decode($analysisResponse->getContent(), true);
+    //     try {
+    //         // 1. Analyser le formulaire
+    //         $analysisResponse = $this->analyzeMaintenanceForm($agencyCode, $request);
+    //         $analysisData = json_decode($analysisResponse->getContent(), true);
             
-            if (!$analysisData['success']) {
-                return new JsonResponse(['error' => 'Erreur analyse formulaire'], 500);
-            }
+    //         if (!$analysisData['success']) {
+    //             return new JsonResponse(['error' => 'Erreur analyse formulaire'], 500);
+    //         }
             
-            $totalEquipments = $analysisData['equipment_analysis']['total_equipments'];
-            $recommendedChunkSize = $analysisData['equipment_analysis']['recommended_chunk_size'];
+    //         $totalEquipments = $analysisData['equipment_analysis']['total_equipments'];
+    //         $recommendedChunkSize = $analysisData['equipment_analysis']['recommended_chunk_size'];
             
-            // Utiliser la taille recommandée si pas spécifiée
-            if ($request->query->get('chunk_size') === null) {
-                $chunkSize = $recommendedChunkSize;
-            }
+    //         // Utiliser la taille recommandée si pas spécifiée
+    //         if ($request->query->get('chunk_size') === null) {
+    //             $chunkSize = $recommendedChunkSize;
+    //         }
             
-            // 2. Traitement automatique par lots
-            $offset = 0;
-            $allResults = [];
-            $totalProcessed = 0;
-            $totalPhotos = 0;
-            $totalErrors = 0;
-            $startTime = time();
+    //         // 2. Traitement automatique par lots
+    //         $offset = 0;
+    //         $allResults = [];
+    //         $totalProcessed = 0;
+    //         $totalPhotos = 0;
+    //         $totalErrors = 0;
+    //         $startTime = time();
             
-            while ($offset < $totalEquipments) {
-                try {
-                    // Appel interne au traitement par lot avec photos
-                    $batchRequest = Request::create(
-                        '/api/maintenance/process-chunked-with-form-photos/' . $agencyCode,
-                        'GET',
-                        [
-                            'form_id' => $formId,
-                            'entry_id' => $entryId,
-                            'chunk_size' => $chunkSize,
-                            'offset' => $offset
-                        ]
-                    );
+    //         while ($offset < $totalEquipments) {
+    //             try {
+    //                 // Appel interne au traitement par lot avec photos
+    //                 $batchRequest = Request::create(
+    //                     '/api/maintenance/process-chunked-with-form-photos/' . $agencyCode,
+    //                     'GET',
+    //                     [
+    //                         'form_id' => $formId,
+    //                         'entry_id' => $entryId,
+    //                         'chunk_size' => $chunkSize,
+    //                         'offset' => $offset
+    //                     ]
+    //                 );
                     
-                    $batchResponse = $this->processMaintenanceChunkedWithFormPhotos($agencyCode, $entityManager, $batchRequest);
-                    $batchData = json_decode($batchResponse->getContent(), true);
+    //                 $batchResponse = $this->processMaintenanceChunkedWithFormPhotos($agencyCode, $entityManager, $batchRequest);
+    //                 $batchData = json_decode($batchResponse->getContent(), true);
                     
-                    if ($batchData['success']) {
-                        $processed = $batchData['batch_info']['processed_in_this_batch'];
-                        $photos = $batchData['batch_info']['photos_processed'];
-                        $totalProcessed += $processed;
-                        $totalPhotos += $photos;
+    //                 if ($batchData['success']) {
+    //                     $processed = $batchData['batch_info']['processed_in_this_batch'];
+    //                     $photos = $batchData['batch_info']['photos_processed'];
+    //                     $totalProcessed += $processed;
+    //                     $totalPhotos += $photos;
                         
-                        $allResults[] = [
-                            'offset' => $offset,
-                            'processed' => $processed,
-                            'photos' => $photos,
-                            'contract_equipments' => $batchData['batch_info']['contract_processed'],
-                            'off_contract_equipments' => $batchData['batch_info']['off_contract_processed'],
-                            'errors' => count($batchData['errors'])
-                        ];
+    //                     $allResults[] = [
+    //                         'offset' => $offset,
+    //                         'processed' => $processed,
+    //                         'photos' => $photos,
+    //                         'contract_equipments' => $batchData['batch_info']['contract_processed'],
+    //                         'off_contract_equipments' => $batchData['batch_info']['off_contract_processed'],
+    //                         'errors' => count($batchData['errors'])
+    //                     ];
                         
-                        $totalErrors += count($batchData['errors']);
+    //                     $totalErrors += count($batchData['errors']);
                         
-                        // Mettre à jour l'offset
-                        $offset = $batchData['batch_info']['next_offset'];
+    //                     // Mettre à jour l'offset
+    //                     $offset = $batchData['batch_info']['next_offset'];
                         
-                        // Pause entre lots
-                        sleep(1);
+    //                     // Pause entre lots
+    //                     sleep(1);
                         
-                        // Vérifier si terminé
-                        if ($batchData['batch_info']['is_complete']) {
-                            break;
-                        }
+    //                     // Vérifier si terminé
+    //                     if ($batchData['batch_info']['is_complete']) {
+    //                         break;
+    //                     }
                         
-                    } else {
-                        $totalErrors++;
-                        $allResults[] = [
-                            'offset' => $offset,
-                            'error' => $batchData['error']
-                        ];
-                        break;
-                    }
+    //                 } else {
+    //                     $totalErrors++;
+    //                     $allResults[] = [
+    //                         'offset' => $offset,
+    //                         'error' => $batchData['error']
+    //                     ];
+    //                     break;
+    //                 }
                     
-                    // Sécurité : éviter les boucles infinies
-                    if ((time() - $startTime) > 580) { // 9m40s max
-                        break;
-                    }
+    //                 // Sécurité : éviter les boucles infinies
+    //                 if ((time() - $startTime) > 580) { // 9m40s max
+    //                     break;
+    //                 }
                     
-                } catch (\Exception $e) {
-                    $totalErrors++;
-                    $allResults[] = [
-                        'offset' => $offset,
-                        'error' => $e->getMessage()
-                    ];
-                    break;
-                }
-            }
+    //             } catch (\Exception $e) {
+    //                 $totalErrors++;
+    //                 $allResults[] = [
+    //                     'offset' => $offset,
+    //                     'error' => $e->getMessage()
+    //                 ];
+    //                 break;
+    //             }
+    //         }
             
-            $endTime = time();
-            $processingTime = $endTime - $startTime;
+    //         $endTime = time();
+    //         $processingTime = $endTime - $startTime;
             
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'processing_summary' => [
-                    'total_equipments_in_form' => $totalEquipments,
-                    'total_processed' => $totalProcessed,
-                    'total_photos_saved' => $totalPhotos,
-                    'total_errors' => $totalErrors,
-                    'processing_time_seconds' => $processingTime,
-                    'chunk_size_used' => $chunkSize,
-                    'batches_processed' => count($allResults)
-                ],
-                'batch_details' => $allResults,
-                'completion_status' => $offset >= $totalEquipments ? 'completed' : 'partial',
-                'message' => $offset >= $totalEquipments ? 
-                    "Traitement automatique terminé: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s" :
-                    "Traitement partiel: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s"
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'entry_id' => $entryId,
+    //             'processing_summary' => [
+    //                 'total_equipments_in_form' => $totalEquipments,
+    //                 'total_processed' => $totalProcessed,
+    //                 'total_photos_saved' => $totalPhotos,
+    //                 'total_errors' => $totalErrors,
+    //                 'processing_time_seconds' => $processingTime,
+    //                 'chunk_size_used' => $chunkSize,
+    //                 'batches_processed' => count($allResults)
+    //             ],
+    //             'batch_details' => $allResults,
+    //             'completion_status' => $offset >= $totalEquipments ? 'completed' : 'partial',
+    //             'message' => $offset >= $totalEquipments ? 
+    //                 "Traitement automatique terminé: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s" :
+    //                 "Traitement partiel: {$totalProcessed}/{$totalEquipments} équipements et {$totalPhotos} sets de photos traités en {$processingTime}s"
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
     * Mapping des form_id par agence basé sur "List all kizeo forms.json"
@@ -4168,156 +4168,156 @@ class SimplifiedMaintenanceController extends AbstractController
      * Route principale : Traitement automatique complet par form_id
      * Usage: GET /api/maintenance/process-form/{agencyCode}?form_id=1088761&chunk_size=15
      */
-    #[Route('/api/maintenance/process-form/{agencyCode}', name: 'app_maintenance_process_form', methods: ['GET'])]
-    public function processMaintenanceByFormId(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-form/{agencyCode}', name: 'app_maintenance_process_form', methods: ['GET'])]
+    // public function processMaintenanceByFormId(
+    //     string $agencyCode,
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        // Configuration optimisée
-        ini_set('memory_limit', '2G');
-        ini_set('max_execution_time', 1800); // 30 minutes max
+    //     // Configuration optimisée
+    //     ini_set('memory_limit', '2G');
+    //     ini_set('max_execution_time', 1800); // 30 minutes max
         
-        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+    //     $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
-        if (!in_array($agencyCode, $validAgencies)) {
-            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
-        }
+    //     if (!in_array($agencyCode, $validAgencies)) {
+    //         return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
+    //     }
 
-        $formId = $request->query->get('form_id');
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
-        $limit = (int) $request->query->get('limit', 50); // Limiter le nombre de soumissions à traiter
+    //     $formId = $request->query->get('form_id');
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15);
+    //     $limit = (int) $request->query->get('limit', 50); // Limiter le nombre de soumissions à traiter
         
-        // Si pas de form_id fourni, utiliser le mapping par défaut
-        if (!$formId) {
-            $agencyMapping = $this->getAgencyFormMapping();
-            $formId = $agencyMapping[$agencyCode] ?? null;
+    //     // Si pas de form_id fourni, utiliser le mapping par défaut
+    //     if (!$formId) {
+    //         $agencyMapping = $this->getAgencyFormMapping();
+    //         $formId = $agencyMapping[$agencyCode] ?? null;
             
-            if (!$formId) {
-                return new JsonResponse([
-                    'error' => 'Aucun form_id trouvé pour l\'agence ' . $agencyCode,
-                    'available_agencies' => array_keys($agencyMapping)
-                ], 400);
-            }
-        }
+    //         if (!$formId) {
+    //             return new JsonResponse([
+    //                 'error' => 'Aucun form_id trouvé pour l\'agence ' . $agencyCode,
+    //                 'available_agencies' => array_keys($agencyMapping)
+    //             ], 400);
+    //         }
+    //     }
 
-        try {
-            $startTime = time();
+    //     try {
+    //         $startTime = time();
             
-            // 1. Récupérer toutes les soumissions du formulaire
-            $submissions = $this->getFormSubmissions($formId, $agencyCode, $limit);
+    //         // 1. Récupérer toutes les soumissions du formulaire
+    //         $submissions = $this->getFormSubmissions($formId, $agencyCode, $limit);
             
-            if (empty($submissions)) {
-                return new JsonResponse([
-                    'success' => true,
-                    'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
-                    'agency' => $agencyCode,
-                    'form_id' => $formId,
-                    'processed_submissions' => 0
-                ]);
-            }
+    //         if (empty($submissions)) {
+    //             return new JsonResponse([
+    //                 'success' => true,
+    //                 'message' => 'Aucune soumission trouvée pour le formulaire ' . $formId,
+    //                 'agency' => $agencyCode,
+    //                 'form_id' => $formId,
+    //                 'processed_submissions' => 0
+    //             ]);
+    //         }
             
-            // 2. Traiter chaque soumission automatiquement
-            $results = [];
-            $totalEquipments = 0;
-            $totalPhotos = 0;
-            $totalErrors = 0;
-            $processedSubmissions = 0;
+    //         // 2. Traiter chaque soumission automatiquement
+    //         $results = [];
+    //         $totalEquipments = 0;
+    //         $totalPhotos = 0;
+    //         $totalErrors = 0;
+    //         $processedSubmissions = 0;
             
-            foreach ($submissions as $submission) {
-                try {
-                    // Traitement automatique de cette soumission
-                    $submissionRequest = Request::create(
-                        '/api/maintenance/process-auto-with-form-photos/' . $agencyCode,
-                        'GET',
-                        [
-                            'form_id' => $formId,
-                            'entry_id' => $submission['entry_id'],
-                            'chunk_size' => $chunkSize
-                        ]
-                    );
+    //         foreach ($submissions as $submission) {
+    //             try {
+    //                 // Traitement automatique de cette soumission
+    //                 $submissionRequest = Request::create(
+    //                     '/api/maintenance/process-auto-with-form-photos/' . $agencyCode,
+    //                     'GET',
+    //                     [
+    //                         'form_id' => $formId,
+    //                         'entry_id' => $submission['entry_id'],
+    //                         'chunk_size' => $chunkSize
+    //                     ]
+    //                 );
                     
-                    $submissionResponse = $this->processMaintenanceAutoWithFormPhotos($agencyCode, $entityManager, $submissionRequest);
-                    $submissionData = json_decode($submissionResponse->getContent(), true);
+    //                 $submissionResponse = $this->processMaintenanceAutoWithFormPhotos($agencyCode, $entityManager, $submissionRequest);
+    //                 $submissionData = json_decode($submissionResponse->getContent(), true);
                     
-                    if ($submissionData['success']) {
-                        $equipments = $submissionData['processing_summary']['total_processed'];
-                        $photos = $submissionData['processing_summary']['total_photos_saved'];
-                        $processingTime = $submissionData['processing_summary']['processing_time_seconds'];
+    //                 if ($submissionData['success']) {
+    //                     $equipments = $submissionData['processing_summary']['total_processed'];
+    //                     $photos = $submissionData['processing_summary']['total_photos_saved'];
+    //                     $processingTime = $submissionData['processing_summary']['processing_time_seconds'];
                         
-                        $totalEquipments += $equipments;
-                        $totalPhotos += $photos;
-                        $processedSubmissions++;
+    //                     $totalEquipments += $equipments;
+    //                     $totalPhotos += $photos;
+    //                     $processedSubmissions++;
                         
-                        $results[] = [
-                            'entry_id' => $submission['entry_id'],
-                            'client_name' => $submission['client_name'],
-                            'status' => 'success',
-                            'equipments_processed' => $equipments,
-                            'photos_saved' => $photos,
-                            'processing_time' => $processingTime
-                        ];
-                    } else {
-                        $totalErrors++;
-                        $results[] = [
-                            'entry_id' => $submission['entry_id'],
-                            'client_name' => $submission['client_name'],
-                            'status' => 'error',
-                            'error' => $submissionData['error'] ?? 'Erreur inconnue'
-                        ];
-                    }
+    //                     $results[] = [
+    //                         'entry_id' => $submission['entry_id'],
+    //                         'client_name' => $submission['client_name'],
+    //                         'status' => 'success',
+    //                         'equipments_processed' => $equipments,
+    //                         'photos_saved' => $photos,
+    //                         'processing_time' => $processingTime
+    //                     ];
+    //                 } else {
+    //                     $totalErrors++;
+    //                     $results[] = [
+    //                         'entry_id' => $submission['entry_id'],
+    //                         'client_name' => $submission['client_name'],
+    //                         'status' => 'error',
+    //                         'error' => $submissionData['error'] ?? 'Erreur inconnue'
+    //                     ];
+    //                 }
                     
-                    // Pause entre soumissions pour éviter la surcharge
-                    sleep(2);
+    //                 // Pause entre soumissions pour éviter la surcharge
+    //                 sleep(2);
                     
-                    // Sécurité : vérifier le temps écoulé
-                    if ((time() - $startTime) > 1750) { // 29m10s max
-                        break;
-                    }
+    //                 // Sécurité : vérifier le temps écoulé
+    //                 if ((time() - $startTime) > 1750) { // 29m10s max
+    //                     break;
+    //                 }
                     
-                } catch (\Exception $e) {
-                    $totalErrors++;
-                    $results[] = [
-                        'entry_id' => $submission['entry_id'],
-                        'client_name' => $submission['client_name'] ?? 'N/A',
-                        'status' => 'error',
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
+    //             } catch (\Exception $e) {
+    //                 $totalErrors++;
+    //                 $results[] = [
+    //                     'entry_id' => $submission['entry_id'],
+    //                     'client_name' => $submission['client_name'] ?? 'N/A',
+    //                     'status' => 'error',
+    //                     'error' => $e->getMessage()
+    //                 ];
+    //             }
+    //         }
             
-            $endTime = time();
-            $totalProcessingTime = $endTime - $startTime;
+    //         $endTime = time();
+    //         $totalProcessingTime = $endTime - $startTime;
             
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'processing_summary' => [
-                    'total_submissions_found' => count($submissions),
-                    'processed_submissions' => $processedSubmissions,
-                    'failed_submissions' => $totalErrors,
-                    'total_equipments_processed' => $totalEquipments,
-                    'total_photos_saved' => $totalPhotos,
-                    'total_processing_time_seconds' => $totalProcessingTime,
-                    'chunk_size_used' => $chunkSize
-                ],
-                'submission_details' => $results,
-                'completion_status' => ($processedSubmissions + $totalErrors) >= count($submissions) ? 'completed' : 'partial',
-                'message' => "Traitement formulaire {$formId} terminé: {$processedSubmissions}/" . count($submissions) . 
-                            " soumissions traitées, {$totalEquipments} équipements, {$totalPhotos} photos en {$totalProcessingTime}s"
-            ]);
+    //         return new JsonResponse([
+    //             'success' => true,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'processing_summary' => [
+    //                 'total_submissions_found' => count($submissions),
+    //                 'processed_submissions' => $processedSubmissions,
+    //                 'failed_submissions' => $totalErrors,
+    //                 'total_equipments_processed' => $totalEquipments,
+    //                 'total_photos_saved' => $totalPhotos,
+    //                 'total_processing_time_seconds' => $totalProcessingTime,
+    //                 'chunk_size_used' => $chunkSize
+    //             ],
+    //             'submission_details' => $results,
+    //             'completion_status' => ($processedSubmissions + $totalErrors) >= count($submissions) ? 'completed' : 'partial',
+    //             'message' => "Traitement formulaire {$formId} terminé: {$processedSubmissions}/" . count($submissions) . 
+    //                         " soumissions traitées, {$totalEquipments} équipements, {$totalPhotos} photos en {$totalProcessingTime}s"
+    //         ]);
 
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'success' => false,
+    //             'agency' => $agencyCode,
+    //             'form_id' => $formId,
+    //             'error' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 
     /**
      * Récupérer toutes les soumissions d'un formulaire pour une agence
@@ -4452,97 +4452,97 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Route pour traiter toutes les agences automatiquement
      */
-    #[Route('/api/maintenance/process-all-agencies', name: 'app_maintenance_process_all_agencies', methods: ['GET'])]
-    public function processAllAgencies(
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/process-all-agencies', name: 'app_maintenance_process_all_agencies', methods: ['GET'])]
+    // public function processAllAgencies(
+    //     EntityManagerInterface $entityManager,
+    //     Request $request
+    // ): JsonResponse {
         
-        // Configuration pour traitement long
-        ini_set('memory_limit', '4G');
-        ini_set('max_execution_time', 0); // Pas de limite
+    //     // Configuration pour traitement long
+    //     ini_set('memory_limit', '4G');
+    //     ini_set('max_execution_time', 0); // Pas de limite
         
-        $agencyMapping = $this->getAgencyFormMapping();
-        $chunkSize = (int) $request->query->get('chunk_size', 15);
-        $limitPerAgency = (int) $request->query->get('limit_per_agency', 20);
+    //     $agencyMapping = $this->getAgencyFormMapping();
+    //     $chunkSize = (int) $request->query->get('chunk_size', 15);
+    //     $limitPerAgency = (int) $request->query->get('limit_per_agency', 20);
         
-        $results = [];
-        $totalEquipments = 0;
-        $totalPhotos = 0;
-        $totalSubmissions = 0;
-        $startTime = time();
+    //     $results = [];
+    //     $totalEquipments = 0;
+    //     $totalPhotos = 0;
+    //     $totalSubmissions = 0;
+    //     $startTime = time();
         
-        foreach ($agencyMapping as $agencyCode => $formId) {
-            try {
-                error_log("Traitement de l'agence {$agencyCode} avec le formulaire {$formId}");
+    //     foreach ($agencyMapping as $agencyCode => $formId) {
+    //         try {
+    //             error_log("Traitement de l'agence {$agencyCode} avec le formulaire {$formId}");
                 
-                $agencyRequest = Request::create(
-                    '/api/maintenance/process-form/' . $agencyCode,
-                    'GET',
-                    [
-                        'form_id' => $formId,
-                        'chunk_size' => $chunkSize,
-                        'limit' => $limitPerAgency
-                    ]
-                );
+    //             $agencyRequest = Request::create(
+    //                 '/api/maintenance/process-form/' . $agencyCode,
+    //                 'GET',
+    //                 [
+    //                     'form_id' => $formId,
+    //                     'chunk_size' => $chunkSize,
+    //                     'limit' => $limitPerAgency
+    //                 ]
+    //             );
                 
-                $agencyResponse = $this->processMaintenanceByFormId($agencyCode, $entityManager, $agencyRequest);
-                $agencyData = json_decode($agencyResponse->getContent(), true);
+    //             $agencyResponse = $this->processMaintenanceByFormId($agencyCode, $entityManager, $agencyRequest);
+    //             $agencyData = json_decode($agencyResponse->getContent(), true);
                 
-                if ($agencyData['success']) {
-                    $equipments = $agencyData['processing_summary']['total_equipments_processed'];
-                    $photos = $agencyData['processing_summary']['total_photos_saved'];
-                    $submissions = $agencyData['processing_summary']['processed_submissions'];
+    //             if ($agencyData['success']) {
+    //                 $equipments = $agencyData['processing_summary']['total_equipments_processed'];
+    //                 $photos = $agencyData['processing_summary']['total_photos_saved'];
+    //                 $submissions = $agencyData['processing_summary']['processed_submissions'];
                     
-                    $totalEquipments += $equipments;
-                    $totalPhotos += $photos;
-                    $totalSubmissions += $submissions;
+    //                 $totalEquipments += $equipments;
+    //                 $totalPhotos += $photos;
+    //                 $totalSubmissions += $submissions;
                     
-                    $results[$agencyCode] = [
-                        'status' => 'success',
-                        'form_id' => $formId,
-                        'processed_submissions' => $submissions,
-                        'equipments_processed' => $equipments,
-                        'photos_saved' => $photos,
-                        'processing_time' => $agencyData['processing_summary']['total_processing_time_seconds']
-                    ];
-                } else {
-                    $results[$agencyCode] = [
-                        'status' => 'error',
-                        'form_id' => $formId,
-                        'error' => $agencyData['error']
-                    ];
-                }
+    //                 $results[$agencyCode] = [
+    //                     'status' => 'success',
+    //                     'form_id' => $formId,
+    //                     'processed_submissions' => $submissions,
+    //                     'equipments_processed' => $equipments,
+    //                     'photos_saved' => $photos,
+    //                     'processing_time' => $agencyData['processing_summary']['total_processing_time_seconds']
+    //                 ];
+    //             } else {
+    //                 $results[$agencyCode] = [
+    //                     'status' => 'error',
+    //                     'form_id' => $formId,
+    //                     'error' => $agencyData['error']
+    //                 ];
+    //             }
                 
-                // Pause entre agences
-                sleep(5);
+    //             // Pause entre agences
+    //             sleep(5);
                 
-            } catch (\Exception $e) {
-                $results[$agencyCode] = [
-                    'status' => 'error',
-                    'form_id' => $formId,
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
+    //         } catch (\Exception $e) {
+    //             $results[$agencyCode] = [
+    //                 'status' => 'error',
+    //                 'form_id' => $formId,
+    //                 'error' => $e->getMessage()
+    //             ];
+    //         }
+    //     }
         
-        $endTime = time();
-        $totalTime = $endTime - $startTime;
+    //     $endTime = time();
+    //     $totalTime = $endTime - $startTime;
         
-        return new JsonResponse([
-            'success' => true,
-            'processing_summary' => [
-                'total_agencies_processed' => count($agencyMapping),
-                'total_submissions_processed' => $totalSubmissions,
-                'total_equipments_processed' => $totalEquipments,
-                'total_photos_saved' => $totalPhotos,
-                'total_processing_time_seconds' => $totalTime,
-                'average_time_per_agency' => round($totalTime / count($agencyMapping), 2)
-            ],
-            'agency_details' => $results,
-            'message' => "Traitement global terminé: {$totalSubmissions} soumissions, {$totalEquipments} équipements, {$totalPhotos} photos en {$totalTime}s"
-        ]);
-    }
+    //     return new JsonResponse([
+    //         'success' => true,
+    //         'processing_summary' => [
+    //             'total_agencies_processed' => count($agencyMapping),
+    //             'total_submissions_processed' => $totalSubmissions,
+    //             'total_equipments_processed' => $totalEquipments,
+    //             'total_photos_saved' => $totalPhotos,
+    //             'total_processing_time_seconds' => $totalTime,
+    //             'average_time_per_agency' => round($totalTime / count($agencyMapping), 2)
+    //         ],
+    //         'agency_details' => $results,
+    //         'message' => "Traitement global terminé: {$totalSubmissions} soumissions, {$totalEquipments} équipements, {$totalPhotos} photos en {$totalTime}s"
+    //     ]);
+    // }
 
     /**
      * PROCESSEUR OPTIMISÉ avec déduplication et gestion mémoire améliorée
@@ -6046,120 +6046,120 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * SOLUTION 4: Test de connectivité simple
      */
-    #[Route('/api/maintenance/test-connectivity/{agencyCode}', name: 'app_maintenance_test_connectivity', methods: ['GET'])]
-    public function testConnectivity(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
+    // #[Route('/api/maintenance/test-connectivity/{agencyCode}', name: 'app_maintenance_test_connectivity', methods: ['GET'])]
+    // public function testConnectivity(
+    //     string $agencyCode,
+    //     Request $request
+    // ): JsonResponse {
         
-        $formId = $request->query->get('form_id');
+    //     $formId = $request->query->get('form_id');
         
-        if (!$formId) {
-            $agencyMapping = $this->getAgencyFormMapping();
-            $formId = $agencyMapping[$agencyCode] ?? null;
-        }
+    //     if (!$formId) {
+    //         $agencyMapping = $this->getAgencyFormMapping();
+    //         $formId = $agencyMapping[$agencyCode] ?? null;
+    //     }
         
-        $tests = [
-            'basic_info' => null,
-            'data_simple' => null,
-            'data_advanced' => null,
-            'single_entry' => null
-        ];
+    //     $tests = [
+    //         'basic_info' => null,
+    //         'data_simple' => null,
+    //         'data_advanced' => null,
+    //         'single_entry' => null
+    //     ];
         
-        // Test 1: Informations du formulaire
-        try {
-            $response = $this->client->request(
-                'GET',
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}",
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'timeout' => 30
-                ]
-            );
-            $tests['basic_info'] = ['status' => 'success', 'data' => $response->toArray()];
-        } catch (\Exception $e) {
-            $tests['basic_info'] = ['status' => 'error', 'error' => $e->getMessage()];
-        }
+    //     // Test 1: Informations du formulaire
+    //     try {
+    //         $response = $this->client->request(
+    //             'GET',
+    //             "https://forms.kizeo.com/rest/v3/forms/{$formId}",
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //                 'timeout' => 30
+    //             ]
+    //         );
+    //         $tests['basic_info'] = ['status' => 'success', 'data' => $response->toArray()];
+    //     } catch (\Exception $e) {
+    //         $tests['basic_info'] = ['status' => 'error', 'error' => $e->getMessage()];
+    //     }
         
-        // Test 2: Endpoint data simple
-        try {
-            $response = $this->client->request(
-                'GET',
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'query' => ['limit' => 1],
-                    'timeout' => 60
-                ]
-            );
-            $data = $response->toArray();
-            $tests['data_simple'] = [
-                'status' => 'success', 
-                'count' => count($data['data'] ?? []),
-                'first_entry_id' => $data['data'][0]['_id'] ?? null
-            ];
-        } catch (\Exception $e) {
-            $tests['data_simple'] = ['status' => 'error', 'error' => $e->getMessage()];
-        }
+    //     // Test 2: Endpoint data simple
+    //     try {
+    //         $response = $this->client->request(
+    //             'GET',
+    //             "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //                 'query' => ['limit' => 1],
+    //                 'timeout' => 60
+    //             ]
+    //         );
+    //         $data = $response->toArray();
+    //         $tests['data_simple'] = [
+    //             'status' => 'success', 
+    //             'count' => count($data['data'] ?? []),
+    //             'first_entry_id' => $data['data'][0]['_id'] ?? null
+    //         ];
+    //     } catch (\Exception $e) {
+    //         $tests['data_simple'] = ['status' => 'error', 'error' => $e->getMessage()];
+    //     }
         
-        // Test 3: Endpoint data advanced
-        try {
-            $response = $this->client->request(
-                'GET',
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/advanced",
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => ['limit' => 1, 'offset' => 0],
-                    'timeout' => 60
-                ]
-            );
-            $data = $response->toArray();
-            $tests['data_advanced'] = [
-                'status' => 'success',
-                'count' => count($data['data'] ?? [])
-            ];
-        } catch (\Exception $e) {
-            $tests['data_advanced'] = ['status' => 'error', 'error' => $e->getMessage()];
-        }
+    //     // Test 3: Endpoint data advanced
+    //     try {
+    //         $response = $this->client->request(
+    //             'GET',
+    //             "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/advanced",
+    //             [
+    //                 'headers' => [
+    //                     'Accept' => 'application/json',
+    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                 ],
+    //                 'json' => ['limit' => 1, 'offset' => 0],
+    //                 'timeout' => 60
+    //             ]
+    //         );
+    //         $data = $response->toArray();
+    //         $tests['data_advanced'] = [
+    //             'status' => 'success',
+    //             'count' => count($data['data'] ?? [])
+    //         ];
+    //     } catch (\Exception $e) {
+    //         $tests['data_advanced'] = ['status' => 'error', 'error' => $e->getMessage()];
+    //     }
         
-        // Test 4: Récupération d'une entrée spécifique
-        if ($tests['data_simple']['status'] === 'success' && isset($tests['data_simple']['first_entry_id'])) {
-            $entryId = $tests['data_simple']['first_entry_id'];
-            try {
-                $response = $this->client->request(
-                    'GET',
-                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$entryId}",
-                    [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 30
-                    ]
-                );
-                $tests['single_entry'] = ['status' => 'success', 'entry_id' => $entryId];
-            } catch (\Exception $e) {
-                $tests['single_entry'] = ['status' => 'error', 'error' => $e->getMessage()];
-            }
-        }
+    //     // Test 4: Récupération d'une entrée spécifique
+    //     if ($tests['data_simple']['status'] === 'success' && isset($tests['data_simple']['first_entry_id'])) {
+    //         $entryId = $tests['data_simple']['first_entry_id'];
+    //         try {
+    //             $response = $this->client->request(
+    //                 'GET',
+    //                 "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/{$entryId}",
+    //                 [
+    //                     'headers' => [
+    //                         'Accept' => 'application/json',
+    //                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                     ],
+    //                     'timeout' => 30
+    //                 ]
+    //             );
+    //             $tests['single_entry'] = ['status' => 'success', 'entry_id' => $entryId];
+    //         } catch (\Exception $e) {
+    //             $tests['single_entry'] = ['status' => 'error', 'error' => $e->getMessage()];
+    //         }
+    //     }
         
-        return new JsonResponse([
-            'success' => true,
-            'agency' => $agencyCode,
-            'form_id' => $formId,
-            'connectivity_tests' => $tests,
-            'recommendation' => $this->generateConnectivityRecommendation($tests)
-        ]);
-    }
+    //     return new JsonResponse([
+    //         'success' => true,
+    //         'agency' => $agencyCode,
+    //         'form_id' => $formId,
+    //         'connectivity_tests' => $tests,
+    //         'recommendation' => $this->generateConnectivityRecommendation($tests)
+    //     ]);
+    // }
 
     private function generateConnectivityRecommendation(array $tests): string
     {
