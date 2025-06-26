@@ -1,27 +1,37 @@
 # config/packages/redis.yaml
+# Configuration simplifiée pour éviter les conflits avec SncRedisBundle
 framework:
     cache:
         app: cache.adapter.redis
-        default_redis_provider: 'redis://%env(REDIS_SOCKET)%'
+        default_redis_provider: '@snc_redis.default'
 
-# Services Redis avec connexion socket o2switch
-services:
-    Redis:
-        class: Redis
-        calls:
-            - connect: ['%env(REDIS_SOCKET)%']
-            - auth: ['%env(REDIS_PASSWORD)%']
-            - select: ['%env(int:REDIS_DB)%']
+# Note: On utilise SncRedisBundle comme provider principal
+# Suppression des services Redis custom pour éviter les conflits
 
-    redis.client:
-        alias: Redis
-        public: true
+# config/packages/snc_redis.yaml (si vous utilisez SncRedisBundle)
+snc_redis:
+    clients:
+        default:
+            type: predis
+            alias: default
+            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/0'
+            logging: '%kernel.debug%'
+            options:
+                connection_timeout: 10
+                read_write_timeout: 30
+        cache:
+            type: predis
+            alias: cache
+            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/1'
+            logging: false
+            options:
+                connection_timeout: 10
+                read_write_timeout: 30
 
-    # Service Redis avec interface pour injection de dépendance
-    app.redis_client:
-        class: Redis
-        calls:
-            - connect: ['%env(REDIS_SOCKET)%']
-            - auth: ['%env(REDIS_PASSWORD)%']
-            - select: ['%env(int:REDIS_DB)%']
-            - setOption: [!php/const Redis::OPT_SERIALIZER, !php/const Redis::SERIALIZER_JSON]
+# Variables d'environnement à ajouter dans .env pour o2switch
+# REDIS_SOCKET=/home2/divi4480/.cpanel/redis/redis.sock
+# REDIS_PASSWORD=e2a9701dead496d5a9251a4a94079d5a
+# REDIS_DB=0
+
+# Note: o2switch utilise un chemin socket spécifique par utilisateur
+# Le socket se trouve généralement dans ~/.cpanel/redis/redis.sock

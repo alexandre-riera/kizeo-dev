@@ -7,7 +7,7 @@ use Redis;
 
 class MaintenanceCacheService
 {
-    private Redis $redis;
+    private $redis;  // Interface SncRedis, pas Redis natif
     private LoggerInterface $logger;
     
     // Durées de cache en secondes
@@ -15,34 +15,25 @@ class MaintenanceCacheService
     private const CACHE_TTL_SUBMISSION_RAW = 2592000; // 30 jours
     private const CACHE_TTL_SUBMISSION_PROCESSED = 604800; // 7 jours
     
-    public function __construct(Redis $redis, LoggerInterface $logger)
+    public function __construct($redis, LoggerInterface $logger)  // Interface générique
     {
         $this->redis = $redis;
         $this->logger = $logger;
         
-        // Configuration spécifique pour o2switch
+        // Configuration spécifique pour SncRedis o2switch
         try {
-            // Vérifier la connexion
-            if (!$this->redis->isConnected()) {
-                throw new \Exception('Redis non connecté');
-            }
-            
-            // Test d'authentification
+            // Test de connexion avec SncRedis
             $this->redis->ping();
             
-            // Configuration optimisée pour o2switch (sans LZ4 qui pourrait ne pas être disponible)
-            $this->redis->setOption(Redis::OPT_SERIALIZER, Redis::SERIALIZER_JSON);
-            // Note: o2switch pourrait ne pas supporter toutes les options avancées
-            
-            $this->logger->info('Service Redis initialisé avec socket o2switch', [
-                'socket_path' => $_ENV['REDIS_SOCKET'] ?? 'non défini',
-                'database' => $_ENV['REDIS_DB'] ?? 0
+            $this->logger->info('Service Redis SncRedis initialisé', [
+                'client_type' => get_class($this->redis),
+                'connection_test' => 'OK'
             ]);
             
         } catch (\Exception $e) {
-            $this->logger->error('Erreur initialisation Redis o2switch', [
+            $this->logger->error('Erreur initialisation Redis SncRedis', [
                 'error' => $e->getMessage(),
-                'socket_path' => $_ENV['REDIS_SOCKET'] ?? 'non défini'
+                'client_type' => get_class($this->redis)
             ]);
             throw $e;
         }

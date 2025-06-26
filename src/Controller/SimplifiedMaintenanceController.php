@@ -16,6 +16,7 @@ use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
 use App\Repository\FormRepository;
+use App\Service\MaintenanceCacheService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -6339,7 +6340,7 @@ class SimplifiedMaintenanceController extends AbstractController
         string $agencyCode,
         EntityManagerInterface $entityManager,
         Request $request,
-        MaintenanceCacheService $cacheService = null // Utilisation du service dédié
+        MaintenanceCacheService $cacheService // Utilisation du service dédié
     ): JsonResponse {
         
         // Configuration conservative
