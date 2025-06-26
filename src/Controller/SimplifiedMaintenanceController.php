@@ -6455,7 +6455,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         
                         // Si pas en cache, traiter normalement et sauvegarder
                         if (!$submissionData) {
-                            $submissionData = $this->processSingleSubmissionWithDeduplication(
+                            $result = $this->processSingleSubmissionWithDeduplication(
                                 $submission,
                                 $agencyCode,
                                 $entityClass,
@@ -6463,8 +6463,16 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $entityManager
                             );
                             
+                            // Préparer les données pour le cache
+                            $submissionData = [
+                                'submission_id' => $submissionId,
+                                'processed_at' => time(),
+                                'result' => $result,
+                                'entity_class' => $entityClass
+                            ];
+                            
                             // Sauvegarder le résultat en cache
-                            if ($useCache && $cacheService && $submissionData) {
+                            if ($useCache && $cacheService) {
                                 $cacheService->saveProcessedSubmission($agencyCode, $submissionId, $submissionData);
                             }
                         } else {
@@ -6588,6 +6596,51 @@ class SimplifiedMaintenanceController extends AbstractController
                 'success' => false,
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Recrée les entités depuis les données en cache
+     */
+    private function recreateEntitiesFromCache(array $cachedData, EntityManagerInterface $entityManager): void
+    {
+        try {
+            // Cette méthode recrée les entités depuis les données mises en cache
+            // Au lieu de traiter depuis l'API, on utilise les données du cache
+            
+            if (isset($cachedData['equipments']) && is_array($cachedData['equipments'])) {
+                foreach ($cachedData['equipments'] as $equipmentData) {
+                    // Recréer l'équipement depuis les données en cache
+                    $entityClass = $cachedData['entity_class'] ?? null;
+                    if (!$entityClass || !class_exists($entityClass)) {
+                        continue;
+                    }
+                    
+                    $equipment = new $entityClass();
+                    
+                    // Restaurer les propriétés depuis le cache
+                    foreach ($equipmentData as $property => $value) {
+                        $setter = 'set' . ucfirst($property);
+                        if (method_exists($equipment, $setter)) {
+                            $equipment->$setter($value);
+                        }
+                    }
+                    
+                    $entityManager->persist($equipment);
+                }
+            }
+            
+            if (isset($cachedData['photos']) && is_array($cachedData['photos'])) {
+                // Traiter les photos depuis le cache si nécessaire
+                foreach ($cachedData['photos'] as $photoData) {
+                    // Logique de traitement des photos depuis le cache
+                    // À adapter selon votre structure
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur recréation entités depuis cache: " . $e->getMessage());
+            throw $e;
         }
     }
 

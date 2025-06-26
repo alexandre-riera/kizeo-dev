@@ -213,7 +213,7 @@ class MaintenanceCacheService
     /**
      * Vide le cache pour une agence spécifique
      */
-    public function clearAgencyCache(string $agencyCode, string $formId = null): int
+    public function clearAgencyCache(string $agencyCode, ?string $formId = null): int
     {
         $deletedCount = 0;
         
