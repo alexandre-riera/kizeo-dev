@@ -11,7 +11,7 @@ class MaintenanceCacheService
     private LoggerInterface $logger;
     
     // Durées de cache en secondes
-    private const CACHE_TTL_SUBMISSIONS_LIST = 86400; // 1 jour
+    private const CACHE_TTL_SUBMISSIONS_LIST = 900; // 15 minutes
     private const CACHE_TTL_SUBMISSION_RAW = 2592000; // 30 jours
     private const CACHE_TTL_SUBMISSION_PROCESSED = 604800; // 7 jours
     
