@@ -152,18 +152,162 @@ class FormController extends AbstractController
         return $this->redirectToRoute('app_api_form_update_lists_equipements_from_bdd'); 
     }
 
+    // /**
+    //  * -------------------------------------------------------------------------- SECOND CALL IN CRON TASK
+    //  * This route is going to replace the route above to update equipments list on Kizeo Forms
+    //  */
+    // #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
+    // public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager): JsonResponse
+    // {
+    //     $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
+
+    //     return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
+    //     // return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // A remettre pour faire tourner la boucle des 2 URL
+    // }
+
     /**
      * -------------------------------------------------------------------------- SECOND CALL IN CRON TASK
      * This route is going to replace the route above to update equipments list on Kizeo Forms
+     * VERSION AVEC CACHE REDIS ET GESTION D'ERREURS AMÉLIORÉE
      */
     #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
-    public function updateKizeoFormsByEquipmentsListFromBdd(FormRepository $formRepository, CacheInterface $cache, EntityManagerInterface $entityManager): JsonResponse
-    {
-        $formRepository->updateKizeoWithEquipmentsListFromBdd($entityManager, $formRepository, $cache);
-
-        return new JsonResponse('La mise à jour sur KIZEO a été réalisée !', Response::HTTP_OK, [], true);
-        // return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // A remettre pour faire tourner la boucle des 2 URL
+    public function updateKizeoFormsByEquipmentsListFromBdd(
+        FormRepository $formRepository, 
+        CacheInterface $cache, 
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        
+        try {
+            // Mesure du temps d'exécution
+            $startTime = microtime(true);
+            
+            // Exécution de la mise à jour avec métriques
+            $results = $formRepository->updateKizeoWithEquipmentsListFromBddWithMetrics(
+                $entityManager, 
+                $formRepository, 
+                $cache
+            );
+            
+            $endTime = microtime(true);
+            $executionTime = round($endTime - $startTime, 2);
+            
+            // Comptage des succès et erreurs
+            $successCount = $results['metrics']['success_count'];
+            $errorCount = $results['metrics']['error_count'];
+            $totalEntities = $results['metrics']['total_entities'];
+            
+            // Construction du message de réponse
+            $message = sprintf(
+                'Mise à jour Kizeo terminée - %d/%d entités mises à jour avec succès en %ds',
+                $successCount,
+                $totalEntities,
+                $executionTime
+            );
+            
+            // Ajout des détails d'erreur si il y en a
+            if ($errorCount > 0) {
+                $errors = array_filter($results['results'], fn($r) => $r['status'] === 'error');
+                $errorDetails = array_map(fn($e) => $e['entite'] . ': ' . $e['error_message'], $errors);
+                
+                return new JsonResponse([
+                    'message' => $message,
+                    'status' => 'partial_success',
+                    'metrics' => $results['metrics'],
+                    'errors' => $errorDetails,
+                    'details' => $results['results']
+                ], Response::HTTP_OK);
+            }
+            
+            // Succès total
+            return new JsonResponse([
+                'message' => $message,
+                'status' => 'success',
+                'metrics' => $results['metrics'],
+                'details' => $results['results']
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            // Gestion des erreurs globales
+            return new JsonResponse([
+                'message' => 'Erreur lors de la mise à jour Kizeo',
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
+
+    /**
+     * Route pour vérifier le statut du cache Redis (optionnel - pour monitoring)
+     */
+    #[Route('/api/forms/cache/status', name: 'app_api_form_cache_status', methods: ['GET'])]
+    public function getCacheStatus(CacheInterface $cache): JsonResponse
+    {
+        try {
+            // Test de connexion au cache
+            $testKey = 'cache_test_' . time();
+            $cache->get($testKey, function(ItemInterface $item) {
+                $item->expiresAfter(10);
+                return 'test_value';
+            });
+            
+            // Suppression de la clé de test
+            $cache->delete($testKey);
+            
+            // Information sur les clés existantes liées aux équipements
+            $cacheInfo = [
+                'status' => 'connected',
+                'type' => 'redis',
+                'test_passed' => true,
+                'timestamp' => date('Y-m-d H:i:s')
+            ];
+            
+            return new JsonResponse($cacheInfo, Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'timestamp' => date('Y-m-d H:i:s')
+            ], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+    }
+
+    /**
+     * Route pour vider le cache des équipements Kizeo (optionnel - pour maintenance)
+     */
+    #[Route('/api/forms/cache/clear/kizeo', name: 'app_api_form_cache_clear_kizeo', methods: ['DELETE'])]
+    public function clearKizeoCache(CacheInterface $cache): JsonResponse
+    {
+        try {
+            $clearedKeys = [];
+            
+            // Liste des entités pour construire les clés de cache
+            $entities = ['s10', 's40', 's50', 's60', 's70', 's80', 's100', 's120', 's130', 's140', 's150', 's160', 's170'];
+            
+            foreach ($entities as $entity) {
+                $cacheKey = 'kizeo_equipments_' . $entity;
+                if ($cache->delete($cacheKey)) {
+                    $clearedKeys[] = $cacheKey;
+                }
+            }
+            
+            return new JsonResponse([
+                'message' => 'Cache Kizeo vidé avec succès',
+                'cleared_keys' => $clearedKeys,
+                'count' => count($clearedKeys),
+                'timestamp' => date('Y-m-d H:i:s')
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'message' => 'Erreur lors du vidage du cache',
+                'error' => $e->getMessage(),
+                'timestamp' => date('Y-m-d H:i:s')
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * 
      * Save PDF maintenance on remote server --                                  THIRD CALL IN CRON TASK

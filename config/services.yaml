@@ -37,3 +37,10 @@ services:
     maintenance.cache:
         alias: App\Service\MaintenanceCacheService
         public: true
+
+    App\Service\KizeoCacheService:
+        arguments:
+            $cache: '@cache.app'
+            $logger: '@monolog.logger.kizeo_cache'
+        tags:
+            - { name: 'monolog.logger', channel: 'kizeo_cache' }
