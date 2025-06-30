@@ -700,8 +700,8 @@ class FormController extends AbstractController
     {
         foreach ($kizeoEquipments as $kizeoEquipment) {
             $kizeoFullKey = explode('|', $kizeoEquipment)[0];
-            $kizeoKeyParts = explode('/\/', $kizeoFullKey);
-            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '/\/' . ($kizeoKeyParts[2] ?? '');
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
             
             if ($kizeoBaseKey === $equipmentBaseKey) {
                 return true;
@@ -802,8 +802,8 @@ class FormController extends AbstractController
             $structuredEquipements = [];
             foreach ($equipements as $equipement) {
                 $equipmentLine = 
-                    ($equipement->getRaisonSociale() ?? '') . '/\/' .
-                    ($equipement->getVisite() ?? '') . '/\/' .
+                    ($equipement->getRaisonSociale() ?? '') . '\\' .
+                    ($equipement->getVisite() ?? '') . '\\' .
                     ($equipement->getNumeroEquipement() ?? '') . '|' .
                     ($equipement->getLibelleEquipement() ?? '') . '|' .
                     ($equipement->getMiseEnService() ?? '') . '|' .
