@@ -1913,27 +1913,120 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /**
-     * Nettoie le format Kizeo en supprimant les doublons avec ':'
+     * Nettoie le format Kizeo en supprimant les doublons avec ':' - VERSION CORRIGÉE
      */
     private function cleanKizeoFormat($kizeoEquipment): string
     {
-        // Le format Kizeo semble être : "value1:value1|value2:value2|..."
-        // On veut juste : "value1|value2|..."
+        // Format problématique détecté :
+        // "EURIAL SAS CREST:EURIAL SAS CREST\CE2:CE2\COU01:COU01|Porte coulissante:Porte coulissante|..."
+        // 
+        // Il faut transformer ça en :
+        // "EURIAL SAS CREST\CE2\COU01|Porte coulissante|..."
         
         $parts = explode('|', $kizeoEquipment);
         $cleanedParts = [];
         
-        foreach ($parts as $part) {
-            if (strpos($part, ':') !== false) {
-                // Si la partie contient ':', prendre seulement la première partie
-                $subParts = explode(':', $part);
-                $cleanedParts[] = $subParts[0];
+        foreach ($parts as $index => $part) {
+            if ($index === 0) {
+                // Premier élément : contient la clé complète avec des ':'
+                // Format : "RAISON_SOCIALE:RAISON_SOCIALE\VISITE:VISITE\NUMERO:NUMERO"
+                // On veut : "RAISON_SOCIALE\VISITE\NUMERO"
+                
+                if (strpos($part, ':') !== false) {
+                    // Séparer par ':' et prendre une partie sur deux
+                    $colonParts = explode(':', $part);
+                    $reconstructed = '';
+                    
+                    // Prendre les éléments impairs (index 0, 2, 4...)
+                    for ($i = 0; $i < count($colonParts); $i += 2) {
+                        if ($i > 0) {
+                            $reconstructed .= '\\';
+                        }
+                        $reconstructed .= $colonParts[$i];
+                    }
+                    
+                    $cleanedParts[] = $reconstructed;
+                } else {
+                    $cleanedParts[] = $part;
+                }
             } else {
-                $cleanedParts[] = $part;
+                // Autres éléments : format "value:value"
+                if (strpos($part, ':') !== false) {
+                    $subParts = explode(':', $part);
+                    $cleanedParts[] = $subParts[0];
+                } else {
+                    $cleanedParts[] = $part;
+                }
             }
         }
         
         return implode('|', $cleanedParts);
+    }
+
+    /**
+     * Alternative plus simple : nettoyer en analysant le pattern
+     */
+    private function cleanKizeoFormatSimple($kizeoEquipment): string
+    {
+        // Si c'est déjà au bon format, ne rien faire
+        if (strpos($kizeoEquipment, ':') === false) {
+            return $kizeoEquipment;
+        }
+        
+        // Séparer par '|'
+        $parts = explode('|', $kizeoEquipment);
+        $cleaned = [];
+        
+        foreach ($parts as $part) {
+            if (strpos($part, ':') !== false) {
+                // Pour chaque partie avec ':', prendre seulement la première moitié
+                $colonSplit = explode(':', $part);
+                
+                // Reconstruction spéciale pour le premier élément (clé complète)
+                if (count($cleaned) === 0 && count($colonSplit) >= 6) {
+                    // Pattern attendu : "A:A\B:B\C:C" -> "A\B\C"
+                    $cleaned[] = $colonSplit[0] . '\\' . $colonSplit[2] . '\\' . $colonSplit[4];
+                } else {
+                    // Pour les autres éléments, prendre juste la première partie
+                    $cleaned[] = $colonSplit[0];
+                }
+            } else {
+                $cleaned[] = $part;
+            }
+        }
+        
+        return implode('|', $cleaned);
+    }
+
+    /**
+     * Test de nettoyage pour debugger
+     */
+    public function testKizeoFormatCleaning(): array
+    {
+        // Échantillon du vrai format Kizeo problématique
+        $sampleKizeoFormat = "EURIAL SAS CREST:EURIAL SAS CREST\\CE2:CE2\\COU01:COU01|Porte coulissante:Porte coulissante|nc:nc|nc:nc|Fermod:Fermod|2500:2500|2000:2000|:|4405:4405|4405:4405|S50:S50";
+        
+        // Format attendu de la BDD
+        $expectedBddFormat = "EURIAL SAS CREST\\CE2\\COU01|Porte coulissante|nc|nc|Fermod|2500|2000||4405|4405|S50";
+        
+        // Test des deux méthodes de nettoyage
+        $cleaned1 = $this->cleanKizeoFormat($sampleKizeoFormat);
+        $cleaned2 = $this->cleanKizeoFormatSimple($sampleKizeoFormat);
+        
+        return [
+            'original_kizeo' => $sampleKizeoFormat,
+            'expected_bdd' => $expectedBddFormat,
+            'cleaned_method1' => $cleaned1,
+            'cleaned_method2' => $cleaned2,
+            'method1_matches' => $cleaned1 === $expectedBddFormat,
+            'method2_matches' => $cleaned2 === $expectedBddFormat,
+            'analysis' => [
+                'original_parts' => explode('|', $sampleKizeoFormat),
+                'expected_parts' => explode('|', $expectedBddFormat),
+                'cleaned1_parts' => explode('|', $cleaned1),
+                'cleaned2_parts' => explode('|', $cleaned2)
+            ]
+        ];
     }
 
     /**
@@ -1967,6 +2060,89 @@ class FormRepository extends ServiceEntityRepository
         return $result;
     }
 
+    /**
+     * Test avec le nettoyage corrigé
+     */
+    public function testSyncWithCorrectCleaning($entityClass = 'App\\Entity\\EquipementS50'): array
+    {
+        $entityManager = $this->getEntityManager();
+        
+        // Récupérer les équipements de la BDD
+        $equipements = $entityManager->getRepository($entityClass)
+            ->createQueryBuilder('e')
+            ->where('e.raisonSociale LIKE :eurial')
+            ->setParameter('eurial', 'EURIAL SAS CREST%')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+        
+        // Structurer les équipements de la BDD
+        $structuredEquipements = [];
+        foreach ($equipements as $equipement) {
+            $equipmentLine = 
+                ($equipement->getRaisonSociale() ?? '') . '\\' .
+                ($equipement->getVisite() ?? '') . '\\' .
+                ($equipement->getNumeroEquipement() ?? '') . '|' .
+                ($equipement->getLibelleEquipement() ?? '') . '|' .
+                ($equipement->getMiseEnService() ?? '') . '|' .
+                ($equipement->getNumeroDeSerie() ?? '') . '|' .
+                ($equipement->getMarque() ?? '') . '|' .
+                ($equipement->getHauteur() ?? '') . '|' .
+                ($equipement->getLargeur() ?? '') . '|' .
+                ($equipement->getRepereSiteClient() ?? '') . '|' .
+                ($equipement->getIdContact() ?? '') . '|' .
+                ($equipement->getCodeSociete() ?? '') . '|' .
+                ($equipement->getCodeAgence() ?? '');
+                
+            $structuredEquipements[] = $equipmentLine;
+        }
+        
+        // Récupérer et nettoyer les équipements Kizeo
+        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        
+        $kizeoFiltered = [];
+        $cleaningStats = ['original' => 0, 'cleaned' => 0, 'perfect_matches' => 0];
+        
+        foreach ($kizeoEquipments as $kizeoEquipment) {
+            if (strpos($kizeoEquipment, 'EURIAL SAS CREST') === 0) {
+                $cleaningStats['original']++;
+                
+                // Utiliser la méthode de nettoyage corrigée
+                $cleanedEquipment = $this->cleanKizeoFormatSimple($kizeoEquipment);
+                $kizeoFiltered[] = $cleanedEquipment;
+                $cleaningStats['cleaned']++;
+                
+                // Vérifier si le nettoyage correspond exactement à un équipement BDD
+                foreach ($structuredEquipements as $bddEquipment) {
+                    if ($cleanedEquipment === $bddEquipment) {
+                        $cleaningStats['perfect_matches']++;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        $beforeCount = count($kizeoFiltered);
+        $simulatedAfter = $this->simulateSyncWithCleaning($structuredEquipements, $kizeoFiltered);
+        $afterCount = count($simulatedAfter);
+        
+        return [
+            'test_scope' => 'EURIAL SAS CREST with corrected cleaning',
+            'bdd_equipment_count' => count($structuredEquipements),
+            'kizeo_before_count' => $beforeCount,
+            'kizeo_after_count' => $afterCount,
+            'difference' => $afterCount - $beforeCount,
+            'cleaning_stats' => $cleaningStats,
+            'format_samples' => [
+                'bdd_sample' => $structuredEquipements[0] ?? 'N/A',
+                'kizeo_cleaned_sample' => $kizeoFiltered[0] ?? 'N/A',
+                'match_check' => isset($structuredEquipements[0], $kizeoFiltered[0]) 
+                    ? $structuredEquipements[0] === $kizeoFiltered[0] 
+                    : false
+            ]
+        ];
+    }
     /**
      * Version corrigée de compareAndSyncEquipments qui gère le format Kizeo
      */

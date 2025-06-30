@@ -796,6 +796,65 @@ class FormController extends AbstractController
     }
 
     /**
+     * Route pour tester le nettoyage du format Kizeo
+     */
+    #[Route('/api/forms/test/kizeo-cleaning', name: 'app_api_form_test_kizeo_cleaning', methods: ['GET'])]
+    public function testKizeoCleaning(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $cleaningTest = $formRepository->testKizeoFormatCleaning();
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'cleaning_test' => $cleaningTest,
+                'recommendation' => $cleaningTest['method1_matches'] || $cleaningTest['method2_matches'] 
+                    ? 'Une méthode de nettoyage fonctionne correctement'
+                    : 'Aucune méthode ne produit le format attendu'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Route de test final avec le bon nettoyage
+     */
+    #[Route('/api/forms/test/sync-final', name: 'app_api_form_test_sync_final', methods: ['GET'])]
+    public function testSyncFinal(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $testResult = $formRepository->testSyncWithCorrectCleaning();
+            
+            $analysis = 'OK - Pas de duplication prévue';
+            if ($testResult['difference'] > 0) {
+                $analysis = 'ATTENTION - Va ajouter ' . $testResult['difference'] . ' équipements en doublon';
+            }
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_result' => $testResult,
+                'analysis' => $analysis,
+                'recommendation' => $testResult['difference'] > 0 
+                    ? 'Ne pas lancer la synchronisation - problème détecté'
+                    : 'OK pour lancer la synchronisation avec le nettoyage corrigé'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
      * Route de test avec nettoyage du format Kizeo
      */
     #[Route('/api/forms/test/sync-with-cleaning', name: 'app_api_form_test_sync_with_cleaning', methods: ['GET'])]
