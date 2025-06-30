@@ -359,6 +359,7 @@ class FormController extends AbstractController
         CacheInterface $cache,
         Request $request
     ): JsonResponse {
+        Request::enableHttpMethodParameterOverride();
         try {
             $entityClass = $request->get('entity', 'App\\Entity\\EquipementS50');
             $maxEquipments = (int) $request->get('max_equipments', 50);
