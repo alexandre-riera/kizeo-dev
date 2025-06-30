@@ -796,6 +796,42 @@ class FormController extends AbstractController
     }
 
     /**
+     * Route de test avec nettoyage du format Kizeo
+     */
+    #[Route('/api/forms/test/sync-with-cleaning', name: 'app_api_form_test_sync_with_cleaning', methods: ['GET'])]
+    public function testSyncWithCleaning(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $testResult = $formRepository->testSyncWithKizeoFormatCleaning();
+            
+            $analysis = 'OK - Pas de duplication prévue';
+            if ($testResult['difference'] > 0) {
+                $analysis = 'ATTENTION - Va ajouter ' . $testResult['difference'] . ' équipements en doublon';
+            }
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_result' => $testResult,
+                'analysis' => $analysis,
+                'recommendation' => $testResult['difference'] > 0 
+                    ? 'Ne pas lancer la synchronisation - problème détecté'
+                    : 'OK pour lancer la synchronisation',
+                'format_analysis' => [
+                    'kizeo_format_issue' => 'Détecté format Kizeo avec doublons (séparateur :)',
+                    'cleaning_applied' => 'Nettoyage automatique appliqué pour la comparaison'
+                ]
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
      * Version avec debugging détaillé pour comprendre le comportement
      */
     private function compareAndSyncEquipmentsWithDetailedLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo, FormRepository $formRepository): array 
