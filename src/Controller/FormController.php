@@ -481,6 +481,379 @@ class FormController extends AbstractController
     }
 
     /**
+     * SOLUTION CORRIGÉE : Compare et synchronise les équipements entre BDD et Kizeo
+     * 
+     * Logique : 
+     * 1. Pour chaque équipement BDD, vérifier s'il existe déjà sur Kizeo (peu importe la visite)
+     * 2. Si l'équipement existe déjà, mettre à jour toutes ses visites avec les nouvelles données
+     * 3. Si l'équipement n'existe pas du tout, l'ajouter
+     */
+    private function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? ''); // RAISON_SOCIALE\NUMERO_EQUIPEMENT
+
+            // Vérifier si cet équipement existe déjà sur Kizeo (peu importe la visite)
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            
+            if ($equipmentExistsInKizeo) {
+                // L'équipement existe déjà : mettre à jour toutes ses visites
+                $this->updateAllVisitsForEquipment($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                
+                // Vérifier si la visite spécifique existe, sinon l'ajouter
+                $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+                if (!$specificVisitExists) {
+                    $updatedKizeoEquipments[] = $structuredEquipment;
+                }
+            } else {
+                // L'équipement n'existe pas du tout : l'ajouter
+                $updatedKizeoEquipments[] = $structuredEquipment;
+            }
+        }
+
+        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+        return $updatedKizeoEquipments;
+    }
+
+    /**
+     * Vérifie si un équipement existe déjà dans Kizeo (peu importe la visite)
+     */
+    private function equipmentExistsInKizeo($kizeoEquipments, $equipmentBaseKey): bool
+    {
+        foreach ($kizeoEquipments as $kizeoEquipment) {
+            $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            
+            if ($kizeoBaseKey === $equipmentBaseKey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Vérifie si une visite spécifique existe déjà
+     */
+    private function specificVisitExists($kizeoEquipments, $structuredFullKey): bool
+    {
+        foreach ($kizeoEquipments as $kizeoEquipment) {
+            $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+            if ($kizeoFullKey === $structuredFullKey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Version avec debugging détaillé pour comprendre le comportement
+     */
+    private function compareAndSyncEquipmentsWithDetailedLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+        $stats = [
+            'processed_equipment' => 0,
+            'equipment_already_exists' => 0,
+            'new_equipment_added' => 0,
+            'specific_visits_added' => 0,
+            'visits_updated' => 0,
+            'details' => []
+        ];
+
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            $visit = $keyParts[1] ?? '';
+
+            $stats['processed_equipment']++;
+            
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+            
+            $action = '';
+            
+            if ($equipmentExistsInKizeo) {
+                $stats['equipment_already_exists']++;
+                $action .= 'Equipment exists, ';
+                
+                // Mettre à jour toutes les visites existantes
+                $updatedCount = $this->updateAllVisitsForEquipmentWithCount($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                $stats['visits_updated'] += $updatedCount;
+                $action .= "$updatedCount visits updated, ";
+                
+                // Ajouter la visite spécifique si elle n'existe pas
+                if (!$specificVisitExists) {
+                    $updatedKizeoEquipments[] = $structuredEquipment;
+                    $stats['specific_visits_added']++;
+                    $action .= 'specific visit added';
+                } else {
+                    $action .= 'specific visit already exists';
+                }
+            } else {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+                $stats['new_equipment_added']++;
+                $action = 'New equipment added';
+            }
+            
+            $stats['details'][] = [
+                'equipment_key' => $equipmentBaseKey,
+                'visit' => $visit,
+                'full_key' => $structuredFullKey,
+                'existed_in_kizeo' => $equipmentExistsInKizeo,
+                'specific_visit_existed' => $specificVisitExists,
+                'action' => $action
+            ];
+        }
+
+        // Log détaillé
+        error_log("DETAILED SYNC STATS: " . json_encode($stats, JSON_PRETTY_PRINT));
+
+        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+        return $updatedKizeoEquipments;
+    }
+
+    /**
+     * Version de updateAllVisitsForEquipment qui retourne le nombre de mises à jour
+     */
+    private function updateAllVisitsForEquipmentWithCount(&$kizeoEquipments, $equipmentBaseKey, $newEquipment): int
+    {
+        $newEquipmentData = explode('|', $newEquipment);
+        $newEquipmentFullKey = $newEquipmentData[0];
+        $updateCount = 0;
+        
+        foreach ($kizeoEquipments as $key => $kizeoEquipment) {
+            $kizeoEquipmentData = explode('|', $kizeoEquipment);
+            $kizeoFullKey = $kizeoEquipmentData[0];
+            
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            
+            if ($kizeoBaseKey === $equipmentBaseKey && $kizeoFullKey !== $newEquipmentFullKey) {
+                // Mettre à jour les données techniques
+                for ($i = 2; $i < count($newEquipmentData); $i++) {
+                    if (isset($newEquipmentData[$i])) {
+                        if (isset($kizeoEquipmentData[$i])) {
+                            $kizeoEquipmentData[$i] = $newEquipmentData[$i];
+                        } else {
+                            $kizeoEquipmentData[] = $newEquipmentData[$i];
+                        }
+                    }
+                }
+                
+                $kizeoEquipments[$key] = implode('|', $kizeoEquipmentData);
+                $updateCount++;
+            }
+        }
+        
+        return $updateCount;
+    }
+
+    /**
+     * Fonction de test pour une simulation complète
+     */
+    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50'): array
+    {
+        $entityManager = $this->getEntityManager();
+        
+        // Prendre seulement quelques équipements EURIAL SAS CREST pour le test
+        $equipements = $entityManager->getRepository($entityClass)
+            ->createQueryBuilder('e')
+            ->where('e.raisonSociale LIKE :eurial')
+            ->setParameter('eurial', 'EURIAL SAS CREST%')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+        
+        $structuredEquipements = $this->structureLikeKizeoEquipmentsList($equipements);
+        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        
+        // Filtrer Kizeo pour ne garder que EURIAL SAS CREST pour la comparaison
+        $kizeoFiltered = array_filter($kizeoEquipments, function($equipment) {
+            return strpos($equipment, 'EURIAL SAS CREST') === 0;
+        });
+        
+        $beforeCount = count($kizeoFiltered);
+        
+        // Simulation avec logging détaillé
+        $afterEquipments = $this->simulateSyncWithLogging($structuredEquipements, $kizeoFiltered);
+        $afterCount = count($afterEquipments);
+        
+        return [
+            'test_scope' => 'EURIAL SAS CREST only',
+            'bdd_equipment_count' => count($structuredEquipements),
+            'kizeo_before_count' => $beforeCount,
+            'kizeo_after_count' => $afterCount,
+            'difference' => $afterCount - $beforeCount,
+            'bdd_sample' => array_slice($structuredEquipements, 0, 3),
+            'kizeo_sample' => array_slice($kizeoFiltered, 0, 3)
+        ];
+    }
+
+    /**
+     * Simulation avec logging pour test
+     */
+    private function simulateSyncWithLogging($structuredEquipements, $kizeoEquipments): array
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+        
+        echo "=== SIMULATION SYNC ===\n";
+        echo "BDD Equipment count: " . count($structuredEquipements) . "\n";
+        echo "Kizeo Equipment count: " . count($kizeoEquipments) . "\n\n";
+        
+        foreach ($structuredEquipements as $index => $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            
+            echo "Processing #$index: $equipmentBaseKey\n";
+            
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+            
+            echo "  - Equipment exists in Kizeo: " . ($equipmentExistsInKizeo ? 'YES' : 'NO') . "\n";
+            echo "  - Specific visit exists: " . ($specificVisitExists ? 'YES' : 'NO') . "\n";
+            
+            if ($equipmentExistsInKizeo) {
+                $updateCount = $this->updateAllVisitsForEquipmentWithCount($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                echo "  - Updated $updateCount existing visits\n";
+                
+                if (!$specificVisitExists) {
+                    $updatedKizeoEquipments[] = $structuredEquipment;
+                    echo "  - Added specific visit\n";
+                }
+            } else {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+                echo "  - Added new equipment\n";
+            }
+            
+            echo "\n";
+        }
+        
+        echo "Final count: " . count($updatedKizeoEquipments) . "\n";
+        echo "=== END SIMULATION ===\n";
+        
+        return $updatedKizeoEquipments;
+    }
+
+    /**
+     * Route de test pour la nouvelle logique de synchronisation
+     * À ajouter dans FormController
+     */
+    #[Route('/api/forms/test/new-sync-logic', name: 'app_api_form_test_new_sync_logic', methods: ['GET'])]
+    public function testNewSyncLogic(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $testResult = $formRepository->testSyncLogicWithSample();
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_result' => $testResult,
+                'analysis' => [
+                    'will_duplicate' => $testResult['difference'] > 0,
+                    'explanation' => $testResult['difference'] > 0 
+                        ? 'La logique actuelle va ajouter ' . $testResult['difference'] . ' équipements en doublon'
+                        : 'La logique semble correcte - pas de duplication prévue'
+                ]
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Route pour appliquer temporairement la nouvelle logique sur une seule entité
+     */
+    #[Route('/api/forms/apply/new-sync-logic/{entity}', name: 'app_api_form_apply_new_sync_logic', methods: ['POST'])]
+    public function applyNewSyncLogic(
+        string $entity,
+        FormRepository $formRepository, 
+        CacheInterface $cache, 
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        
+        try {
+            // Valider l'entité
+            $validEntities = [
+                's10' => 'App\\Entity\\EquipementS10',
+                's40' => 'App\\Entity\\EquipementS40', 
+                's50' => 'App\\Entity\\EquipementS50',
+                's60' => 'App\\Entity\\EquipementS60',
+                's70' => 'App\\Entity\\EquipementS70',
+                's80' => 'App\\Entity\\EquipementS80',
+                's100' => 'App\\Entity\\EquipementS100',
+                's120' => 'App\\Entity\\EquipementS120',
+                's130' => 'App\\Entity\\EquipementS130',
+                's140' => 'App\\Entity\\EquipementS140',
+                's150' => 'App\\Entity\\EquipementS150',
+                's160' => 'App\\Entity\\EquipementS160',
+                's170' => 'App\\Entity\\EquipementS170',
+            ];
+            
+            if (!isset($validEntities[$entity])) {
+                return new JsonResponse([
+                    'status' => 'error',
+                    'error' => 'Entité non valide. Utilisez: ' . implode(', ', array_keys($validEntities))
+                ], Response::HTTP_BAD_REQUEST);
+            }
+            
+            $entityClass = $validEntities[$entity];
+            
+            // Appliquer la nouvelle logique pour cette entité uniquement
+            $startTime = microtime(true);
+            
+            // Récupérer les équipements de la BDD
+            $equipements = $entityManager->getRepository($entityClass)->findAll();
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            
+            // Récupérer l'ID de liste et vider le cache
+            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+            $cache->delete('kizeo_equipments_' . $entity);
+            
+            // Récupérer les données Kizeo
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+            
+            // Appliquer la nouvelle logique avec logging détaillé
+            $updatedEquipments = $formRepository->compareAndSyncEquipmentsWithDetailedLogging(
+                $structuredEquipements,
+                $kizeoEquipments,
+                $idListeKizeo
+            );
+            
+            $endTime = microtime(true);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'entity' => $entity,
+                'results' => [
+                    'bdd_count' => count($structuredEquipements),
+                    'kizeo_before' => count($kizeoEquipments),
+                    'kizeo_after' => count($updatedEquipments),
+                    'execution_time' => round($endTime - $startTime, 2)
+                ],
+                'message' => 'Nouvelle logique appliquée avec succès pour ' . $entity
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
      * Route pour vérifier le statut du cache Redis (optionnel - pour monitoring)
      */
     #[Route('/api/forms/cache/status', name: 'app_api_form_cache_status', methods: ['GET'])]

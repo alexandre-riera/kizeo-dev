@@ -1904,6 +1904,75 @@ class FormRepository extends ServiceEntityRepository
         return $structuredEquipements;
     }
 
+
+    /**
+     * Méthode à ajouter dans FormRepository pour remplacer temporairement 
+     * l'ancienne fonction compareAndSyncEquipments
+     */
+    public function compareAndSyncEquipmentsWithDetailedLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+        $stats = [
+            'processed_equipment' => 0,
+            'equipment_already_exists' => 0,
+            'new_equipment_added' => 0,
+            'specific_visits_added' => 0,
+            'visits_updated' => 0,
+            'details' => []
+        ];
+
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            $visit = $keyParts[1] ?? '';
+
+            $stats['processed_equipment']++;
+            
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+            
+            $action = '';
+            
+            if ($equipmentExistsInKizeo) {
+                $stats['equipment_already_exists']++;
+                $action .= 'Equipment exists, ';
+                
+                // Mettre à jour toutes les visites existantes
+                $updatedCount = $this->updateAllVisitsForEquipmentWithCount($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                $stats['visits_updated'] += $updatedCount;
+                $action .= "$updatedCount visits updated, ";
+                
+                // Ajouter la visite spécifique si elle n'existe pas
+                if (!$specificVisitExists) {
+                    $updatedKizeoEquipments[] = $structuredEquipment;
+                    $stats['specific_visits_added']++;
+                    $action .= 'specific visit added';
+                } else {
+                    $action .= 'specific visit already exists';
+                }
+            } else {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+                $stats['new_equipment_added']++;
+                $action = 'New equipment added';
+            }
+            
+            $stats['details'][] = [
+                'equipment_key' => $equipmentBaseKey,
+                'visit' => $visit,
+                'full_key' => $structuredFullKey,
+                'existed_in_kizeo' => $equipmentExistsInKizeo,
+                'specific_visit_existed' => $specificVisitExists,
+                'action' => $action
+            ];
+        }
+
+        // Log détaillé
+        error_log("DETAILED SYNC STATS: " . json_encode($stats, JSON_PRETTY_PRINT));
+
+        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+        return $updatedKizeoEquipments;
+    }
     // Function to preg_split structured equipments to keep only the first part  raison_sociale|visit|numero_equipment
     public function splitStructuredEquipmentsToKeepFirstPart($structuredEquipmentsList){
         $structuredEquipmentsListSplitted = [];
