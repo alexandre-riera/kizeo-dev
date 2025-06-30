@@ -352,7 +352,7 @@ class FormController extends AbstractController
      * Route pour tester la synchronisation sur un échantillon
      * À ajouter dans FormController
      */
-    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST'])]
+    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST', 'GET'])]
     public function testSyncSample(
         FormRepository $formRepository,
         EntityManagerInterface $entityManager,
