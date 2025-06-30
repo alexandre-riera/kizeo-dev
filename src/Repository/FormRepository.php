@@ -1607,101 +1607,101 @@ class FormRepository extends ServiceEntityRepository
 
     /////////////////// TEMPORAIRE ////////////////////////////////////////////////
 
-    /**
-     * Fonction de diagnostic pour identifier les problèmes de synchronisation
-     * À ajouter temporairement dans FormRepository pour déboguer
-     */
-    public function diagnoseSyncIssues($entityClass = 'App\\Entity\\EquipementS50'): array
-    {
-        $entityManager = $this->getEntityManager();
+    // /**
+    //  * Fonction de diagnostic pour identifier les problèmes de synchronisation
+    //  * À ajouter temporairement dans FormRepository pour déboguer
+    //  */
+    // public function diagnoseSyncIssues($entityClass = 'App\\Entity\\EquipementS50'): array
+    // {
+    //     $entityManager = $this->getEntityManager();
         
-        // Récupérer quelques équipements de la BDD (limitons à 10 pour le test)
-        $equipements = $entityManager->getRepository($entityClass)
-            ->createQueryBuilder('e')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult();
+    //     // Récupérer quelques équipements de la BDD (limitons à 10 pour le test)
+    //     $equipements = $entityManager->getRepository($entityClass)
+    //         ->createQueryBuilder('e')
+    //         ->setMaxResults(10)
+    //         ->getQuery()
+    //         ->getResult();
         
-        // Structurer comme pour Kizeo
-        $structuredEquipements = $this->structureLikeKizeoEquipmentsList($equipements);
+    //     // Structurer comme pour Kizeo
+    //     $structuredEquipements = $this->structureLikeKizeoEquipmentsList($equipements);
         
-        // Récupérer les équipements Kizeo (pour S50 par exemple)
-        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
-        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+    //     // Récupérer les équipements Kizeo (pour S50 par exemple)
+    //     $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
+    //     $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
         
-        // Analyse des structures
-        $diagnostic = [
-            'bdd_count' => count($structuredEquipements),
-            'kizeo_count' => count($kizeoEquipments),
-            'bdd_samples' => [],
-            'kizeo_samples' => [],
-            'key_analysis' => [],
-            'potential_matches' => []
-        ];
+    //     // Analyse des structures
+    //     $diagnostic = [
+    //         'bdd_count' => count($structuredEquipements),
+    //         'kizeo_count' => count($kizeoEquipments),
+    //         'bdd_samples' => [],
+    //         'kizeo_samples' => [],
+    //         'key_analysis' => [],
+    //         'potential_matches' => []
+    //     ];
         
-        // Analyser les échantillons BDD
-        foreach (array_slice($structuredEquipements, 0, 5) as $index => $equipment) {
-            $parts = explode('|', $equipment);
-            $key = $parts[0];
+    //     // Analyser les échantillons BDD
+    //     foreach (array_slice($structuredEquipements, 0, 5) as $index => $equipment) {
+    //         $parts = explode('|', $equipment);
+    //         $key = $parts[0];
             
-            $diagnostic['bdd_samples'][] = [
-                'raw' => $equipment,
-                'key' => $key,
-                'key_length' => strlen($key),
-                'parts_count' => count($parts),
-                'key_structure' => $this->analyzeKeyStructure($key)
-            ];
-        }
+    //         $diagnostic['bdd_samples'][] = [
+    //             'raw' => $equipment,
+    //             'key' => $key,
+    //             'key_length' => strlen($key),
+    //             'parts_count' => count($parts),
+    //             'key_structure' => $this->analyzeKeyStructure($key)
+    //         ];
+    //     }
         
-        // Analyser les échantillons Kizeo
-        foreach (array_slice($kizeoEquipments, 0, 5) as $index => $equipment) {
-            $parts = explode('|', $equipment);
-            $key = $parts[0];
+    //     // Analyser les échantillons Kizeo
+    //     foreach (array_slice($kizeoEquipments, 0, 5) as $index => $equipment) {
+    //         $parts = explode('|', $equipment);
+    //         $key = $parts[0];
             
-            $diagnostic['kizeo_samples'][] = [
-                'raw' => $equipment,
-                'key' => $key,
-                'key_length' => strlen($key),
-                'parts_count' => count($parts),
-                'key_structure' => $this->analyzeKeyStructure($key)
-            ];
-        }
+    //         $diagnostic['kizeo_samples'][] = [
+    //             'raw' => $equipment,
+    //             'key' => $key,
+    //             'key_length' => strlen($key),
+    //             'parts_count' => count($parts),
+    //             'key_structure' => $this->analyzeKeyStructure($key)
+    //         ];
+    //     }
         
-        // Rechercher des correspondances potentielles
-        foreach (array_slice($structuredEquipements, 0, 3) as $bddEquipment) {
-            $bddKey = explode('|', $bddEquipment)[0];
+    //     // Rechercher des correspondances potentielles
+    //     foreach (array_slice($structuredEquipements, 0, 3) as $bddEquipment) {
+    //         $bddKey = explode('|', $bddEquipment)[0];
             
-            $matches = [];
-            foreach (array_slice($kizeoEquipments, 0, 20) as $kizeoEquipment) {
-                $kizeoKey = explode('|', $kizeoEquipment)[0];
+    //         $matches = [];
+    //         foreach (array_slice($kizeoEquipments, 0, 20) as $kizeoEquipment) {
+    //             $kizeoKey = explode('|', $kizeoEquipment)[0];
                 
-                // Différents types de comparaisons
-                if ($kizeoKey === $bddKey) {
-                    $matches[] = [
-                        'type' => 'exact_match',
-                        'kizeo_key' => $kizeoKey
-                    ];
-                } elseif (trim($kizeoKey) === trim($bddKey)) {
-                    $matches[] = [
-                        'type' => 'match_after_trim',
-                        'kizeo_key' => $kizeoKey
-                    ];
-                } elseif (stripos($kizeoKey, $bddKey) !== false) {
-                    $matches[] = [
-                        'type' => 'partial_match',
-                        'kizeo_key' => $kizeoKey
-                    ];
-                }
-            }
+    //             // Différents types de comparaisons
+    //             if ($kizeoKey === $bddKey) {
+    //                 $matches[] = [
+    //                     'type' => 'exact_match',
+    //                     'kizeo_key' => $kizeoKey
+    //                 ];
+    //             } elseif (trim($kizeoKey) === trim($bddKey)) {
+    //                 $matches[] = [
+    //                     'type' => 'match_after_trim',
+    //                     'kizeo_key' => $kizeoKey
+    //                 ];
+    //             } elseif (stripos($kizeoKey, $bddKey) !== false) {
+    //                 $matches[] = [
+    //                     'type' => 'partial_match',
+    //                     'kizeo_key' => $kizeoKey
+    //                 ];
+    //             }
+    //         }
             
-            $diagnostic['potential_matches'][] = [
-                'bdd_key' => $bddKey,
-                'matches' => $matches
-            ];
-        }
+    //         $diagnostic['potential_matches'][] = [
+    //             'bdd_key' => $bddKey,
+    //             'matches' => $matches
+    //         ];
+    //     }
         
-        return $diagnostic;
-    }
+    //     return $diagnostic;
+    // }
 
     /**
      * Analyse la structure d'une clé d'équipement
@@ -1720,7 +1720,75 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /////////////////// TEMPORAIRE ////////////////////////////////////////////////
+    /**
+     * Fonction de test pour une simulation complète
+     */
+    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50', FormRepository $formRepository): array
+    {
+        $entityManager = $this->$formRepository->getEntityManager();
+        
+        // Prendre seulement quelques équipements EURIAL SAS CREST pour le test
+        $equipements = $entityManager->getRepository($entityClass)
+            ->createQueryBuilder('e')
+            ->where('e.raisonSociale LIKE :eurial')
+            ->setParameter('eurial', 'EURIAL SAS CREST%')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+        
+        $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
+        $idListeKizeo = $this->$formRepository->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->$formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        
+        // Filtrer Kizeo pour ne garder que EURIAL SAS CREST pour la comparaison
+        $kizeoFiltered = array_filter($kizeoEquipments, function($equipment) {
+            return strpos($equipment, 'EURIAL SAS CREST') === 0;
+        });
+        
+        $beforeCount = count($kizeoFiltered);
+        
+        // Simulation avec logging détaillé
+        $afterEquipments = $this->simulateSyncWithLogging($structuredEquipements, $kizeoFiltered);
+        $afterCount = count($afterEquipments);
+        
+        return [
+            'test_scope' => 'EURIAL SAS CREST only',
+            'bdd_equipment_count' => count($structuredEquipements),
+            'kizeo_before_count' => $beforeCount,
+            'kizeo_after_count' => $afterCount,
+            'difference' => $afterCount - $beforeCount,
+            'bdd_sample' => array_slice($structuredEquipements, 0, 3),
+            'kizeo_sample' => array_slice($kizeoFiltered, 0, 3)
+        ];
+    }
 
+    private function simulateSyncSimple($structuredEquipements, $kizeoEquipments): array
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+        
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+            
+            if ($equipmentExistsInKizeo) {
+                // Mettre à jour les visites existantes
+                $this->updateAllVisitsForEquipmentWithCount($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                
+                // Ajouter la visite spécifique si elle n'existe pas
+                if (!$specificVisitExists) {
+                    $updatedKizeoEquipments[] = $structuredEquipment;
+                }
+            } else {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+            }
+        }
+        
+        return $updatedKizeoEquipments;
+    }
     /**
      * Explication des modifications:
 
@@ -1982,6 +2050,20 @@ class FormRepository extends ServiceEntityRepository
             array_push($structuredEquipmentsListSplitted, $clientVisiteCodeEquipementBdd);
         }
         return $structuredEquipmentsListSplitted;
+    }
+
+    /**
+     * Vérifie si une visite spécifique existe déjà
+     */
+    private function specificVisitExists($kizeoEquipments, $structuredFullKey): bool
+    {
+        foreach ($kizeoEquipments as $kizeoEquipment) {
+            $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+            if ($kizeoFullKey === $structuredFullKey) {
+                return true;
+            }
+        }
+        return false;
     }
     //      ----------------------------------------------------------------------------------------------------------------------
     //      ---------------------------------------- SAVE BASE EQUIPMENTS LIST TO LOCAL BDD --------------------------------------

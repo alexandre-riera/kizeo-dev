@@ -332,8 +332,8 @@ class FormController extends AbstractController
     public function testSimpleSync(FormRepository $formRepository): JsonResponse
     {
         try {
-            $testResult = $formRepository->testSyncLogicWithSample();
-            
+            $testResult = $formRepository->testSyncLogicWithSample('App\\Entity\\EquipementS50', $formRepository);
+
             $analysis = 'OK - Pas de duplication prévue';
             if ($testResult['difference'] > 0) {
                 $analysis = 'ATTENTION - Va ajouter ' . $testResult['difference'] . ' équipements en doublon';
@@ -522,69 +522,69 @@ class FormController extends AbstractController
         return $insights;
     }
 
-    /**
-     * Route pour tester la synchronisation sur un échantillon
-     * À ajouter dans FormController
-     */
-    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST'])]
-    public function testSyncSample(
-        FormRepository $formRepository,
-        EntityManagerInterface $entityManager,
-        CacheInterface $cache,
-        Request $request
-    ): JsonResponse {
-        Request::enableHttpMethodParameterOverride();
-        try {
-            $entityClass = $request->get('entity', 'App\\Entity\\EquipementS50');
-            $maxEquipments = (int) $request->get('max_equipments', 50);
+    // /**
+    //  * Route pour tester la synchronisation sur un échantillon
+    //  * À ajouter dans FormController
+    //  */
+    // #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST'])]
+    // public function testSyncSample(
+    //     FormRepository $formRepository,
+    //     EntityManagerInterface $entityManager,
+    //     CacheInterface $cache,
+    //     Request $request
+    // ): JsonResponse {
+    //     Request::enableHttpMethodParameterOverride();
+    //     try {
+    //         $entityClass = $request->get('entity', 'App\\Entity\\EquipementS50');
+    //         $maxEquipments = (int) $request->get('max_equipments', 50);
             
-            // Récupérer un échantillon d'équipements
-            $equipements = $entityManager->getRepository($entityClass)
-                ->createQueryBuilder('e')
-                ->setMaxResults($maxEquipments)
-                ->getQuery()
-                ->getResult();
+    //         // Récupérer un échantillon d'équipements
+    //         $equipements = $entityManager->getRepository($entityClass)
+    //             ->createQueryBuilder('e')
+    //             ->setMaxResults($maxEquipments)
+    //             ->getQuery()
+    //             ->getResult();
             
-            // Structurer pour Kizeo
-            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+    //         // Structurer pour Kizeo
+    //         $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
             
-            // Récupérer les données Kizeo actuelles
-            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
-            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+    //         // Récupérer les données Kizeo actuelles
+    //         $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+    //         $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
             
-            // Simuler la synchronisation SANS envoyer à Kizeo
-            $beforeCount = count($kizeoEquipments);
-            $afterEquipments = $formRepository->simulateSync($structuredEquipements, $kizeoEquipments);
-            $afterCount = count($afterEquipments);
+    //         // Simuler la synchronisation SANS envoyer à Kizeo
+    //         $beforeCount = count($kizeoEquipments);
+    //         $afterEquipments = $formRepository->simulateSync($structuredEquipements, $kizeoEquipments);
+    //         $afterCount = count($afterEquipments);
             
-            return new JsonResponse([
-                'status' => 'success',
-                'test_results' => [
-                    'entity' => $entityClass,
-                    'bdd_equipment_count' => count($structuredEquipements),
-                    'kizeo_before_count' => $beforeCount,
-                    'kizeo_after_count' => $afterCount,
-                    'would_add' => $afterCount - $beforeCount,
-                    'sample_bdd_keys' => array_slice(
-                        array_map(fn($e) => explode('|', $e)[0], $structuredEquipements),
-                        0,
-                        5
-                    ),
-                    'sample_kizeo_keys' => array_slice(
-                        array_map(fn($e) => explode('|', $e)[0], $kizeoEquipments),
-                        0,
-                        5
-                    )
-                ]
-            ], Response::HTTP_OK);
+    //         return new JsonResponse([
+    //             'status' => 'success',
+    //             'test_results' => [
+    //                 'entity' => $entityClass,
+    //                 'bdd_equipment_count' => count($structuredEquipements),
+    //                 'kizeo_before_count' => $beforeCount,
+    //                 'kizeo_after_count' => $afterCount,
+    //                 'would_add' => $afterCount - $beforeCount,
+    //                 'sample_bdd_keys' => array_slice(
+    //                     array_map(fn($e) => explode('|', $e)[0], $structuredEquipements),
+    //                     0,
+    //                     5
+    //                 ),
+    //                 'sample_kizeo_keys' => array_slice(
+    //                     array_map(fn($e) => explode('|', $e)[0], $kizeoEquipments),
+    //                     0,
+    //                     5
+    //                 )
+    //             ]
+    //         ], Response::HTTP_OK);
             
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'status' => 'error',
-                'error' => $e->getMessage()
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return new JsonResponse([
+    //             'status' => 'error',
+    //             'error' => $e->getMessage()
+    //         ], Response::HTTP_INTERNAL_SERVER_ERROR);
+    //     }
+    // }
 
     /**
      * Méthode de simulation à ajouter dans FormRepository
@@ -724,6 +724,50 @@ class FormController extends AbstractController
         return false;
     }
 
+    // AJOUTER cette route ultra-simple dans FormController.php pour tester :
+
+    /**
+     * Route de test ultra-simple pour vérifier que les méthodes existent
+     */
+    #[Route('/api/forms/test/ultra-simple', name: 'app_api_form_test_ultra_simple', methods: ['GET'])]
+    public function testUltraSimple(FormRepository $formRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        try {
+            // Test 1: Vérifier qu'on peut récupérer des équipements
+            $equipements = $entityManager->getRepository('App\\Entity\\EquipementS50')
+                ->createQueryBuilder('e')
+                ->where('e.raisonSociale LIKE :eurial')
+                ->setParameter('eurial', 'EURIAL SAS CREST%')
+                ->setMaxResults(3)
+                ->getQuery()
+                ->getResult();
+            
+            // Test 2: Vérifier qu'on peut structurer les équipements
+            $structured = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            
+            // Test 3: Vérifier qu'on peut récupérer l'ID de liste
+            $idListe = $formRepository->getIdListeKizeoPourEntite('App\\Entity\\EquipementS50');
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'tests' => [
+                    'equipments_found' => count($equipements),
+                    'structured_count' => count($structured),
+                    'list_id' => $idListe,
+                    'first_structured' => isset($structured[0]) ? $structured[0] : null
+                ]
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Version avec debugging détaillé pour comprendre le comportement
      */
@@ -829,47 +873,7 @@ class FormController extends AbstractController
         return $updateCount;
     }
 
-    /**
-     * Fonction de test pour une simulation complète
-     */
-    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50', FormRepository $formRepository): array
-    {
-        $entityManager = $this->$formRepository->getEntityManager();
-        
-        // Prendre seulement quelques équipements EURIAL SAS CREST pour le test
-        $equipements = $entityManager->getRepository($entityClass)
-            ->createQueryBuilder('e')
-            ->where('e.raisonSociale LIKE :eurial')
-            ->setParameter('eurial', 'EURIAL SAS CREST%')
-            ->setMaxResults(5)
-            ->getQuery()
-            ->getResult();
-        
-        $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
-        $idListeKizeo = $this->$formRepository->getIdListeKizeoPourEntite($entityClass);
-        $kizeoEquipments = $this->$formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
-        
-        // Filtrer Kizeo pour ne garder que EURIAL SAS CREST pour la comparaison
-        $kizeoFiltered = array_filter($kizeoEquipments, function($equipment) {
-            return strpos($equipment, 'EURIAL SAS CREST') === 0;
-        });
-        
-        $beforeCount = count($kizeoFiltered);
-        
-        // Simulation avec logging détaillé
-        $afterEquipments = $this->simulateSyncWithLogging($structuredEquipements, $kizeoFiltered);
-        $afterCount = count($afterEquipments);
-        
-        return [
-            'test_scope' => 'EURIAL SAS CREST only',
-            'bdd_equipment_count' => count($structuredEquipements),
-            'kizeo_before_count' => $beforeCount,
-            'kizeo_after_count' => $afterCount,
-            'difference' => $afterCount - $beforeCount,
-            'bdd_sample' => array_slice($structuredEquipements, 0, 3),
-            'kizeo_sample' => array_slice($kizeoFiltered, 0, 3)
-        ];
-    }
+    
 
     /**
      * Simulation avec logging pour test
@@ -925,7 +929,7 @@ class FormController extends AbstractController
     public function testNewSyncLogic(FormRepository $formRepository): JsonResponse
     {
         try {
-            $testResult = $formRepository->testSyncLogicWithSample();
+            $testResult = $formRepository->testSyncLogicWithSample('App\\Entity\\EquipementS50', $formRepository);
             
             return new JsonResponse([
                 'status' => 'success',
