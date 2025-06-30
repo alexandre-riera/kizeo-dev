@@ -1756,7 +1756,7 @@ class FormRepository extends ServiceEntityRepository
         // Prendre quelques équipements EURIAL SAS CREST pour le test
         $equipements = $entityManager->getRepository($entityClass)
             ->createQueryBuilder('e')
-            ->where('e.raisonSociale LIKE :eurial')
+            ->where('e.raison_sociale LIKE :eurial')
             ->setParameter('eurial', 'EURIAL SAS CREST%')
             ->setMaxResults(5)
             ->getQuery()
