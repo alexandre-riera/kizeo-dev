@@ -238,6 +238,193 @@ class FormController extends AbstractController
     }
 
     /**
+     * Route de diagnostic pour les équipements multi-visites
+     * À ajouter dans FormController
+     */
+    #[Route('/api/forms/diagnose/multi-visits', name: 'app_api_form_diagnose_multi_visits', methods: ['GET'])]
+    public function diagnoseMultiVisitEquipments(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $diagnostic = $formRepository->diagnoseMultiVisitEquipments();
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'diagnostic' => $diagnostic,
+                'insights' => $this->generateMultiVisitInsights($diagnostic)
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Génère des insights sur la répartition des visites
+     */
+    private function generateMultiVisitInsights(array $diagnostic): array
+    {
+        $insights = [];
+        
+        // Analyse de la distribution
+        $visitDistribution = $diagnostic['visit_distribution'];
+        $maxVisits = max(array_keys($visitDistribution));
+        $equipmentsWithMultipleVisits = array_sum(
+            array_filter($visitDistribution, fn($count, $visits) => $visits > 1, ARRAY_FILTER_USE_BOTH)
+        );
+        
+        $insights[] = "Total d'équipements: " . $diagnostic['total_equipments'];
+        $insights[] = "Équipements uniques: " . count($diagnostic['equipment_groups']);
+        $insights[] = "Équipements avec plusieurs visites: " . $equipmentsWithMultipleVisits;
+        $insights[] = "Maximum de visites par équipement: " . $maxVisits;
+        
+        // Identifier les équipements problématiques potentiels
+        $problematicEquipments = array_filter(
+            $diagnostic['equipment_groups'],
+            fn($group) => $group['visit_count'] > 4 // Plus de 4 visites = suspect
+        );
+        
+        if (!empty($problematicEquipments)) {
+            $insights[] = "Équipements avec beaucoup de visites (>4): " . count($problematicEquipments);
+        }
+        
+        return $insights;
+    }
+
+    /**
+     * Route pour tester la synchronisation sur un échantillon
+     * À ajouter dans FormController
+     */
+    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST'])]
+    public function testSyncSample(
+        FormRepository $formRepository,
+        EntityManagerInterface $entityManager,
+        CacheInterface $cache,
+        Request $request
+    ): JsonResponse {
+        try {
+            $entityClass = $request->get('entity', 'App\\Entity\\EquipementS50');
+            $maxEquipments = (int) $request->get('max_equipments', 50);
+            
+            // Récupérer un échantillon d'équipements
+            $equipements = $entityManager->getRepository($entityClass)
+                ->createQueryBuilder('e')
+                ->setMaxResults($maxEquipments)
+                ->getQuery()
+                ->getResult();
+            
+            // Structurer pour Kizeo
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            
+            // Récupérer les données Kizeo actuelles
+            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+            
+            // Simuler la synchronisation SANS envoyer à Kizeo
+            $beforeCount = count($kizeoEquipments);
+            $afterEquipments = $formRepository->simulateSync($structuredEquipements, $kizeoEquipments);
+            $afterCount = count($afterEquipments);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_results' => [
+                    'entity' => $entityClass,
+                    'bdd_equipment_count' => count($structuredEquipements),
+                    'kizeo_before_count' => $beforeCount,
+                    'kizeo_after_count' => $afterCount,
+                    'would_add' => $afterCount - $beforeCount,
+                    'sample_bdd_keys' => array_slice(
+                        array_map(fn($e) => explode('|', $e)[0], $structuredEquipements),
+                        0,
+                        5
+                    ),
+                    'sample_kizeo_keys' => array_slice(
+                        array_map(fn($e) => explode('|', $e)[0], $kizeoEquipments),
+                        0,
+                        5
+                    )
+                ]
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Méthode de simulation à ajouter dans FormRepository
+     * Simule la synchronisation sans envoyer à Kizeo
+     */
+    public function simulateSync($structuredEquipements, $kizeoEquipments): array
+    {
+        $updatedKizeoEquipments = $kizeoEquipments;
+
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredFullKey = explode('|', $structuredEquipment)[0];
+            $keyParts = explode('\\', $structuredFullKey);
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+
+            $foundAndReplaced = false;
+            
+            foreach ($updatedKizeoEquipments as $key => $kizeoEquipment) {
+                $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+
+                if ($kizeoFullKey === $structuredFullKey) {
+                    $updatedKizeoEquipments[$key] = $structuredEquipment;
+                    $foundAndReplaced = true;
+                    break;
+                }
+            }
+
+            if (!$foundAndReplaced) {
+                $updatedKizeoEquipments[] = $structuredEquipment;
+            }
+
+            // Simulation de updateAllVisitsForEquipment
+            $this->simulateUpdateAllVisits($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+        }
+
+        return $updatedKizeoEquipments;
+    }
+
+    /**
+     * Simulation de updateAllVisitsForEquipment
+     */
+    private function simulateUpdateAllVisits(&$kizeoEquipments, $equipmentBaseKey, $newEquipment): void
+    {
+        $newEquipmentData = explode('|', $newEquipment);
+        $newEquipmentFullKey = $newEquipmentData[0];
+        
+        foreach ($kizeoEquipments as $key => $kizeoEquipment) {
+            $kizeoEquipmentData = explode('|', $kizeoEquipment);
+            $kizeoFullKey = $kizeoEquipmentData[0];
+            
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            
+            if ($kizeoBaseKey === $equipmentBaseKey && $kizeoFullKey !== $newEquipmentFullKey) {
+                // Simulation de la mise à jour des données techniques
+                for ($i = 2; $i < count($newEquipmentData); $i++) {
+                    if (isset($newEquipmentData[$i])) {
+                        if (isset($kizeoEquipmentData[$i])) {
+                            $kizeoEquipmentData[$i] = $newEquipmentData[$i];
+                        } else {
+                            $kizeoEquipmentData[] = $newEquipmentData[$i];
+                        }
+                    }
+                }
+                
+                $kizeoEquipments[$key] = implode('|', $kizeoEquipmentData);
+            }
+        }
+    }
+
+    /**
      * Route pour vérifier le statut du cache Redis (optionnel - pour monitoring)
      */
     #[Route('/api/forms/cache/status', name: 'app_api_form_cache_status', methods: ['GET'])]
