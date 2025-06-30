@@ -1439,6 +1439,8 @@ class FormRepository extends ServiceEntityRepository
         foreach ($equipements as $equipement) {
             // Format Kizeo : "Libelle|Type|Année|N° série|Marque|Hauteur|Largeur|Repère|Id client|Id societe|Code agence"
             $equipmentLine = 
+                ($equipement->getRaisonSociale() ?? '') . '\\' .           // Raison sociale
+                ($equipement->getVisite() ?? '') . '\\' .           // Visite
                 ($equipement->getNumeroEquipement() ?? '') . '|' .           // Numéro équipement
                 ($equipement->getLibelleEquipement() ?? '') . '|' .          // Libellé équipement
                 ($equipement->getMiseEnService() ?? '') . '|' .             // Année
