@@ -238,6 +238,61 @@ class FormController extends AbstractController
     }
 
     /**
+     * Route de diagnostic à ajouter temporairement dans FormController
+     */
+    #[Route('/api/forms/diagnose/sync', name: 'app_api_form_diagnose_sync', methods: ['GET'])]
+    public function diagnoseSyncIssues(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $diagnostic = $formRepository->diagnoseSyncIssues();
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'diagnostic' => $diagnostic,
+                'recommendations' => $this->generateRecommendations($diagnostic)
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
+     * Génère des recommandations basées sur le diagnostic
+     */
+    private function generateRecommendations(array $diagnostic): array
+    {
+        $recommendations = [];
+        
+        // Si aucune correspondance exacte
+        if (empty($diagnostic['potential_matches']) || 
+            !collect($diagnostic['potential_matches'])->flatMap(fn($m) => $m['matches'])->where('type', 'exact_match')->count()) {
+            $recommendations[] = "Aucune correspondance exacte trouvée - vérifier le format des clés";
+        }
+        
+        // Si les structures diffèrent
+        $bddStructures = collect($diagnostic['bdd_samples'])->pluck('key_structure')->unique();
+        $kizeoStructures = collect($diagnostic['kizeo_samples'])->pluck('key_structure')->unique();
+        
+        if ($bddStructures->count() > 1 || $kizeoStructures->count() > 1) {
+            $recommendations[] = "Structures de clés incohérentes détectées";
+        }
+        
+        // Si problème d'encodage
+        $encodingIssues = collect($diagnostic['bdd_samples'])
+            ->merge($diagnostic['kizeo_samples'])
+            ->where('key_structure.encoding', '!=', 'UTF-8')
+            ->count();
+            
+        if ($encodingIssues > 0) {
+            $recommendations[] = "Problèmes d'encodage détectés - normaliser les caractères";
+        }
+        
+        return $recommendations;
+    }
+    /**
      * Route de diagnostic pour les équipements multi-visites
      * À ajouter dans FormController
      */
