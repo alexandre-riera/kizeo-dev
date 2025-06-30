@@ -1766,8 +1766,8 @@ class FormRepository extends ServiceEntityRepository
         $structuredEquipements = [];
         foreach ($equipements as $equipement) {
             $equipmentLine = 
-                ($equipement->getRaisonSociale() ?? '') . '\\' .
-                ($equipement->getVisite() ?? '') . '\\' .
+                ($equipement->getRaisonSociale() ?? '') . '/\/' .
+                ($equipement->getVisite() ?? '') . '/\/' .
                 ($equipement->getNumeroEquipement() ?? '') . '|' .
                 ($equipement->getLibelleEquipement() ?? '') . '|' .
                 ($equipement->getMiseEnService() ?? '') . '|' .
@@ -1806,6 +1806,154 @@ class FormRepository extends ServiceEntityRepository
             'bdd_sample' => array_slice($structuredEquipements, 0, 3),
             'kizeo_sample' => array_slice($kizeoFiltered, 0, 3)
         ];
+    }
+
+    /**
+     * Test avec le format BDD corrigé (antislashes simples) - AJOUTER DANS FormRepository.php
+     */
+    public function testSyncWithCorrectFormat($entityClass = 'App\\Entity\\EquipementS50'): array
+    {
+        $entityManager = $this->getEntityManager();
+        
+        // Récupérer les équipements de la BDD
+        $equipements = $entityManager->getRepository($entityClass)
+            ->createQueryBuilder('e')
+            ->where('e.raisonSociale LIKE :eurial')
+            ->setParameter('eurial', 'EURIAL SAS CREST%')
+            ->setMaxResults(5)
+            ->getQuery()
+            ->getResult();
+        
+        // Structurer les équipements de la BDD avec le format corrigé
+        $structuredEquipements = [];
+        foreach ($equipements as $equipement) {
+            $equipmentLine = 
+                ($equipement->getRaisonSociale() ?? '') . '\\' .           // Antislash échappé pour PHP
+                ($equipement->getVisite() ?? '') . '\\' .                 // Antislash échappé pour PHP
+                ($equipement->getNumeroEquipement() ?? '') . '|' .
+                ($equipement->getLibelleEquipement() ?? '') . '|' .
+                ($equipement->getMiseEnService() ?? '') . '|' .
+                ($equipement->getNumeroDeSerie() ?? '') . '|' .
+                ($equipement->getMarque() ?? '') . '|' .
+                ($equipement->getHauteur() ?? '') . '|' .
+                ($equipement->getLargeur() ?? '') . '|' .
+                ($equipement->getRepereSiteClient() ?? '') . '|' .
+                ($equipement->getIdContact() ?? '') . '|' .
+                ($equipement->getCodeSociete() ?? '') . '|' .
+                ($equipement->getCodeAgence() ?? '');
+                
+            $structuredEquipements[] = $equipmentLine;
+        }
+        
+        // Récupérer et nettoyer les équipements Kizeo
+        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        
+        $kizeoFiltered = [];
+        $cleaningStats = ['original' => 0, 'cleaned' => 0, 'perfect_matches' => 0];
+        
+        foreach ($kizeoEquipments as $kizeoEquipment) {
+            if (strpos($kizeoEquipment, 'EURIAL SAS CREST') === 0) {
+                $cleaningStats['original']++;
+                
+                // Utiliser la méthode de nettoyage 1 (qui fonctionne parfaitement)
+                $cleanedEquipment = $this->cleanKizeoFormat($kizeoEquipment);
+                $kizeoFiltered[] = $cleanedEquipment;
+                $cleaningStats['cleaned']++;
+                
+                // Vérifier si le nettoyage correspond exactement à un équipement BDD
+                foreach ($structuredEquipements as $bddEquipment) {
+                    if ($cleanedEquipment === $bddEquipment) {
+                        $cleaningStats['perfect_matches']++;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        $beforeCount = count($kizeoFiltered);
+        $simulatedAfter = $this->simulateCorrectSync($structuredEquipements, $kizeoFiltered);
+        $afterCount = count($simulatedAfter);
+        
+        return [
+            'test_scope' => 'EURIAL SAS CREST with corrected format matching',
+            'bdd_equipment_count' => count($structuredEquipements),
+            'kizeo_before_count' => $beforeCount,
+            'kizeo_after_count' => $afterCount,
+            'difference' => $afterCount - $beforeCount,
+            'cleaning_stats' => $cleaningStats,
+            'format_samples' => [
+                'bdd_sample' => $structuredEquipements[0] ?? 'N/A',
+                'kizeo_cleaned_sample' => $kizeoFiltered[0] ?? 'N/A',
+                'match_check' => isset($structuredEquipements[0], $kizeoFiltered[0]) 
+                    ? $structuredEquipements[0] === $kizeoFiltered[0] 
+                    : false
+            ],
+            'detailed_comparison' => [
+                'bdd_key' => isset($structuredEquipements[0]) ? explode('|', $structuredEquipements[0])[0] : 'N/A',
+                'kizeo_key' => isset($kizeoFiltered[0]) ? explode('|', $kizeoFiltered[0])[0] : 'N/A',
+                'keys_match' => isset($structuredEquipements[0], $kizeoFiltered[0]) 
+                    ? explode('|', $structuredEquipements[0])[0] === explode('|', $kizeoFiltered[0])[0]
+                    : false
+            ]
+        ];
+    }
+
+    /**
+     * Simulation correcte avec remplacement exact - AJOUTER DANS FormRepository.php
+     */
+    private function simulateCorrectSync($structuredEquipements, $cleanedKizeoEquipments): array
+    {
+        $result = $cleanedKizeoEquipments;
+        $replacements = 0;
+        $additions = 0;
+        
+        foreach ($structuredEquipements as $structuredEquipment) {
+            $structuredKey = explode('|', $structuredEquipment)[0]; // RAISON_SOCIALE\VISITE\NUMERO
+            
+            // Chercher une correspondance exacte
+            $found = false;
+            foreach ($result as $key => $existingEquipment) {
+                $existingKey = explode('|', $existingEquipment)[0];
+                if ($existingKey === $structuredKey) {
+                    // Remplacer par les données de la BDD
+                    $result[$key] = $structuredEquipment;
+                    $found = true;
+                    $replacements++;
+                    break;
+                }
+            }
+            
+            // Si pas trouvé, ajouter
+            if (!$found) {
+                $result[] = $structuredEquipment;
+                $additions++;
+            }
+        }
+        
+        // Log pour debug
+        error_log("Simulation: $replacements remplacements, $additions ajouts");
+        
+        return $result;
+    }
+
+    
+
+    /**
+     * Versions adaptées des méthodes avec nettoyage - AJOUTER DANS FormRepository.php
+     */
+    private function equipmentExistsInKizeoWithCleaning($cleanedKizeoEquipments, $equipmentBaseKey): bool
+    {
+        foreach ($cleanedKizeoEquipments as $kizeoEquipment) {
+            $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            
+            if ($kizeoBaseKey === $equipmentBaseKey) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -2144,9 +2292,9 @@ class FormRepository extends ServiceEntityRepository
         ];
     }
     /**
-     * Version corrigée de compareAndSyncEquipments qui gère le format Kizeo
+     * Version finale de compareAndSyncEquipmentsWithKizeoFormatFix - AJOUTER DANS FormRepository.php
      */
-    private function compareAndSyncEquipmentsWithKizeoFormatFix($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipmentsWithKizeoFormatFix($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         // Nettoyer d'abord tous les équipements Kizeo
         $cleanedKizeoEquipments = [];
@@ -2161,23 +2309,66 @@ class FormRepository extends ServiceEntityRepository
             $keyParts = explode('\\', $structuredFullKey);
             $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
 
-            // Utiliser les méthodes existantes mais avec les équipements nettoyés
-            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
+            // Vérifier si cet équipement existe déjà sur Kizeo (peu importe la visite)
+            $equipmentExistsInKizeo = $this->equipmentExistsInKizeoWithCleaning($updatedKizeoEquipments, $equipmentBaseKey);
             
             if ($equipmentExistsInKizeo) {
-                $this->updateAllVisitsForEquipment($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                // L'équipement existe déjà : mettre à jour toutes ses visites
+                $this->updateAllVisitsForEquipmentWithCleaning($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
                 
-                $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
+                // Vérifier si la visite spécifique existe, sinon l'ajouter
+                $specificVisitExists = $this->specificVisitExistsWithCleaning($updatedKizeoEquipments, $structuredFullKey);
                 if (!$specificVisitExists) {
                     $updatedKizeoEquipments[] = $structuredEquipment;
                 }
             } else {
+                // L'équipement n'existe pas du tout : l'ajouter
                 $updatedKizeoEquipments[] = $structuredEquipment;
             }
         }
 
         $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
         return $updatedKizeoEquipments;
+    }
+
+    private function specificVisitExistsWithCleaning($cleanedKizeoEquipments, $structuredFullKey): bool
+    {
+        foreach ($cleanedKizeoEquipments as $kizeoEquipment) {
+            $kizeoFullKey = explode('|', $kizeoEquipment)[0];
+            if ($kizeoFullKey === $structuredFullKey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private function updateAllVisitsForEquipmentWithCleaning(&$cleanedKizeoEquipments, $equipmentBaseKey, $newEquipment): void
+    {
+        $newEquipmentData = explode('|', $newEquipment);
+        $newEquipmentFullKey = $newEquipmentData[0];
+        
+        foreach ($cleanedKizeoEquipments as $key => $kizeoEquipment) {
+            $kizeoEquipmentData = explode('|', $kizeoEquipment);
+            $kizeoFullKey = $kizeoEquipmentData[0];
+            
+            $kizeoKeyParts = explode('\\', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            
+            if ($kizeoBaseKey === $equipmentBaseKey && $kizeoFullKey !== $newEquipmentFullKey) {
+                // Mettre à jour les données techniques
+                for ($i = 2; $i < count($newEquipmentData); $i++) {
+                    if (isset($newEquipmentData[$i])) {
+                        if (isset($kizeoEquipmentData[$i])) {
+                            $kizeoEquipmentData[$i] = $newEquipmentData[$i];
+                        } else {
+                            $kizeoEquipmentData[] = $newEquipmentData[$i];
+                        }
+                    }
+                }
+                
+                $cleanedKizeoEquipments[$key] = implode('|', $kizeoEquipmentData);
+            }
+        }
     }
 
     /**
