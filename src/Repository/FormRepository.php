@@ -1939,7 +1939,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Obtient l'ID de liste Kizeo associé à l'entité d'équipement
      */
-    private function getIdListeKizeoPourEntite($entite): int
+    public function getIdListeKizeoPourEntite($entite): int
     {
         // Mapping des entités vers les IDs de listes Kizeo
         $mapping = [
@@ -1994,7 +1994,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Structure les équipements de la BDD pour correspondre au format Kizeo
      */
-    private function structureLikeKizeoEquipmentsList($equipements): array
+    public function structureLikeKizeoEquipmentsList($equipements): array
     {
         $structuredEquipements = [];
         
