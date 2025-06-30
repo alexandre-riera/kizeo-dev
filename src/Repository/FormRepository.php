@@ -1253,7 +1253,7 @@ class FormRepository extends ServiceEntityRepository
         foreach ($structuredEquipements as $structuredEquipment) {
             $structuredFullKey = explode('|', $structuredEquipment)[0];
             $keyParts = explode('\\', $structuredFullKey);
-            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? ''); // RAISON_SOCIALE\NUMERO_EQUIPEMENT
 
             // Vérifier si cet équipement existe déjà sur Kizeo (peu importe la visite)
             $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
@@ -2043,7 +2043,7 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /**
-     * Simulation simple sans fonctions complexes
+     * Simulation simple pour test
      */
     private function simulateSyncSimple($structuredEquipements, $kizeoEquipments): array
     {

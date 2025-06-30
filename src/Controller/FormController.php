@@ -412,6 +412,61 @@ class FormController extends AbstractController
     }
 
     /**
+     * Route pour appliquer la correction SEULEMENT sur S50 - AJOUTER cette méthode
+     */
+    #[Route('/api/forms/fix/s50-only', name: 'app_api_form_fix_s50_only', methods: ['POST'])]
+    public function fixS50Only(
+        FormRepository $formRepository,
+        CacheInterface $cache,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        
+        try {
+            $entityClass = 'App\\Entity\\EquipementS50';
+            $startTime = microtime(true);
+            
+            // Récupérer les équipements de la BDD
+            $equipements = $entityManager->getRepository($entityClass)->findAll();
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            
+            // Récupérer l'ID de liste et vider le cache
+            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+            $cache->delete('kizeo_equipments_s50');
+            
+            // Récupérer les données Kizeo
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+            
+            // Appliquer la nouvelle logique
+            $updatedEquipments = $formRepository->compareAndSyncEquipments(
+                $structuredEquipements,
+                $kizeoEquipments,
+                $idListeKizeo
+            );
+            
+            $endTime = microtime(true);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'entity' => 'S50',
+                'results' => [
+                    'bdd_count' => count($structuredEquipements),
+                    'kizeo_before' => count($kizeoEquipments),
+                    'kizeo_after' => count($updatedEquipments),
+                    'execution_time' => round($endTime - $startTime, 2)
+                ],
+                'message' => 'Logique corrigée appliquée avec succès pour S50'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+    /**
      * Route de diagnostic pour les équipements multi-visites
      * À ajouter dans FormController
      */
@@ -607,7 +662,7 @@ class FormController extends AbstractController
      * 2. Si l'équipement existe déjà, mettre à jour toutes ses visites avec les nouvelles données
      * 3. Si l'équipement n'existe pas du tout, l'ajouter
      */
-    private function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    private function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo, FormRepository $formRepository): array 
     {
         $updatedKizeoEquipments = $kizeoEquipments;
 
@@ -621,7 +676,7 @@ class FormController extends AbstractController
             
             if ($equipmentExistsInKizeo) {
                 // L'équipement existe déjà : mettre à jour toutes ses visites
-                $this->updateAllVisitsForEquipment($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
+                $this->$formRepository->updateAllVisitsForEquipment($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
                 
                 // Vérifier si la visite spécifique existe, sinon l'ajouter
                 $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
@@ -634,7 +689,7 @@ class FormController extends AbstractController
             }
         }
 
-        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+        $this->$formRepository->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
         return $updatedKizeoEquipments;
     }
 
@@ -672,8 +727,9 @@ class FormController extends AbstractController
     /**
      * Version avec debugging détaillé pour comprendre le comportement
      */
-    private function compareAndSyncEquipmentsWithDetailedLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    private function compareAndSyncEquipmentsWithDetailedLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo, FormRepository $formRepository): array 
     {
+        
         $updatedKizeoEquipments = $kizeoEquipments;
         $stats = [
             'processed_equipment' => 0,
@@ -733,7 +789,7 @@ class FormController extends AbstractController
         // Log détaillé
         error_log("DETAILED SYNC STATS: " . json_encode($stats, JSON_PRETTY_PRINT));
 
-        $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
+        $this->$formRepository->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
         return $updatedKizeoEquipments;
     }
 
@@ -776,9 +832,9 @@ class FormController extends AbstractController
     /**
      * Fonction de test pour une simulation complète
      */
-    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50'): array
+    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50', FormRepository $formRepository): array
     {
-        $entityManager = $this->getEntityManager();
+        $entityManager = $this->$formRepository->getEntityManager();
         
         // Prendre seulement quelques équipements EURIAL SAS CREST pour le test
         $equipements = $entityManager->getRepository($entityClass)
@@ -789,9 +845,9 @@ class FormController extends AbstractController
             ->getQuery()
             ->getResult();
         
-        $structuredEquipements = $this->structureLikeKizeoEquipmentsList($equipements);
-        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
-        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
+        $idListeKizeo = $this->$formRepository->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->$formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
         
         // Filtrer Kizeo pour ne garder que EURIAL SAS CREST pour la comparaison
         $kizeoFiltered = array_filter($kizeoEquipments, function($equipment) {
