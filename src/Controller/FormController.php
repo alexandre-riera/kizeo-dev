@@ -372,7 +372,7 @@ class FormController extends AbstractController
                 ->getResult();
             
             // Structurer pour Kizeo
-            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
             
             // Récupérer les données Kizeo actuelles
             $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
