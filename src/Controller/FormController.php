@@ -352,7 +352,7 @@ class FormController extends AbstractController
      * Route pour tester la synchronisation sur un échantillon
      * À ajouter dans FormController
      */
-    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST', 'GET'])]
+    #[Route('/api/forms/test/sync-sample', name: 'app_api_form_test_sync_sample', methods: ['POST'])]
     public function testSyncSample(
         FormRepository $formRepository,
         EntityManagerInterface $entityManager,
@@ -372,7 +372,7 @@ class FormController extends AbstractController
                 ->getResult();
             
             // Structurer pour Kizeo
-            $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
             
             // Récupérer les données Kizeo actuelles
             $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
