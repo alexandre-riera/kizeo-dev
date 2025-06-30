@@ -2339,12 +2339,12 @@ class FormRepository extends ServiceEntityRepository
     public function structureLikeKizeoEquipmentsList($equipements): array
     {
         $structuredEquipements = [];
-        
+         
         foreach ($equipements as $equipement) {
             // Format Kizeo : "Libelle|Type|Année|N° série|Marque|Hauteur|Largeur|Repère|Id client|Id societe|Code agence"
             $equipmentLine = 
-                ($equipement->getRaisonSociale() ?? '') . '\\' .           // Raison sociale
-                ($equipement->getVisite() ?? '') . '\\' .           // Visite
+                ($equipement->getRaisonSociale() ?? '') . '/\/' .           // Raison sociale
+                ($equipement->getVisite() ?? '') . '/\/' .           // Visite
                 ($equipement->getNumeroEquipement() ?? '') . '|' .           // Numéro équipement
                 ($equipement->getLibelleEquipement() ?? '') . '|' .          // Libellé équipement
                 ($equipement->getMiseEnService() ?? '') . '|' .             // Année
@@ -2432,6 +2432,32 @@ class FormRepository extends ServiceEntityRepository
         $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
         return $updatedKizeoEquipments;
     }
+
+    /**
+     * Test de comparaison directe pour vérifier le format
+     */
+    public function testDirectFormatComparison(): array
+    {
+        // Test direct avec les vrais formats
+        $bddFormat = "EURIAL SAS CREST\CE2\COU01|Porte coulissante|nc|nc|Fermod|2500|2000||4405|4405|S50";
+        $kizeoOriginal = "EURIAL SAS CREST:EURIAL SAS CREST\CE2:CE2\COU01:COU01|Porte coulissante:Porte coulissante|nc:nc|nc:nc|Fermod:Fermod|2500:2500|2000:2000|:|4405:4405|4405:4405|S50:S50";
+        
+        $kizeoCleaned = $this->cleanKizeoFormat($kizeoOriginal);
+        
+        return [
+            'bdd_format' => $bddFormat,
+            'kizeo_original' => $kizeoOriginal,
+            'kizeo_cleaned' => $kizeoCleaned,
+            'formats_match' => $bddFormat === $kizeoCleaned,
+            'analysis' => [
+                'bdd_length' => strlen($bddFormat),
+                'cleaned_length' => strlen($kizeoCleaned),
+                'bdd_parts' => explode('|', $bddFormat),
+                'cleaned_parts' => explode('|', $kizeoCleaned)
+            ]
+        ];
+    }
+
     // Function to preg_split structured equipments to keep only the first part  raison_sociale|visit|numero_equipment
     public function splitStructuredEquipmentsToKeepFirstPart($structuredEquipmentsList){
         $structuredEquipmentsListSplitted = [];

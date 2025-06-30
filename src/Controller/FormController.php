@@ -700,14 +700,161 @@ class FormController extends AbstractController
     {
         foreach ($kizeoEquipments as $kizeoEquipment) {
             $kizeoFullKey = explode('|', $kizeoEquipment)[0];
-            $kizeoKeyParts = explode('\\', $kizeoFullKey);
-            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '\\' . ($kizeoKeyParts[2] ?? '');
+            $kizeoKeyParts = explode('/\/', $kizeoFullKey);
+            $kizeoBaseKey = ($kizeoKeyParts[0] ?? '') . '/\/' . ($kizeoKeyParts[2] ?? '');
             
             if ($kizeoBaseKey === $equipmentBaseKey) {
                 return true;
             }
         }
         return false;
+    }
+
+    /**
+     * Test de comparaison directe des formats
+     */
+    #[Route('/api/forms/test/format-comparison', name: 'app_api_form_test_format_comparison', methods: ['GET'])]
+    public function testFormatComparison(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $comparisonTest = $formRepository->testDirectFormatComparison();
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'comparison_test' => $comparisonTest,
+                'result' => $comparisonTest['formats_match'] 
+                    ? 'SUCCÈS - Les formats correspondent parfaitement !' 
+                    : 'ÉCHEC - Les formats ne correspondent pas'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Test final avec le format corrigé
+     */
+    #[Route('/api/forms/test/final-corrected', name: 'app_api_form_test_final_corrected', methods: ['GET'])]
+    public function testFinalCorrected(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $testResult = $formRepository->testSyncWithCorrectFormat();
+            
+            $analysis = 'OK - Pas de duplication prévue';
+            $color = 'success';
+            
+            if ($testResult['difference'] > 0) {
+                $analysis = 'ATTENTION - Va ajouter ' . $testResult['difference'] . ' équipements en doublon';
+                $color = 'danger';
+            }
+            
+            if ($testResult['cleaning_stats']['perfect_matches'] > 0) {
+                $analysis .= ' (' . $testResult['cleaning_stats']['perfect_matches'] . ' correspondances parfaites trouvées)';
+            }
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_result' => $testResult,
+                'analysis' => $analysis,
+                'alert_color' => $color,
+                'recommendation' => $testResult['difference'] === 0 
+                    ? '✅ OK pour lancer la synchronisation !'
+                    : '❌ Ne pas lancer la synchronisation - problème détecté',
+                'next_step' => $testResult['difference'] === 0 
+                    ? 'Vous pouvez maintenant utiliser POST /api/forms/fix/s50-with-cleaning'
+                    : 'Vérifiez les échantillons de format pour identifier le problème'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Route pour appliquer la synchronisation avec le nettoyage corrigé
+     */
+    #[Route('/api/forms/fix/s50-with-cleaning', name: 'app_api_form_fix_s50_with_cleaning', methods: ['POST'])]
+    public function fixS50WithCleaning(
+        FormRepository $formRepository,
+        CacheInterface $cache,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        
+        try {
+            $entityClass = 'App\\Entity\\EquipementS50';
+            $startTime = microtime(true);
+            
+            // 1. Récupérer les équipements de la BDD avec le format corrigé
+            $equipements = $entityManager->getRepository($entityClass)->findAll();
+            
+            // 2. Structurer avec des antislashes simples
+            $structuredEquipements = [];
+            foreach ($equipements as $equipement) {
+                $equipmentLine = 
+                    ($equipement->getRaisonSociale() ?? '') . '/\/' .
+                    ($equipement->getVisite() ?? '') . '/\/' .
+                    ($equipement->getNumeroEquipement() ?? '') . '|' .
+                    ($equipement->getLibelleEquipement() ?? '') . '|' .
+                    ($equipement->getMiseEnService() ?? '') . '|' .
+                    ($equipement->getNumeroDeSerie() ?? '') . '|' .
+                    ($equipement->getMarque() ?? '') . '|' .
+                    ($equipement->getHauteur() ?? '') . '|' .
+                    ($equipement->getLargeur() ?? '') . '|' .
+                    ($equipement->getRepereSiteClient() ?? '') . '|' .
+                    ($equipement->getIdContact() ?? '') . '|' .
+                    ($equipement->getCodeSociete() ?? '') . '|' .
+                    ($equipement->getCodeAgence() ?? '');
+                    
+                $structuredEquipements[] = $equipmentLine;
+            }
+            
+            // 3. Récupérer l'ID de liste et vider le cache
+            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+            $cache->delete('kizeo_equipments_s50');
+            
+            // 4. Récupérer et nettoyer les données Kizeo
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+            
+            // 5. Appliquer la synchronisation avec nettoyage
+            $updatedEquipments = $formRepository->compareAndSyncEquipmentsWithKizeoFormatFix(
+                $structuredEquipements,
+                $kizeoEquipments,
+                $idListeKizeo
+            );
+            
+            $endTime = microtime(true);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'entity' => 'S50',
+                'results' => [
+                    'bdd_count' => count($structuredEquipements),
+                    'kizeo_before' => count($kizeoEquipments),
+                    'kizeo_after' => count($updatedEquipments),
+                    'execution_time' => round($endTime - $startTime, 2)
+                ],
+                'message' => '✅ Synchronisation S50 terminée avec succès (nettoyage Kizeo appliqué)'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => basename($e->getFile())
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
