@@ -1408,7 +1408,7 @@ class FormRepository extends ServiceEntityRepository
         // Récupérer les équipements avec leurs différentes visites
         $equipements = $entityManager->getRepository($entityClass)
             ->createQueryBuilder('e')
-            ->where('e.raisonSociale LIKE :eurial')
+            ->where('e.raison_sociale LIKE :eurial')
             ->setParameter('eurial', 'EURIAL SAS CREST%')
             ->setMaxResults(20)
             ->getQuery()
