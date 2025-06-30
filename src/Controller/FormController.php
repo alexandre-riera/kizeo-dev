@@ -267,24 +267,56 @@ class FormController extends AbstractController
         $recommendations = [];
         
         // Si aucune correspondance exacte
-        if (empty($diagnostic['potential_matches']) || 
-            !collect($diagnostic['potential_matches'])->flatMap(fn($m) => $m['matches'])->where('type', 'exact_match')->count()) {
+        $hasExactMatch = false;
+        if (!empty($diagnostic['potential_matches'])) {
+            foreach ($diagnostic['potential_matches'] as $match) {
+                if (!empty($match['matches'])) {
+                    foreach ($match['matches'] as $m) {
+                        if ($m['type'] === 'exact_match') {
+                            $hasExactMatch = true;
+                            break 2;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (!$hasExactMatch) {
             $recommendations[] = "Aucune correspondance exacte trouvée - vérifier le format des clés";
         }
         
         // Si les structures diffèrent
-        $bddStructures = collect($diagnostic['bdd_samples'])->pluck('key_structure')->unique();
-        $kizeoStructures = collect($diagnostic['kizeo_samples'])->pluck('key_structure')->unique();
+        $bddStructures = [];
+        $kizeoStructures = [];
         
-        if ($bddStructures->count() > 1 || $kizeoStructures->count() > 1) {
+        if (!empty($diagnostic['bdd_samples'])) {
+            foreach ($diagnostic['bdd_samples'] as $sample) {
+                $bddStructures[] = $sample['key_structure'];
+            }
+        }
+        
+        if (!empty($diagnostic['kizeo_samples'])) {
+            foreach ($diagnostic['kizeo_samples'] as $sample) {
+                $kizeoStructures[] = $sample['key_structure'];
+            }
+        }
+        
+        $bddStructures = array_unique($bddStructures, SORT_REGULAR);
+        $kizeoStructures = array_unique($kizeoStructures, SORT_REGULAR);
+        
+        if (count($bddStructures) > 1 || count($kizeoStructures) > 1) {
             $recommendations[] = "Structures de clés incohérentes détectées";
         }
         
         // Si problème d'encodage
-        $encodingIssues = collect($diagnostic['bdd_samples'])
-            ->merge($diagnostic['kizeo_samples'])
-            ->where('key_structure.encoding', '!=', 'UTF-8')
-            ->count();
+        $encodingIssues = 0;
+        $allSamples = array_merge($diagnostic['bdd_samples'] ?? [], $diagnostic['kizeo_samples'] ?? []);
+        
+        foreach ($allSamples as $sample) {
+            if (isset($sample['key_structure']['encoding']) && $sample['key_structure']['encoding'] !== 'UTF-8') {
+                $encodingIssues++;
+            }
+        }
             
         if ($encodingIssues > 0) {
             $recommendations[] = "Problèmes d'encodage détectés - normaliser les caractères";
@@ -292,6 +324,93 @@ class FormController extends AbstractController
         
         return $recommendations;
     }
+
+    /**
+     * Route de test simplifiée sans dépendances complexes
+     */
+    #[Route('/api/forms/test/simple-sync', name: 'app_api_form_test_simple_sync', methods: ['GET'])]
+    public function testSimpleSync(FormRepository $formRepository): JsonResponse
+    {
+        try {
+            $testResult = $formRepository->testSyncLogicWithSample();
+            
+            $analysis = 'OK - Pas de duplication prévue';
+            if ($testResult['difference'] > 0) {
+                $analysis = 'ATTENTION - Va ajouter ' . $testResult['difference'] . ' équipements en doublon';
+            }
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'test_result' => $testResult,
+                'analysis' => $analysis
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Route pour appliquer la correction sur S50 uniquement
+     */
+    #[Route('/api/forms/fix/s50-sync', name: 'app_api_form_fix_s50_sync', methods: ['POST'])]
+    public function fixS50Sync(
+        FormRepository $formRepository,
+        CacheInterface $cache,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        
+        try {
+            $entityClass = 'App\\Entity\\EquipementS50';
+            $startTime = microtime(true);
+            
+            // Récupérer les équipements de la BDD
+            $equipements = $entityManager->getRepository($entityClass)->findAll();
+            $structuredEquipements = $formRepository->structureLikeKizeoEquipmentsList($equipements);
+            
+            // Récupérer l'ID de liste et vider le cache
+            $idListeKizeo = $formRepository->getIdListeKizeoPourEntite($entityClass);
+            $cache->delete('kizeo_equipments_s50');
+            
+            // Récupérer les données Kizeo
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+            
+            // Appliquer la nouvelle logique
+            $updatedEquipments = $formRepository->compareAndSyncEquipments(
+                $structuredEquipements,
+                $kizeoEquipments,
+                $idListeKizeo
+            );
+            
+            $endTime = microtime(true);
+            
+            return new JsonResponse([
+                'status' => 'success',
+                'entity' => 'S50',
+                'results' => [
+                    'bdd_count' => count($structuredEquipements),
+                    'kizeo_before' => count($kizeoEquipments),
+                    'kizeo_after' => count($updatedEquipments),
+                    'execution_time' => round($endTime - $startTime, 2)
+                ],
+                'message' => 'Logique corrigée appliquée avec succès pour S50'
+            ], Response::HTTP_OK);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'status' => 'error',
+                'error' => $e->getMessage(),
+                'line' => $e->getLine(),
+                'file' => $e->getFile()
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
     /**
      * Route de diagnostic pour les équipements multi-visites
      * À ajouter dans FormController
