@@ -34,7 +34,7 @@ use stdClass;
  */
 class FormRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry,  private HttpClientInterface $client)
+    public function __construct(ManagerRegistry $registry,  public HttpClientInterface $client)
     {
         parent::__construct($registry, Form::class);
     }
@@ -276,7 +276,7 @@ class FormRepository extends ServiceEntityRepository
      * Récupère tous les data_ids pour un form_id donné
      * Utilise l'endpoint /data/advanced qui est plus efficace
      */
-    private function getDataIdsForForm($formId, $cache): array
+    public function getDataIdsForForm($formId, $cache): array
     {
         $cacheKey = "form_data_ids_$formId";
         
@@ -323,7 +323,7 @@ class FormRepository extends ServiceEntityRepository
      * Marque tous les data_ids d'un formulaire comme "non lus"
      * Suit exactement la spec Kizeo: POST /forms/{formId}/markasunreadbyaction/read
      */
-    private function markFormDataAsUnread($formId, $dataIds): void
+    public function markFormDataAsUnread($formId, $dataIds): void
     {
         try {
             // Construire l'URL selon la spec Kizeo
@@ -837,7 +837,7 @@ class FormRepository extends ServiceEntityRepository
      * @param string $typeLibelle Le libellé du type d'équipement
      * @return string Le code du type (ex: SEC pour porte sectionnelle)
      */
-    private function getTypeCodeFromLibelle(string $typeLibelle): string
+    public function getTypeCodeFromLibelle(string $typeLibelle): string
     {
         // Mappings connus pour les types d'équipement courants
         $typeCodeMap = [
@@ -911,7 +911,7 @@ class FormRepository extends ServiceEntityRepository
     * @param string $entityAgency La classe de l'entité d'agence
     * @return int Le prochain numéro à utiliser
     */
-    private function getNextEquipmentNumberFromDatabase(string $typeCode, string $idClient, string $entityAgency): int
+    public function getNextEquipmentNumberFromDatabase(string $typeCode, string $idClient, string $entityAgency): int
     {
         // Requête pour trouver tous les équipements du même type pour ce client
         $equipements = $this->getEntityManager()->getRepository($entityAgency)
@@ -1246,7 +1246,7 @@ class FormRepository extends ServiceEntityRepository
     * Le format des équipements est : "RAISON_SOCIALE\VISITE\NUMERO_EQUIPEMENT|libelle|type|..."
     * La comparaison doit se faire sur l'ensemble de la partie avant le premier "|"
     */
-    private function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipments($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         $updatedKizeoEquipments = $kizeoEquipments; // Initialiser avec les données Kizeo existantes
 
@@ -1291,7 +1291,7 @@ class FormRepository extends ServiceEntityRepository
      * Met à jour toutes les visites d'un même équipement avec les nouvelles données
      * FONCTION CORRIGÉE
      */
-    private function updateAllVisitsForEquipment(&$kizeoEquipments, $equipmentBaseKey, $newEquipment): void
+    public function updateAllVisitsForEquipment(&$kizeoEquipments, $equipmentBaseKey, $newEquipment): void
     {
         $newEquipmentData = explode('|', $newEquipment);
         $newEquipmentFullKey = $newEquipmentData[0]; // RAISON_SOCIALE\VISITE\NUMERO_EQUIPEMENT
@@ -1330,7 +1330,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Version avec logging pour debug
      */
-    private function compareAndSyncEquipmentsWithLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipmentsWithLogging($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         $updatedKizeoEquipments = $kizeoEquipments;
         $stats = [
@@ -1381,7 +1381,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Compte le nombre de mises à jour inter-visites pour un équipement
      */
-    private function countCrossVisitUpdates($kizeoEquipments, $equipmentBaseKey, $excludeFullKey): int
+    public function countCrossVisitUpdates($kizeoEquipments, $equipmentBaseKey, $excludeFullKey): int
     {
         $count = 0;
         
@@ -1464,7 +1464,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Version avec debugging pour identifier les problèmes de comparaison
      */
-    private function compareAndSyncEquipmentsWithDebug($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipmentsWithDebug($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         $updatedKizeoEquipments = $kizeoEquipments;
         $debugInfo = [
@@ -1518,7 +1518,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Version avec nettoyage des clés pour éviter les problèmes d'encodage/espaces
      */
-    private function compareAndSyncEquipmentsWithCleaning($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipmentsWithCleaning($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         $updatedKizeoEquipments = $kizeoEquipments;
 
@@ -1552,7 +1552,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Normalise une clé en supprimant les espaces et caractères indésirables
      */
-    private function normalizeKey(string $key): string
+    public function normalizeKey(string $key): string
     {
         // Supprimer les espaces en début/fin
         $key = trim($key);
@@ -1569,7 +1569,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Version optimisée qui évite la double boucle pour de meilleures performances
      */
-    private function compareAndSyncEquipmentsOptimized($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
+    public function compareAndSyncEquipmentsOptimized($structuredEquipements, $kizeoEquipments, $idListeKizeo): array 
     {
         // Créer un index des équipements Kizeo pour une recherche rapide
         $kizeoIndex = [];
@@ -1706,7 +1706,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Analyse la structure d'une clé d'équipement
      */
-    private function analyzeKeyStructure(string $key): array
+    public function analyzeKeyStructure(string $key): array
     {
         $analysis = [
             'has_backslash' => strpos($key, '\\') !== false,
@@ -1811,7 +1811,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Simulation simple - AJOUTER cette méthode dans FormRepository.php
      */
-    private function simulateSimpleSync($structuredEquipements, $kizeoEquipments): array
+    public function simulateSimpleSync($structuredEquipements, $kizeoEquipments): array
     {
         $result = $kizeoEquipments; // Commencer avec les équipements Kizeo existants
         
@@ -1868,7 +1868,7 @@ class FormRepository extends ServiceEntityRepository
     * 2. Comparaison basée sur le client ET le numéro d'équipement exact
     * 3. Évite la mise à jour de tous les équipements du même type
     */
-    private function updateAllVisits(&$kizeoEquipments, $structuredPrefix, $newEquipment): void
+    public function updateAllVisits(&$kizeoEquipments, $structuredPrefix, $newEquipment): void
     {
         $newEquipmentData = explode('|', $newEquipment);
         
@@ -1905,7 +1905,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Envoie la liste d'équipements mise à jour à Kizeo
      */
-    private function envoyerListeKizeo($kizeoEquipments, $idListeKizeo): void
+    public function envoyerListeKizeo($kizeoEquipments, $idListeKizeo): void
     {
         Request::enableHttpMethodParameterOverride();
         $client = new Client();
@@ -2104,7 +2104,7 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Vérifie si une visite spécifique existe déjà
      */
-    private function specificVisitExists($kizeoEquipments, $structuredFullKey): bool
+    public function specificVisitExists($kizeoEquipments, $structuredFullKey): bool
     {
         foreach ($kizeoEquipments as $kizeoEquipment) {
             $kizeoFullKey = explode('|', $kizeoEquipment)[0];
