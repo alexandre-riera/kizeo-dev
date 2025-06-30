@@ -1447,7 +1447,7 @@ class FormRepository extends ServiceEntityRepository
                 ($equipement->getHauteur() ?? '') . '|' .                   // Hauteur
                 ($equipement->getLargeur() ?? '') . '|' .                   // Largeur
                 ($equipement->getRepereSiteClient() ?? '') . '|' .          // Repère site client
-                ($equipement->getIdClient() ?? '') . '|' .                  // Id client
+                ($equipement->getIdContact() ?? '') . '|' .                  // Id client
                 ($equipement->getIdSociete() ?? '') . '|' .                 // Id société
                 ($equipement->getCodeAgence() ?? '');                       // Code agence
                 
