@@ -1720,14 +1720,40 @@ class FormRepository extends ServiceEntityRepository
     }
 
     /////////////////// TEMPORAIRE ////////////////////////////////////////////////
-    /**
-     * Fonction de test pour une simulation complète
-     */
-    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50', FormRepository $formRepository): array
+    public function structureEquipmentsForKizeo($equipements): array
     {
-        $entityManager = $this->$formRepository->getEntityManager();
+        $structuredEquipements = [];
         
-        // Prendre seulement quelques équipements EURIAL SAS CREST pour le test
+        foreach ($equipements as $equipement) {
+            $equipmentLine = 
+                ($equipement->getRaisonSociale() ?? '') . '\\' .
+                ($equipement->getVisite() ?? '') . '\\' .
+                ($equipement->getNumeroEquipement() ?? '') . '|' .
+                ($equipement->getLibelleEquipement() ?? '') . '|' .
+                ($equipement->getMiseEnService() ?? '') . '|' .
+                ($equipement->getNumeroDeSerie() ?? '') . '|' .
+                ($equipement->getMarque() ?? '') . '|' .
+                ($equipement->getHauteur() ?? '') . '|' .
+                ($equipement->getLargeur() ?? '') . '|' .
+                ($equipement->getRepereSiteClient() ?? '') . '|' .
+                ($equipement->getIdContact() ?? '') . '|' .
+                ($equipement->getCodeSociete() ?? '') . '|' .
+                ($equipement->getCodeAgence() ?? '');
+                
+            $structuredEquipements[] = $equipmentLine;
+        }
+        
+        return $structuredEquipements;
+    }
+
+    /**
+     * Fonction de test pour une simulation complète - VERSION CORRIGÉE
+     */
+    public function testSyncLogicWithSample($entityClass = 'App\\Entity\\EquipementS50'): array
+    {
+        $entityManager = $this->getEntityManager();
+        
+        // Prendre quelques équipements EURIAL SAS CREST pour le test
         $equipements = $entityManager->getRepository($entityClass)
             ->createQueryBuilder('e')
             ->where('e.raisonSociale LIKE :eurial')
@@ -1736,20 +1762,40 @@ class FormRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
         
-        $structuredEquipements = $this->$formRepository->structureLikeKizeoEquipmentsList($equipements);
-        $idListeKizeo = $this->$formRepository->getIdListeKizeoPourEntite($entityClass);
-        $kizeoEquipments = $this->$formRepository->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        // Structurer les équipements manuellement (sans appeler la méthode privée)
+        $structuredEquipements = [];
+        foreach ($equipements as $equipement) {
+            $equipmentLine = 
+                ($equipement->getRaisonSociale() ?? '') . '\\' .
+                ($equipement->getVisite() ?? '') . '\\' .
+                ($equipement->getNumeroEquipement() ?? '') . '|' .
+                ($equipement->getLibelleEquipement() ?? '') . '|' .
+                ($equipement->getMiseEnService() ?? '') . '|' .
+                ($equipement->getNumeroDeSerie() ?? '') . '|' .
+                ($equipement->getMarque() ?? '') . '|' .
+                ($equipement->getHauteur() ?? '') . '|' .
+                ($equipement->getLargeur() ?? '') . '|' .
+                ($equipement->getRepereSiteClient() ?? '') . '|' .
+                ($equipement->getIdContact() ?? '') . '|' .
+                ($equipement->getCodeSociete() ?? '') . '|' .
+                ($equipement->getCodeAgence() ?? '');
+                
+            $structuredEquipements[] = $equipmentLine;
+        }
         
-        // Filtrer Kizeo pour ne garder que EURIAL SAS CREST pour la comparaison
+        $idListeKizeo = $this->getIdListeKizeoPourEntite($entityClass);
+        $kizeoEquipments = $this->getAgencyListEquipementsFromKizeoByListId($idListeKizeo);
+        
+        // Filtrer Kizeo pour ne garder que EURIAL SAS CREST
         $kizeoFiltered = array_filter($kizeoEquipments, function($equipment) {
             return strpos($equipment, 'EURIAL SAS CREST') === 0;
         });
         
         $beforeCount = count($kizeoFiltered);
         
-        // Simulation avec logging détaillé
-        $afterEquipments = $this->simulateSyncWithLogging($structuredEquipements, $kizeoFiltered);
-        $afterCount = count($afterEquipments);
+        // Simulation simple de synchronisation
+        $simulatedAfter = $this->simulateSimpleSync($structuredEquipements, $kizeoFiltered);
+        $afterCount = count($simulatedAfter);
         
         return [
             'test_scope' => 'EURIAL SAS CREST only',
@@ -1762,32 +1808,35 @@ class FormRepository extends ServiceEntityRepository
         ];
     }
 
-    private function simulateSyncSimple($structuredEquipements, $kizeoEquipments): array
+    /**
+     * Simulation simple - AJOUTER cette méthode dans FormRepository.php
+     */
+    private function simulateSimpleSync($structuredEquipements, $kizeoEquipments): array
     {
-        $updatedKizeoEquipments = $kizeoEquipments;
+        $result = $kizeoEquipments; // Commencer avec les équipements Kizeo existants
         
         foreach ($structuredEquipements as $structuredEquipment) {
-            $structuredFullKey = explode('|', $structuredEquipment)[0];
-            $keyParts = explode('\\', $structuredFullKey);
-            $equipmentBaseKey = ($keyParts[0] ?? '') . '\\' . ($keyParts[2] ?? '');
+            $structuredKey = explode('|', $structuredEquipment)[0]; // RAISON_SOCIALE\VISITE\NUMERO
             
-            $equipmentExistsInKizeo = $this->equipmentExistsInKizeo($updatedKizeoEquipments, $equipmentBaseKey);
-            $specificVisitExists = $this->specificVisitExists($updatedKizeoEquipments, $structuredFullKey);
-            
-            if ($equipmentExistsInKizeo) {
-                // Mettre à jour les visites existantes
-                $this->updateAllVisitsForEquipmentWithCount($updatedKizeoEquipments, $equipmentBaseKey, $structuredEquipment);
-                
-                // Ajouter la visite spécifique si elle n'existe pas
-                if (!$specificVisitExists) {
-                    $updatedKizeoEquipments[] = $structuredEquipment;
+            // Vérifier si cet équipement exact existe déjà
+            $found = false;
+            foreach ($result as $key => $existingEquipment) {
+                $existingKey = explode('|', $existingEquipment)[0];
+                if ($existingKey === $structuredKey) {
+                    // Remplacer l'équipement existant
+                    $result[$key] = $structuredEquipment;
+                    $found = true;
+                    break;
                 }
-            } else {
-                $updatedKizeoEquipments[] = $structuredEquipment;
+            }
+            
+            // Si pas trouvé, ajouter
+            if (!$found) {
+                $result[] = $structuredEquipment;
             }
         }
         
-        return $updatedKizeoEquipments;
+        return $result;
     }
     /**
      * Explication des modifications:

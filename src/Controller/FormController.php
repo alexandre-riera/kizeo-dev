@@ -727,7 +727,7 @@ class FormController extends AbstractController
     // AJOUTER cette route ultra-simple dans FormController.php pour tester :
 
     /**
-     * Route de test ultra-simple pour vérifier que les méthodes existent
+     * Route de test ultra-simple qui fonctionne - VERSION CORRIGÉE
      */
     #[Route('/api/forms/test/ultra-simple', name: 'app_api_form_test_ultra_simple', methods: ['GET'])]
     public function testUltraSimple(FormRepository $formRepository, EntityManagerInterface $entityManager): JsonResponse
@@ -736,25 +736,52 @@ class FormController extends AbstractController
             // Test 1: Vérifier qu'on peut récupérer des équipements
             $equipements = $entityManager->getRepository('App\\Entity\\EquipementS50')
                 ->createQueryBuilder('e')
-                ->where('e.raison_sociale LIKE :eurial')
+                ->where('e.raisonSociale LIKE :eurial')
                 ->setParameter('eurial', 'EURIAL SAS CREST%')
                 ->setMaxResults(3)
                 ->getQuery()
                 ->getResult();
             
-            // Test 2: Vérifier qu'on peut structurer les équipements
-            $structured = $formRepository->structureLikeKizeoEquipmentsList($equipements);
-            
-            // Test 3: Vérifier qu'on peut récupérer l'ID de liste
+            // Test 2: Vérifier qu'on peut récupérer l'ID de liste
             $idListe = $formRepository->getIdListeKizeoPourEntite('App\\Entity\\EquipementS50');
+            
+            // Test 3: Vérifier qu'on peut récupérer les équipements Kizeo
+            $kizeoEquipments = $formRepository->getAgencyListEquipementsFromKizeoByListId($idListe);
+            
+            // Test 4: Créer manuellement un équipement structuré pour test
+            $testEquipment = '';
+            if (!empty($equipements)) {
+                $eq = $equipements[0];
+                $testEquipment = 
+                    ($eq->getRaisonSociale() ?? '') . '\\' .
+                    ($eq->getVisite() ?? '') . '\\' .
+                    ($eq->getNumeroEquipement() ?? '') . '|' .
+                    ($eq->getLibelleEquipement() ?? '') . '|' .
+                    ($eq->getMiseEnService() ?? '') . '|' .
+                    ($eq->getNumeroDeSerie() ?? '') . '|' .
+                    ($eq->getMarque() ?? '') . '|' .
+                    ($eq->getHauteur() ?? '') . '|' .
+                    ($eq->getLargeur() ?? '') . '|' .
+                    ($eq->getRepereSiteClient() ?? '') . '|' .
+                    ($eq->getIdContact() ?? '') . '|' .
+                    ($eq->getCodeSociete() ?? '') . '|' .
+                    ($eq->getCodeAgence() ?? '');
+            }
+            
+            // Test 5: Filtrer les équipements Kizeo EURIAL
+            $eurialKizeoEquipments = array_filter($kizeoEquipments, function($equipment) {
+                return strpos($equipment, 'EURIAL SAS CREST') === 0;
+            });
             
             return new JsonResponse([
                 'status' => 'success',
                 'tests' => [
                     'equipments_found' => count($equipements),
-                    'structured_count' => count($structured),
                     'list_id' => $idListe,
-                    'first_structured' => isset($structured[0]) ? $structured[0] : null
+                    'total_kizeo_equipments' => count($kizeoEquipments),
+                    'eurial_kizeo_equipments' => count($eurialKizeoEquipments),
+                    'test_structured_equipment' => $testEquipment,
+                    'sample_kizeo_equipment' => !empty($eurialKizeoEquipments) ? array_values($eurialKizeoEquipments)[0] : null
                 ]
             ], Response::HTTP_OK);
             
