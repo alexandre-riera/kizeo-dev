@@ -736,7 +736,7 @@ class FormController extends AbstractController
             // Test 1: Vérifier qu'on peut récupérer des équipements
             $equipements = $entityManager->getRepository('App\\Entity\\EquipementS50')
                 ->createQueryBuilder('e')
-                ->where('e.raisonSociale LIKE :eurial')
+                ->where('e.raison_sociale LIKE :eurial')
                 ->setParameter('eurial', 'EURIAL SAS CREST%')
                 ->setMaxResults(3)
                 ->getQuery()
