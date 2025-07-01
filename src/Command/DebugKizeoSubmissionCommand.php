@@ -86,7 +86,7 @@ class DebugKizeoSubmissionCommand extends Command
                     return Command::FAILURE;
                 }
 
-                $entryId = $listData['data'][0]['_id'];
+                $entryId = $listData['data'][0]['id'];
                 $output->writeln("📝 Première soumission trouvée: <comment>{$entryId}</comment>");
             }
 
