@@ -3132,8 +3132,8 @@ class SimplifiedMaintenanceController extends AbstractController
         $idClient = $fields['id_client_']['value'] ?? '';
         
         // 2. Vérifier si l'équipement existe déjà
-        if ($this->equipmentExists($numeroEquipement, $idClient, $entityClass, $entityManager)) {
-            return false; // Skip car déjà existe
+        if ($this->equipmentExistsForSameVisit($numeroEquipement, $idClient, $fields['date_et_heure1']['value'] ?? '', $entityClass, $entityManager)) {
+            return false; // Skip seulement si même équipement + même date
         }
         
         // 3. Continuer avec le traitement normal
@@ -3194,6 +3194,38 @@ class SimplifiedMaintenanceController extends AbstractController
         $this->savePhotosToFormEntityWithDeduplication($equipmentContrat, $fields, $formId, $entryId, $numeroEquipement, $entityManager);
         
         return true; // Équipement traité avec succès
+    }
+
+    /**
+     * Vérifier si l'équipement existe déjà pour la MÊME visite (même date)
+     * Permet de conserver l'historique entre différentes visites
+     */
+    private function equipmentExistsForSameVisit(
+        string $numeroEquipement, 
+        string $idClient, 
+        string $dateVisite,
+        string $entityClass, 
+        EntityManagerInterface $entityManager
+    ): bool {
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            
+            $existing = $repository->createQueryBuilder('e')
+                ->where('e.numero_equipement = :numero')
+                ->andWhere('e.id_contact = :idClient')
+                ->andWhere('e.date_enregistrement = :dateVisite') // Même date = même visite
+                ->setParameter('numero', $numeroEquipement)
+                ->setParameter('idClient', $idClient)
+                ->setParameter('dateVisite', $dateVisite)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            return $existing !== null;
+            
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
