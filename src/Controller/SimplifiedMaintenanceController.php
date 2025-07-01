@@ -1649,40 +1649,70 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Données spécifiques contrat - VERSION FINALE
+     * Données spécifiques contrat - VERSION CORRIGÉE pour le nouveau format
      */
     private function setRealContractData($equipement, array $equipmentContrat): void
     {
-        // Extraction du path et value
+        // 1. Type de visite depuis le path
         $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
-        $equipementValue = $equipmentContrat['equipement']['value'] ?? '';
-        
-        // Type de visite depuis le path
         $visite = $this->extractVisitTypeFromPath($equipementPath);
         $equipement->setVisite($visite);
         
-        // Parse des infos équipement
-        $equipmentInfo = $this->parseEquipmentInfo($equipementValue);
+        // 2. Numéro d'équipement (simple valeur, pas de parsing)
+        $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
+        $equipement->setNumeroEquipement($numeroEquipement);
         
-        $equipement->setNumeroEquipement($equipmentInfo['numero'] ?? '');
-        $equipement->setLibelleEquipement($equipmentInfo['libelle'] ?? '');
-        $equipement->setMiseEnService($equipmentInfo['mise_en_service'] ?? '');
-        $equipement->setNumeroDeSerie($equipmentInfo['numero_serie'] ?? '');
-        $equipement->setMarque($equipmentInfo['marque'] ?? '');
-        $equipement->setHauteur($equipmentInfo['hauteur'] ?? '');
-        $equipement->setLargeur($equipmentInfo['largeur'] ?? '');
-        $equipement->setRepereSiteClient($equipmentInfo['repere'] ?? '');
+        // 3. Libellé depuis reference7
+        $libelle = $equipmentContrat['reference7']['value'] ?? '';
+        $equipement->setLibelleEquipement($libelle);
         
-        // Données du formulaire
-        $equipement->setModeFonctionnement($equipmentContrat['mode_fonctionnement']['value'] ?? '');
-        $equipement->setLongueur($equipmentContrat['longueur']['value'] ?? '');
-        $equipement->setPlaqueSignaletique($equipmentContrat['plaque_signaletique']['value'] ?? '');
-        $equipement->setEtat($equipmentContrat['etat']['value'] ?? '');
+        // 4. Année mise en service depuis reference2
+        $miseEnService = $equipmentContrat['reference2']['value'] ?? '';
+        $equipement->setMiseEnService($miseEnService);
         
-        // Statut de maintenance
-        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentContrat['etat']['value'] ?? ''));
+        // 5. Numéro de série depuis reference6
+        $numeroSerie = $equipmentContrat['reference6']['value'] ?? '';
+        $equipement->setNumeroDeSerie($numeroSerie);
         
+        // 6. Marque depuis reference5
+        $marque = $equipmentContrat['reference5']['value'] ?? '';
+        $equipement->setMarque($marque);
+        
+        // 7. Hauteur depuis reference1
+        $hauteur = $equipmentContrat['reference1']['value'] ?? '';
+        $equipement->setHauteur($hauteur);
+        
+        // 8. Largeur depuis reference3 (si disponible)
+        $largeur = $equipmentContrat['reference3']['value'] ?? '';
+        $equipement->setLargeur($largeur);
+        
+        // 9. Localisation depuis localisation_site_client
+        $localisation = $equipmentContrat['localisation_site_client']['value'] ?? '';
+        $equipement->setRepereSiteClient($localisation);
+        
+        // 10. Mode fonctionnement corrigé
+        $modeFonctionnement = $equipmentContrat['mode_fonctionnement_2']['value'] ?? '';
+        $equipement->setModeFonctionnement($modeFonctionnement);
+        
+        // 11. Plaque signalétique
+        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
+        $equipement->setPlaqueSignaletique($plaqueSignaletique);
+        
+        // 12. État
+        $etat = $equipmentContrat['etat']['value'] ?? '';
+        $equipement->setEtat($etat);
+        
+        // 13. Longueur (peut ne pas exister pour certains équipements)
+        $longueur = $equipmentContrat['longueur']['value'] ?? '';
+        $equipement->setLongueur($longueur);
+        
+        // 14. Statut de maintenance basé sur l'état
+        $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
+        $equipement->setStatutDeMaintenance($statut);
+        
+        // 15. Flags par défaut
         $equipement->setEnMaintenance(true);
+        $equipement->setIsArchive(false);
     }
 
     /**
@@ -2651,19 +2681,19 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Correspondance états pour S140
+     * Correspondance états pour le nouveau format
      */
     private function getMaintenanceStatusFromEtatFixed(string $etat): string
     {
         switch ($etat) {
             case "F": // Fonctionnel
-                return "RAS";
-            case "C": // À réparer/Conforme avec remarques
-                return "A_REPARER";
-            case "A": // À l'arrêt
-                return "HS";
             case "B": // Bon état
                 return "RAS";
+            case "C": // À réparer/Conforme avec remarques
+            case "A": // À l'arrêt
+                return "A_REPARER";
+            case "D": // Défaillant ou autres états
+                return "HS";
             default:
                 return "RAS";
         }
