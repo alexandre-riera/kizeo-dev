@@ -164,7 +164,7 @@ class DebugKizeoSubmissionCommand extends Command
                 'id_societe',
                 'nom_du_client', 
                 'code_agence',
-                'technicien',
+                'trigramme',
                 'date_et_heure',
                 'date_et_heure1'
             ];
