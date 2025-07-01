@@ -181,11 +181,11 @@ class SimplifiedMaintenanceController extends AbstractController
     {
         $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
         $equipement->setIdContact($fields['id_client_']['value'] ?? '');
-        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
-        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
-        
+        $equipement->setRaisonSociale($fields['nom_client']['value'] ?? '');
+        $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? '');
+
         // Convertir la date au format string si nécessaire
-        $dateIntervention = $fields['date_et_heure']['value'] ?? '';
+        $dateIntervention = $fields['date_et_heure1']['value'] ?? '';
         $equipement->setDateEnregistrement($dateIntervention);
         
         // Stocker les informations client dans des champs existants ou les ignorer
@@ -1444,9 +1444,9 @@ class SimplifiedMaintenanceController extends AbstractController
             // Données de base
             $equipement->setCodeAgence($fields['code_agence']['value']);
             $equipement->setIdContact($fields['id_client_']['value'] ?? '');
-            $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
-            $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
-            $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+            $equipement->setRaisonSociale($fields['nom_client']['value'] ?? '');
+            $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? '');
+            $equipement->setDateEnregistrement($fields['date_et_heure1']['value'] ?? '');
             
             // Données d'équipement de test
             $equipement->setNumeroEquipement('TEST_S140_001');
@@ -1639,9 +1639,9 @@ class SimplifiedMaintenanceController extends AbstractController
     {
         $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
         $equipement->setIdContact($fields['id_client_']['value'] ?? '');
-        $equipement->setRaisonSociale($fields['nom_du_client']['value'] ?? '');
-        $equipement->setTrigrammeTech($fields['technicien']['value'] ?? '');
-        $equipement->setDateEnregistrement($fields['date_et_heure']['value'] ?? '');
+        $equipement->setRaisonSociale($fields['nom_client']['value'] ?? '');
+        $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? '');
+        $equipement->setDateEnregistrement($fields['date_et_heure1']['value'] ?? '');
         
         // Valeurs par défaut
         $equipement->setEtatDesLieuxFait(false);
