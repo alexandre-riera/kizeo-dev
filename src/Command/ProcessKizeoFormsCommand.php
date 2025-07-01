@@ -6,12 +6,17 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\HttpFoundation\Request;
 use App\Controller\SimplifiedMaintenanceController;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Service\MaintenanceCacheService;
 
+#[AsCommand(
+    name: 'app:process-kizeo-forms',
+    description: 'Enregistrer les équipements de toutes les agences en base de données'
+)]
 class ProcessKizeoFormsCommand extends Command
 {
     protected static $defaultName = 'app:process-kizeo-forms';
