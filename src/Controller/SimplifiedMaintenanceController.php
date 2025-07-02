@@ -3131,10 +3131,10 @@ class SimplifiedMaintenanceController extends AbstractController
         $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
         $idClient = $fields['id_client_']['value'] ?? '';
         
-        // 2. Vérifier si l'équipement existe déjà
-        if ($this->equipmentExists($numeroEquipement, $idClient, $entityClass, $entityManager)) {
-            return false; // Skip car déjà existe
-        }
+        // // 2. Vérifier si l'équipement existe déjà
+        // if ($this->equipmentExists($numeroEquipement, $idClient, $entityClass, $entityManager)) {
+        //     return false; // Skip car déjà existe
+        // }
         
         // 3. Continuer avec le traitement normal
         $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
