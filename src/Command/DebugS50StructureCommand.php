@@ -59,7 +59,7 @@ class DebugS50StructureCommand extends Command
                 return Command::FAILURE;
             }
 
-            $entryS50 = $dataS50['data'][0]['_id'];
+            $entryS50 = $dataS50['data'][0]['id'];
             $output->writeln("📝 Soumission S50 trouvée: {$entryS50}");
 
             // Récupérer les détails S50
