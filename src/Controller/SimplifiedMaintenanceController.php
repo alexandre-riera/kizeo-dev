@@ -155,8 +155,8 @@ class SimplifiedMaintenanceController extends AbstractController
         }
 
         // Traitement des équipements hors contrat
-        if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-            foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+            foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                 $equipement = new $entityClass();
                 $this->setCommonEquipmentData($equipement, $fields);
                 $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
@@ -780,8 +780,8 @@ class SimplifiedMaintenanceController extends AbstractController
                             }
 
                             // Traitement des équipements hors contrat
-                            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+                            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                                     $equipement = new $entityClass();
                                     $this->setCommonEquipmentData($equipement, $fields);
                                     $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
@@ -1007,8 +1007,8 @@ class SimplifiedMaintenanceController extends AbstractController
                             }
 
                             // Traitement des équipements hors contrat
-                            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+                            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                                     $equipement = new $entityClass();
                                     $this->setCommonEquipmentData($equipement, $fields);
                                     $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
@@ -1270,8 +1270,8 @@ class SimplifiedMaintenanceController extends AbstractController
             }
 
             // Traitement des équipements hors contrat
-            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                     $equipement = new $entityClass();
                     $this->setCommonEquipmentData($equipement, $fields);
                     $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
@@ -1294,7 +1294,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     'form_id' => $formId,
                     'entry_id' => $entryId,
                     'client_name' => $fields['nom_du_client']['value'] ?? 'N/A',
-                    'technician' => $fields['technicien']['value'] ?? 'N/A',
+                    'technician' => $fields['trigramme']['value'] ?? 'N/A',
                     'date' => $fields['date_et_heure']['value'] ?? 'N/A'
                 ],
                 'contract_equipments' => $contractEquipments,
@@ -1476,9 +1476,9 @@ class SimplifiedMaintenanceController extends AbstractController
                     'entry_id' => $entryId,
                     'agency' => $fields['code_agence']['value'],
                     'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_du_client']['value'] ?? '',
-                    'technician' => $fields['technicien']['value'] ?? '',
-                    'date' => $fields['date_et_heure']['value'] ?? ''
+                    'client_name' => $fields['nom_client']['value'] ?? '',
+                    'technician' => $fields['trigramme']['value'] ?? '',
+                    'date' => $fields['date_et_heure1']['value'] ?? ''
                 ]
             ]);
 
@@ -1569,8 +1569,8 @@ class SimplifiedMaintenanceController extends AbstractController
             }
 
             // 4. Traiter les équipements hors contrat
-            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                foreach ($fields['hors_contrat']['value'] as $index => $equipmentHorsContrat) {
+            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                foreach ($fields['tableau2']['value'] as $index => $equipmentHorsContrat) {
                     try {
                         $equipement = new EquipementS140();
                         
@@ -1609,9 +1609,9 @@ class SimplifiedMaintenanceController extends AbstractController
                     'form_id' => $formId,
                     'entry_id' => $entryId,
                     'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_du_client']['value'] ?? '',
-                    'technician' => $fields['technicien']['value'] ?? '',
-                    'date' => $fields['date_et_heure']['value'] ?? ''
+                    'client_name' => $fields['nom_client']['value'] ?? '',
+                    'technician' => $fields['trigramme']['value'] ?? '',
+                    'date' => $fields['date_et_heure1']['value'] ?? ''
                 ],
                 'contract_equipments' => $contractEquipments,
                 'off_contract_equipments' => $offContractEquipments,
@@ -1961,7 +1961,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $fields = $data['data']['fields'];
         
         // Vérifier la présence des champs essentiels
-        $requiredFields = ['code_agence', 'nom_du_client', 'technicien'];
+        $requiredFields = ['code_agence', 'nom_du_client', 'trigramme'];
         
         foreach ($requiredFields as $field) {
             if (!isset($fields[$field]['value'])) {
@@ -2151,8 +2151,8 @@ class SimplifiedMaintenanceController extends AbstractController
             }
 
             // Traiter les équipements hors contrat
-            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                foreach ($fields['hors_contrat']['value'] as $index => $equipmentHorsContrat) {
+            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                foreach ($fields['tableau2']['value'] as $index => $equipmentHorsContrat) {
                     try {
                         $equipement = new EquipementS140();
                         $this->setRealCommonData($equipement, $fields);
@@ -2186,9 +2186,9 @@ class SimplifiedMaintenanceController extends AbstractController
                     'form_id' => $formId,
                     'entry_id' => $entryId,
                     'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_du_client']['value'] ?? '',
-                    'technician' => $fields['technicien']['value'] ?? '',
-                    'date' => $fields['date_et_heure']['value'] ?? ''
+                    'client_name' => $fields['nom_client']['value'] ?? '',
+                    'technician' => $fields['trigramme']['value'] ?? '',
+                    'date' => $fields['date_et_heure1']['value'] ?? ''
                 ],
                 'contract_equipments' => $contractEquipments,
                 'off_contract_equipments' => $offContractEquipments,
@@ -2296,13 +2296,13 @@ class SimplifiedMaintenanceController extends AbstractController
                                     'form_name' => $form['name'],
                                     'entry_id' => $entry['_id'],
                                     'client_id' => $fields['id_client_']['value'] ?? '',
-                                    'client_name' => $fields['nom_du_client']['value'] ?? '',
-                                    'technician' => $fields['technicien']['value'] ?? '',
-                                    'date' => $fields['date_et_heure']['value'] ?? '',
+                                    'client_name' => $fields['nom_client']['value'] ?? '',
+                                    'technician' => $fields['trigramme']['value'] ?? '',
+                                    'date' => $fields['date_et_heure1']['value'] ?? '',
                                     'has_contract_equipment' => !empty($fields['contrat_de_maintenance']['value'] ?? []),
-                                    'has_offcontract_equipment' => !empty($fields['hors_contrat']['value'] ?? []),
+                                    'has_offcontract_equipment' => !empty($fields['tableau2']['value'] ?? []),
                                     'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
-                                    'offcontract_count' => count($fields['hors_contrat']['value'] ?? [])
+                                    'offcontract_count' => count($fields['tableau2']['value'] ?? [])
                                 ];
                             }
 
@@ -2476,8 +2476,8 @@ class SimplifiedMaintenanceController extends AbstractController
             }
 
             // Traiter équipements hors contrat
-            if (isset($fields['hors_contrat']['value']) && !empty($fields['hors_contrat']['value'])) {
-                foreach ($fields['hors_contrat']['value'] as $equipmentHorsContrat) {
+            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
+                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                     $equipement = new EquipementS140();
                     $this->setRealCommonData($equipement, $fields);
                     $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
@@ -2551,7 +2551,7 @@ class SimplifiedMaintenanceController extends AbstractController
 
             $fields = $detailData['data']['fields'];
             $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+            $offContractEquipments = $fields['tableau2']['value'] ?? [];
             
             $totalEquipments = count($contractEquipments) + count($offContractEquipments);
             $recommendedChunkSize = max(10, min(20, intval($totalEquipments / 4)));
@@ -2560,9 +2560,9 @@ class SimplifiedMaintenanceController extends AbstractController
                 'success' => true,
                 'form_id' => $formId,
                 'entry_id' => $entryId,
-                'client_name' => $fields['nom_du_client']['value'] ?? '',
-                'technician' => $fields['technicien']['value'] ?? '',
-                'date' => $fields['date_et_heure']['value'] ?? '',
+                'client_name' => $fields['nom_client']['value'] ?? '',
+                'technician' => $fields['trigramme']['value'] ?? '',
+                'date' => $fields['date_et_heure1']['value'] ?? '',
                 'equipment_analysis' => [
                     'contract_equipments' => count($contractEquipments),
                     'off_contract_equipments' => count($offContractEquipments),
@@ -4006,9 +4006,9 @@ class SimplifiedMaintenanceController extends AbstractController
                     $submissionAnalysis = [
                         'id' => $submission['_id'],
                         'has_contract_equipment' => isset($fields['contrat_de_maintenance']),
-                        'has_offcontract_equipment' => isset($fields['hors_contrat']),
+                        'has_offcontract_equipment' => isset($fields['tableau2']),
                         'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
-                        'offcontract_count' => count($fields['hors_contrat']['value'] ?? []),
+                        'offcontract_count' => count($fields['tableau2']['value'] ?? []),
                         'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
                         'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
                         'agency_field' => $fields['code_agence']['value'] ?? $fields['id_agence']['value'] ?? 'NOT_FOUND',
@@ -4185,7 +4185,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
                         'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
                         'has_equipment_contract' => isset($fields['contrat_de_maintenance']) && !empty($fields['contrat_de_maintenance']['value'] ?? []),
-                        'has_equipment_offcontract' => isset($fields['hors_contrat']) && !empty($fields['hors_contrat']['value'] ?? [])
+                        'has_equipment_offcontract' => isset($fields['tableau2']) && !empty($fields['tableau2']['value'] ?? [])
                     ];
                     
                     // 5. Vérifier si cette soumission correspond à l'agence cible
@@ -4506,7 +4506,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         
                         // Traitement minimal des équipements
                         $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-                        $offContractEquipments = $fields['hors_contrat']['value'] ?? [];
+                        $offContractEquipments = $fields['tableau2']['value'] ?? [];
                         
                         $equipmentCount = count($contractEquipments) + count($offContractEquipments);
                         $totalEquipments += $equipmentCount;
