@@ -1182,6 +1182,7 @@ class FormRepository extends ServiceEntityRepository
                     }
                 );
 
+ 
                 // Comparer et mettre à jour la liste Kizeo
                 $updatedEquipments = $this->compareAndSyncEquipments(
                     $structuredEquipements, 
@@ -1192,6 +1193,10 @@ class FormRepository extends ServiceEntityRepository
                 // Invalider le cache après mise à jour
                 $cache->delete('kizeo_equipments_' . $nomCache);
                 
+
+                // Avant l'envoi à Kizeo, ajoutez :
+                error_log("Envoi pour entité $entite : " . count($updatedEquipments) . " équipements");
+
                 // Ajouter le résultat au tableau de retour
                 $results[$nomCache] = [
                     'entite' => $entite,
@@ -1274,7 +1279,7 @@ class FormRepository extends ServiceEntityRepository
                 $updatedKizeoEquipments[] = $structuredEquipment;
             }
         }
-
+        
         $this->envoyerListeKizeo($updatedKizeoEquipments, $idListeKizeo);
         return $updatedKizeoEquipments;
     }
