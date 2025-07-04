@@ -4738,6 +4738,10 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $entityManager
                             );
                             
+                            // ✅ AJOUTER CES LIGNES POUR COMPTER LES ÉQUIPEMENTS :
+                            $totalEquipments += $result['equipments_processed'] ?? 0;
+                            $totalPhotos += $result['photos_saved'] ?? 0;
+                            
                             // Préparer les données pour le cache
                             $submissionData = [
                                 'submission_id' => $submissionId,
@@ -4751,10 +4755,15 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $cacheService->saveProcessedSubmission($agencyCode, $submissionId, $submissionData);
                             }
                         } else {
+                            // ✅ AJOUTER AUSSI POUR LES DONNÉES DEPUIS LE CACHE :
+                            $cachedResult = $submissionData['result'] ?? [];
+                            $totalEquipments += $cachedResult['equipments_processed'] ?? 0;
+                            $totalPhotos += $cachedResult['photos_saved'] ?? 0;
+                            
                             // Utiliser les données du cache pour recréer les entités
                             $this->recreateEntitiesFromCache($submissionData, $entityManager);
                         }
-                        
+
                         $processedCount++;
                         
                         // Flush périodique pour libérer la mémoire
