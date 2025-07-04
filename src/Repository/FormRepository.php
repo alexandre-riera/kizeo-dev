@@ -1158,6 +1158,11 @@ class FormRepository extends ServiceEntityRepository
         // Traitement par entité d'équipement
         foreach ($entitesEquipements as $entite) {
             try {
+                // 🔧 AJOUT : Vérifier et reconnecter MySQL si nécessaire
+                if (!$entityManager->getConnection()->ping()) {
+                    $entityManager->getConnection()->close();
+                    $entityManager->getConnection()->connect();
+                }
                 // Récupérer les équipements depuis la BDD
                 $equipements = $entityManager->getRepository($entite)->findAll();
                 
