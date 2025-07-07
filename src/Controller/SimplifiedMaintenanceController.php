@@ -3253,10 +3253,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setDataId($entryId);
             $form->setEquipmentId($equipmentCode);
             $form->setCodeEquipement($equipmentCode);
-            dump($equipmentData);
-            $form->setRaisonSocialeVisite(
-                ($fields['nom_client']['value'] ?? '') . '\\' . ($fields['visite']['value'] ?? '')
-            );
+            $form->setRaisonSocialeVisite($fields['equipement']['path']);
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
             // Photos (même logique que précédemment)
