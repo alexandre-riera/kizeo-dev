@@ -171,8 +171,6 @@ class SimplifiedMaintenanceController extends AbstractController
             'off_contract' => $offContractEquipments
         ];
     }
-
-    // ... Le reste des méthodes reste identique (setCommonEquipmentData, setContractEquipmentData, etc.) ...
     
     /**
      * Définir les données communes à tous les équipements - ADAPTÉE AUX PROPRIÉTÉS EXISTANTES
@@ -2772,7 +2770,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setDataId($entryId);
             $form->setEquipmentId($equipmentCode);
             $form->setCodeEquipement($equipmentCode);
-            $form->setRaisonSocialeVisite($fields['nom_client']['value'] ?? '');
+            $form->setRaisonSocialeVisite($fields['nom_client']['value'] . '\\' . $fields['visite']['value'] ?? '');
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
             // Photo étiquette SOMAFI
@@ -3253,7 +3251,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setDataId($entryId);
             $form->setEquipmentId($equipmentCode);
             $form->setCodeEquipement($equipmentCode);
-            $form->setRaisonSocialeVisite($fields['nom_client']['value'] ?? '');
+            $form->setRaisonSocialeVisite($fields['nom_client']['value'] . '\\' . $fields['visite']['value'] ?? '');
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
             // Photos (même logique que précédemment)
