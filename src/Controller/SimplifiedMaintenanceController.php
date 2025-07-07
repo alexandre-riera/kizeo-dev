@@ -3253,7 +3253,8 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setDataId($entryId);
             $form->setEquipmentId($equipmentCode);
             $form->setCodeEquipement($equipmentCode);
-            dd($fields);
+            dump($fields['visite']['value'] ?? '');
+            dump($fields['visit']['value'] ?? '');
             $form->setRaisonSocialeVisite(
                 ($fields['nom_client']['value'] ?? '') . '\\' . ($fields['visite']['value'] ?? '')
             );
