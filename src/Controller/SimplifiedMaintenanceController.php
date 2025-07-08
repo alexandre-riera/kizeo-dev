@@ -4929,6 +4929,120 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
+     * Version simplifiée - Extrait uniquement les valeurs des anomalies 
+     * selon le type d'équipement (trigramme du numero_equipement)
+     * Retourne un tableau PHP (pas JSON)
+     */
+    private function extractSimpleAnomaliesArrayByEquipmentType(array $equipmentData, string $numeroEquipement): array
+    {
+        // Extraire le trigramme du numéro d'équipement (ex: SEC01 -> SEC, RID24 -> RID)
+        $trigramme = $this->extractTrigrammeFromNumero($numeroEquipement);
+        
+        if (!$trigramme) {
+            error_log("Impossible d'extraire le trigramme du numéro: " . $numeroEquipement);
+            return [];
+        }
+        
+        $allAnomalies = [];
+        
+        // Mapping des trigrammes vers les champs d'anomalies correspondants
+        switch ($trigramme) {
+            case 'SEC': // Porte sectionnelle
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_sec_rid_rap_vor_pac',
+                    'anomalies_sec_'
+                ]);
+                break;
+                
+            case 'RID': // Rideau métallique
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_rid_vor',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'RAP': // Porte rapide
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_rapide',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'VOR': // Volet roulant
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_rid_vor',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'PAC': // Porte accordéon
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'NIV': // Niveleur
+            case 'PLQ': // Plaque de quai
+            case 'MIP': // Mini-pont
+            case 'TEL': // Table élévatrice
+            case 'BLR': // Bloc roue
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_niv_plq_mip_tel_blr_'
+                ]);
+                break;
+                
+            case 'SAS': // Sas
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_sas'
+                ]);
+                break;
+                
+            case 'BLE': // Barrière levante
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_ble1',
+                    'anomalie_ble_moto_auto'
+                ]);
+                break;
+                
+            case 'TOU': // Tourniquet
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_tou1'
+                ]);
+                break;
+                
+            case 'PAU': // Portail automatique
+            case 'PMO': // Portail motorisé
+            case 'PMA': // Portail manuel
+            case 'PCO': // Portail coulissant
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_portail',
+                    'anomalie_portail_auto_moto'
+                ]);
+                break;
+                
+            case 'PPV': // Porte piétonne
+            case 'CFE': // Porte coupe-feu
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_ppv_cfe',
+                    'anomalie_cfe_ppv_auto_moto'
+                ]);
+                break;
+                
+            case 'HYD': // Équipement hydraulique
+                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
+                    'anomalie_hydraulique'
+                ]);
+                break;
+                
+            default:
+                error_log("Type d'équipement non géré pour le trigramme: " . $trigramme);
+                return [];
+        }
+        
+        return $allAnomalies;
+    }
+
+    /**
      * Extrait uniquement les valeurs des anomalies des champs spécifiés
      */
     private function getAnomaliesValues(array $equipmentData, array $fieldNames): array
@@ -4963,22 +5077,39 @@ class SimplifiedMaintenanceController extends AbstractController
 
     /**
      * Méthode simplifiée pour définir les anomalies sur l'équipement
+     * Enregistre les anomalies comme une chaîne séparée par des virgules
      */
     private function setSimpleEquipmentAnomalies($equipement, array $equipmentData): void
     {
         $numeroEquipement = $equipement->getNumeroEquipement();
         
         if ($numeroEquipement) {
-            $anomalies = $this->extractSimpleAnomaliesByEquipmentType($equipmentData, $numeroEquipement);
+            $anomaliesArray = $this->extractSimpleAnomaliesArrayByEquipmentType($equipmentData, $numeroEquipement);
             
-            if ($anomalies) {
-                $equipement->setAnomalies($anomalies); // On prend le premier élément du tableau JSON
-                // Log pour le débogage
-                error_log("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomalies);
+            if (!empty($anomaliesArray)) {
+                // Convertir le tableau en chaîne séparée par des virgules
+                $anomaliesString = implode(', ', $anomaliesArray);
+                $equipement->setAnomalies($anomaliesString);
+                error_log("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomaliesString);
             } else {
                 error_log("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
             }
         }
+    }
+
+    /**
+     * Fonction utilitaire pour récupérer les anomalies côté frontend
+     */
+    function getAnomaliesFromDatabase($equipement) 
+    {
+        $anomalies = $equipement->getAnomalies();
+        
+        if (empty($anomalies)) {
+            return [];
+        }
+        
+        // Convertir la chaîne en tableau si nécessaire
+        return explode(', ', $anomalies);
     }
 
 }
