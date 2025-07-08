@@ -443,6 +443,13 @@
                                 <th>Repère site client</th>
                                 <td>{{ equipment.repereSiteClient ?? 'Non repèré' }}</td>
                             </tr>
+                            {# LIGNE POUR LES ANOMALIES - Cette partie était manquante ou mal configurée #}
+                            {% if equipment.anomalies is defined and equipment.anomalies is not null and equipment.anomalies|trim is not empty %}
+                            <tr>
+                                <th>Anomalies</th>
+                                <td style="color: #d9534f; font-weight: bold;">{{ equipment.anomalies }}</td>
+                            </tr>
+                            {% endif %}
                         </table>
                     </td>
                 </tr>
@@ -495,9 +502,6 @@
                             </td>
                             <td style="width: 70%;">
                                 <table>
-                                    <pre>
-                                        {{ dump(equipment) }}
-                                    </pre>
                                     <tr>
                                         <th colspan="2">Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}

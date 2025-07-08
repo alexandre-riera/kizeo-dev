@@ -65,7 +65,7 @@ class EquipementPdfController extends AbstractController
         ]);
         
         $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
-        dd($equipment);
+        
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/single_equipement.html.twig', [
             'equipment' => $equipment,
