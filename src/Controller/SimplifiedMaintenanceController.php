@@ -4962,19 +4962,6 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Extrait le trigramme du numéro d'équipement
-     */
-    private function extractTrigrammeFromNumero(string $numeroEquipement): ?string
-    {
-        // Pattern pour extraire les lettres au début du numéro
-        if (preg_match('/^([A-Z]{2,4})/', $numeroEquipement, $matches)) {
-            return $matches[1];
-        }
-        
-        return null;
-    }
-
-    /**
      * Méthode simplifiée pour définir les anomalies sur l'équipement
      */
     private function setSimpleEquipmentAnomalies($equipement, array $equipmentData): void
