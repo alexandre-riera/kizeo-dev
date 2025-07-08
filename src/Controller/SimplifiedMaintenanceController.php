@@ -3239,9 +3239,25 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): void {
         
+        error_log("=== DÉBUT DEBUG PHOTOS HORS CONTRAT ===");
+        error_log("Equipment Code: " . $equipmentCode);
+        error_log("Form ID: " . $formId);
+        error_log("Entry ID: " . $entryId);
+        
+        // Log des données photo disponibles
+        error_log("Photo3 présente: " . (isset($equipmentData['photo3']) ? 'OUI' : 'NON'));
+        if (isset($equipmentData['photo3'])) {
+            error_log("Photo3 value: " . ($equipmentData['photo3']['value'] ?? 'VIDE'));
+            error_log("Photo3 empty check: " . (empty($equipmentData['photo3']['value']) ? 'VIDE' : 'PAS VIDE'));
+        }
+
         // Vérifier si l'entrée Form existe déjà
-        if ($this->formEntryExists($formId, $entryId, $equipmentCode, $entityManager)) {
-            return; // Skip car déjà existe
+        $existsAlready = $this->formEntryExists($formId, $entryId, $equipmentCode, $entityManager);
+        error_log("Entry existe déjà: " . ($existsAlready ? 'OUI - SKIP' : 'NON - PROCEED'));
+        
+        if ($existsAlready) {
+            error_log("ATTENTION: Entry ignorée car déjà existante!");
+            return; 
         }
         
         try {
@@ -3256,30 +3272,80 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setRaisonSocialeVisite($equipmentData['equipement']['path']);
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
-            // Photos (même logique que précédemment)
+            // DEBUG: Photos avant assignation
+            error_log("=== ASSIGNATION PHOTOS ===");
+            
             if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
                 $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
+                error_log("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
             }
             
             if (!empty($equipmentData['photo2']['value'])) {
                 $form->setPhoto2($equipmentData['photo2']['value']);
+                error_log("Photo2 assignée: " . $equipmentData['photo2']['value']);
             }
+            
+            // POINT CRITIQUE: Photo compte rendu
             if (!empty($equipmentData['photo3']['value'])) {
-                $form->setPhotoCompteRendu($equipmentData['photo3']['value']);
+                $photoValue = $equipmentData['photo3']['value'];
+                $form->setPhotoCompteRendu($photoValue);
+                error_log("PHOTO COMPTE RENDU assignée: " . $photoValue);
+                
+                // Vérification immédiate
+                $verification = $form->getPhotoCompteRendu();
+                error_log("Vérification getter après set: " . ($verification ?? 'NULL'));
+            } else {
+                error_log("ATTENTION: photo3 est vide ou n'existe pas!");
+                error_log("Structure equipmentData: " . print_r(array_keys($equipmentData), true));
             }
             
             if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
                 $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
+                error_log("Photo environnement assignée: " . $equipmentData['photo_complementaire_equipeme']['value']);
             }
             
             // Autres photos...
             $this->setAllPhotosToForm($form, $equipmentData);
             
+            // DEBUG: État de l'entité avant persist
+            error_log("=== AVANT PERSIST ===");
+            error_log("Form ID: " . $form->getFormId());
+            error_log("Equipment ID: " . $form->getEquipmentId());
+            error_log("Photo compte rendu final: " . ($form->getPhotoCompteRendu() ?? 'NULL'));
+            
             // Sauvegarder l'entité Form
             $entityManager->persist($form);
+            error_log("Entity persistée avec succès");
+            
+            // IMPORTANT: Ajouter un flush immédiat pour tester
+            // $entityManager->flush();
+            // error_log("Entity flushée avec succès");
             
         } catch (\Exception $e) {
-            error_log("Erreur sauvegarde photos Form: " . $e->getMessage());
+            error_log("ERREUR sauvegarde photos Form: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            throw $e;
+        }
+        
+        error_log("=== FIN DEBUG PHOTOS HORS CONTRAT ===");
+    }
+    // Fonction de vérification post-sauvegarde à ajouter après le flush
+    private function verifyPhotosSaved(string $formId, string $entryId, string $equipmentCode, EntityManagerInterface $entityManager): void 
+    {
+        error_log("=== VÉRIFICATION POST-SAUVEGARDE ===");
+        
+        $savedForm = $entityManager->getRepository(Form::class)->findOneBy([
+            'form_id' => $formId,
+            'data_id' => $entryId,
+            'code_equipement' => $equipmentCode
+        ]);
+        
+        if ($savedForm) {
+            error_log("Form trouvée en base");
+            error_log("Photo compte rendu en base: " . ($savedForm->getPhotoCompteRendu() ?? 'NULL'));
+            error_log("Photo2 en base: " . ($savedForm->getPhoto2() ?? 'NULL'));
+        } else {
+            error_log("ERREUR: Form non trouvée en base!");
         }
     }
 
