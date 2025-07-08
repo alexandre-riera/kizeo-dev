@@ -482,9 +482,7 @@
                 
                 <div class="equipement">
                     <table class="info-table">
-                        <tr>
-                            <td>{{ dump(equipment) }}</td>
-                        </tr>
+                        
                         <tr>
                             <td rowspan="6" class="equipment-image"> {# Changé de 5 à 6 pour inclure les anomalies #}
                                 {% if pictures|length > 0 %}
@@ -497,6 +495,9 @@
                             </td>
                             <td style="width: 70%;">
                                 <table>
+                                    <tr>
+                                        <td>{{ dump(equipment) }}</td>
+                                    </tr>
                                     <tr>
                                         <th colspan="2">Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
