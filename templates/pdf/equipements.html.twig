@@ -483,7 +483,10 @@
                 <div class="equipement">
                     <table class="info-table">
                         <tr>
-                            <td rowspan="5" class="equipment-image">
+                            <td>{{ dump(equipment.anomalies) }}</td>
+                        </tr>
+                        <tr>
+                            <td rowspan="6" class="equipment-image"> {# Changé de 5 à 6 pour inclure les anomalies #}
                                 {% if pictures|length > 0 %}
                                     <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
                                 {% else %}
@@ -495,25 +498,19 @@
                             <td style="width: 70%;">
                                 <table>
                                     <tr>
-                                        <th colspan="2">Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }} 
+                                        <th colspan="2">Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
-                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 20px; height: 20px; float: right;">
+                                                <span style="color: green;">✓</span>
                                             {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
-                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 20px; height: 20px; float: right;">
-                                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
-                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 20px; height: 20px; float: right;">
-                                            {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
-                                                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 20px; height: 20px; float: right;">
+                                                <span style="color: orange;">⚠</span>
+                                            {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                                <span style="color: red;">⚠</span>
                                             {% endif %}
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th>Numéro</th>
-                                        <td>{{ equipment.numeroEquipement ?? 'Non renseigné' }}</td>
-                                    </tr>
-                                    <tr>
                                         <th>Type</th>
-                                        <td>{{ equipment.type ?? 'Non renseigné' }}</td>
+                                        <td>{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
                                     </tr>
                                     <tr>
                                         <th>Marque</th>
@@ -551,10 +548,13 @@
                                         <th>Repère site client</th>
                                         <td>{{ equipment.repereSiteClient ?? 'Non repèré' }}</td>
                                     </tr>
+                                    {# LIGNE POUR LES ANOMALIES - Cette partie était manquante ou mal configurée #}
+                                    {% if equipment.anomalies is defined and equipment.anomalies is not null and equipment.anomalies|trim is not empty %}
                                     <tr>
                                         <th>Anomalies</th>
-                                        <td>{{ equipment.anomalies ?? '' }}</td>
+                                        <td style="color: #d9534f; font-weight: bold;">{{ equipment.anomalies }}</td>
                                     </tr>
+                                    {% endif %}
                                 </table>
                             </td>
                         </tr>
