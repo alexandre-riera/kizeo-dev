@@ -197,76 +197,137 @@
     
     {# Tableau de statistiques #}
     {% if statistiques is defined %}
-    <div class="stats-section">
-        <div class="stats-title">Équipements visités</div>
-        
-        <table class="stats-table">
-            <thead>
-                <tr>
-                    <th>Statut</th>
-                    <th>État</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for etat, count in statistiques.etatsCount %}
-                    {% if etat != "Equipement non présent le jour de la visite" or etat != "G" %}
-                        <tr>
-                            <td style="text-align: center;">
-                                {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                    <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
-                                {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                    <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
-                                {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
-                                    <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
-                                {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                    <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+        <div class="stats-section">
+            <div class="stats-title">Équipements visités</div>
+            
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Statut</th>
+                        <th>État</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for etat, count in statistiques.etatsCount %}
+                        {% if etat != "Equipement non présent le jour de la visite" or etat != "G" %}
+                            <tr>
+                                <td style="text-align: center;">
+                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
+                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
+                                    {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
+                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
+                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                                    {% endif %}
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                        <p>Bon état</p>
+                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                        <p>Travaux à prévoir</p>
+                                    {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
+                                        <p>Travaux urgent ou à l'arrêt</p>
+                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                        <p>Équipement inaccessible</p>
+                                    {% endif %} 
+                                </td>
+                                <td style="text-align: center;">
+                                    {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
+                                        {% set etat = "" %}
+                                        {{ etat }}
+                                    {% else %}
+                                        {{ count }}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% for etat, count in statistiques.etatsCount %}
+                {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
+                    <div class="stats-title">Équipements non présents le jour de la visite</div>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Statut</th>
+                                <th>État</th>
+                                <th>Total inexistant</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for etat, count in statistiques.etatsCount %}
+                                {% if etat == "Equipement non présent sur site" or etat == "Equipement non présent" or etat == "G" %}
+                                    <tr>
+                                        <td style="text-align: center;">
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <p>Équipement non présent</p>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            {{ count }}
+                                        </td>
+                                    </tr>
                                 {% endif %}
-                            </td>
-                            <td style="text-align: center;">
-                                {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                    <p>Bon état</p>
-                                {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                    <p>Travaux à prévoir</p>
-                                {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
-                                    <p>Travaux urgent ou à l'arrêt</p>
-                                {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                    <p>Équipement inaccessible</p>
-                                {% endif %} 
-                            </td>
-                            <td style="text-align: center;">
-                                {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
-                                    {% set etat = "" %}
-                                    {{ etat }}
-                                {% else %}
-                                    {{ count }}
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endif %}
-                {% endfor %}
-            </tbody>
-        </table>
-        {% for etat, count in statistiques.etatsCount %}
-            {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
-                <div class="stats-title">Équipements non présents le jour de la visite</div>
-                <table class="stats-table">
-                    <thead>
-                        <tr>
-                            <th>Statut</th>
-                            <th>État</th>
-                            <th>Total inexistant</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% endif %}
+            {% endfor %}
+            {# Légende des couleurs #}
+            <div style="margin-top: 15px; font-size: 10px;">
+                <strong>Légende :</strong>
+                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
+                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux à prévoir |
+                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
+                <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
+            </div>
+        </div>
+        <div class="page-break"></div>
+        {# Mettre ici la table pour les équipements supplémentaires #}
+    {% endif %}
+    
+    {% if equipementsSupplementaires|length > 0 %}
+        <div class="stats-section">
+            <div class="stats-title">Équipements supplémentaires</div>
+            <table class="stats-table">
+                <thead>
+                    <tr>
+                        <th>Statut</th>
+                        <th>État/th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for equipment in equipementsSupplementaires %}
                         {% for etat, count in statistiques.etatsCount %}
-                            {% if etat == "Equipement non présent sur site" or etat == "Equipement non présent" or etat == "G" %}
+                            {% if etat != "Equipement non présent le jour de la visite" or etat != "G" %}
                                 <tr>
                                     <td style="text-align: center;">
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                                        {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
+                                        {% endif %}
                                     </td>
                                     <td style="text-align: center;">
-                                        <p>Équipement non présent</p>
+                                        {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                            <p>Bon état</p>
+                                        {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                            <p>Travaux à prévoir</p>
+                                        {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
+                                            <p>Travaux urgent ou à l'arrêt</p>
+                                        {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                            <p>Équipement inaccessible</p>
+                                        {% endif %} 
                                     </td>
                                     <td style="text-align: center;">
                                         {{ count }}
@@ -274,23 +335,13 @@
                                 </tr>
                             {% endif %}
                         {% endfor %}
-                    </tbody>
-                </table>
-            {% endif %}
-        {% endfor %}
-        {# Légende des couleurs #}
-        <div style="margin-top: 15px; font-size: 10px;">
-            <strong>Légende :</strong>
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 15px; height: 15px; vertical-align: middle;"> Bon état |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux à prévoir |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 15px; height: 15px; vertical-align: middle;"> Travaux curatifs/Arrêt |
-            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 15px; height: 15px; vertical-align: middle;"> Inaccessible/Inexistant
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
-    <div class="page-break"></div>
-    {# Mettre ici la table pour les équipements supplémentaires #}
+        <div class="page-break"></div>
     {% endif %}
-    
+
     {% for equipmentData in equipmentsWithPictures %}
         {% set equipment = equipmentData.equipment %}
         {% set pictures = equipmentData.pictures %}
