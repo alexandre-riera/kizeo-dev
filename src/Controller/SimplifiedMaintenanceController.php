@@ -4972,7 +4972,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $anomalies = $this->extractSimpleAnomaliesByEquipmentType($equipmentData, $numeroEquipement);
             
             if ($anomalies) {
-                $equipement->setAnomalies($anomalies[0]); // On prend le premier élément du tableau JSON
+                $equipement->setAnomalies($anomalies); // On prend le premier élément du tableau JSON
                 // Log pour le débogage
                 error_log("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomalies);
             } else {
