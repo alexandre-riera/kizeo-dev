@@ -2512,6 +2512,100 @@ class FormRepository extends ServiceEntityRepository
         return $picturesdata;
     }
 
+    // Nouvelle fonction dans FormRepository.php pour récupérer spécifiquement les photos des équipements supplémentaires
+
+    /**
+     * Récupère les photos spécifiquement pour les équipements supplémentaires
+     * Les équipements supplémentaires utilisent le champ photo_compte_rendu
+     */
+    public function getPictureArrayByIdSupplementaryEquipment($entityManager, $equipment) {
+        $picturesdata = [];
+        
+        // Pour les équipements supplémentaires, on utilise la même logique de filtrage
+        // que les équipements au contrat pour garantir l'unicité et le respect du tri par visite
+        $picturesArray = $entityManager->getRepository(Form::class)->findBy([
+            'code_equipement' => $equipment->getNumeroEquipement(),
+            'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
+        ]);
+        
+        foreach ($picturesArray as $value) {
+            // Vérifier si c'est bien le bon équipement et qu'il y a une photo_compte_rendu
+            if ($value->getPhotoCompteRendu() && $value->getPhotoCompteRendu() !== '') {
+                $photoJpg = $this->getJpgPictureFromPhotoCompteRendu($value, $entityManager);
+                
+                if (!empty($photoJpg)) {
+                    foreach ($photoJpg as $photo) {
+                        $pictureEncoded = base64_encode($photo);
+                        $picturesdataObject = new stdClass;
+                        $picturesdataObject->picture = $pictureEncoded;
+                        $picturesdataObject->update_time = $value->getUpdateTime();
+                        $picturesdata[] = $picturesdataObject;
+                    }
+                }
+            }
+        }
+        
+        return $picturesdata;
+    }
+
+    
+    /**
+     * Récupère spécifiquement les photos du champ photo_compte_rendu
+     */
+    public function getJpgPictureFromPhotoCompteRendu($formEntity, $entityManager) {
+        $picturesNames = [$formEntity->getPhotoCompteRendu()];
+        $the_picture = [];
+        
+        foreach ($picturesNames as $pictureName) {
+            if (empty($pictureName)) {
+                continue;
+            }
+            
+            // Gérer les photos multiples séparées par des virgules
+            if (str_contains($pictureName, ", ")) {
+                $photosSupplementaires = explode(", ", $pictureName);
+                foreach ($photosSupplementaires as $photo) {
+                    if (!empty(trim($photo))) {
+                        $photoContent = $this->fetchPhotoFromKizeo($formEntity, trim($photo));
+                        if ($photoContent) {
+                            $the_picture[] = $photoContent;
+                        }
+                    }
+                }
+            } else {
+                // Photo unique
+                $photoContent = $this->fetchPhotoFromKizeo($formEntity, $pictureName);
+                if ($photoContent) {
+                    $the_picture[] = $photoContent;
+                }
+            }
+        }
+        
+        return $the_picture;
+    }
+
+    /**
+     * Fonction helper pour récupérer une photo depuis l'API Kizeo
+     */
+    private function fetchPhotoFromKizeo($formEntity, $photoName) {
+        try {
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formEntity->getFormId() . '/data/' . $formEntity->getDataId() . '/medias/' . $photoName,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+            return $response->getContent();
+        } catch (\Exception $e) {
+            // Log l'erreur si nécessaire
+            return null;
+        }
+    }
+
     public function cleanKizeoFormat($kizeoEquipment): string
     {
         $parts = explode('|', $kizeoEquipment);
