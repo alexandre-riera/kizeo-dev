@@ -3194,6 +3194,9 @@ class SimplifiedMaintenanceController extends AbstractController
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
         $this->savePhotosToFormEntityWithDeduplication($equipmentContrat, $fields, $formId, $entryId, $numeroEquipement, $entityManager);
         
+        // NOUVELLE PARTIE: Extraction et définition des anomalies
+        $this->setEquipmentAnomalies($equipement, $equipmentContrat);
+
         return true; // Équipement traité avec succès
     }
 
@@ -3821,6 +3824,8 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
         $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
+        // NOUVELLE PARTIE: Extraction et définition des anomalies
+        $this->setEquipmentAnomalies($equipement, $equipmentHorsContrat);
         
         return true; // Équipement traité avec succès
     }
@@ -3973,367 +3978,6 @@ class SimplifiedMaintenanceController extends AbstractController
      * Script pour vérifier la configuration des agences
      */
 
-    // Route de test à ajouter dans SimplifiedMaintenanceController
-    #[Route('/api/maintenance/verify-agencies', name: 'app_maintenance_verify_agencies', methods: ['GET'])]
-    public function verifyAgenciesConfiguration(): JsonResponse
-    {
-        $agencyMapping = $this->getAgencyFormMapping();
-        $results = [];
-        
-        foreach ($agencyMapping as $agencyCode => $formId) {
-            $status = [
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'configured' => !empty($formId),
-                'test_url' => !empty($formId) ? 
-                    "/api/maintenance/process-form-optimized/{$agencyCode}?chunk_size=5&max_submissions=5" : 
-                    null
-            ];
-            
-            // Test de connectivité API si configuré
-            if (!empty($formId)) {
-                try {
-                    $response = $this->client->request(
-                        'GET',
-                        "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                            'query' => ['limit' => 1]
-                        ]
-                    );
-                    
-                    $data = $response->toArray();
-                    $status['api_accessible'] = true;
-                    $status['submissions_count'] = count($data['data'] ?? []);
-                    
-                } catch (\Exception $e) {
-                    $status['api_accessible'] = false;
-                    $status['api_error'] = $e->getMessage();
-                }
-            }
-            
-            $results[] = $status;
-        }
-        
-        return new JsonResponse([
-            'success' => true,
-            'agencies_status' => $results,
-            'summary' => [
-                'total_agencies' => count($agencyMapping),
-                'configured' => count(array_filter($agencyMapping)),
-                'not_configured' => count(array_filter($agencyMapping, function($formId) {
-                    return empty($formId);
-                }))
-            ]
-        ]);
-    }
-
-    /**
-     * Route de debug pour tester une agence spécifique
-     */
-    #[Route('/api/maintenance/debug-agency/{agencyCode}', name: 'app_maintenance_debug_agency', methods: ['GET'])]
-    public function debugAgency(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
-        
-        $formId = $request->query->get('form_id');
-        $limit = (int) $request->query->get('limit', 5);
-        
-        // 1. Vérifier la configuration
-        $agencyMapping = $this->getAgencyFormMapping();
-        $configuredFormId = $agencyMapping[$agencyCode] ?? null;
-        
-        if (!$formId && !$configuredFormId) {
-            return new JsonResponse([
-                'error' => "Agence {$agencyCode} non configurée",
-                'solution' => "Ajouter le form_id dans getAgencyFormMapping()",
-                'available_agencies' => array_keys(array_filter($agencyMapping))
-            ], 400);
-        }
-        
-        $testFormId = $formId ?: $configuredFormId;
-        
-        try {
-            // 2. Test de connectivité API
-            $response = $this->client->request(
-                'GET',
-                "https://forms.kizeo.com/rest/v3/forms/{$testFormId}/data",
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'query' => ['limit' => $limit]
-                ]
-            );
-            
-            $submissionsData = $response->toArray();
-            $submissions = $submissionsData['data'] ?? [];
-            
-            $debugInfo = [
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id_used' => $testFormId,
-                'form_id_configured' => $configuredFormId,
-                'api_response_status' => 'OK',
-                'total_submissions' => count($submissions),
-                'submissions_sample' => []
-            ];
-            
-            // 3. Analyser quelques soumissions
-            foreach (array_slice($submissions, 0, 2) as $submission) {
-                try {
-                    $detailResponse = $this->client->request(
-                        'GET',
-                        "https://forms.kizeo.com/rest/v3/forms/{$testFormId}/data/{$submission['_id']}",
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-                    
-                    $detailData = $detailResponse->toArray();
-                    $fields = $detailData['data']['fields'] ?? [];
-                    
-                    $submissionAnalysis = [
-                        'id' => $submission['_id'],
-                        'has_contract_equipment' => isset($fields['contrat_de_maintenance']),
-                        'has_offcontract_equipment' => isset($fields['tableau2']),
-                        'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
-                        'offcontract_count' => count($fields['tableau2']['value'] ?? []),
-                        'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
-                        'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
-                        'agency_field' => $fields['code_agence']['value'] ?? $fields['id_agence']['value'] ?? 'NOT_FOUND',
-                        'form_version' => $this->detectFormVersion($fields)
-                    ];
-                    
-                    $debugInfo['submissions_sample'][] = $submissionAnalysis;
-                    
-                } catch (\Exception $e) {
-                    $debugInfo['submissions_sample'][] = [
-                        'id' => $submission['_id'],
-                        'error' => 'Impossible de récupérer les détails: ' . $e->getMessage()
-                    ];
-                }
-            }
-            
-            // 4. Recommandations
-            $debugInfo['recommendations'] = $this->generateRecommendations($debugInfo);
-            
-            return new JsonResponse($debugInfo);
-            
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'agency' => $agencyCode,
-                'form_id_tested' => $testFormId,
-                'error' => $e->getMessage(),
-                'error_type' => get_class($e),
-                'recommendations' => [
-                    'Vérifier la validité du form_id',
-                    'Vérifier les permissions API',
-                    'Tester avec un autre form_id'
-                ]
-            ], 500);
-        }
-    }
-
-    /**
-     * Détecter la version du formulaire
-     */
-    private function detectFormVersion(array $fields): string
-    {
-        // V5 a généralement des champs différents de V4
-        if (isset($fields['new_field_v5']) || isset($fields['updated_structure'])) {
-            return 'V5';
-        }
-        
-        // Critères spécifiques pour détecter V4 vs V5
-        $v5Indicators = ['specific_v5_field', 'another_v5_field'];
-        
-        foreach ($v5Indicators as $indicator) {
-            if (isset($fields[$indicator])) {
-                return 'V5';
-            }
-        }
-        
-        return 'V4';
-    }
-
-    /**
-     * Générer des recommandations basées sur l'analyse
-     */
-    private function generateRecommendations(array $debugInfo): array
-    {
-        $recommendations = [];
-        
-        if ($debugInfo['total_submissions'] == 0) {
-            $recommendations[] = "Aucune soumission trouvée - Vérifier si le formulaire a des données";
-        }
-        
-        if (!empty($debugInfo['submissions_sample'])) {
-            $sample = $debugInfo['submissions_sample'][0];
-            
-            if ($sample['contract_count'] == 0 && $sample['offcontract_count'] == 0) {
-                $recommendations[] = "Aucun équipement trouvé - Vérifier la structure des champs";
-            }
-            
-            if ($sample['client_field'] === 'NOT_FOUND') {
-                $recommendations[] = "Champ client non trouvé - Adapter le mapping des champs";
-            }
-            
-            if ($sample['agency_field'] === 'NOT_FOUND') {
-                $recommendations[] = "Champ agence non trouvé - Vérifier les champs d'agence";
-            }
-        }
-        
-        if (empty($recommendations)) {
-            $recommendations[] = "Configuration semble correcte - Tester avec processMaintenanceByFormIdOptimized";
-        }
-        
-        return $recommendations;
-    }
-
-    /**
-     * Route pour debug le filtrage des soumissions
-     */
-    #[Route('/api/maintenance/debug-submissions/{agencyCode}', name: 'app_maintenance_debug_submissions', methods: ['GET'])]
-    public function debugSubmissionsFilter(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
-        
-        $formId = $request->query->get('form_id');
-        $limit = (int) $request->query->get('limit', 10);
-        
-        // Utiliser le mapping si pas de form_id
-        if (!$formId) {
-            $agencyMapping = $this->getAgencyFormMapping();
-            $formId = $agencyMapping[$agencyCode] ?? null;
-        }
-        
-        if (!$formId) {
-            return new JsonResponse(['error' => 'Form ID non trouvé'], 400);
-        }
-        
-        try {
-            // 1. Récupérer toutes les soumissions sans filtrage
-            $response = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced',
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'json' => [
-                        'limit' => $limit,
-                        'offset' => 0
-                    ]
-                ]
-            );
-
-            $formData = $response->toArray();
-            $submissionsAnalysis = [];
-            $agencyFieldsFound = [];
-            
-            // 2. Analyser chaque soumission
-            foreach (array_slice($formData['data'] ?? [], 0, $limit) as $entry) {
-                try {
-                    $detailResponse = $this->client->request(
-                        'GET',
-                        'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ]
-                        ]
-                    );
-
-                    $detailData = $detailResponse->toArray();
-                    $fields = $detailData['data']['fields'] ?? [];
-                    
-                    // 3. Chercher tous les champs qui pourraient contenir l'agence
-                    $agencyFields = [];
-                    foreach ($fields as $fieldName => $fieldData) {
-                        if (stripos($fieldName, 'agence') !== false || 
-                            stripos($fieldName, 'code') !== false ||
-                            (is_array($fieldData) && isset($fieldData['value']) && 
-                            is_string($fieldData['value']) && 
-                            preg_match('/S\d+/', $fieldData['value']))) {
-                            
-                            $agencyFields[$fieldName] = $fieldData['value'] ?? '';
-                            $agencyFieldsFound[$fieldName] = ($agencyFieldsFound[$fieldName] ?? 0) + 1;
-                        }
-                    }
-                    
-                    // 4. Analyser la structure
-                    $analysis = [
-                        'entry_id' => $entry['_id'],
-                        'agency_fields_found' => $agencyFields,
-                        'target_agency' => $agencyCode,
-                        'matches_target' => false,
-                        'client_field' => $fields['nom_client']['value'] ?? $fields['nom_du_client']['value'] ?? 'NOT_FOUND',
-                        'date_field' => $fields['date_et_heure1']['value'] ?? $fields['date_et_heure']['value'] ?? 'NOT_FOUND',
-                        'has_equipment_contract' => isset($fields['contrat_de_maintenance']) && !empty($fields['contrat_de_maintenance']['value'] ?? []),
-                        'has_equipment_offcontract' => isset($fields['tableau2']) && !empty($fields['tableau2']['value'] ?? [])
-                    ];
-                    
-                    // 5. Vérifier si cette soumission correspond à l'agence cible
-                    foreach ($agencyFields as $fieldValue) {
-                        if ($fieldValue === $agencyCode) {
-                            $analysis['matches_target'] = true;
-                            break;
-                        }
-                    }
-                    
-                    $submissionsAnalysis[] = $analysis;
-                    
-                } catch (\Exception $e) {
-                    $submissionsAnalysis[] = [
-                        'entry_id' => $entry['_id'],
-                        'error' => 'Impossible de récupérer: ' . $e->getMessage()
-                    ];
-                }
-            }
-            
-            // 6. Générer le rapport
-            $matchingSubmissions = array_filter($submissionsAnalysis, function($s) {
-                return $s['matches_target'] ?? false;
-            });
-            
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'debug_info' => [
-                    'total_submissions_analyzed' => count($submissionsAnalysis),
-                    'matching_submissions' => count($matchingSubmissions),
-                    'agency_fields_found_across_all' => $agencyFieldsFound,
-                    'most_common_agency_field' => $this->getMostCommonField($agencyFieldsFound)
-                ],
-                'submissions_analysis' => $submissionsAnalysis,
-                'matching_submissions_only' => array_values($matchingSubmissions),
-                'recommendations' => $this->generateFilteringRecommendations($submissionsAnalysis, $agencyCode, $agencyFieldsFound)
-            ]);
-            
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'agency' => $agencyCode,
-                'form_id' => $formId
-            ], 500);
-        }
-    }
-
     /**
      * Trouver le champ d'agence le plus commun
      */
@@ -4346,118 +3990,7 @@ class SimplifiedMaintenanceController extends AbstractController
         return array_key_first(array_slice($agencyFieldsFound, 0, 1, true));
     }
 
-    /**
-     * Générer des recommandations pour corriger le filtrage
-     */
-    private function generateFilteringRecommendations(array $analysis, string $targetAgency, array $agencyFields): array
-    {
-        $recommendations = [];
-        
-        if (empty($analysis)) {
-            $recommendations[] = "Aucune soumission trouvée - Vérifier l'API Kizeo";
-            return $recommendations;
-        }
-        
-        $totalAnalyzed = count($analysis);
-        $withEquipment = count(array_filter($analysis, function($a) {
-            return ($a['has_equipment_contract'] ?? false) || ($a['has_equipment_offcontract'] ?? false);
-        }));
-        
-        if ($withEquipment == 0) {
-            $recommendations[] = "Aucune soumission avec équipements trouvée - Vérifier la structure des formulaires";
-        }
-        
-        if (empty($agencyFields)) {
-            $recommendations[] = "Aucun champ d'agence détecté - Le filtrage par agence ne peut pas fonctionner";
-            $recommendations[] = "Solution: Traiter TOUTES les soumissions sans filtrage d'agence";
-        } else {
-            $mostCommon = $this->getMostCommonField($agencyFields);
-            $recommendations[] = "Champ d'agence le plus fréquent: '{$mostCommon}'";
-            $recommendations[] = "Modifier getFormSubmissionsOptimized pour utiliser ce champ";
-        }
-        
-        $matchingCount = count(array_filter($analysis, function($a) {
-            return $a['matches_target'] ?? false;
-        }));
-        
-        if ($matchingCount == 0) {
-            $recommendations[] = "PROBLÈME: Aucune soumission ne correspond à l'agence {$targetAgency}";
-            $recommendations[] = "Solution 1: Vérifier si ce formulaire contient vraiment des données pour {$targetAgency}";
-            $recommendations[] = "Solution 2: Traiter TOUTES les soumissions sans filtre d'agence";
-        } else {
-            $recommendations[] = "SUCCÈS: {$matchingCount}/{$totalAnalyzed} soumissions correspondent à {$targetAgency}";
-            $recommendations[] = "Le filtrage peut être corrigé avec les bons champs";
-        }
-        
-        return $recommendations;
-    }
-
     ///////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * SOLUTION 1: Version avec timeout plus long et endpoint simple
-     */
-    #[Route('/api/maintenance/test-simple-api/{agencyCode}', name: 'app_maintenance_test_simple_api', methods: ['GET'])]
-    public function testSimpleAPI(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
-        
-        $formId = $request->query->get('form_id');
-        $limit = (int) $request->query->get('limit', 10);
-        
-        if (!$formId) {
-            $agencyMapping = $this->getAgencyFormMapping();
-            $formId = $agencyMapping[$agencyCode] ?? null;
-        }
-        
-        if (!$formId) {
-            return new JsonResponse(['error' => 'Form ID non trouvé'], 400);
-        }
-        
-        try {
-            // UTILISER L'ENDPOINT SIMPLE avec timeout étendu
-            $response = $this->client->request(
-                'GET',
-                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                    'query' => [
-                        'limit' => $limit,
-                        'offset' => 0
-                    ],
-                    'timeout' => 120  // 2 minutes au lieu de 30s par défaut
-                ]
-            );
-
-            $formData = $response->toArray();
-            $submissions = $formData['data'] ?? [];
-            
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'api_endpoint' => 'simple',
-                'total_submissions' => count($submissions),
-                'submissions_sample' => array_slice($submissions, 0, 3),
-                'message' => count($submissions) > 0 ? 
-                    'API simple fonctionne - ' . count($submissions) . ' soumissions trouvées' :
-                    'API accessible mais aucune soumission'
-            ]);
-            
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'agency' => $agencyCode,
-                'form_id' => $formId,
-                'error' => $e->getMessage(),
-                'error_type' => get_class($e),
-                'timeout_occurred' => stripos($e->getMessage(), 'timeout') !== false
-            ], 500);
-        }
-    }
 
     /**
      * SOLUTION FONCTIONNELLE : Remplacer getFormSubmissionsOptimized
@@ -4657,17 +4190,6 @@ class SimplifiedMaintenanceController extends AbstractController
                 'agency' => $agencyCode,
                 'form_id' => $formId
             ], 500);
-        }
-    }
-
-    private function generateConnectivityRecommendation(array $tests): string
-    {
-        if ($tests['data_simple']['status'] === 'success') {
-            return "API fonctionnelle - Utiliser l'endpoint simple avec pagination";
-        } elseif ($tests['basic_info']['status'] === 'success') {
-            return "Formulaire accessible mais problème avec les données - Contacter support Kizeo";
-        } else {
-            return "Problème de connectivité général - Vérifier token API et réseau";
         }
     }
 
@@ -5052,44 +4574,244 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setIsArchive(false);
     }
 
-    private function setContractDataForAgency($equipement, array $equipmentData, string $agencyCode): void
+    /**
+     * Extrait et structure les anomalies d'un équipement selon son type (trigramme)
+     * basé sur le numero_equipement et les données du formulaire Kizeo
+     */
+    private function extractAnomaliesByEquipmentType(array $equipmentData, string $numeroEquipement): ?string
     {
-        // À adapter selon la structure de chaque agence
-        // Pour l'instant, logique générique
+        // Extraire le trigramme du numéro d'équipement (ex: SEC01 -> SEC)
+        $trigramme = $this->extractTrigrammeFromNumero($numeroEquipement);
         
-        $numeroEquipement = $equipmentData['equipement']['value'] ?? 
-                        $equipmentData['numero_equipement']['value'] ?? '';
-        $equipement->setNumeroEquipement($numeroEquipement);
+        if (!$trigramme) {
+            error_log("Impossible d'extraire le trigramme du numéro: " . $numeroEquipement);
+            return null;
+        }
         
-        $libelle = $equipmentData['libelle']['value'] ?? 
-                $equipmentData['description']['value'] ?? '';
-        $equipement->setLibelleEquipement($libelle);
+        $anomalies = [];
         
-        // Autres champs selon disponibilité
-        $this->setCommonEquipmentFields($equipement, $equipmentData);
+        // Mapping des trigrammes vers les champs d'anomalies correspondants
+        switch ($trigramme) {
+            case 'SEC': // Porte sectionnelle
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_sec_rid_rap_vor_pac',
+                    'anomalies_sec_'
+                ]);
+                break;
+                
+            case 'RID': // Rideau métallique
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_rid_vor',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'RAP': // Porte rapide
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_rapide',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'VOR': // Volet roulant
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_rid_vor',
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'PAC': // Porte accordéon
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_sec_rid_rap_vor_pac'
+                ]);
+                break;
+                
+            case 'NIV': // Niveleur
+            case 'PLQ': // Plaque de quai
+            case 'MIP': // Mini-pont
+            case 'TEL': // Table élévatrice
+            case 'BLR': // Bloc roue
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_niv_plq_mip_tel_blr_'
+                ]);
+                break;
+                
+            case 'SAS': // Sas
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_sas'
+                ]);
+                break;
+                
+            case 'BLE': // Barrière levante
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_ble1',
+                    'anomalie_ble_moto_auto'
+                ]);
+                break;
+                
+            case 'TOU': // Tourniquet
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_tou1'
+                ]);
+                break;
+                
+            case 'PAU': // Portail automatique
+            case 'PMO': // Portail motorisé
+            case 'PMA': // Portail manuel
+            case 'PCO': // Portail coulissant
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_portail',
+                    'anomalie_portail_auto_moto'
+                ]);
+                break;
+                
+            case 'PPV': // Porte piétonne
+            case 'CFE': // Porte coupe-feu
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_ppv_cfe',
+                    'anomalie_cfe_ppv_auto_moto'
+                ]);
+                break;
+                
+            case 'HYD': // Équipement hydraulique
+                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
+                    'anomalie_hydraulique'
+                ]);
+                break;
+                
+            default:
+                error_log("Type d'équipement non géré pour le trigramme: " . $trigramme);
+                // Essayer de récupérer toutes les anomalies disponibles
+                $anomalies = $this->extractAllAnomalies($equipmentData);
+                break;
+        }
+        
+        return $this->formatAnomaliesForDatabase($anomalies);
     }
 
-    private function setOffContractDataForAgency($equipement, array $equipmentData, string $agencyCode): void
+    /**
+     * Extrait le trigramme du numéro d'équipement
+     */
+    private function extractTrigrammeFromNumero(string $numeroEquipement): ?string
     {
-        // Même logique que contrat mais avec en_maintenance = false
-        $this->setContractDataForAgency($equipement, $equipmentData, $agencyCode);
+        // Pattern pour extraire les lettres au début du numéro
+        if (preg_match('/^([A-Z]{2,4})/', $numeroEquipement, $matches)) {
+            return $matches[1];
+        }
+        
+        return null;
     }
 
-    private function setCommonEquipmentFields($equipement, array $equipmentData): void
+    /**
+     * Extrait les anomalies des champs spécifiés
+     */
+    private function extractAnomaliesFromFields(array $equipmentData, array $fieldNames): array
     {
-        // Champs communs à tous les équipements
-        if (method_exists($equipement, 'setMarque') && isset($equipmentData['marque']['value'])) {
-            $equipement->setMarque($equipmentData['marque']['value']);
+        $anomalies = [];
+        
+        foreach ($fieldNames as $fieldName) {
+            if (isset($equipmentData[$fieldName])) {
+                $fieldData = $equipmentData[$fieldName];
+                
+                // Vérifier si le champ est visible (pas hidden)
+                $isHidden = isset($fieldData['hidden']) && 
+                        ($fieldData['hidden'] === true || $fieldData['hidden'] === 'true');
+                
+                if (!$isHidden && isset($fieldData['valuesAsArray'])) {
+                    $values = $fieldData['valuesAsArray'];
+                    
+                    // Filtrer les valeurs vides
+                    $validValues = array_filter($values, function($value) {
+                        return !empty(trim($value));
+                    });
+                    
+                    if (!empty($validValues)) {
+                        $anomalies[$fieldName] = [
+                            'type' => $fieldData['type'] ?? 'select',
+                            'values' => $validValues,
+                            'columns' => $fieldData['columns'] ?? '',
+                            'time' => $fieldData['time'] ?? []
+                        ];
+                    }
+                }
+            }
         }
         
-        if (method_exists($equipement, 'setHauteur') && isset($equipmentData['hauteur']['value'])) {
-            $equipement->setHauteur($equipmentData['hauteur']['value']);
-        }
-        
-        if (method_exists($equipement, 'setLargeur') && isset($equipmentData['largeur']['value'])) {
-            $equipement->setLargeur($equipmentData['largeur']['value']);
-        }
-        
-        // Ajouter d'autres champs selon les besoins
+        return $anomalies;
     }
+
+    /**
+     * Extrait toutes les anomalies disponibles (fallback)
+     */
+    private function extractAllAnomalies(array $equipmentData): array
+    {
+        $anomalies = [];
+        
+        // Liste de tous les champs d'anomalies possibles
+        $allAnomalieFields = [
+            'anomalie_sec_rid_rap_vor_pac',
+            'anomalies_sec_',
+            'anomalie_rid_vor',
+            'anomalie_rapide',
+            'anomalie_niv_plq_mip_tel_blr_',
+            'anomalie_sas',
+            'anomalie_ble1',
+            'anomalie_tou1',
+            'anomalie_portail',
+            'anomalie_ppv_cfe',
+            'anomalie_portail_auto_moto',
+            'anomalie_cfe_ppv_auto_moto',
+            'anomalie_ble_moto_auto',
+            'anomalie_hydraulique'
+        ];
+        
+        return $this->extractAnomaliesFromFields($equipmentData, $allAnomalieFields);
+    }
+
+    /**
+     * Formate les anomalies pour l'enregistrement en base de données
+     */
+    private function formatAnomaliesForDatabase(array $anomalies): ?string
+    {
+        if (empty($anomalies)) {
+            return null;
+        }
+        
+        $formattedAnomalies = [];
+        
+        foreach ($anomalies as $fieldName => $anomalieData) {
+            if (!empty($anomalieData['values'])) {
+                $formattedAnomalies[] = [
+                    'field' => $fieldName,
+                    'type' => $anomalieData['type'],
+                    'anomalies' => $anomalieData['values'],
+                    'details' => $anomalieData['columns'],
+                    'timestamps' => $anomalieData['time']
+                ];
+            }
+        }
+        
+        return !empty($formattedAnomalies) ? json_encode($formattedAnomalies, JSON_UNESCAPED_UNICODE) : null;
+    }
+
+    /**
+     * Méthode mise à jour pour intégrer l'extraction des anomalies
+     * dans setContractEquipmentData ou setOffContractEquipmentData
+     */
+    private function setEquipmentAnomalies($equipement, array $equipmentData): void
+    {
+        $numeroEquipement = $equipement->getNumeroEquipement();
+        
+        if ($numeroEquipement) {
+            $anomalies = $this->extractAnomaliesByEquipmentType($equipmentData, $numeroEquipement);
+            
+            if ($anomalies) {
+                $equipement->setAnomalies($anomalies);
+                error_log("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomalies);
+            } else {
+                error_log("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
+            }
+        }
+    }
+
 }
