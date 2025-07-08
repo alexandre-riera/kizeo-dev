@@ -15,6 +15,7 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Entity\Form;
 use App\Repository\FormRepository;
 use App\Service\MaintenanceCacheService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -3319,7 +3320,7 @@ class SimplifiedMaintenanceController extends AbstractController
             
             // IMPORTANT: Ajouter un flush immédiat pour tester
             $entityManager->flush();
-            // error_log("Entity flushée avec succès");
+            error_log("Entity flushée avec succès");
             
         } catch (\Exception $e) {
             error_log("ERREUR sauvegarde photos Form: " . $e->getMessage());
