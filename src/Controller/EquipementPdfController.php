@@ -247,6 +247,27 @@ class EquipementPdfController extends AbstractController
         $equipementsSupplementaires = array_filter($equipmentsWithPictures, function($equipement) {
             return $equipement['equipment']->isEnMaintenance() === false;
         });
+
+        // Calculer les statistiques pour les équipements supplémentaires
+        $statistiquesSupplementaires = [];
+        $etatsCountSupplementaires = [];
+
+        foreach ($equipementsSupplementaires as $equipmentData) {
+            $equipment = $equipmentData['equipment'];
+            $etat = $equipment->getEtat();
+            
+            if ($etat && $etat !== "Equipement non présent sur site" && $etat !== "G") {
+                if (!isset($etatsCountSupplementaires[$etat])) {
+                    $etatsCountSupplementaires[$etat] = 0;
+                }
+                $etatsCountSupplementaires[$etat]++;
+            }
+        }
+
+        $statistiquesSupplementaires = [
+            'etatsCount' => $etatsCountSupplementaires
+        ];
+
         $equipementsNonPresents = [];
         foreach ($equipmentsWithPictures as $equipement) {
             if ($equipement['equipment']->getEtat() === "Equipement non présent sur site" || $equipement['equipment']->getEtat() === "G") {
@@ -269,6 +290,7 @@ class EquipementPdfController extends AbstractController
             'clientAnneeFilter' => $clientAnneeFilter,
             'clientVisiteFilter' => $clientVisiteFilter,
             'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
+            'statistiquesSupplementaires' => $statistiquesSupplementaires, // 🎯 Nouvelle variable
             'dateDeDerniererVisite' => $dateDeDerniererVisite,
             'clientSelectedInformations' => $clientSelectedInformations,
             'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter)
