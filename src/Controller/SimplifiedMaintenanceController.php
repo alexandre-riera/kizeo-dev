@@ -3318,7 +3318,7 @@ class SimplifiedMaintenanceController extends AbstractController
             error_log("Entity persistée avec succès");
             
             // IMPORTANT: Ajouter un flush immédiat pour tester
-            // $entityManager->flush();
+            $entityManager->flush();
             // error_log("Entity flushée avec succès");
             
         } catch (\Exception $e) {
