@@ -495,9 +495,9 @@
                             </td>
                             <td style="width: 70%;">
                                 <table>
-                                    <tr>
-                                        <td>{{ dump(equipment) }}</td>
-                                    </tr>
+                                    <pre>
+                                        {{ dump(equipment) }}
+                                    </pre>
                                     <tr>
                                         <th colspan="2">Équipement {{ equipment.numeroEquipement }} - {{ equipment.raisonSociale }}
                                             {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
