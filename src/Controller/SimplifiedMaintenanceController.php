@@ -5092,7 +5092,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 $processedAnomalies = [];
                 
                 foreach ($anomaliesArray as $anomalie) {
-                    if ($anomalie === 'autres_composants') {
+                    if ($anomalie === 'autres_composants' || $anomalie === 'Autres_composants') {
                         // Récupérer la valeur du champ "information_autre_composant"
                         $informationAutreComposant = $equipmentData['information_autre_composant']['value'] ?? '';
                         
