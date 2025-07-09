@@ -5086,17 +5086,16 @@ class SimplifiedMaintenanceController extends AbstractController
         
         if ($numeroEquipement) {
             $anomaliesArray = $this->extractSimpleAnomaliesArrayByEquipmentType($equipmentData, $numeroEquipement);
-            dd($anomaliesArray); // Pour débogage
             
             if (!empty($anomaliesArray)) {
                 // Traiter chaque anomalie pour gérer le cas "autres_composants"
                 $processedAnomalies = [];
                 
                 foreach ($anomaliesArray as $anomalie) {
-                    if ($anomalie === 'autres_composants') {
+                    if ($anomalie === 'autres_composants' || $anomalie === 'Autres composants') {
                         // CORRECTION: Récupérer d'abord la valeur du champ "autres_composants" lui-même
                         $autresComposantsValue = $equipmentData['autres_composants']['value'] ?? '';
-                        
+                        dd($autresComposantsValue); // Pour débogage
                         if (!empty($autresComposantsValue) && trim($autresComposantsValue) !== '') {
                             $processedAnomalies[] = trim($autresComposantsValue);
                             error_log("Anomalie 'autres_composants' remplacée par sa valeur: " . trim($autresComposantsValue));
