@@ -5083,7 +5083,7 @@ class SimplifiedMaintenanceController extends AbstractController
     private function setSimpleEquipmentAnomalies($equipement, array $equipmentData): void
     {
         $numeroEquipement = $equipement->getNumeroEquipement();
-    
+        
         if ($numeroEquipement) {
             $anomaliesArray = $this->extractSimpleAnomaliesArrayByEquipmentType($equipmentData, $numeroEquipement);
             
@@ -5092,17 +5092,25 @@ class SimplifiedMaintenanceController extends AbstractController
                 $processedAnomalies = [];
                 
                 foreach ($anomaliesArray as $anomalie) {
-                    if ($anomalie === 'autres_composants' || $anomalie === 'Autres_composants' || $anomalie === 'Autres composants') {
-                        // Récupérer la valeur du champ "information_autre_composant"
-                        $informationAutreComposant = $equipmentData['information_autre_composant']['value'] ?? '';
+                    if ($anomalie === 'autres_composants') {
+                        // CORRECTION: Récupérer d'abord la valeur du champ "autres_composants" lui-même
+                        $autresComposantsValue = $equipmentData['autres_composants']['value'] ?? '';
                         
-                        if (!empty($informationAutreComposant) && trim($informationAutreComposant) !== '') {
-                            $processedAnomalies[] = trim($informationAutreComposant);
-                            error_log("Anomalie 'autres_composants' remplacée par: " . trim($informationAutreComposant));
+                        if (!empty($autresComposantsValue) && trim($autresComposantsValue) !== '') {
+                            $processedAnomalies[] = trim($autresComposantsValue);
+                            error_log("Anomalie 'autres_composants' remplacée par sa valeur: " . trim($autresComposantsValue));
                         } else {
-                            // Si pas d'information spécifique, garder "autres_composants"
-                            $processedAnomalies[] = $anomalie . ' non spécifiés';
-                            error_log("Anomalie 'autres_composants' gardée (pas d'information spécifique)");
+                            // Si pas de valeur dans "autres_composants", essayer "information_autre_composant"
+                            $informationAutreComposant = $equipmentData['information_autre_composant']['value'] ?? '';
+                            
+                            if (!empty($informationAutreComposant) && trim($informationAutreComposant) !== '') {
+                                $processedAnomalies[] = trim($informationAutreComposant);
+                                error_log("Anomalie 'autres_composants' remplacée par information_autre_composant: " . trim($informationAutreComposant));
+                            } else {
+                                // Si aucune des deux valeurs n'est disponible, garder "autres_composants"
+                                $processedAnomalies[] = $anomalie;
+                                error_log("Anomalie 'autres_composants' gardée (pas d'information spécifique)");
+                            }
                         }
                     } else {
                         // Anomalie normale, on la garde telle quelle
