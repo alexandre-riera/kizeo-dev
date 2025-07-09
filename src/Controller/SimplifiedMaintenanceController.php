@@ -5101,7 +5101,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             error_log("Anomalie 'autres_composants' remplacée par: " . trim($informationAutreComposant));
                         } else {
                             // Si pas d'information spécifique, garder "autres_composants"
-                            $processedAnomalies[] = $anomalie;
+                            $processedAnomalies[] = $anomalie . ' non spécifiés';
                             error_log("Anomalie 'autres_composants' gardée (pas d'information spécifique)");
                         }
                     } else {
