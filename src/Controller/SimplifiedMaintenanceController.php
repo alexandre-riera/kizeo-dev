@@ -5095,7 +5095,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     if ($anomalie === 'autres_composants' || $anomalie === 'Autres composants') {
                         // CORRECTION: Récupérer d'abord la valeur du champ "autres_composants" lui-même
                         $autresComposantsValue = $equipmentData['autres_composants']['value'] ?? '';
-                        dd($equipmentData); // Pour débogage
+                        dd($equipmentData['autres_composants']); // Pour débogage
                         if (!empty($autresComposantsValue) && trim($autresComposantsValue) !== '') {
                             $processedAnomalies[] = trim($autresComposantsValue);
                             error_log("Anomalie 'autres_composants' remplacée par sa valeur: " . trim($autresComposantsValue));
