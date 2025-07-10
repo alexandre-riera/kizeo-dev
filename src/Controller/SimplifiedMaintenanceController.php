@@ -5092,29 +5092,34 @@ class SimplifiedMaintenanceController extends AbstractController
                 $processedAnomalies = [];
                 
                 foreach ($anomaliesArray as $anomalie) {
-                    if ($anomalie === 'autres_composants' || $anomalie === 'Autres composants') {
+                    dump('Je suis $anomalie : ' . $anomalie); // Pour débogage
+                    // if ($anomalie === 'autres_composants' || $anomalie === 'Autres composants') {
+                    if ($anomalie === 'Autres composants') {
                         // CORRECTION: Récupérer d'abord la valeur du champ "autres_composants" lui-même
                         $autresComposantsValue = $equipmentData['autres_composants']['value'] ?? '';
-                        dd($equipmentData['autres_composants']); // Pour débogage
+                        dump('Je suis $autresComposantsValue : ' . $autresComposantsValue); // Pour débogage
                         if (!empty($autresComposantsValue) && trim($autresComposantsValue) !== '') {
                             $processedAnomalies[] = trim($autresComposantsValue);
-                            error_log("Anomalie 'autres_composants' remplacée par sa valeur: " . trim($autresComposantsValue));
+                            dump("Anomalie 'Autres_composants' remplacée par la valeur: " . trim($autresComposantsValue));
                         } else {
                             // Si pas de valeur dans "autres_composants", essayer "information_autre_composant"
-                            $informationAutreComposant = $equipmentData['information_autre_composant']['value'] ?? '';
+                            $informationAutreComposant = $equipmentData['information_autre_composant']['value'];
                             
                             if (!empty($informationAutreComposant) && trim($informationAutreComposant) !== '') {
                                 $processedAnomalies[] = trim($informationAutreComposant);
-                                error_log("Anomalie 'autres_composants' remplacée par information_autre_composant: " . trim($informationAutreComposant));
+                                dump("Anomalie 'Autres_composants' remplacée par information_autre_composant: " . trim($informationAutreComposant));
                             } else {
-                                // Si aucune des deux valeurs n'est disponible, garder "autres_composants"
-                                $processedAnomalies[] = $anomalie;
-                                error_log("Anomalie 'autres_composants' gardée (pas d'information spécifique)");
+                                // Si aucune des deux valeurs n'est disponible, on set à rien, pas garder "autres_composants"
+                                // $processedAnomalies[] = $anomalie;
+                                $processedAnomalies[] = '';
+                                // error_log("Anomalie 'autres_composants' gardée (pas d'information spécifique)");
+                                dump("Anomalie 'Autres_composants' settée à rien, pasgardée (pas d'information spécifique)");
                             }
                         }
                     } else {
                         // Anomalie normale, on la garde telle quelle
                         $processedAnomalies[] = $anomalie;
+                        dd("Anomalie normale gardée car elle contient : " . $anomalie); // Pour débogage
                     }
                 }
                 
@@ -5122,10 +5127,10 @@ class SimplifiedMaintenanceController extends AbstractController
                     // Convertir le tableau en chaîne séparée par des virgules
                     $anomaliesString = implode(', ', $processedAnomalies);
                     $equipement->setAnomalies($anomaliesString);
-                    error_log("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomaliesString);
+                    dd("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomaliesString);
                 }
             } else {
-                error_log("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
+                dd("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
             }
         }
     }
