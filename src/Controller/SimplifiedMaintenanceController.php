@@ -2920,14 +2920,14 @@ class SimplifiedMaintenanceController extends AbstractController
             'S60' => '1055932',  // V4- Lyon /Visite maintenance
             'S70' => '1057365',  // V4- Bordeaux /Visite maintenance
             'S80' => '1053175',  // V4 - Paris / Visite maintenance
-            // 'S100' => '1071913', // V5- Montpellier /Visite maintenance
-            'S100' => '1052982', // V4- Montpellier /Visite maintenance
+            'S100' => '1071913', // V5- Montpellier /Visite maintenance
+            // 'S100' => '1052982', // V4- Montpellier /Visite maintenance
             'S120' => '1062555', // v4- Portland / visite de maintenance
             'S130' => '1057880', // V4- Toulouse / visite de maintenance
             'S140' => '1088761', // V4 - Smp / visite de maintenance
             'S150' => '1057408', // V4- Paca / visite de maintenance
             'S160' => '1060720', // V4- Rouen / visite de maintenance
-            'S170' => '1090092', // V4- Rennes / visite de maintenance MEME QUE GROUP CAR PAS EN PRODUCTION
+            'S170' => '1094209', // V5- Rennes / visite de maintenance
         ];
     }
 
