@@ -5119,7 +5119,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     } else {
                         // Anomalie normale, on la garde telle quelle
                         $processedAnomalies[] = $anomalie;
-                        dd("Anomalie normale gardée car elle contient : " . $anomalie); // Pour débogage
+                        dump("Anomalie normale gardée car elle contient : " . $anomalie); // Pour débogage
                     }
                 }
                 
