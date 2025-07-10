@@ -2915,8 +2915,8 @@ class SimplifiedMaintenanceController extends AbstractController
         return [
             'S10' => '1090092',  // V4- Group / Visite maintenance
             'S40' => '1055931',  // V4- St Etienne / Visite maintenance
-            // 'S50' => '1065302',  // V5- GRENOBLE / Visite de maintenance
-            'S50' => '1052966',  // V4- GRENOBLE / Visite de maintenance
+            'S50' => '1065302',  // V5- GRENOBLE / Visite de maintenance
+            // 'S50' => '1052966',  // V4- GRENOBLE / Visite de maintenance
             'S60' => '1055932',  // V4- Lyon /Visite maintenance
             'S70' => '1057365',  // V4- Bordeaux /Visite maintenance
             'S80' => '1053175',  // V4 - Paris / Visite maintenance
