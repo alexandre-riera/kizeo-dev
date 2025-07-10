@@ -2447,49 +2447,105 @@ class FormRepository extends ServiceEntityRepository
         $this->getEntityManager()->flush();
     }
 
-    public function getJpgPictureFromStringName($value, $entityManager){
-        // $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2, $value->photo_compte_rendu];
+    // public function getJpgPictureFromStringName($value, $entityManager){
+    //     // $picturesNames = [$value->photo_plaque, $value->photo_etiquette_somafi, $value->photo_choc, $value->photo_choc_montant, $value->photo_panneau_intermediaire_i, $value->photo_panneau_bas_inter_ext, $value->photo_lame_basse__int_ext, $value->photo_lame_intermediaire_int_, $value->photo_envirronement_eclairage, $value->photo_bache, $value->photo_marquage_au_sol, $value->photo_environnement_equipement1, $value->photo_coffret_de_commande, $value->photo_carte, $value->photo_rail, $value->photo_equerre_rail, $value->photo_fixation_coulisse, $value->photo_moteur, $value->photo_deformation_plateau, $value->photo_deformation_plaque, $value->photo_deformation_structure, $value->photo_deformation_chassis, $value->photo_deformation_levre, $value->photo_fissure_cordon, $value->photo_joue, $value->photo_butoir, $value->photo_vantail, $value->photo_linteau, $value->photo_barriere, $value->photo_tourniquet, $value->photo_sas, $value->photo_marquage_au_sol_, $value->photo_marquage_au_sol_2, $value->photo_2, $value->photo_compte_rendu];
 
+    //     // On récupère la photo du compte rendu uniquement
+    //     $picturesNames = [ $value->photo_2, $value->photo_compte_rendu];
+        
+    //     $the_picture = [];
+        
+    //     foreach ($picturesNames as $pictureName) {
+    //         if (!str_contains($pictureName, ", ")) {
+    //             if ($pictureName != "" || $pictureName != null) {
+    //                 $response = $this->client->request(
+    //                     'GET',
+    //                     'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $pictureName, [
+    //                         'headers' => [
+    //                             'Accept' => 'application/json',
+    //                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                         ],
+    //                     ]
+    //                 );
+    //                 $photoJpg = $response->getContent();
+    //                 array_push($the_picture, $photoJpg);
+    //             }
+    //         }
+    //         else{
+    //             $photosSupplementaires = explode(", ", $pictureName);
+    //             foreach ($photosSupplementaires as $photo) {
+    //                 // Call kizeo url to get jpeg here and encode the result
+    //                 $response = $this->client->request(
+    //                     'GET',
+    //                     'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $photo, [
+    //                         'headers' => [
+    //                             'Accept' => 'application/json',
+    //                             'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+    //                         ],
+    //                     ]
+    //                 );
+    //                 $photoJpg = $response->getContent();
+    //                 array_push($the_picture, $photoJpg);
+    //             }
+    //         }
+    //     }
+    //     return $the_picture;
+    // }
+    public function getJpgPictureFromStringName($value, $entityManager){
         // On récupère la photo du compte rendu uniquement
         $picturesNames = [ $value->photo_2, $value->photo_compte_rendu];
         
         $the_picture = [];
         
         foreach ($picturesNames as $pictureName) {
-            if (!str_contains($pictureName, ", ")) {
-                if ($pictureName != "" || $pictureName != null) {
-                    $response = $this->client->request(
-                        'GET',
-                        'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $pictureName, [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-                    $photoJpg = $response->getContent();
-                    array_push($the_picture, $photoJpg);
-                }
+            if (empty($pictureName)) {
+                continue;
             }
-            else{
+            
+            if (!str_contains($pictureName, ", ")) {
+                // Photo unique
+                $photoContent = $this->fetchPhotoFromKizeoSafely($value, $pictureName);
+                if ($photoContent) {
+                    array_push($the_picture, $photoContent);
+                }
+            } else {
+                // Photos multiples séparées par des virgules
                 $photosSupplementaires = explode(", ", $pictureName);
                 foreach ($photosSupplementaires as $photo) {
-                    // Call kizeo url to get jpeg here and encode the result
-                    $response = $this->client->request(
-                        'GET',
-                        'https://forms.kizeo.com/rest/v3/forms/' .  $value->form_id . '/data/' . $value->data_id . '/medias/' . $photo, [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-                    $photoJpg = $response->getContent();
-                    array_push($the_picture, $photoJpg);
+                    if (!empty(trim($photo))) {
+                        $photoContent = $this->fetchPhotoFromKizeoSafely($value, trim($photo));
+                        if ($photoContent) {
+                            array_push($the_picture, $photoContent);
+                        }
+                    }
                 }
             }
         }
         return $the_picture;
+    }
+    
+    /**
+     * Fonction helper pour récupérer une photo depuis l'API Kizeo avec gestion d'erreurs
+     * Continue le traitement même si une photo n'est pas trouvée (404)
+     */
+    private function fetchPhotoFromKizeoSafely($value, $photoName) {
+        try {
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $value->form_id . '/data/' . $value->data_id . '/medias/' . $photoName,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                ]
+            );
+            return $response->getContent();
+        } catch (\Exception $e) {
+            // Log l'erreur pour debug mais continue le traitement
+            error_log("Photo '{$photoName}' non trouvée sur Kizeo Forms (Form ID: {$value->form_id}, Data ID: {$value->data_id}): " . $e->getMessage());
+            return null;
+        }
     }
 
     public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
