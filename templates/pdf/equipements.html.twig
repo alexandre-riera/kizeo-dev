@@ -8,14 +8,9 @@
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
-            {% if backgroundImage is defined and backgroundImage %}
-                background-image: url('{{ backgroundImage }}');
-                background-size: cover;
-                background-position: center;
-                background-repeat: no-repeat;
-            {% endif %}
             padding-top: 150px;
-            margin: 0 !important;
+            margin: 0;
+            background-color: white;
         }
         
         .page-break {
@@ -26,7 +21,7 @@
             margin-bottom: 20px;
             border: 1px solid #ddd;
             padding: 10px;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: white;
         }
         
         .equipement-header {
@@ -43,16 +38,19 @@
             margin-bottom: 10px;
         }
         
-        .info-table th, .info-table td {
+        .info-table th {
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
-        }
-        
-        .info-table th {
             background-color: #f9f9f9;
             width: 30%;
             font-weight: bold;
+        }
+        
+        .info-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
         }
         
         .equipment-image {
@@ -110,10 +108,21 @@
             vertical-align: middle;
         }
         
-        .statut-bon { background-color: #28a745; }
-        .statut-attention { background-color: #ffc107; }
-        .statut-urgent { background-color: #dc3545; }
-        .statut-arret { background-color: #6c757d; }
+        .statut-bon { 
+            background-color: #28a745; 
+        }
+        
+        .statut-attention { 
+            background-color: #ffc107; 
+        }
+        
+        .statut-urgent { 
+            background-color: #dc3545; 
+        }
+        
+        .statut-arret { 
+            background-color: #6c757d; 
+        }
         
         /* Mise en évidence des anomalies */
         .anomalies {
@@ -126,7 +135,7 @@
         
         /* Section des statistiques */
         .stats-section {
-            background-color: rgba(248, 249, 250, 0.95);
+            background-color: #f8f9fa;
             border: 1px solid #dee2e6;
             border-radius: 4px;
             padding: 15px;
@@ -167,6 +176,32 @@
         .stats-table .statut-cell {
             text-align: left;
             padding-left: 15px;
+        }
+        
+        /* Logos de statut */
+        .logo-statut {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .logo-vert { 
+            background-color: #4CAF50; 
+        }
+        
+        .logo-orange { 
+            background-color: #FF9800; 
+        }
+        
+        .logo-rouge { 
+            background-color: #F44336; 
+        }
+        
+        .logo-noir { 
+            background-color: #424242; 
         }
         
         /* Informations de filtrage */
@@ -235,20 +270,33 @@
                 <thead>
                     <tr>
                         <th>Statut</th>
+                        <th>État</th>
                         <th>Nombre</th>
                         <th>Pourcentage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for statut, data in statistiques %}
-                        <tr>
-                            <td class="statut-cell">
-                                <span class="statut-icon statut-{{ statut|lower }}"></span>
-                                {{ data.label }}
-                            </td>
-                            <td>{{ data.count }}</td>
-                            <td>{{ data.percentage }}%</td>
-                        </tr>
+                    {% set totalEquipments = equipmentsWithPictures|length %}
+                    {% for etat, count in statistiques %}
+                        {% if count > 0 %}
+                            {% set percentage = totalEquipments > 0 ? ((count / totalEquipments) * 100)|round(1) : 0 %}
+                            <tr>
+                                <td style="text-align: center;">
+                                    {% if etat == "Rien à signaler le jour de la visite." %}
+                                        <span class="logo-statut logo-vert"></span>
+                                    {% elseif "urgent" in etat|lower or "arrêt" in etat|lower %}
+                                        <span class="logo-statut logo-rouge"></span>
+                                    {% elseif "attention" in etat|lower or "surveillance" in etat|lower %}
+                                        <span class="logo-statut logo-orange"></span>
+                                    {% else %}
+                                        <span class="logo-statut logo-noir"></span>
+                                    {% endif %}
+                                </td>
+                                <td class="statut-cell">{{ etat }}</td>
+                                <td style="text-align: center;">{{ count }}</td>
+                                <td style="text-align: center;">{{ percentage }}%</td>
+                            </tr>
+                        {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
@@ -279,7 +327,6 @@
                     <tr>
                         <td rowspan="7" class="equipment-image">
                             {% if pictures|length > 0 %}
-                                {# Utilisation de l'image locale encodée en base64 #}
                                 <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement {{ equipment.numeroEquipement }}">
                             {% else %}
                                 <div class="no-image">
