@@ -9,19 +9,6 @@ framework:
     #esi: true
     #fragments: true
 
-    # Configuration HttpClient pour les appels Kizeo
-    http_client:
-        default_options:
-            timeout: 30
-            max_redirects: 3
-        scoped_clients:
-            kizeo.client:
-                base_uri: 'https://forms.kizeo.com/rest/v3/'
-                headers:
-                    'Accept': 'application/json'
-                    'Content-Type': 'application/json'
-                timeout: 45
-
 when@test:
     framework:
         test: true

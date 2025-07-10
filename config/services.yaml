@@ -18,8 +18,6 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Kernel.php'
 
-    # ==================== SÉCURITÉ ====================
-    
     # Enregistrement explicite de UsersAuthenticator
     App\Security\UsersAuthenticator:
         arguments:
@@ -27,9 +25,7 @@ services:
         tags:
             - { name: 'security.authenticator' }
 
-    # ==================== SERVICES DE CACHE ====================
-    
-    # Service de cache maintenance avec SncRedis
+    # Service de cache maintenance avec SncRedis (SANS constantes Redis)
     App\Service\MaintenanceCacheService:
         arguments:
             $redis: '@snc_redis.default'
@@ -42,52 +38,9 @@ services:
         alias: App\Service\MaintenanceCacheService
         public: true
 
-    # Service de cache Kizeo
     App\Service\KizeoCacheService:
         arguments:
             $cache: '@cache.app'
             $logger: '@monolog.logger.kizeo_cache'
         tags:
             - { name: 'monolog.logger', channel: 'kizeo_cache' }
-
-    # ==================== SERVICES PDF ET IMAGES ====================
-    
-    # Service de génération PDF existant
-    App\Service\PdfGenerator:
-        autowire: true
-        autoconfigure: true
-
-    # Service de gestion des images d'équipements
-    App\Service\ImageStorageService:
-        arguments:
-            $projectDir: '%kernel.project_dir%'
-            $logger: '@logger'
-        tags:
-            - { name: 'monolog.logger', channel: 'image_storage' }
-
-    # ==================== CONTROLLERS ====================
-    
-    # Controller PDF des équipements avec optimisation images
-    App\Controller\EquipementPdfController:
-        arguments:
-            $imageStorageService: '@App\Service\ImageStorageService'
-            $pdfGenerator: '@App\Service\PdfGenerator'
-            $httpClient: '@http_client'
-            $logger: '@logger'
-        tags: ['controller.service_arguments']
-
-    # Controller de maintenance simplifié
-    App\Controller\SimplifiedMaintenanceController:
-        arguments:
-            $imageStorageService: '@App\Service\ImageStorageService'
-        tags: ['controller.service_arguments']
-
-    # ==================== COMMANDES CONSOLE ====================
-    
-    # Commande de téléchargement des images
-    App\Command\DownloadImagesCommand:
-        arguments:
-            $imageStorageService: '@App\Service\ImageStorageService'
-            $logger: '@logger'
-        tags:
-            - { name: 'console.command' }
