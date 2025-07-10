@@ -9,24 +9,24 @@ framework:
 # Suppression des services Redis custom pour éviter les conflits
 
 # config/packages/snc_redis.yaml (si vous utilisez SncRedisBundle)
-snc_redis:
-    clients:
-        default:
-            type: predis
-            alias: default
-            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/0'
-            logging: '%kernel.debug%'
-            options:
-                connection_timeout: 10
-                read_write_timeout: 30
-        cache:
-            type: predis
-            alias: cache
-            dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/1'
-            logging: false
-            options:
-                connection_timeout: 10
-                read_write_timeout: 30
+# snc_redis:
+#     clients:
+#         default:
+#             type: predis
+#             alias: default
+#             dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/0'
+#             logging: '%kernel.debug%'
+#             options:
+#                 connection_timeout: 10
+#                 read_write_timeout: 30
+#         cache:
+#             type: predis
+#             alias: cache
+#             dsn: 'redis://%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/1'
+#             logging: false
+#             options:
+#                 connection_timeout: 10
+#                 read_write_timeout: 30
 
 # Variables d'environnement à ajouter dans .env pour o2switch
 # REDIS_SOCKET=/home2/divi4480/.cpanel/redis/redis.sock

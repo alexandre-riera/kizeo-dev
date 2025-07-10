@@ -4,8 +4,8 @@ snc_redis:
         default:
             type: predis
             alias: default
-            dsn: 'redis://:e2a9701dead496d5a9251a4a94079d5a@/home2/divi4480/.cpanel/redis/redis.sock/0'
-            logging: false  # ✅ Changé de '%kernel.debug%' à false
+            dsn: 'redis://:%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/0'
+            logging: false
             options:
                 connection_timeout: 10.0
                 read_write_timeout: 30.0
@@ -13,8 +13,8 @@ snc_redis:
         cache:
             type: predis
             alias: cache
-            dsn: 'redis://:e2a9701dead496d5a9251a4a94079d5a@/home2/divi4480/.cpanel/redis/redis.sock/1'
-            logging: false  # ✅ Déjà false, parfait
+            dsn: 'redis://:%env(REDIS_PASSWORD)%@%env(REDIS_SOCKET)%/1'
+            logging: false
             options:
                 connection_timeout: 10.0
                 read_write_timeout: 30.0
