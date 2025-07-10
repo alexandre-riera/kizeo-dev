@@ -5127,10 +5127,10 @@ class SimplifiedMaintenanceController extends AbstractController
                     // Convertir le tableau en chaîne séparée par des virgules
                     $anomaliesString = implode(', ', $processedAnomalies);
                     $equipement->setAnomalies($anomaliesString);
-                    dd("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomaliesString);
+                    dump("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomaliesString);
                 }
             } else {
-                dd("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
+                error_log("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
             }
         }
     }
