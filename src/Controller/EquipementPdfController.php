@@ -440,15 +440,34 @@ class EquipementPdfController extends AbstractController
             $match = true;
             
             if (!empty($clientAnneeFilter)) {
-                $equipmentYear = $equipment->getDerniereVisite() ? 
-                    $equipment->getDerniereVisite()->format('Y') : 
-                    date('Y');
-                $match = $match && ($equipmentYear === $clientAnneeFilter);
+                try {
+                    $derniereVisite = $equipment->getDerniereVisite();
+                    $equipmentYear = date('Y'); // Valeur par défaut
+                    
+                    if (is_string($derniereVisite)) {
+                        // Si c'est une chaîne, essayer d'extraire l'année
+                        if (preg_match('/(\d{4})/', $derniereVisite, $matches)) {
+                            $equipmentYear = $matches[1];
+                        }
+                    } elseif ($derniereVisite instanceof \DateTime) {
+                        $equipmentYear = $derniereVisite->format('Y');
+                    }
+                    
+                    $match = $match && ($equipmentYear === $clientAnneeFilter);
+                } catch (\Exception $e) {
+                    $this->logger->warning("Erreur filtrage par année: " . $e->getMessage());
+                    $match = false; // Exclure l'équipement en cas d'erreur
+                }
             }
             
             if (!empty($clientVisiteFilter)) {
-                $equipmentVisite = $equipment->getVisite() ?? '';
-                $match = $match && ($equipmentVisite === $clientVisiteFilter);
+                try {
+                    $equipmentVisite = method_exists($equipment, 'getVisite') ? $equipment->getVisite() : '';
+                    $match = $match && ($equipmentVisite === $clientVisiteFilter);
+                } catch (\Exception $e) {
+                    $this->logger->warning("Erreur filtrage par visite: " . $e->getMessage());
+                    $match = false;
+                }
             }
             
             return $match;
@@ -656,8 +675,39 @@ class EquipementPdfController extends AbstractController
      */
     private function extractAnneeFromEquipement($equipment): string
     {
-        $date = $equipment->getDerniereVisite() ?? $equipment->getCreatedAt() ?? new \DateTime();
-        return $date->format('Y');
+        try {
+            $date = $equipment->getDerniereVisite();
+            
+            // Si c'est déjà une chaîne de caractères, essayer de l'extraire
+            if (is_string($date)) {
+                // Si c'est une date au format string, extraire l'année
+                if (preg_match('/(\d{4})/', $date, $matches)) {
+                    return $matches[1];
+                }
+                // Si c'est juste une année
+                if (preg_match('/^\d{4}$/', $date)) {
+                    return $date;
+                }
+            }
+            
+            // Si c'est un objet DateTime
+            if ($date instanceof \DateTime) {
+                return $date->format('Y');
+            }
+            
+            // Essayer getCreatedAt() comme fallback
+            $createdAt = method_exists($equipment, 'getCreatedAt') ? $equipment->getCreatedAt() : null;
+            if ($createdAt instanceof \DateTime) {
+                return $createdAt->format('Y');
+            }
+            
+            // Si rien ne fonctionne, utiliser l'année actuelle
+            return date('Y');
+            
+        } catch (\Exception $e) {
+            $this->logger->warning("Erreur extraction année équipement: " . $e->getMessage());
+            return date('Y');
+        }
     }
 
     /**
@@ -665,6 +715,28 @@ class EquipementPdfController extends AbstractController
      */
     private function extractTypeVisiteFromEquipement($equipment): string
     {
-        return $equipment->getVisite() ?? 'CE1';
+        try {
+            if (method_exists($equipment, 'getVisite')) {
+                $visite = $equipment->getVisite();
+                if (!empty($visite)) {
+                    return $visite;
+                }
+            }
+            
+            // Essayer d'autres méthodes possibles
+            if (method_exists($equipment, 'getTypeVisite')) {
+                $typeVisite = $equipment->getTypeVisite();
+                if (!empty($typeVisite)) {
+                    return $typeVisite;
+                }
+            }
+            
+            // Valeur par défaut
+            return 'CE1';
+            
+        } catch (\Exception $e) {
+            $this->logger->warning("Erreur extraction type visite: " . $e->getMessage());
+            return 'CE1';
+        }
     }
 }
