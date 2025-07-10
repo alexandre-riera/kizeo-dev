@@ -211,38 +211,41 @@
                 <tbody>
                     {% for etat, count in statistiques.etatsCount %}
                         {% if etat != "Equipement non présent le jour de la visite" or etat != "G" %}
-                            <tr>
-                                <td style="text-align: center;">
-                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" style="width: 20px; height: 20px;">
-                                    {% endif %}
-                                </td>
-                                <td style="text-align: center;">
-                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                        <p>Bon état</p>
-                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                        <p>Travaux à prévoir</p>
-                                    {% elseif etat == "Travaux curatifs" or etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "C" or etat == "E" or etat == "F" %}
-                                        <p>Travaux urgent ou à l'arrêt</p>
-                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                        <p>Équipement inaccessible</p>
-                                    {% endif %} 
-                                </td>
-                                <td style="text-align: center;">
-                                    {% if etat == "Equipement non présent le jour de la visite" or etat == "G" %}
-                                        {% set etat = "" %}
-                                        {{ etat }}
-                                    {% else %}
+                            {% if count > 0 %}
+                                <tr>
+                                    <td style="text-align: center;">
+                                        {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Travaux curatifs" or etat == "C" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "E" or etat == "F" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 20px; height: 20px;">
+                                        {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                            <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 20px; height: 20px;">
+                                        {% endif %}
+                                    </td>
+                                    <td style="text-align: center;">
+                                        {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
+                                            Bon état
+                                        {% elseif etat == "Travaux à prévoir" or etat == "B" %}
+                                            Travaux à prévoir
+                                        {% elseif etat == "Travaux curatifs" or etat == "C" %}
+                                            Travaux curatifs urgents
+                                        {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "E" or etat == "F" %}
+                                            Équipement à l'arrêt
+                                        {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
+                                            Équipement inaccessible
+                                        {% else %}
+                                            {{ etat }}
+                                        {% endif %}
+                                    </td>
+                                    <td style="text-align: center;">
                                         {{ count }}
-                                    {% endif %}
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </tbody>
