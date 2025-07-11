@@ -47,6 +47,7 @@
                         <th data-sortable="true" data-field="longueur">L</th>
                         <th data-sortable="true" data-field="date_enregistrement">Enregistré / modifié</th>
                         <th data-sortable="true" data-filter-control="select" data-field="etat">État</th>
+                        <th data-sortable="true" data-filter-control="select" data-field="etat">Anomalies</th>
                         <th data-sortable="true" data-filter-control="select" data-field="statut_maintenance">Statut</th>
                         <th>Options</th>
                     </tr>
@@ -90,6 +91,7 @@
                                 {% else %}
                                     <td>{{ equipment.getEtat() }}</td>
                             {% endif %}
+                            <td>{{ equipment.getAnomalies() }}</td>
                             {%if equipment.statutDeMaintenance == "Vert" %}
                                 <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                 {% elseif equipment.statutDeMaintenance == "Orange" %}
