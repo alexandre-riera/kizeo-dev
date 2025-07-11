@@ -67,6 +67,7 @@
                             <td>{{ equipment.getLargeur() }}</td>
                             <td>{{ equipment.getLongueur() }}</td>
                             <td>{{ equipment.getDateEnregistrement() }}</td>
+                            <td>{{ equipment.getAnomalies() }}</td>
                             {%if equipment.etat == "A" %}
                                 <td>Bon état de fonctionnement le jour de la visite</td>
                                 <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>Vert</figcaption></figure></td>
@@ -91,7 +92,7 @@
                                 {% else %}
                                     <td>{{ equipment.getEtat() }}</td>
                             {% endif %}
-                            <td>{{ equipment.getAnomalies() }}</td>
+                            
                             {%if equipment.statutDeMaintenance == "Vert" %}
                                 <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                 {% elseif equipment.statutDeMaintenance == "Orange" %}
