@@ -92,6 +92,7 @@
                                 {% else %}
                                     <td>{{ equipment.getEtat() }}</td>
                             {% endif %}
+                            <td>{{ equipment.getAnomalies() }}</td>
                             
                             {%if equipment.statutDeMaintenance == "Vert" %}
                                 <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
@@ -107,7 +108,7 @@
                                 {% elseif equipment.statutDeMaintenance == "Non présent" %}
                                 <td>{{ equipment.getStatutDeMaintenance() }}</td>
                             {% endif %}
-                            <td>{{ equipment.getAnomalies() }}</td>
+                            
                             <td>
                             {% if is_granted('ROLE_ADMIN') %}
                                 <button onclick="editEquipement(
