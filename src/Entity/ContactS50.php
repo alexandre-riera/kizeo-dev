@@ -57,9 +57,16 @@ class ContactS50
     #[ORM\OneToMany(targetEntity: ContratS50::class, mappedBy: 'contact')]
     private Collection $contratS50s;
 
+    /**
+     * @var Collection<int, MailS50>
+     */
+    #[ORM\OneToMany(targetEntity: MailS50::class, mappedBy: 'id_contact')]
+    private Collection $mailS50s;
+
     public function __construct()
     {
         $this->contratS50s = new ArrayCollection();
+        $this->mailS50s = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -235,6 +242,36 @@ class ContactS50
             // set the owning side to null (unless already changed)
             if ($contratS50->getContact() === $this) {
                 $contratS50->setContact(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MailS50>
+     */
+    public function getMailS50s(): Collection
+    {
+        return $this->mailS50s;
+    }
+
+    public function addMailS50(MailS50 $mailS50): static
+    {
+        if (!$this->mailS50s->contains($mailS50)) {
+            $this->mailS50s->add($mailS50);
+            $mailS50->setIdContact($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMailS50(MailS50 $mailS50): static
+    {
+        if ($this->mailS50s->removeElement($mailS50)) {
+            // set the owning side to null (unless already changed)
+            if ($mailS50->getIdContact() === $this) {
+                $mailS50->setIdContact(null);
             }
         }
 

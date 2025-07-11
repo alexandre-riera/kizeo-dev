@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "276d47633837d4252000ac93c2acc02d",
+    "content-hash": "e7bb6c01d3a21c4cb4b2d353290eca54",
     "packages": [
         {
             "name": "doctrine/cache",
@@ -2572,16 +2572,16 @@
         },
         {
             "name": "snc/redis-bundle",
-            "version": "4.9.1",
+            "version": "4.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/snc/SncRedisBundle.git",
-                "reference": "6c37565de4f1286f98007ab332c970ab39d94d82"
+                "reference": "05bfb149e57dcc206025a920be6b420259106fde"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/snc/SncRedisBundle/zipball/6c37565de4f1286f98007ab332c970ab39d94d82",
-                "reference": "6c37565de4f1286f98007ab332c970ab39d94d82",
+                "url": "https://api.github.com/repos/snc/SncRedisBundle/zipball/05bfb149e57dcc206025a920be6b420259106fde",
+                "reference": "05bfb149e57dcc206025a920be6b420259106fde",
                 "shasum": ""
             },
             "require": {
@@ -2605,7 +2605,7 @@
                 "monolog/monolog": "*",
                 "phpunit/phpunit": "^9.5.28 || ^10",
                 "predis/predis": "^2.0 || ^3.0 ",
-                "seec/phpunit-consecutive-params": "dev-master",
+                "seec/phpunit-consecutive-params": "^1.1.4",
                 "symfony/browser-kit": "^5.4.20 ||^6.0 || ^7.0",
                 "symfony/cache": "^5.4.20 ||^6.0 || ^7.0",
                 "symfony/config": "^5.4.20 ||^6.0 || ^7.0",
@@ -2657,9 +2657,9 @@
             ],
             "support": {
                 "issues": "https://github.com/snc/SncRedisBundle/issues",
-                "source": "https://github.com/snc/SncRedisBundle/tree/4.9.1"
+                "source": "https://github.com/snc/SncRedisBundle/tree/4.10.0"
             },
-            "time": "2025-05-28T11:42:58+00:00"
+            "time": "2025-06-29T12:30:01+00:00"
         },
         {
             "name": "symfony/asset",
@@ -7735,7 +7735,7 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
@@ -7743,6 +7743,6 @@
         "ext-ctype": "*",
         "ext-iconv": "*"
     },
-    "platform-dev": {},
+    "platform-dev": [],
     "plugin-api-version": "2.6.0"
 }
