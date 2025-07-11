@@ -46,8 +46,8 @@
                         <th data-sortable="true" data-field="largeur">l</th>
                         <th data-sortable="true" data-field="longueur">L</th>
                         <th data-sortable="true" data-field="date_enregistrement">Enregistré / modifié</th>
+                        <th data-sortable="true" data-filter-control="select" data-field="etat">Anomalies</th>
                         <th data-sortable="true" data-filter-control="select" data-field="etat">État</th>
-                        {# <th data-sortable="true" data-filter-control="select" data-field="etat">Anomalies</th> #}
                         <th data-sortable="true" data-filter-control="select" data-field="statut_maintenance">Statut</th>
                         <th>Options</th>
                     </tr>
@@ -67,6 +67,9 @@
                             <td>{{ equipment.getLargeur() }}</td>
                             <td>{{ equipment.getLongueur() }}</td>
                             <td>{{ equipment.getDateEnregistrement() }}</td>
+                            <td>{{ equipment.getAnomalies() }}</td>
+                            
+                            {% if equipment.etat is not empty %}
                             
                             {%if equipment.etat == "A" %}
                                 <td>Bon état de fonctionnement le jour de la visite</td>
