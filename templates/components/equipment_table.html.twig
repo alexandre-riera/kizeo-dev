@@ -67,9 +67,9 @@
                             <td>{{ equipment.getLargeur() }}</td>
                             <td>{{ equipment.getLongueur() }}</td>
                             <td>{{ equipment.getDateEnregistrement() }}</td>
-                            <td>{{ equipment.getAnomalies() }}</td>
                             
                             {% if equipment.etat is not empty %}
+                                <td>{{ equipment.getAnomalies() }}</td>
                             
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
