@@ -69,7 +69,7 @@
                             <td>{{ equipment.getDateEnregistrement() }}</td>
                             <td>{{ equipment.getAnomalies() }}</td>
                             
-                            {% if equipment.etat is not empty %}
+                            {# {% if equipment.etat is not empty %} #}
                             
                                 {%if equipment.etat == "A" %}
                                     <td>Bon état de fonctionnement le jour de la visite</td>
@@ -90,7 +90,6 @@
                                         <td>Equipement mis à l'arrêt lors de l'intervention</td>
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>Rouge</figcaption></figure></td>
                                     {% elseif equipment.etat == "G" %}
-                                        <td>Equipement non présent sur site</td>
                                         <td>Equipement non présent sur site</td>
                                     {% else %}
                                         <td>{{ equipment.getEtat() }}</td>
@@ -152,7 +151,7 @@
                                     <i class="fa-solid fa-file-pdf"></i>PDF équipement
                                 </a>
                                 </td>
-                            {% endif %}
+                            {# {% endif %} #}
                         </tr>
                     {% endfor %}
                 </tbody>
