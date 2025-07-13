@@ -23,7 +23,8 @@
                     {% for objectFile in directoriesLists %}
                         {% if  objectFile.path %}
                             <select name="compte-rendu-tech-kizeo" id="compte-rendu-tech-kizeo" onchange="location = this.value;">
-                                <option value="{{ objectFile.visite }} du {{ objectFile.date }}">
+                                <option value="-------"></option>
+                                <option value="{{ objectFile.path }}">
                                     <a href="{{ objectFile.path }}" target="_blank">{{ objectFile.visite }} du {{ objectFile.date }}</a>
                                 </option>
                             </select>
