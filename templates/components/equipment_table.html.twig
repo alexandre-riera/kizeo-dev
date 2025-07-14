@@ -23,7 +23,6 @@
                     <select name="compte-rendu-tech-kizeo" id="compte-rendu-tech-kizeo" onchange="window.open(this.value)">
                     {% for objectFile in directoriesLists %}
                         {% if  objectFile.path %}
-                            <option value="">---------</option>
                             <option value="{{ objectFile.path }}">
                                 {{ objectFile.visite }} du {{ objectFile.date }}
                             </option>
