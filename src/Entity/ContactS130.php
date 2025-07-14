@@ -63,6 +63,9 @@ class ContactS130
     #[ORM\OneToMany(targetEntity: MailS130::class, mappedBy: 'id_contact')]
     private Collection $mailS130s;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $email = null;
+
     public function __construct()
     {
         $this->contratS130s = new ArrayCollection();
@@ -274,6 +277,18 @@ class ContactS130
                 $mailS130->setIdContact(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(?string $email): static
+    {
+        $this->email = $email;
 
         return $this;
     }
