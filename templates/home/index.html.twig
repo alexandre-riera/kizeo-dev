@@ -236,7 +236,7 @@
         }
 
     </style>
-    {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') %}
+    {% if app.user and is_granted('ROLE_ADMIN') or is_granted('ROLE_SOMAFI') or is_granted('ROLE_SOMAFI_TESTEUR') or is_granted('ROLE_S10') or is_granted('ROLE_S40') or is_granted('ROLE_S50') or is_granted('ROLE_S60') or is_granted('ROLE_S70') or is_granted('ROLE_S80') or is_granted('ROLE_S100') or is_granted('ROLE_S120') or is_granted('ROLE_S130') or is_granted('ROLE_S140') or is_granted('ROLE_S150') or is_granted('ROLE_S160') or is_granted('ROLE_S170') %}
         {% block header %}
         <header class="header">
             <h1>Gestion de parc équipements</h1>
