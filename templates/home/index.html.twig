@@ -370,7 +370,7 @@
                 {% endif %}
 
                 <!-- Sélection du client (affiché seulement si agence sélectionnée mais pas de client sélectionné) -->
-                {% if agenceSelected is not null %}
+                {% if agenceSelected is not null and clientSelected is null %}
                     <div class="alert alert-info">
                         <i class="fa-solid fa-info-circle"></i> 
                         Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - 
