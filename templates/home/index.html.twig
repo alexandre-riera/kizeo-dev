@@ -338,7 +338,7 @@
         <div class="selections-container">
             <div class="selection-client">
                 <!-- Section de sélection d'agence si plusieurs agences disponibles et aucun client sélectionné -->
-                {% if userAgencies|length > 1 and clientSelected is null %}
+                {% if userAgencies|length > 1 and agenceSelected is null%}
                     <div>
                         <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
                         <form action="" method="post">
@@ -370,7 +370,7 @@
                 {% endif %}
 
                 <!-- Sélection du client (affiché seulement si agence sélectionnée mais pas de client sélectionné) -->
-                {% if clientSelected is null %}
+                {% if agenceSelected is not null %}
                     <div class="alert alert-info">
                         <i class="fa-solid fa-info-circle"></i> 
                         Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - 
