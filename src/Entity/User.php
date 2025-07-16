@@ -75,24 +75,31 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @see UserInterface
-     * @return list<string>
      */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
+        
+        // Si les rôles sont stockés comme un objet au lieu d'un tableau
+        if (is_object($roles)) {
+            $roles = array_values((array) $roles);
+        }
+        
+        // S'assurer que c'est un tableau
+        if (!is_array($roles)) {
+            $roles = [];
+        }
+        
+        // Garantir que chaque utilisateur a au moins ROLE_USER
         $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
 
-    /**
-     * @param list<string> $roles
-     */
     public function setRoles(array $roles): static
     {
-        $this->roles = $roles;
-
+        // S'assurer que les rôles sont stockés comme un tableau indexé numériquement
+        $this->roles = array_values($roles);
         return $this;
     }
 

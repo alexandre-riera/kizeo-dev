@@ -334,15 +334,45 @@
                 {% endfor %}
             {% endfor %}
         </div>
-        {% block clientsInformations %}
+        
+        {# DEBUG INFORMATION #}
+        <div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid #ccc;">
+            <h4>🔍 DEBUG INFORMATIONS</h4>
+            <p><strong>User Agencies:</strong> 
+                {% if userAgencies is defined %}
+                    {{ userAgencies|length }} agence(s) - [{{ userAgencies|join(', ') }}]
+                {% else %}
+                    <span style="color: red;">NON DÉFINI</span>
+                {% endif %}
+            </p>
+            <p><strong>Agence Selected:</strong> 
+                {% if agenceSelected is defined %}
+                    "{{ agenceSelected }}"
+                {% else %}
+                    <span style="color: red;">NON DÉFINI</span>
+                {% endif %}
+            </p>
+            <p><strong>Client Selected:</strong> 
+                {% if clientSelected is defined %}
+                    "{{ clientSelected }}"
+                {% else %}
+                    <span style="color: red;">NON DÉFINI</span>
+                {% endif %}
+            </p>
+            <p><strong>Méthode de la requête:</strong> {{ app.request.method }}</p>
+            {% if app.request.method == 'POST' %}
+                <p><strong>Données POST:</strong> {{ app.request.request.all|json_encode }}</p>
+            {% endif %}
+        </div>
+
         <div class="selections-container">
-            <div class="selection-client" >
-                <!-- N'apparait que si le client n'est pas sélectionné et que l'agence n'est pas sélectionnée -->
-                {% if userAgencies|length > 1 and agenceSelected == NULL %}
+            <div class="selection-client">
+                <!-- Section de sélection d'agence si plusieurs agences disponibles -->
+                {% if userAgencies|length > 1 and agenceSelected is null %}
                     <div>
                         <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
                         <form action="" method="post">
-                            <select class="form-control" id="agence-somafi" name="agenceName">
+                            <select class="form-control" id="agence-somafi" name="agenceName" required>
                                 <option value="" selected>Sélectionner une agence</option> 
                                 {% for agencyCode in userAgencies %}
                                     <option value="{{ agencyCode }}">
@@ -368,86 +398,96 @@
                         </form>
                     </div>
                 {% endif %}
-                {# Message informatif si un seul rôle d'agence #}
+
+                <!-- Message informatif si une seule agence -->
                 {% if userAgencies|length == 1 %}
                     <div class="alert alert-info">
                         <i class="fa-solid fa-info-circle"></i> 
-                        Agence automatiquement sélectionnée : <strong>{{ agenceSelected }}</strong>
-                    </div>
-                {% endif %}
-                <!-- N'apparait que si l'agence est sélectionnée -->
-                {% if agenceSelected and clientSelected is empty %}
-                    <div>
-                        <h2><span class="number"> {% if userAgencies|length > 1 %}2{% else %}1{% endif %} - </span>Sélectionnez maintenant votre client</h2>
-                        <h3>Agence de rattachement : {{ agenceSelected }}</h3>
+                        Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - {% if agenceSelected == 'S10' %}Group
+                        {% elseif agenceSelected == 'S40' %}St Etienne
+                        {% elseif agenceSelected == 'S50' %}Grenoble
+                        {% elseif agenceSelected == 'S60' %}Lyon
+                        {% elseif agenceSelected == 'S70' %}Bordeaux
+                        {% elseif agenceSelected == 'S80' %}ParisNord
+                        {% elseif agenceSelected == 'S100' %}Montpellier
+                        {% elseif agenceSelected == 'S120' %}HautsDeFrance
+                        {% elseif agenceSelected == 'S130' %}Toulouse
+                        {% elseif agenceSelected == 'S140' %}SMP
+                        {% elseif agenceSelected == 'S150' %}PACA
+                        {% elseif agenceSelected == 'S160' %}Rouen
+                        {% elseif agenceSelected == 'S170' %}Rennes
+                        {% else %}{{ agenceSelected }}
+                        {% endif %}</h3>
                         <label class="selection-client-label" for="client-select">Client sous contrat</label>
                         <form action="" method="post">
-                            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()" >
-                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)">
-                                <option value = "" selected> Select client </option> 
-                                {% if agenceSelected == "Grenoble" or agenceSelected == "grenoble" or agenceSelected == "Gre"  or agenceSelected == "gre"   or agenceSelected == "S50"  or agenceSelected == "s50" %}
-                                    {% for client in clientsGrenoble%}
-                                        <option value="{{ client }} {{ agenceSelected }}" id="client_selected_s50">{{ client }}</option>
+                            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
+                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)" required>
+                                <option value="" selected>Select client</option> 
+                                {% if agenceSelected == "S10" %}
+                                    {% for client in clientsGroup %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Montpellier" or agenceSelected == "montpellier" or agenceSelected == "montp"  or agenceSelected == "mon"   or agenceSelected == "S100"   or agenceSelected == "s100"%}
-                                    {% for client in clientsMontpellier%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s100">{{ client }}</option>
+                                {% elseif agenceSelected == "S40" %}
+                                    {% for client in clientsStEtienne %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "ParisNord" or agenceSelected == "paris nord" or agenceSelected == "paris"  or agenceSelected == "S80"  or agenceSelected == "s80" %}
-                                    {% for client in clientsParisNord%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s80">{{ client }}</option>
+                                {% elseif agenceSelected == "S50" %}
+                                    {% for client in clientsGrenoble %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Group" or agenceSelected == "group" or agenceSelected == "grou"  or agenceSelected == "S10"   or agenceSelected == "s10"%}
-                                    {% for client in clientsGroup%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s10">{{ client }}</option>
+                                {% elseif agenceSelected == "S60" %}
+                                    {% for client in clientsLyon %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "St Etienne" or agenceSelected == "st etienne" or agenceSelected == "stetienne"  or agenceSelected == "S40"   or agenceSelected == "s40"%}
-                                    {% for client in clientsStEtienne%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s40">{{ client }}</option>
+                                {% elseif agenceSelected == "S70" %}
+                                    {% for client in clientsBordeaux %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Lyon" or agenceSelected == "lyon" or agenceSelected == "ly"  or agenceSelected == "S60"  or agenceSelected == "s60" %}
-                                    {% for client in clientsLyon%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s60">{{ client }}</option>
+                                {% elseif agenceSelected == "S80" %}
+                                    {% for client in clientsParisNord %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Bordeaux" or agenceSelected == "bordeaux" or agenceSelected == "bor"  or agenceSelected == "S70"   or agenceSelected == "s70"%}
-                                    {% for client in clientsBordeaux%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s70">{{ client }}</option>
+                                {% elseif agenceSelected == "S100" %}
+                                    {% for client in clientsMontpellier %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "HautsDeFrance" or agenceSelected == "Portland" or agenceSelected == "portland" or agenceSelected == "hdf"   or agenceSelected == "S120"   or agenceSelected == "s120"%}
-                                    {% for client in clientsHautsDeFrance%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s120">{{ client }}</option>
+                                {% elseif agenceSelected == "S120" %}
+                                    {% for client in clientsHautsDeFrance %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Toulouse" or agenceSelected == "toulouse" or agenceSelected == "tou"  or agenceSelected == "S130"   or agenceSelected == "s130"%}
-                                    {% for client in clientsToulouse%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s130">{{ client }}</option>
+                                {% elseif agenceSelected == "S130" %}
+                                    {% for client in clientsToulouse %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "SMP" or agenceSelected == "Epinal" or agenceSelected == "epinal"  or agenceSelected == "smp"  or agenceSelected == "S140"   or agenceSelected == "s140"%}
-                                    {% for client in clientsEpinal%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s140">{{ client }}</option>
+                                {% elseif agenceSelected == "S140" %}
+                                    {% for client in clientsEpinal %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Paca" or agenceSelected == "PACA" or agenceSelected == "brignoles" or agenceSelected == "Brignoles"   or agenceSelected == "S150"   or agenceSelected == "s150"%}
-                                    {% for client in clientsPaca%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s150">{{ client }}</option>
+                                {% elseif agenceSelected == "S150" %}
+                                    {% for client in clientsPaca %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Rouen" or agenceSelected == "rouen" or agenceSelected == "rou"  or agenceSelected == "S160"   or agenceSelected == "s160"%}
-                                    {% for client in clientsRouen%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s160">{{ client }}</option>
+                                {% elseif agenceSelected == "S160" %}
+                                    {% for client in clientsRouen %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
-                                {% elseif agenceSelected == "Rennes" or agenceSelected == "rennes" or agenceSelected == "ren"  or agenceSelected == "S170"   or agenceSelected == "s170"%}
-                                    {% for client in clientsRennes%}
-                                        <option  value="{{ client }} {{ agenceSelected }}" id="client_selected_s170">{{ client }}</option>
+                                {% elseif agenceSelected == "S170" %}
+                                    {% for client in clientsRennes %}
+                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
                                     {% endfor %}
                                 {% else %}
-                                    <option value=""></option>
+                                    <option value="">Aucun client disponible pour cette agence</option>
                                 {% endif %}
                             </select>
-                            <button type="submit"  name ="submitClient" class="btn btn-primary">Select Client</button>
-                        </form> 
+                            <button type="submit" name="submitClient" class="btn btn-primary">Select Client</button>
+                        </form>
                     </div>
                 {% endif %}
             </div>
         </div>
-        {% if clientSelectedInformations != NULL  %}
+
+        <!-- Informations et équipements du client sélectionné -->
+        {% if clientSelectedInformations != NULL %}
             <div class="row">
                 <div class="col-sm-3 mb-3 mb-sm-0">
                     <div class="card">
@@ -476,8 +516,6 @@
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">Filtres</h4>
-                            {# Formulaire de filtres avec valeurs par défaut #}
-                            {# <form id="filterForm" method="get" action="{{ path('votre_route_actuelle') }}"> #}
                             <form id="filterForm" method="get" action="">
                                 <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
                                 <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
@@ -531,7 +569,7 @@
                     </a>
                 </div>
             </div>
-        {%endif%}
+        {% endif %}
         {% endblock %}
         
         {% block modal %}
@@ -677,80 +715,94 @@
             </nav>
     {% endif %}
     <script>
-        $(document).ready(function() {
-            const anneeSelect = document.getElementById('clientAnneeFilter');
-            const visiteSelect = document.getElementById('clientVisiteFilter');
-            const pdfButton = document.getElementById('pdf-button');
-            
-            function updatePdfButton() {
-                if (!pdfButton) return;
-                
-                const baseUrl = pdfButton.href.split('?')[0];
-                const url = new URL(baseUrl);
-                
-                const anneeValue = anneeSelect.value;
-                const visiteValue = visiteSelect.value;
-                
-                if (anneeValue) {
-                    url.searchParams.set('clientAnneeFilter', anneeValue);
-                }
-                if (visiteValue) {
-                    url.searchParams.set('clientVisiteFilter', visiteValue);
-                }
-                
-                pdfButton.href = url.toString();
-                
-                // Mettre à jour le texte du bouton pour afficher les filtres
-                const buttonSmall = pdfButton.querySelector('small');
-                if (anneeValue || visiteValue) {
-                    let filterText = '';
-                    if (anneeValue) filterText += anneeValue;
-                    if (visiteValue) filterText += (filterText ? ' - ' : '') + visiteValue;
-                    
-                    if (buttonSmall) {
-                        buttonSmall.textContent = `(${filterText})`;
-                    } else {
-                        const smallElement = document.createElement('small');
-                        smallElement.className = 'd-block';
-                        smallElement.textContent = `(${filterText})`;
-                        pdfButton.appendChild(smallElement);
-                    }
-                } else if (buttonSmall) {
-                    buttonSmall.textContent = '';
-                }
-            }
+    console.log('=== DEBUG INFORMATIONS ===');
+    console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }');
+    console.log('Agence Selected:', '{{ agenceSelected|default("") }}');
+    console.log('Client Selected:', '{{ clientSelected|default("") }}');
+    console.log('Request Method:', '{{ app.request.method }}'); 
 
-            // Intercepter la soumission du formulaire
-            $('#filterForm').on('submit', function(e) {
-                e.preventDefault();
-                
-                // Récupérer les données du formulaire
-                var formData = $(this).serialize();
-                
-                // Envoyer la requête AJAX
-                $.ajax({
-                    url: '/ajax/filter-equipment',
-                    type: 'GET',
-                    data: formData,
-                    success: function(response) {
-                        // Mettre à jour le conteneur du tableau
-                        $('#equipment-table-container').html(response);
-                        // Réinitialiser Bootstrap Table
-                        $('#table').bootstrapTable();
-                        // Mettre à jour le bouton PDF après le filtrage AJAX
-                        updatePdfButton();
-                    },
-                    error: function(xhr) {
-                        console.error('Erreur lors du chargement des données:', xhr.responseText);
-                    }
-                });
-            });
-            // Écouter les changements sur les sélecteurs
-            if (anneeSelect) anneeSelect.addEventListener('change', updatePdfButton);
-            if (visiteSelect) visiteSelect.addEventListener('change', updatePdfButton);
+    $(document).ready(function() {
+        const anneeSelect = document.getElementById('clientAnneeFilter');
+        const visiteSelect = document.getElementById('clientVisiteFilter');
+        const pdfButton = document.getElementById('pdf-button');
+        
+        function updatePdfButton() {
+            if (!pdfButton) return;
             
-            // Mettre à jour au chargement initial
-            updatePdfButton();
+            const baseUrl = pdfButton.href.split('?')[0];
+            const url = new URL(baseUrl);
+            
+            const anneeValue = anneeSelect ? anneeSelect.value : '';
+            const visiteValue = visiteSelect ? visiteSelect.value : '';
+            
+            if (anneeValue) {
+                url.searchParams.set('clientAnneeFilter', anneeValue);
+            }
+            if (visiteValue) {
+                url.searchParams.set('clientVisiteFilter', visiteValue);
+            }
+            
+            pdfButton.href = url.toString();
+            
+            // Mettre à jour le texte du bouton pour afficher les filtres
+            const buttonSmall = pdfButton.querySelector('small');
+            if (anneeValue || visiteValue) {
+                let filterText = '';
+                if (anneeValue) filterText += anneeValue;
+                if (visiteValue) filterText += (filterText ? ' - ' : '') + visiteValue;
+                
+                if (buttonSmall) {
+                    buttonSmall.textContent = '(' + filterText + ')';
+                } else {
+                    const smallElement = document.createElement('small');
+                    smallElement.className = 'd-block';
+                    smallElement.textContent = '(' + filterText + ')';
+                    pdfButton.appendChild(smallElement);
+                }
+            } else if (buttonSmall) {
+                buttonSmall.textContent = '';
+            }
+        }
+
+        // Intercepter la soumission du formulaire de filtres
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Récupérer les données du formulaire
+            var formData = $(this).serialize();
+            
+            // Envoyer la requête AJAX
+            $.ajax({
+                url: '/ajax/filter-equipment',
+                type: 'GET',
+                data: formData,
+                success: function(response) {
+                    // Mettre à jour le conteneur du tableau
+                    $('#equipment-table-container').html(response);
+                    // Réinitialiser Bootstrap Table si elle existe
+                    if (typeof $('#table').bootstrapTable === 'function') {
+                        $('#table').bootstrapTable();
+                    }
+                    // Mettre à jour le bouton PDF après le filtrage AJAX
+                    updatePdfButton();
+                },
+                error: function(xhr) {
+                    console.error('Erreur lors du chargement des données:', xhr.responseText);
+                    alert('Erreur lors du filtrage des équipements');
+                }
+            });
         });
+        
+        // Écouter les changements sur les sélecteurs
+        if (anneeSelect) {
+            anneeSelect.addEventListener('change', updatePdfButton);
+        }
+        if (visiteSelect) {
+            visiteSelect.addEventListener('change', updatePdfButton);
+        }
+        
+        // Mettre à jour au chargement initial
+        updatePdfButton();
+    });
     </script>
 {% endblock %}

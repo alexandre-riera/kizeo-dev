@@ -12,6 +12,8 @@ use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 
 class UserFormType extends AbstractType
 {
@@ -34,7 +36,7 @@ class UserFormType extends AbstractType
                 'label' => 'Rôles',
                 'choices'  => [
                     'Super admin' => 'ROLE_ADMIN',
-                    'SOMAFI testeur toutes agences' => 'ROLE_SOMAFI', // N'a pas la fonction edit ni gestion utilisateurs
+                    'SOMAFI testeur toutes agences' => 'ROLE_SOMAFI',
                     'Utilisateur SOMAFI éditeur' => 'ROLE_SOMAFI_EDIT',
                     'Group' => 'ROLE_S10',
                     'St Etienne' => 'ROLE_S40',
@@ -58,25 +60,51 @@ class UserFormType extends AbstractType
                 'expanded' => true,
                 'attr' => ['class' => 'form-check']
             ]);
-            $passwordConstraints = [
-                new Length([
-                    'min' => 6,
-                    'minMessage' => 'Le mot de passe doit comporter au moins {{ limit }} caractères',
-                    'max' => 4096,
-                ]),
-            ];
-            
-            // Ajouter le champ plainPassword
-            $builder->add('password', PasswordType::class, [
-                'label' => 'Mot de passe',
-                'mapped' => false,
-                'required' => !$options['is_edit'], // obligatoire uniquement pour la création
-                'attr' => ['class' => 'form-control'],
-                'constraints' => $options['is_edit'] 
-                    ? $passwordConstraints 
-                    : array_merge($passwordConstraints, [new NotBlank(['message' => 'Veuillez entrer un mot de passe'])]),
-                'help' => $options['is_edit'] ? 'Laissez vide pour conserver le mot de passe actuel' : null,
-            ]);
+
+        // Ajouter un event listener pour transformer les rôles
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
+            $user = $event->getData();
+            if ($user && $user->getRoles()) {
+                $roles = $user->getRoles();
+                // Assurer que c'est un tableau simple
+                if (is_array($roles)) {
+                    // Retirer ROLE_USER automatique et réindexer
+                    $roles = array_values(array_filter($roles, function($role) {
+                        return $role !== 'ROLE_USER';
+                    }));
+                    $user->setRoles($roles);
+                }
+            }
+        });
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
+            $data = $event->getData();
+            if (isset($data['roles']) && is_array($data['roles'])) {
+                // S'assurer que les rôles sont dans un tableau indexé numériquement
+                $data['roles'] = array_values($data['roles']);
+                $event->setData($data);
+            }
+        });
+
+        $passwordConstraints = [
+            new Length([
+                'min' => 6,
+                'minMessage' => 'Le mot de passe doit comporter au moins {{ limit }} caractères',
+                'max' => 4096,
+            ]),
+        ];
+        
+        // Ajouter le champ plainPassword
+        $builder->add('password', PasswordType::class, [
+            'label' => 'Mot de passe',
+            'mapped' => false,
+            'required' => !$options['is_edit'],
+            'attr' => ['class' => 'form-control'],
+            'constraints' => $options['is_edit'] 
+                ? $passwordConstraints 
+                : array_merge($passwordConstraints, [new NotBlank(['message' => 'Veuillez entrer un mot de passe'])]),
+            'help' => $options['is_edit'] ? 'Laissez vide pour conserver le mot de passe actuel' : null,
+        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
