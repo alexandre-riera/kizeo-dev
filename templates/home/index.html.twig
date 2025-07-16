@@ -370,7 +370,7 @@
                 {% endif %}
 
                 <!-- Message informatif si une seule agence -->
-                {% if userAgencies|length == 1 %}
+                {% if clientSelected is null %}
                     <div class="alert alert-info">
                         <i class="fa-solid fa-info-circle"></i> 
                         Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - {% if agenceSelected == 'S10' %}Group
