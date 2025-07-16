@@ -116,11 +116,12 @@ class HomeController extends AbstractController
             // Extraire l'ID client et nettoyer le nom
             if ($clientSelected != "") {
                 $clientSelectedSplitted = preg_split("/[-]/", $clientSelected);
-                dd($clientSelectedSplitted);
+                dump($clientSelectedSplitted);
                 if (count($clientSelectedSplitted) >= 2) {
                     $idClientSelected = trim($clientSelectedSplitted[0]);
                     $clientSelected = trim($clientSelectedSplitted[1]);
-                    
+                    $agenceSelected = trim(substr($clientSelectedSplitted[2], 0, 4)); // Extraire le code agence (S10, S40, etc.)
+                    dd($agenceSelected);
                     // Charger les informations et équipements du client
                     $this->loadClientData($agenceSelected, $idClientSelected, $entityManager, $clientSelectedInformations, $clientSelectedEquipments, $homeRepository, $clientSelected);
                 }
