@@ -716,7 +716,7 @@
     {% endif %}
     <script>
     console.log('=== DEBUG INFORMATIONS ===');
-    console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }');
+    console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }}');
     console.log('Agence Selected:', '{{ agenceSelected|default("") }}');
     console.log('Client Selected:', '{{ clientSelected|default("") }}');
     console.log('Request Method:', '{{ app.request.method }}'); 
