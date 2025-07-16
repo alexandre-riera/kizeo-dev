@@ -338,7 +338,7 @@
         <div class="selections-container">
             <div class="selection-client">
                 <!-- Section de sélection d'agence si plusieurs agences disponibles et aucun client sélectionné -->
-                {% if userAgencies|length > 1 and agenceSelected is null and clientSelected is null %}
+                {% if userAgencies|length > 1 and clientSelected is null %}
                     <div>
                         <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
                         <form action="" method="post">
