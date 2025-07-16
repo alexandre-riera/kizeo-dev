@@ -48,6 +48,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class HomeController extends AbstractController
 {
@@ -72,11 +73,36 @@ class HomeController extends AbstractController
         $clientsRennes = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_RENNES"]);
         
         // GET AGENCIES FROM DATABASE
-        $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
-            $item->expiresAfter(900); // 15 minutes in cache
-            $agencies = $entityManager->getRepository(Agency::class)->findAll();
-            return $agencies;
-        });
+        // $agenciesArray =  $cache->get('agency_array', function (ItemInterface $item) use ($entityManager)  {
+        //     $item->expiresAfter(900); // 15 minutes in cache
+        //     $agencies = $entityManager->getRepository(Agency::class)->findAll();
+        //     return $agencies;
+        // });
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->redirectToRoute('app_login');
+        }
+
+        // Récupérer les codes d'agence de l'utilisateur
+        $userAgencies = $this->getUserAgencies($user);
+        
+        // Variables pour le template
+        $agenceSelected = null;
+        $clientSelected = null;
+        
+        // Logique de sélection d'agence
+        if (count($userAgencies) === 1) {
+            // Un seul rôle d'agence : sélection automatique
+            $agenceSelected = $userAgencies[0];
+        } elseif (count($userAgencies) > 1) {
+            // Plusieurs rôles : afficher la liste de sélection
+            if ($request->isMethod('POST') && $request->request->has('agenceName')) {
+                $selectedAgency = $request->request->get('agenceName');
+                if (in_array($selectedAgency, $userAgencies)) {
+                    $agenceSelected = $selectedAgency;
+                }
+            }
+        }
 
         // GET CLIENT SELECTED INFORMATION BY AGENCY BY HIS RAISON_SOCIALE
         $clientSelectedInformations  = "";
@@ -91,13 +117,15 @@ class HomeController extends AbstractController
         $directoriesLists = [];
 
         // Récupération de l'agence sélectionnée nécessaire pour charger la liste client de l'agence
-        if(isset($_POST['submitAgence'])){  
-            if(!empty($_POST['agenceName'])) {
-                $agenceSelected = $_POST['agenceName'];
-            } else {  
-                echo 'Please select the value.';
-            }  
-        }
+        // if(isset($_POST['submitAgence'])){  
+        //     if(!empty($_POST['agenceName'])) {
+        //         $agenceSelected = $_POST['agenceName'];
+        //     } else {  
+        //         echo 'Please select the value.';
+        //     }  
+        // }
+
+
         // Récupération du client sélectionné et SET de $agenceSelected par les 4 derniers caractères de $clientSelected
         if(isset($_POST['submitClient'])){  
             if(!empty($_POST['clientName'])) {  
@@ -1560,6 +1588,7 @@ class HomeController extends AbstractController
         }
 
         return $this->render('home/index.html.twig', [
+            'userAgencies' => $userAgencies, // Array of user connected agencies
             'clientsGroup' => $clientsGroup,  // Array of Contacts
             'clientsStEtienne' => $clientsStEtienne,  // Array of Contacts
             'clientsGrenoble' => $clientsGrenoble,  // Array of Contacts
@@ -1575,7 +1604,7 @@ class HomeController extends AbstractController
             'clientsRennes' => $clientsRennes,  // Array of Contacts
             'clientSelected' => $clientSelected, // String
             'agenceSelected' => $agenceSelected, // String
-            'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)
+            // 'agenciesArray' => $agenciesArray, // Array of all agencies (params : code, agence)
             'clientSelectedInformations'  => $clientSelectedInformations, // Selected Entity Contact
             'clientSelectedEquipmentsFiltered'  => $clientSelectedEquipmentsFiltered, // Selected Entity Equipement where last visit is superior 3 months ago
             'totalClientSelectedEquipmentsFiltered'  => count($clientSelectedEquipmentsFiltered), // Total Selected Entity Equipement where last visit is superior 3 months ago
@@ -1590,6 +1619,48 @@ class HomeController extends AbstractController
             'defaultYear' => $defaultYear,
             'defaultVisit' => $defaultVisit,
         ]);
+    }
+
+    /**
+     * Extrait les codes d'agence des rôles de l'utilisateur
+     */
+    private function getUserAgencies(UserInterface $user): array
+    {
+        $agencies = [];
+        $roles = $user->getRoles();
+        
+        foreach ($roles as $role) {
+            // Vérifier si le rôle correspond à un code d'agence
+            if (preg_match('/^ROLE_(S\d+)$/', $role, $matches)) {
+                $agencies[] = $matches[1]; // Récupère S10, S40, etc.
+            }
+        }
+        
+        return array_unique($agencies);
+    }
+    
+    /**
+     * Convertit le code d'agence en nom lisible
+     */
+    private function getAgencyName(string $code): string
+    {
+        $agencyNames = [
+            'S10' => 'Group',
+            'S40' => 'St Etienne',
+            'S50' => 'Grenoble',
+            'S60' => 'Lyon',
+            'S70' => 'Bordeaux',
+            'S80' => 'ParisNord',
+            'S100' => 'Montpellier',
+            'S120' => 'HautsDeFrance',
+            'S130' => 'Toulouse',
+            'S140' => 'SMP',
+            'S150' => 'PACA',
+            'S160' => 'Rouen',
+            'S170' => 'Rennes',
+        ];
+        
+        return $agencyNames[$code] ?? $code;
     }
     
     #[Route('/filter-equipments', name: 'app_filter_equipments')]

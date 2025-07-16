@@ -338,24 +338,47 @@
         <div class="selections-container">
             <div class="selection-client" >
                 <!-- N'apparait que si le client n'est pas sélectionné et que l'agence n'est pas sélectionnée -->
-                {% if agenceSelected == NULL %}
+                {% if userAgencies|length > 1 and agenceSelected == NULL %}
                     <div>
                         <h2><span class="number"> 1 - </span>Sélectionnez votre agence</h2>
                         <form action="" method="post">
                             <select class="form-control" id="agence-somafi" name="agenceName">
-                                <option value = "" selected> Select agence </option> 
-                                {% for agence in agenciesArray %}
-                                    <option  value="{{ agence.getCode() }}" id="agence_selected">{{ agence.getAgence() }}</option>
+                                <option value="" selected>Sélectionner une agence</option> 
+                                {% for agencyCode in userAgencies %}
+                                    <option value="{{ agencyCode }}">
+                                        {{ agencyCode }} - {% if agencyCode == 'S10' %}Group
+                                        {% elseif agencyCode == 'S40' %}St Etienne
+                                        {% elseif agencyCode == 'S50' %}Grenoble
+                                        {% elseif agencyCode == 'S60' %}Lyon
+                                        {% elseif agencyCode == 'S70' %}Bordeaux
+                                        {% elseif agencyCode == 'S80' %}ParisNord
+                                        {% elseif agencyCode == 'S100' %}Montpellier
+                                        {% elseif agencyCode == 'S120' %}HautsDeFrance
+                                        {% elseif agencyCode == 'S130' %}Toulouse
+                                        {% elseif agencyCode == 'S140' %}SMP
+                                        {% elseif agencyCode == 'S150' %}PACA
+                                        {% elseif agencyCode == 'S160' %}Rouen
+                                        {% elseif agencyCode == 'S170' %}Rennes
+                                        {% else %}{{ agencyCode }}
+                                        {% endif %}
+                                    </option>
                                 {% endfor %}
                             </select>
-                            <button type="submit"  name ="submitAgence" class="btn btn-primary">Select Agence</button>
+                            <button type="submit" name="submitAgence" class="btn btn-primary">Sélectionner l'agence</button>
                         </form>
+                    </div>
+                {% endif %}
+                {# Message informatif si un seul rôle d'agence #}
+                {% if userAgencies|length == 1 %}
+                    <div class="alert alert-info">
+                        <i class="fa-solid fa-info-circle"></i> 
+                        Agence automatiquement sélectionnée : <strong>{{ agenceSelected }}</strong>
                     </div>
                 {% endif %}
                 <!-- N'apparait que si l'agence est sélectionnée -->
                 {% if agenceSelected and clientSelected is empty %}
                     <div>
-                        <h2><span class="number"> 2 - </span>Sélectionnez maintenant votre client</h2>
+                        <h2><span class="number"> {% if userAgencies|length > 1 %}2{% else %}1{% endif %} - </span>Sélectionnez maintenant votre client</h2>
                         <h3>Agence de rattachement : {{ agenceSelected }}</h3>
                         <label class="selection-client-label" for="client-select">Client sous contrat</label>
                         <form action="" method="post">

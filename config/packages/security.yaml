@@ -38,14 +38,17 @@ security:
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
 
+    # Ajouter une hiérarchie de rôles pour une meilleure gestion
+    role_hierarchy:
+        ROLE_ADMIN: [ROLE_SOMAFI, ROLE_SOMAFI_EDIT, ROLE_S10, ROLE_S40, ROLE_S50, ROLE_S60, ROLE_S70, ROLE_S80, ROLE_S100, ROLE_S120, ROLE_S130, ROLE_S140, ROLE_S150, ROLE_S160, ROLE_S170]
+        ROLE_SOMAFI: [ROLE_S10, ROLE_S40, ROLE_S50, ROLE_S60, ROLE_S70, ROLE_S80, ROLE_S100, ROLE_S120, ROLE_S130, ROLE_S140, ROLE_S150, ROLE_S160, ROLE_S170]
+        
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
         - { path: ^/register, roles: ROLE_ADMIN }
-        # - { path: ^/, roles: [ROLE_SOMAFI] }
         - { path: ^/kuehne, roles: [ROLE_ADMIN_KUEHNE, ROLE_USER_KUEHNE] }
         - { path: ^/gls, roles: [ROLE_ADMIN_GLS, ROLE_USER_GLS] }
-        # - { path: ^/login, roles: ROLE_USER }
 
 when@test:
     security:
