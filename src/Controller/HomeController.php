@@ -120,7 +120,7 @@ class HomeController extends AbstractController
                 if (count($clientSelectedSplitted) >= 2) {
                     $idClientSelected = trim($clientSelectedSplitted[0]);
                     $clientSelected = trim($clientSelectedSplitted[1]);
-                    $agenceSelected = trim(substr($clientSelectedSplitted[2], 0, 4)); // Extraire le code agence (S10, S40, etc.)
+                    $agenceSelected = trim(substr($clientSelectedSplitted[2], -1, 4)); // Extraire le code agence (S10, S40, etc.)
                     dd($agenceSelected);
                     // Charger les informations et équipements du client
                     $this->loadClientData($agenceSelected, $idClientSelected, $entityManager, $clientSelectedInformations, $clientSelectedEquipments, $homeRepository, $clientSelected);
