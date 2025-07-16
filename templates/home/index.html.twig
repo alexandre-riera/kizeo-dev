@@ -334,36 +334,6 @@
                 {% endfor %}
             {% endfor %}
         </div>
-        
-        {# DEBUG INFORMATION #}
-        <div style="background: #f0f0f0; padding: 10px; margin: 10px; border: 1px solid #ccc;">
-            <h4>🔍 DEBUG INFORMATIONS</h4>
-            <p><strong>User Agencies:</strong> 
-                {% if userAgencies is defined %}
-                    {{ userAgencies|length }} agence(s) - [{{ userAgencies|join(', ') }}]
-                {% else %}
-                    <span style="color: red;">NON DÉFINI</span>
-                {% endif %}
-            </p>
-            <p><strong>Agence Selected:</strong> 
-                {% if agenceSelected is defined %}
-                    "{{ agenceSelected }}"
-                {% else %}
-                    <span style="color: red;">NON DÉFINI</span>
-                {% endif %}
-            </p>
-            <p><strong>Client Selected:</strong> 
-                {% if clientSelected is defined %}
-                    "{{ clientSelected }}"
-                {% else %}
-                    <span style="color: red;">NON DÉFINI</span>
-                {% endif %}
-            </p>
-            <p><strong>Méthode de la requête:</strong> {{ app.request.method }}</p>
-            {% if app.request.method == 'POST' %}
-                <p><strong>Données POST:</strong> {{ app.request.request.all|json_encode }}</p>
-            {% endif %}
-        </div>
 
         <div class="selections-container">
             <div class="selection-client">
@@ -400,7 +370,7 @@
                 {% endif %}
 
                 <!-- Message informatif si une seule agence -->
-                {% if userAgencies|length == 1 %}
+                {% if userAgencies|length == 1 and clientSelected is not null %}
                     <div class="alert alert-info">
                         <i class="fa-solid fa-info-circle"></i> 
                         Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - {% if agenceSelected == 'S10' %}Group
