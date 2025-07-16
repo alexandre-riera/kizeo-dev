@@ -109,12 +109,14 @@ class HomeController extends AbstractController
         }
 
         // **ÉTAPE 2 : Logique de sélection de client**
-        if ($agenceSelected && $request->isMethod('POST') && $request->request->has('clientName')) {
-            $clientSelected = $request->request->get('clientName');
-            
+        // if ($agenceSelected && $request->isMethod('POST') && $request->request->has('clientName')) {
+        if (isset($_POST['clientName'])) {
+            $clientSelected = $_POST['clientName'];
+
             // Extraire l'ID client et nettoyer le nom
             if ($clientSelected != "") {
                 $clientSelectedSplitted = preg_split("/[-]/", $clientSelected);
+                dd($clientSelectedSplitted);
                 if (count($clientSelectedSplitted) >= 2) {
                     $idClientSelected = trim($clientSelectedSplitted[0]);
                     $clientSelected = trim($clientSelectedSplitted[1]);
