@@ -3237,7 +3237,7 @@ class SimplifiedMaintenanceController extends AbstractController
             // IMPORTANT: Ajouter un flush immédiat pour tester
             $entityManager->flush();
             dump("Entity flushée avec succès");
-            
+            die();
         } catch (\Exception $e) {
             dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
             dump("Stack trace: " . $e->getTraceAsString());
@@ -3717,7 +3717,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // IMPORTANT: Équipements hors contrat ne sont PAS en maintenance
         $equipement->setEnMaintenance(false);
         $equipement->setIsArchive(false);
-        die();
+        
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
         $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
         // NOUVELLE PARTIE: Extraction et définition des anomalies
