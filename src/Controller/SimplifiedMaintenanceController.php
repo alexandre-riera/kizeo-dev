@@ -355,6 +355,7 @@ class SimplifiedMaintenanceController extends AbstractController
             'porte accordéon' => 'PAC',
             'portail' => 'PAU',
             'porte sectionnelle' => 'SEC',
+            'Porte sectionnelle' => 'SEC',
             'protection' => 'PRO',
             'porte rapide' => 'RAP',
             'porte coulissante' => 'COU',
