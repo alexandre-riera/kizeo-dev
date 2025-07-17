@@ -3511,7 +3511,7 @@ class SimplifiedMaintenanceController extends AbstractController
             dump("===== TRAITEMENT SOUMISSION " . $submission['entry_id'] . " =====");
             dump("Équipements sous contrat: " . count($contractEquipments));
             dump("Équipements hors contrat: " . count($offContractEquipments));
-            die;
+            
             // Traitement des équipements sous contrat
             if (!empty($contractEquipments)) {
                 dump("--- DÉBUT TRAITEMENT SOUS CONTRAT ---");
@@ -3572,8 +3572,10 @@ class SimplifiedMaintenanceController extends AbstractController
             }
             
             // Traitement des équipements hors contrat
+            
             if (!empty($offContractEquipments)) {
                 dump("--- DÉBUT TRAITEMENT HORS CONTRAT ---");
+                die();
                 $offContractChunks = array_chunk($offContractEquipments, $chunkSize);
                 
                 foreach ($offContractChunks as $chunkIndex => $chunk) {
