@@ -3718,9 +3718,9 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setIsArchive(false);
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-        $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value']['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
-        // NOUVELLE PARTIE: Extraction et définition des anomalies
-        die("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
+        // $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value']['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
+        // // NOUVELLE PARTIE: Extraction et définition des anomalies
+        // die("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
         return true; // Équipement traité avec succès
