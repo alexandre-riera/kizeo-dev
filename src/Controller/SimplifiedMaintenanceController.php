@@ -3647,7 +3647,6 @@ class SimplifiedMaintenanceController extends AbstractController
             }
             
             dump("===== FIN TRAITEMENT SOUMISSION " . $submission['entry_id'] . " =====");
-            die("Traitement de la soumission {$submission['entry_id']} terminé");
         } catch (\Exception $e) {
             $errors++;
             dump("Erreur traitement soumission {$submission['entry_id']}: " . $e->getMessage());
