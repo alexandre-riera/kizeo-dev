@@ -3592,7 +3592,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             $this->setRealCommonDataFixed($equipement, $fields);
                             dump("Données communes définies pour équipement hors contrat");
                             dump("État en_maintenance après données communes: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-                            die();
+                            
                             // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
                                 $equipement, 
@@ -3717,7 +3717,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // IMPORTANT: Équipements hors contrat ne sont PAS en maintenance
         $equipement->setEnMaintenance(false);
         $equipement->setIsArchive(false);
-        
+        die();
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
         $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
         // NOUVELLE PARTIE: Extraction et définition des anomalies
