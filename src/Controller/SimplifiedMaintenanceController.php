@@ -3234,16 +3234,15 @@ class SimplifiedMaintenanceController extends AbstractController
             $entityManager->persist($form);
             dump("Entity form persistée avec succès");
             
-            // // IMPORTANT: Ajouter un flush immédiat pour tester
-            // $entityManager->flush();
-            // dump("Entity form flushée avec succès");
+            // IMPORTANT: Ajouter un flush immédiat pour tester
+            $entityManager->flush();
+            dump("Entity form flushée avec succès");
         } catch (\Exception $e) {
             dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
             dump("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
-        $entityManager->flush();
-        dump("Entity form flushée avec succès");
+        
         dump("=== FIN DEBUG PHOTOS HORS CONTRAT ===");
     }
 
