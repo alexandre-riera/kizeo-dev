@@ -3676,7 +3676,7 @@ class SimplifiedMaintenanceController extends AbstractController
         string $dateDerniereVisite
     ): bool {
         
-        dump("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) ===");
+        dump("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
         dump("Entry ID: " . $entryId);
         dump("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
 
