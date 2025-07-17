@@ -3592,7 +3592,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             $this->setRealCommonDataFixed($equipement, $fields);
                             dump("Données communes définies pour équipement hors contrat");
                             dump("État en_maintenance après données communes: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
-                            
+                            die();
                             // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
                                 $equipement, 
@@ -3623,7 +3623,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             }
                             
                             dump("--- FIN ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . " ---");
-                            die();
+                            
                         } catch (\Exception $e) {
                             $errors++;
                             dump("Erreur traitement équipement hors contrat: " . $e->getMessage());
