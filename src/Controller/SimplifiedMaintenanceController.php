@@ -3106,7 +3106,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
         $this->savePhotosToFormEntityWithDeduplication($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager);
-        
+        dump("=== PHOTOS SAUVÉES AVEC SUCCÈS pour équipement au contrat ===");
         // NOUVELLE PARTIE: Extraction et définition des anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
 
