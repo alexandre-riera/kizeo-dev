@@ -3575,7 +3575,7 @@ class SimplifiedMaintenanceController extends AbstractController
             
             if (!empty($offContractEquipments)) {
                 dump("--- DÉBUT TRAITEMENT HORS CONTRAT ---");
-                die();
+                
                 $offContractChunks = array_chunk($offContractEquipments, $chunkSize);
                 
                 foreach ($offContractChunks as $chunkIndex => $chunk) {
@@ -3623,7 +3623,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             }
                             
                             dump("--- FIN ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . " ---");
-                            
+                            die();
                         } catch (\Exception $e) {
                             $errors++;
                             dump("Erreur traitement équipement hors contrat: " . $e->getMessage());
