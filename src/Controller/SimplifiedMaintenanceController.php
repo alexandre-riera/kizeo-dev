@@ -3195,11 +3195,6 @@ class SimplifiedMaintenanceController extends AbstractController
             if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
                 $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
                 dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
-            }else {
-                // Equipement hors contrat, utiliser la photo étiquette somafi1
-                dump("ATTENTION: photo_etiquette_somafi est vide, utilisation de photo_etiquette_somafi1");
-                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi1']['value']);
-                dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi1']['value']);
             }
             
             if (!empty($equipmentData['photo2']['value'])) {
@@ -3242,7 +3237,6 @@ class SimplifiedMaintenanceController extends AbstractController
             // IMPORTANT: Ajouter un flush immédiat pour tester
             $entityManager->flush();
             dump("Entity flushée avec succès");
-            die();
         } catch (\Exception $e) {
             dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
             dump("Stack trace: " . $e->getTraceAsString());
