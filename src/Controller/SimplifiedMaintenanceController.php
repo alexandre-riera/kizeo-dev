@@ -3105,7 +3105,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setEnMaintenance(true);
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-        $this->savePhotosToFormEntityWithDeduplication($equipmentContrat, $fields, $formId, $entryId, $numeroEquipement, $entityManager);
+        $this->savePhotosToFormEntityWithDeduplication($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager);
         
         // NOUVELLE PARTIE: Extraction et définition des anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
@@ -3148,8 +3148,8 @@ class SimplifiedMaintenanceController extends AbstractController
      * Sauvegarder les photos avec vérification de doublons
      */
     private function savePhotosToFormEntityWithDeduplication(
-        array $equipmentData, 
-        array $fields, 
+        string $equipementPath,
+        array $equipmentData,
         string $formId, 
         string $entryId, 
         string $equipmentCode, 
@@ -3186,7 +3186,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setDataId($entryId);
             $form->setEquipmentId($equipmentCode);
             $form->setCodeEquipement($equipmentCode);
-            $form->setRaisonSocialeVisite($equipmentData['equipement']['path']);
+            $form->setRaisonSocialeVisite($equipementPath);
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
             // DEBUG: Photos avant assignation
@@ -3195,6 +3195,11 @@ class SimplifiedMaintenanceController extends AbstractController
             if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
                 $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
                 dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
+            }else {
+                // Equipement hors contrat, utiliser la photo étiquette somafi1
+                dump("ATTENTION: photo_etiquette_somafi est vide, utilisation de photo_etiquette_somafi1");
+                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi1']['value']);
+                dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi1']['value']);
             }
             
             if (!empty($equipmentData['photo2']['value'])) {
@@ -3719,7 +3724,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setIsArchive(false);
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-        $this->savePhotosToFormEntityWithDeduplication($equipmentHorsContrat, $fields, $formId, $entryId, $numeroFormate, $entityManager);
+        $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value']['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
         // NOUVELLE PARTIE: Extraction et définition des anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
