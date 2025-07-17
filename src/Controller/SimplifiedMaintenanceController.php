@@ -3613,9 +3613,10 @@ class SimplifiedMaintenanceController extends AbstractController
                                 dump("- En maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
                                 
                                 $entityManager->persist($equipement);
+                                $entityManager->flush();
                                 $equipmentsProcessed++;
                                 $photosSaved++;
-                                dump("Équipement hors contrat persisté avec succès");
+                                dump("Équipement hors contrat persisté et flushé avec succès");
                             } else {
                                 $equipmentsSkipped++;
                                 dump("Équipement hors contrat skippé (doublon)");
@@ -3718,10 +3719,12 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setIsArchive(false);
         
         // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-        // $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value']['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
-        // // NOUVELLE PARTIE: Extraction et définition des anomalies
-        // die("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
+        $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value']['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
+        // NOUVELLE PARTIE: Extraction et définition des anomalies
+        dump("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
+
+
 
         return true; // Équipement traité avec succès
     }
