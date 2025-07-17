@@ -3797,9 +3797,9 @@ class SimplifiedMaintenanceController extends AbstractController
         error_log("Numéro formaté final: '" . $numeroFormate . "'");
         
         // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
-        if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-            return false; // Skip car déjà existe
-        }
+        // if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+        //     return false; // Skip car déjà existe
+        // }
         
         // 3. Définir les données de l'équipement hors contrat
         $equipement->setNumeroEquipement($numeroFormate);
