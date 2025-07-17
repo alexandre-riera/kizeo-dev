@@ -3841,7 +3841,7 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT ===");
+        dump("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT ===");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
@@ -3863,16 +3863,16 @@ class SimplifiedMaintenanceController extends AbstractController
                     ->getOneOrNullResult();
                 
                 $result = $existing !== null;
-                error_log("Résultat vérification: " . ($result ? "EXISTE" : "N'EXISTE PAS"));
+                dump("Résultat vérification: " . ($result ? "EXISTE" : "N'EXISTE PAS"));
                 return $result;
             }
             
             // Si pas de numéro de série valide, considérer comme nouveau
-            error_log("Pas de numéro de série valide -> NOUVEAU");
+            dump("Pas de numéro de série valide -> NOUVEAU");
             return false;
             
         } catch (\Exception $e) {
-            error_log("Erreur vérification: " . $e->getMessage());
+            dump("Erreur vérification: " . $e->getMessage());
             return false; // En cas d'erreur, traiter comme nouveau
         }
     }
