@@ -3797,9 +3797,9 @@ class SimplifiedMaintenanceController extends AbstractController
         error_log("Numéro formaté final: '" . $numeroFormate . "'");
         
         // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
-        // if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-        //     return false; // Skip car déjà existe
-        // }
+        if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
+            return false; // Skip car déjà existe
+        }
         
         // 3. Définir les données de l'équipement hors contrat
         $equipement->setNumeroEquipement($numeroFormate);
@@ -3841,64 +3841,39 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT (NOMS CORRECTS) ===");
+        error_log("=== VÉRIFICATION EXISTENCE ÉQUIPEMENT HORS CONTRAT ===");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
             
             $numeroSerie = $equipmentHorsContrat['n_de_serie']['value'] ?? '';
-            $marque = $equipmentHorsContrat['marque']['value'] ?? '';
-            $localisation = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
-            $nature = $equipmentHorsContrat['nature']['value'] ?? '';
+            $dateVisite = date('Y-m-d H:i:s'); // Date actuelle
             
-            error_log("Critères: numeroSerie='$numeroSerie', marque='$marque', localisation='$localisation', nature='$nature'");
-            
-            $existing = null;
-            
-            // Stratégie 1: Numéro de série (sauf si "NC")
-            if (!empty($numeroSerie) && trim($numeroSerie) !== '' && $numeroSerie !== 'NC') {
-                error_log("Recherche par numéro de série...");
-                
+            // SEULEMENT si numéro de série valide ET différent de NC
+            if (!empty($numeroSerie) && $numeroSerie !== 'NC' && $numeroSerie !== 'Non renseigné') {
                 $existing = $repository->createQueryBuilder('e')
-                    ->where('e.numero_de_serie = :numeroSerie')  // ✅ PROPRIÉTÉ: numero_de_serie
-                    ->andWhere('e.id_contact = :idClient')       // ✅ PROPRIÉTÉ: id_contact
+                    ->where('e.numero_de_serie = :numeroSerie')
+                    ->andWhere('e.id_contact = :idClient')
+                    ->andWhere('e.date_enregistrement = :dateVisite') // Même date seulement
                     ->setParameter('numeroSerie', $numeroSerie)
                     ->setParameter('idClient', $idClient)
+                    ->setParameter('dateVisite', $dateVisite)
                     ->setMaxResults(1)
                     ->getQuery()
                     ->getOneOrNullResult();
-                    
-                error_log("Résultat recherche par numéro de série: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
-            }
-            
-            // Stratégie 2: Combinaison marque + localisation + nature
-            if (!$existing && !empty($marque) && !empty($localisation) && !empty($nature)) {
-                error_log("Recherche par combinaison marque + localisation + nature...");
                 
-                $existing = $repository->createQueryBuilder('e')
-                    ->where('e.marque = :marque')
-                    ->andWhere('e.repere_site_client = :localisation')   // ✅ PROPRIÉTÉ: repere_site_client
-                    ->andWhere('e.libelle_equipement = :nature')         // ✅ PROPRIÉTÉ: libelle_equipement
-                    ->andWhere('e.id_contact = :idClient')               // ✅ PROPRIÉTÉ: id_contact
-                    ->setParameter('marque', $marque)
-                    ->setParameter('localisation', $localisation)
-                    ->setParameter('nature', strtolower($nature))
-                    ->setParameter('idClient', $idClient)
-                    ->setMaxResults(1)
-                    ->getQuery()
-                    ->getOneOrNullResult();
-                    
-                error_log("Résultat recherche par combinaison: " . ($existing ? "TROUVÉ" : "NON TROUVÉ"));
+                $result = $existing !== null;
+                error_log("Résultat vérification: " . ($result ? "EXISTE" : "N'EXISTE PAS"));
+                return $result;
             }
             
-            $result = $existing !== null;
-            error_log("DÉCISION FINALE: " . ($result ? "EXISTE DÉJÀ (SKIP)" : "N'EXISTE PAS (TRAITER)"));
-            
-            return $result;
+            // Si pas de numéro de série valide, considérer comme nouveau
+            error_log("Pas de numéro de série valide -> NOUVEAU");
+            return false;
             
         } catch (\Exception $e) {
-            error_log("Erreur dans offContractEquipmentExists: " . $e->getMessage());
-            return false;
+            error_log("Erreur vérification: " . $e->getMessage());
+            return false; // En cas d'erreur, traiter comme nouveau
         }
     }
     /**
