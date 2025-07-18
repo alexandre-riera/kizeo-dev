@@ -532,7 +532,7 @@
                     </div>
                 </div>
                 {% if clientSelectedEquipmentsFilteredHorsContrat is not empty %}
-                    <div class="col-sm-3">
+                    <div class="compte_rendu col-sm-3">
                         <div class="card">
                             <div class="card-body">
                                 <h4 class="card-title">Nombre d'équipements hors contrat</h4>
@@ -562,7 +562,7 @@
                     </div>
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
-                <div class="col-sm-3">
+                <div class="compte_rendu col-sm-3">
                     <a id="pdf-button" href="{{ path('client_equipements_pdf', {
                         'agence': agenceSelected,
                         'id': clientSelectedInformations.getIdContact(),
