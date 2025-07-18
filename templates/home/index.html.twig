@@ -371,9 +371,8 @@
 
                 <!-- Sélection du client (affiché seulement si agence sélectionnée mais pas de client sélectionné) -->
                 {% if agenceSelected is not null and clientSelected is null %}
-                    <div class="alert alert-info">
-                        <i class="fa-solid fa-info-circle"></i> 
-                        Agence automatiquement sélectionnée : <strong>{{ agenceSelected }} - 
+                    <div class="alert alert-info">                        
+                        <label class="selection-client-label" for="client-select">Client sous contrat <strong>{{ agenceSelected }} - 
                         {% if agenceSelected == 'S10' %}Group
                         {% elseif agenceSelected == 'S40' %}St Etienne
                         {% elseif agenceSelected == 'S50' %}Grenoble
@@ -388,9 +387,7 @@
                         {% elseif agenceSelected == 'S160' %}Rouen
                         {% elseif agenceSelected == 'S170' %}Rennes
                         {% else %}{{ agenceSelected }}
-                        {% endif %}</strong>
-                        
-                        <label class="selection-client-label" for="client-select">Client sous contrat</label>
+                        {% endif %}</strong></label>
                         <form action="" method="post">
                             <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
                             <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)" required>
@@ -453,14 +450,6 @@
                             </select>
                             <button type="submit" name="submitClient" class="btn btn-primary">Select Client</button>
                         </form>
-                    </div>
-                {% endif %}
-
-                <!-- Message informatif pour une seule agence (seulement si aucun client sélectionné) -->
-                {% if clientSelected is null and userAgencies|length == 1 and agenceSelected is not empty %}
-                    <div class="alert alert-info">
-                        <i class="fa-solid fa-info-circle"></i> 
-                        Agence automatiquement sélectionnée : <strong>{{ agenceSelected }}</strong>
                     </div>
                 {% endif %}
             </div>
