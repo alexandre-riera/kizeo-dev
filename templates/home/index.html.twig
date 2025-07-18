@@ -676,7 +676,7 @@
         {% endblock %}
         {# Conteneur pour la table des équipements (sera mis à jour par AJAX) #}
         <div id="equipment-table-container">
-            {% include 'components/equipment_table.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered} %}
+            {% include 'components/equipment_table.html.twig' with {'clientSelectedEquipmentsFiltered': clientSelectedEquipmentsFiltered, 'clientSelectedEquipmentsFilteredAuContrat': clientSelectedEquipmentsFilteredAuContrat, 'clientSelectedEquipmentsFilteredHorsContrat': clientSelectedEquipmentsFilteredHorsContrat} %}
         </div>
         {% else %}
             <header class="header">

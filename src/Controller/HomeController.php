@@ -90,6 +90,8 @@ class HomeController extends AbstractController
         $clientSelectedInformations = null;
         $clientSelectedEquipments = [];
         $clientSelectedEquipmentsFiltered = [];
+        $clientSelectedEquipmentsFilteredAuContrat = [];
+        $clientSelectedEquipmentsFilteredHorsContrat = [];
         $idClientSelected = "";
         $directoriesLists = [];
         
@@ -220,6 +222,11 @@ class HomeController extends AbstractController
                 if (!in_array($equipment->getDerniereVisite(), $dateArray)) {
                     $dateArray[] = $equipment->getDerniereVisite();
                 }
+                if ($equipment->isEnMaintenance()) {
+                    $clientSelectedEquipmentsFilteredAuContrat[] = $equipment;
+                } else {
+                    $clientSelectedEquipmentsFilteredHorsContrat[] = $equipment;
+                }
             }
             
             if ($clientSelected && ($clientVisiteFilter ?: $defaultVisit) && $agenceSelected) {
@@ -246,6 +253,8 @@ class HomeController extends AbstractController
             'agenceSelected' => $agenceSelected,
             'clientSelectedInformations' => $clientSelectedInformations,
             'clientSelectedEquipmentsFiltered' => $clientSelectedEquipmentsFiltered,
+            'clientSelectedEquipmentsFilteredAuContrat' => $clientSelectedEquipmentsFilteredAuContrat,
+            'clientSelectedEquipmentsFilteredHorsContrat' => $clientSelectedEquipmentsFilteredHorsContrat,
             'totalClientSelectedEquipmentsFiltered' => count($clientSelectedEquipmentsFiltered),
             'directoriesLists' => $directoriesLists,
             'clientSelectedEquipments' => $clientSelectedEquipments,
