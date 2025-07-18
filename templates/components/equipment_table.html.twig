@@ -29,11 +29,11 @@
                             </option>
                         {#<li style="margin-bottom:10px;"><a href="{{ objectFile.path }}" target="_blank">{{ objectFile.visite }} du {{ objectFile.date }}</a></li>#}
                         {% endif %}
-                        {% endfor %}
-                    </select>
-                {#</ul>#}
-            </div>
+                    {% endfor %}
+                </select>
+            {#</ul>#}
         </div>
+    </div>
     <div>
     {% block clientEquipements %}
         <div>
@@ -169,10 +169,4 @@
             </script>
         </div>
     {% endblock %}
-    <script>
-        $(function() {
-            $('#table').bootstrapTable()
-        })
-    </script>
-    </div>
 {% endif %}
