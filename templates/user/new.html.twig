@@ -157,7 +157,7 @@
                         <a href="{{ path('app_user_index') }}" class="btn btn-secondary">Annuler</a>
                         <button type="submit" class="btn btn-success">Enregistrer</button>
                     </div>
-                {{ form_end(form) }}
+                {{ form_end(form, {'render_rest': false}) }}
             </div>
         </div>
     </div>
