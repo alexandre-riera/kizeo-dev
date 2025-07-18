@@ -38,7 +38,7 @@
     {% block clientEquipements %}
         <div>
             <table id="table" class="table-equipement-client table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
-                <CAPTION ALIGN="TOP" style="font-size:22px; color:white;">Équipements au contrat </CAPTION>
+                <CAPTION ALIGN="TOP" style="font-size:24px; color:white;">{{ clientSelectedEquipmentsFilteredAuContrat|length }} Équipements au contrat </CAPTION>
                 <thead>
                     <tr class="sticky">
                         <th data-sortable="true" data-filter-control="select" data-field="visite">Visite</th>
@@ -173,7 +173,7 @@
         </div>
         <div>
             <table id="tableHorsContrat" class="table-equipement-client table-bordered" data-toggle="table" data-pagination="true" data-search="true" data-filter-control="true" data-show-search-clear-button="true">
-                <CAPTION ALIGN="TOP" style="font-size:22px; color:white;">Équipements Hors contrat </CAPTION>
+                <CAPTION ALIGN="TOP" style="font-size:24px; color:white;">{{ clientSelectedEquipmentsFilteredHorsContrat|length }} Équipements Hors contrat </CAPTION>
                 <thead>
                     <tr class="sticky">
                         <th data-sortable="true" data-filter-control="select" data-field="visite">Visite</th>

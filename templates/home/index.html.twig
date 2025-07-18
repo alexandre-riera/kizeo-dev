@@ -524,13 +524,25 @@
                 <div class="col-sm-3">
                     <div class="card">
                         <div class="card-body">
-                            <h4 class="card-title">Nombre d'équipements</h4>
+                            <h4 class="card-title">Nombre d'équipements au contrat</h4>
                             <br>
                             <br>
-                            <p class="client-infos-nombre">{{ totalClientSelectedEquipmentsFiltered }}</p>
+                            <p class="client-infos-nombre">{{ clientSelectedEquipmentsFilteredAuContrat|length }}</p>
                         </div>
                     </div>
                 </div>
+                {% if clientSelectedEquipmentsFilteredHorsContrat is not empty %}
+                    <div class="col-sm-3">
+                        <div class="card">
+                            <div class="card-body">
+                                <h4 class="card-title">Nombre d'équipements hors contrat</h4>
+                                <br>
+                                <br>
+                                <p class="client-infos-nombre">{{ clientSelectedEquipmentsFilteredHorsContrat|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="mb-3">
                     <a id="pdf-button" href="{{ path('client_equipements_pdf', {
