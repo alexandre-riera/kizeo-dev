@@ -372,7 +372,7 @@
                 <!-- Sélection du client (affiché seulement si agence sélectionnée mais pas de client sélectionné) -->
                 {% if agenceSelected is not null and clientSelected is null %}
                     <div class="alert alert-info">                        
-                        <label class="selection-client-label" for="client-select">Client sous contrat <strong>{{ agenceSelected }} - 
+                        <label class="selection-client-label" for="client-select">Clients sous contrat : <strong>{{ agenceSelected }} - 
                         {% if agenceSelected == 'S10' %}Group
                         {% elseif agenceSelected == 'S40' %}St Etienne
                         {% elseif agenceSelected == 'S50' %}Grenoble
