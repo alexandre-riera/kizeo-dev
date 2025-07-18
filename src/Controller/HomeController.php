@@ -56,9 +56,9 @@ class HomeController extends AbstractController
     public function index(CacheInterface $cache, EntityManagerInterface $entityManager, SerializerInterface $serializer, Request $request, HomeRepository $homeRepository): Response
     {
         $user = $this->getUser();
-        if (!$user) {
-            return $this->redirectToRoute('app_login');
-        }
+        // if (!$user) {
+        //     return $this->redirectToRoute('app_login');
+        // }
 
         // Récupérer les codes d'agence de l'utilisateur
         $userAgencies = $this->getUserAgencies($user);
