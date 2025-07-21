@@ -42,7 +42,7 @@ Cette commande migre les photos des équipements depuis l\'API Kizeo Forms vers 
 
 Exemples d\'utilisation:
   php bin/console app:migrate-photos S140
-  php bin/console app:migrate-photos S140 --batch-size=25 --verify
+  php bin/console app:migrate-photos S140 --batch-size=25 --watch
   php bin/console app:migrate-photos S140 --dry-run
   php bin/console app:migrate-photos S140 --force --clean-orphans
             ');
@@ -56,7 +56,7 @@ Exemples d\'utilisation:
         $force = $input->getOption('force');
         $dryRun = $input->getOption('dry-run');
         $cleanOrphans = $input->getOption('clean-orphans');
-        $verify = $input->getOption('verify');
+        $watch = $input->getOption('watch');
 
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
 
@@ -92,7 +92,7 @@ Exemples d\'utilisation:
         if (!$dryRun) {
             $io->section('🔄 Migration des photos');
             
-            $migrationResults = $this->performMigration($agency, $batchSize, $force, $verify, $io);
+            $migrationResults = $this->performMigration($agency, $batchSize, $force, $watch, $io);
             
             $io->definitionList(
                 ['Équipements traités' => $migrationResults['processed']],
@@ -147,7 +147,7 @@ Exemples d\'utilisation:
         return Command::SUCCESS;
     }
 
-    private function performMigration(string $agency, int $batchSize, bool $force, bool $verify, SymfonyStyle $io): array
+    private function performMigration(string $agency, int $batchSize, bool $force, bool $watch, SymfonyStyle $io): array
     {
         $results = $this->formRepository->migrateAllEquipmentsToLocalStorage($agency, $batchSize);
         
@@ -170,7 +170,7 @@ Exemples d\'utilisation:
         $io->newLine(2);
 
         // Vérification de l'intégrité si demandée
-        if ($verify && $results['migrated'] > 0) {
+        if ($watch && $results['migrated'] > 0) {
             $io->info('🔍 Vérification de l\'intégrité des images...');
             $this->verifyImageIntegrity($agency, $io);
         }
@@ -279,7 +279,7 @@ Exemples d\'utilisation:
  * php bin/console app:migrate-photos S140
  * 
  * Migration avec options:
- * php bin/console app:migrate-photos S140 --batch-size=25 --verify --clean-orphans
+ * php bin/console app:migrate-photos S140 --batch-size=25 --watch --clean-orphans
  * 
  * Test sans modification:
  * php bin/console app:migrate-photos S140 --dry-run
