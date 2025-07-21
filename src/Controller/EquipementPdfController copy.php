@@ -51,7 +51,7 @@ class EquipementPdfController extends AbstractController
             'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
         ]);
         
-        $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
+        $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipmentOptimized($picturesArray, $entityManager, $equipment);
         
         // Générer le HTML pour le PDF
         $html = $this->renderView('pdf/single_equipement.html.twig', [
@@ -126,7 +126,7 @@ class EquipementPdfController extends AbstractController
                 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
             ]);
             
-            $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
+            $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipmentOptimized($picturesArray, $entityManager, $equipment);
             
             $equipmentsWithPictures[] = [
                 'equipment' => $equipment,
