@@ -37,7 +37,7 @@ class MigratePhotosDirectCommand extends Command
             ->addOption('batch-size', 'b', InputOption::VALUE_OPTIONAL, 'Taille des lots', 10)
             ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Simulation sans modification')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forcer le re-téléchargement des photos existantes')
-            ->addOption('debug', null, InputOption::VALUE_NONE, 'Mode debug avec logs détaillés')
+            ->addOption('debug', 'd', InputOption::VALUE_NONE, 'Mode debug avec logs détaillés')
             ->setHelp('
 Cette commande migre les photos en utilisant uniquement equipment_id pour résoudre 
 les problèmes de correspondance raison_sociale_visite.
