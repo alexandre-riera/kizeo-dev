@@ -5822,7 +5822,7 @@ public function generateOptimizedPDF(
     
     try {
         $repository = $this->getRepositoryForAgency($agencyCode, $entityManager);
-        $equipment = $repository->findOneBy(['numeroEquipement' => $equipmentId]);
+        $equipment = $repository->findOneBy(['numero_equipement' => $equipmentId]);
         
         if (!$equipment) {
             return new JsonResponse(['error' => 'Équipement non trouvé'], 404);
