@@ -35,7 +35,7 @@ class MigratePhotosDirectCommand extends Command
         $this
             ->addArgument('agency', InputArgument::REQUIRED, 'Code agence (S140, S50, etc.)')
             ->addOption('batch-size', 'b', InputOption::VALUE_OPTIONAL, 'Taille des lots', 10)
-            ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Simulation sans modification')
+            ->addOption('dry-run', 'r', InputOption::VALUE_NONE, 'Simulation sans modification')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forcer le re-téléchargement des photos existantes')
             ->addOption('debug', 'd', InputOption::VALUE_NONE, 'Mode debug avec logs détaillés')
             ->setHelp('
