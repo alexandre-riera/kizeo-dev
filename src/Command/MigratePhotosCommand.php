@@ -36,7 +36,7 @@ class MigratePhotosCommand extends Command
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forcer le re-téléchargement des photos existantes')
             ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Simulation sans modification')
             ->addOption('clean-orphans', 'c', InputOption::VALUE_NONE, 'Nettoyer les photos orphelines après migration')
-            ->addOption('verify', 'v', InputOption::VALUE_NONE, 'Vérifier l\'intégrité des images après téléchargement')
+            ->addOption('watch', 'w', InputOption::VALUE_NONE, 'Vérifier l\'intégrité des images après téléchargement')
             ->setHelp('
 Cette commande migre les photos des équipements depuis l\'API Kizeo Forms vers un stockage local.
 
