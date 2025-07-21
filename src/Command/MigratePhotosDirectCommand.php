@@ -37,7 +37,7 @@ class MigratePhotosDirectCommand extends Command
             ->addOption('batch-size', 'b', InputOption::VALUE_OPTIONAL, 'Taille des lots', 10)
             ->addOption('dry-run', 'd', InputOption::VALUE_NONE, 'Simulation sans modification')
             ->addOption('force', 'f', InputOption::VALUE_NONE, 'Forcer le re-téléchargement des photos existantes')
-            ->addOption('debug', null, InputOption::VALUE_NONE, 'Mode debug avec logs détaillés')
+            ->addOption('verbose', 'v', InputOption::VALUE_NONE, 'Mode verbose avec logs détaillés')
             ->setHelp('
 Cette commande migre les photos en utilisant uniquement equipment_id pour résoudre 
 les problèmes de correspondance raison_sociale_visite.
@@ -56,7 +56,7 @@ Exemples:
         $batchSize = (int) $input->getOption('batch-size');
         $dryRun = $input->getOption('dry-run');
         $force = $input->getOption('force');
-        $debug = $input->getOption('debug');
+        $verbose = $input->getOption('verbose');
 
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
 
@@ -110,7 +110,7 @@ Exemples:
                     ->getResult();
 
                 foreach ($equipments as $equipment) {
-                    $equipmentResult = $this->processEquipment($equipment, $agency, $dryRun, $force, $debug, $io);
+                    $equipmentResult = $this->processEquipment($equipment, $agency, $dryRun, $force, $verbose, $io);
                     
                     $results['processed']++;
                     $results[$equipmentResult['status']]++;
@@ -118,7 +118,7 @@ Exemples:
 
                     $progressBar->advance();
 
-                    if ($debug) {
+                    if ($verbose) {
                         $io->writeln("\n  {$equipment->getNumeroEquipement()}: {$equipmentResult['message']}");
                     }
                 }
@@ -147,7 +147,7 @@ Exemples:
 
         } catch (\Exception $e) {
             $io->error("❌ Erreur de migration: " . $e->getMessage());
-            if ($debug) {
+            if ($verbose) {
                 $io->writeln($e->getTraceAsString());
             }
             return Command::FAILURE;
@@ -175,7 +175,7 @@ Exemples:
         return $allPassed;
     }
 
-    private function processEquipment($equipment, string $agency, bool $dryRun, bool $force, bool $debug, SymfonyStyle $io): array
+    private function processEquipment($equipment, string $agency, bool $dryRun, bool $force, bool $verbose, SymfonyStyle $io): array
     {
         $equipmentId = $equipment->getNumeroEquipement();
         
@@ -218,7 +218,7 @@ Exemples:
 
             // 5. Migration des photos
             if (!$dryRun) {
-                $downloadedCount = $this->downloadPhotos($equipment, $formData, $agency, $availablePhotos, $debug);
+                $downloadedCount = $this->downloadPhotos($equipment, $formData, $agency, $availablePhotos, $verbose);
                 $result['photos_downloaded'] = $downloadedCount;
                 
                 if ($downloadedCount > 0) {
@@ -285,7 +285,7 @@ Exemples:
         return false;
     }
 
-    private function downloadPhotos($equipment, $formData, string $agency, array $availablePhotos, bool $debug): int
+    private function downloadPhotos($equipment, $formData, string $agency, array $availablePhotos, bool $verbose): int
     {
         $raisonSociale = $this->cleanFileName(explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale());
         $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
@@ -309,14 +309,14 @@ Exemples:
 
                     // Vérifier si existe déjà
                     if ($this->imageStorageService->imageExists($agency, $raisonSociale, $anneeVisite, $typeVisite, $filename)) {
-                        if ($debug) {
+                        if ($verbose) {
                             error_log("Photo existe déjà: {$filename}");
                         }
                         continue;
                     }
 
                     // Télécharger depuis l'API Kizeo
-                    $imageContent = $this->downloadFromKizeoApi($formData->getFormId(), $formData->getDataId(), $singlePhotoName, $debug);
+                    $imageContent = $this->downloadFromKizeoApi($formData->getFormId(), $formData->getDataId(), $singlePhotoName, $verbose);
                     
                     if ($imageContent) {
                         // Sauvegarder localement
@@ -331,14 +331,14 @@ Exemples:
                         
                         $downloadedCount++;
                         
-                        if ($debug) {
+                        if ($verbose) {
                             error_log("Photo téléchargée: {$filename} (" . strlen($imageContent) . " octets)");
                         }
                     }
                 }
 
             } catch (\Exception $e) {
-                if ($debug) {
+                if ($verbose) {
                     error_log("Erreur téléchargement {$photoType}: " . $e->getMessage());
                 }
             }
@@ -347,7 +347,7 @@ Exemples:
         return $downloadedCount;
     }
 
-    private function downloadFromKizeoApi(string $formId, string $dataId, string $photoName, bool $debug): ?string
+    private function downloadFromKizeoApi(string $formId, string $dataId, string $photoName, bool $verbose): ?string
     {
         try {
             $response = $this->client->request(
@@ -365,7 +365,7 @@ Exemples:
             $imageContent = $response->getContent();
             
             if (empty($imageContent)) {
-                if ($debug) {
+                if ($verbose) {
                     error_log("Contenu vide pour photo: {$photoName}");
                 }
                 return null;
@@ -374,7 +374,7 @@ Exemples:
             return $imageContent;
 
         } catch (\Exception $e) {
-            if ($debug) {
+            if ($verbose) {
                 error_log("Erreur API Kizeo pour {$photoName}: " . $e->getMessage());
             }
             return null;
@@ -436,7 +436,7 @@ Exemples:
         $io->section('🔧 Conseils de dépannage');
         
         if ($results['errors'] > 0) {
-            $io->writeln("• Activez le mode debug: --debug");
+            $io->writeln("• Activez le mode verbose: --verbose");
             $io->writeln("• Vérifiez les logs d'erreurs");
         }
         
@@ -455,8 +455,8 @@ Exemples:
  * # Test en mode simulation (recommandé)
  * php bin/console app:migrate-photos-direct S140 --dry-run --batch-size=5
  * 
- * # Migration réelle avec debug
- * php bin/console app:migrate-photos-direct S140 --batch-size=5 --debug
+ * # Migration réelle avec verbose
+ * php bin/console app:migrate-photos-direct S140 --batch-size=5 --verbose
  * 
  * # Migration complète
  * php bin/console app:migrate-photos-direct S140 --batch-size=20
