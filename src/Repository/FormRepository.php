@@ -36,6 +36,7 @@ use App\Service\ImageStorageService;
 class FormRepository extends ServiceEntityRepository
 {
     private ImageStorageService $imageStorageService;
+    private HttpClientInterface $client;
 
     public function __construct(
         ManagerRegistry $registry,
@@ -43,7 +44,7 @@ class FormRepository extends ServiceEntityRepository
         ImageStorageService $imageStorageService
     ) {
         parent::__construct($registry, Form::class);
-        $this->$client = $client;
+        $this->client = $client;
         $this->imageStorageService = $imageStorageService;
     }
 
