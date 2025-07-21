@@ -44,3 +44,32 @@ services:
             $logger: '@monolog.logger.kizeo_cache'
         tags:
             - { name: 'monolog.logger', channel: 'kizeo_cache' }
+
+    # Configuration du service ImageStorageService
+    App\Service\ImageStorageService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+            $logger: '@logger'
+
+    # Configuration du contrôleur avec injection des dépendances
+    App\Controller\SimplifiedMaintenanceController:
+        arguments:
+            $imageStorageService: '@App\Service\ImageStorageService'
+            $client: '@http_client'
+            $logger: '@logger'
+
+    # Configuration du repository avec injection du service
+    App\Repository\FormRepository:
+        arguments:
+            $registry: '@doctrine'
+            $client: '@http_client'
+            $imageStorageService: '@App\Service\ImageStorageService'
+
+    # Configuration de la commande
+    App\Command\MigratePhotosCommand:
+        arguments:
+            $entityManager: '@doctrine.orm.entity_manager'
+            $formRepository: '@App\Repository\FormRepository'
+            $imageStorageService: '@App\Service\ImageStorageService'
+        tags:
+            - { name: 'console.command' }

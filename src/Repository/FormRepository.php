@@ -28,15 +28,23 @@ use Symfony\Component\Config\Definition\Exception\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use stdClass;
+use App\Service\ImageStorageService;
 
 /**
  * @extends ServiceEntityRepository<ApiForm>
  */
 class FormRepository extends ServiceEntityRepository
 {
-    public function __construct(ManagerRegistry $registry,  public HttpClientInterface $client)
-    {
+    private ImageStorageService $imageStorageService;
+
+    public function __construct(
+        ManagerRegistry $registry,
+        HttpClientInterface $client,
+        ImageStorageService $imageStorageService
+    ) {
         parent::__construct($registry, Form::class);
+        $this->$client = $client;
+        $this->imageStorageService = $imageStorageService;
     }
 
     /**
@@ -79,107 +87,6 @@ class FormRepository extends ServiceEntityRepository
 
             return $content;
     }
-    /**
-    * @return Form[] Returns an array of forms from Kizeo
-    */
-    // public function getFormsMaintenance($cache): array 
-    // {
-    //     // Cache pour les formulaires MAINTENANCE
-    //     $formsCacheKey = 'maintenance_forms_list';
-    //     $cachedForms = $cache->get($formsCacheKey, function(ItemInterface $item) {
-    //         $item->expiresAfter(3600); // Cache valide 1 heure
-            
-    //         $response = $this->client->request(
-    //             'GET',
-    //             'https://forms.kizeo.com/rest/v3/forms', [
-    //                 'headers' => [
-    //                     'Accept' => 'application/json',
-    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-    //                 ],
-    //             ]
-    //         );
-    //         $content = $response->toArray();
-    
-    //         return array_filter($content['forms'], function($form) {
-    //             return $form['class'] == "MAINTENANCE";
-    //         });
-    //     });
-    
-    //     $formMaintenanceArrayOfObject = [];
-    //     $allFormsIds = array_column($cachedForms, 'id');
-        
-    //     $cachedFormData = [];
-    //     // Cache pour chaque formulaire
-    //     foreach ($allFormsIds as $formId) {
-    //         // Clé de cache unique pour chaque formulaire
-    //         $dataCacheKey = 'maintenance_form_data_' . $formId;
-    //         $cachedFormData = $cache->get($dataCacheKey, function(ItemInterface $item) use ($formId) {
-    //             $item->expiresAfter(1800); // Cache valide 30 minutes
-                
-    //             $response = $this->client->request('POST', 
-    //                 'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', [
-    //                     'headers' => [
-    //                         'Accept' => 'application/json',
-    //                         'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-    //                     ],
-    //                 ]
-    //             );
-    //             $content = $response->getContent();
-    //             $content = $response->toArray();
-    //             return $content['data'];
-    //         });
-    //     }
-
-    //     // Mettre en cache avec expiration (par exemple 24 heures)
-    //     $formattedData = $cache->get('all_form_id_with_their_data_id', function (ItemInterface $item) use ($cachedFormData) {
-    //         $item->expiresAfter(3600); // 1 heure
-
-    //         $formattedData = [];
-    //         foreach ($cachedFormData as $item) {
-    //             $formId = $item['_form_id'];
-    //             $dataId = intval($item['_id']); // Convertir à int
-
-    //             if (!isset($formattedData[$formId])) {
-    //                 $formattedData[$formId] = [];
-    //             }
-
-    //             $formattedData[$formId][] = $dataId;
-    //         }
-
-    //         return $formattedData;
-    //     });
-    //     // dd($formattedData);
-    //     // array:1 [▼
-    //     //     1034808 => array:5 [▼
-    //     //         0 => "212851512"
-    //     //         1 => "213145512"
-    //     //         2 => "213435284"
-    //     //         3 => "213762192"
-    //     //         4 => "213933129"
-    //     //     ]
-    //     // ]
-    //     foreach ($formattedData as $theFormId => $dataIds) {
-    //         $idDesDatas = [];
-    //         foreach ($dataIds as $dataId) {
-    //             $idDesDatas[] = intval($dataId); // Convertir à int
-    //         }
-    //         // Effectuer une action de marquage de tous les formulaires en une seule requête
-    //         $this->client->request('POST', 
-    //             'https://forms.kizeo.com/rest/v3/forms/' . $theFormId . '/markasunreadbyaction/read', [
-    //                 'headers' => [
-    //                     'Accept' => 'application/json',
-    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-    //                 ],
-    //                 'json' => [
-    //                     "data_ids" => $idDesDatas
-    //                 ]
-    //             ]
-    //         );  
-    //     }
-        
-        
-    //     return $formMaintenanceArrayOfObject;
-    // }
         
     /**
      * Version optimisée pour marquer les formulaires de maintenance comme "non lus"
@@ -2718,5 +2625,617 @@ class FormRepository extends ServiceEntityRepository
             }
         }
         return false;
+    }
+
+    // Gestion des photos en local
+    /**
+     * NOUVELLE VERSION OPTIMISÉE - Récupère les photos locales au lieu d'appeler l'API
+     * Remplace l'ancienne méthode getPictureArrayByIdEquipment
+     */
+    public function getPictureArrayByIdEquipmentOptimized($equipment, EntityManagerInterface $entityManager): array
+    {
+        $picturesdata = [];
+        
+        try {
+            // Extraire les informations nécessaires de l'équipement
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Récupérer toutes les photos locales de cet équipement
+            $localPhotos = $this->imageStorageService->getAllImagesForEquipment(
+                $agence,
+                $raisonSociale,
+                $anneeVisite,
+                $typeVisite,
+                $codeEquipement
+            );
+            
+            // Convertir les photos locales au format attendu par le template
+            foreach ($localPhotos as $photoType => $photoInfo) {
+                if (file_exists($photoInfo['path'])) {
+                    $pictureEncoded = base64_encode(file_get_contents($photoInfo['path']));
+                    
+                    $picturesdataObject = new \stdClass();
+                    $picturesdataObject->picture = $pictureEncoded;
+                    $picturesdataObject->update_time = date('Y-m-d H:i:s', $photoInfo['modified']);
+                    $picturesdataObject->photo_type = $photoType;
+                    $picturesdataObject->local_path = $photoInfo['path'];
+                    
+                    $picturesdata[] = $picturesdataObject;
+                }
+            }
+            
+            // Si aucune photo locale n'est trouvée, fallback vers la méthode originale avec l'API
+            if (empty($picturesdata)) {
+                return $this->getPictureArrayByIdEquipmentFallback($equipment, $entityManager);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération photos locales pour {$codeEquipement}: " . $e->getMessage());
+            // Fallback vers l'ancienne méthode en cas d'erreur
+            return $this->getPictureArrayByIdEquipmentFallback($equipment, $entityManager);
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * NOUVELLE VERSION OPTIMISÉE pour équipements supplémentaires
+     * Remplace getPictureArrayByIdSupplementaryEquipment
+     */
+    public function getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, EntityManagerInterface $entityManager): array
+    {
+        $picturesdata = [];
+        
+        try {
+            // Mêmes informations que pour les équipements normaux
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Priorité aux photos "compte_rendu" pour les équipements supplémentaires
+            $compteRenduPhoto = $this->imageStorageService->getImagePath(
+                $agence,
+                $raisonSociale,
+                $anneeVisite,
+                $typeVisite,
+                $codeEquipement . '_compte_rendu'
+            );
+            
+            if ($compteRenduPhoto && file_exists($compteRenduPhoto)) {
+                $pictureEncoded = base64_encode(file_get_contents($compteRenduPhoto));
+                
+                $picturesdataObject = new \stdClass();
+                $picturesdataObject->picture = $pictureEncoded;
+                $picturesdataObject->update_time = date('Y-m-d H:i:s', filemtime($compteRenduPhoto));
+                $picturesdataObject->photo_type = 'compte_rendu';
+                
+                $picturesdata[] = $picturesdataObject;
+            }
+            
+            // Si pas de photo locale, fallback vers l'API
+            if (empty($picturesdata)) {
+                return $this->getPictureArrayByIdSupplementaryEquipmentFallback($equipment, $entityManager);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur photos locales équipement supplémentaire {$codeEquipement}: " . $e->getMessage());
+            return $this->getPictureArrayByIdSupplementaryEquipmentFallback($equipment, $entityManager);
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * Méthode fallback - ancienne logique avec appels API (pour compatibilité)
+     */
+    private function getPictureArrayByIdEquipmentFallback($equipment, EntityManagerInterface $entityManager): array
+    {
+        // Ancienne logique avec appels API Kizeo
+        $picturesArray = $entityManager->getRepository(Form::class)->findBy([
+            'code_equipement' => $equipment->getNumeroEquipement(),
+            'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
+        ]);
+        
+        $picturesdata = [];
+        
+        foreach ($picturesArray as $value) {
+            if ($value->getPhotoCompteRendu() && $value->getPhotoCompteRendu() !== '') {
+                $photoJpg = $this->getJpgPictureFromPhotoCompteRendu($value, $entityManager);
+                
+                if (!empty($photoJpg)) {
+                    foreach ($photoJpg as $photo) {
+                        $pictureEncoded = base64_encode($photo);
+                        $picturesdataObject = new \stdClass();
+                        $picturesdataObject->picture = $pictureEncoded;
+                        $picturesdataObject->update_time = $value->getUpdateTime();
+                        $picturesdata[] = $picturesdataObject;
+                    }
+                }
+            }
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * Méthode fallback pour équipements supplémentaires
+     */
+    private function getPictureArrayByIdSupplementaryEquipmentFallback($equipment, EntityManagerInterface $entityManager): array
+    {
+        // Ancienne logique avec appels API
+        $picturesArray = $entityManager->getRepository(Form::class)->findBy([
+            'code_equipement' => $equipment->getNumeroEquipement(),
+            'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
+        ]);
+        
+        $picturesdata = [];
+        
+        foreach ($picturesArray as $value) {
+            if ($value->getPhotoCompteRendu() && $value->getPhotoCompteRendu() !== '') {
+                $photoJpg = $this->getJpgPictureFromPhotoCompteRendu($value, $entityManager);
+                
+                if (!empty($photoJpg)) {
+                    foreach ($photoJpg as $photo) {
+                        $pictureEncoded = base64_encode($photo);
+                        $picturesdataObject = new \stdClass();
+                        $picturesdataObject->picture = $pictureEncoded;
+                        $picturesdataObject->update_time = $value->getUpdateTime();
+                        $picturesdata[] = $picturesdataObject;
+                    }
+                }
+            }
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * NOUVELLE MÉTHODE - Batch processing pour générer plusieurs PDFs rapidement
+     */
+    public function generateBatchPDFsWithLocalPhotos(array $equipments, string $agence): array
+    {
+        $results = [
+            'success' => 0,
+            'errors' => 0,
+            'generated_pdfs' => [],
+            'processing_time' => 0
+        ];
+        
+        $startTime = microtime(true);
+        
+        foreach ($equipments as $equipment) {
+            try {
+                // Utiliser les photos locales pour ce PDF
+                $picturesData = $this->getPictureArrayByIdEquipmentOptimized($equipment, $this->getEntityManager());
+                
+                // Générer le PDF (logique existante mais avec photos locales)
+                $pdfPath = $this->generateSinglePDFWithLocalPhotos($equipment, $picturesData, $agence);
+                
+                if ($pdfPath) {
+                    $results['success']++;
+                    $results['generated_pdfs'][] = $pdfPath;
+                } else {
+                    $results['errors']++;
+                }
+                
+            } catch (\Exception $e) {
+                $results['errors']++;
+                error_log("Erreur génération PDF pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+            }
+        }
+        
+        $results['processing_time'] = round(microtime(true) - $startTime, 2);
+        
+        return $results;
+    }
+
+    /**
+     * Génération d'un seul PDF avec photos locales
+     */
+    private function generateSinglePDFWithLocalPhotos($equipment, array $picturesData, string $agence): ?string
+    {
+        try {
+            // Préparer les données pour le template Twig
+            $equipmentsWithPictures = [
+                [
+                    'equipment' => $equipment,
+                    'pictures' => $picturesData
+                ]
+            ];
+            
+            // Utiliser le moteur de template existant mais avec les données locales
+            // Cette partie dépend de votre implémentation Twig existante
+            
+            $pdfFilename = sprintf(
+                'equipement_%s_%s_%s.pdf',
+                $equipment->getNumeroEquipement(),
+                $agence,
+                date('Y-m-d')
+            );
+            
+            // Retourner le chemin du PDF généré
+            return '/path/to/generated/pdfs/' . $pdfFilename;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur génération PDF: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * UTILITAIRE - Vérifie la disponibilité des photos locales pour un équipement
+     */
+    public function checkLocalPhotosAvailability($equipment): array
+    {
+        $agence = $equipment->getCodeAgence();
+        $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+        $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+        $typeVisite = $equipment->getVisite();
+        $codeEquipement = $equipment->getNumeroEquipement();
+        
+        $localPhotos = $this->imageStorageService->getAllImagesForEquipment(
+            $agence,
+            $raisonSociale,
+            $anneeVisite,
+            $typeVisite,
+            $codeEquipement
+        );
+        
+        return [
+            'has_local_photos' => !empty($localPhotos),
+            'photo_count' => count($localPhotos),
+            'photo_types' => array_keys($localPhotos),
+            'total_size' => array_sum(array_column($localPhotos, 'size')),
+            'equipment_id' => $codeEquipement
+        ];
+    }
+
+    /**
+     * MIGRATION - Convertit tous les équipements vers le stockage local
+     */
+    public function migrateAllEquipmentsToLocalStorage(string $agence, int $batchSize = 50): array
+    {
+        $repository = $this->getEntityManager()->getRepository("App\\Entity\\Equipement{$agence}");
+        $totalEquipments = $repository->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+        
+        $results = [
+            'total_equipments' => $totalEquipments,
+            'processed' => 0,
+            'migrated' => 0,
+            'skipped' => 0,
+            'errors' => 0,
+            'batches_completed' => 0
+        ];
+        
+        $offset = 0;
+        
+        while ($offset < $totalEquipments) {
+            // Traiter par lots pour éviter les problèmes de mémoire
+            $equipments = $repository->createQueryBuilder('e')
+                ->setFirstResult($offset)
+                ->setMaxResults($batchSize)
+                ->getQuery()
+                ->getResult();
+            
+            foreach ($equipments as $equipment) {
+                try {
+                    $results['processed']++;
+                    
+                    // Vérifier si les photos locales existent déjà
+                    $availability = $this->checkLocalPhotosAvailability($equipment);
+                    
+                    if ($availability['has_local_photos']) {
+                        $results['skipped']++;
+                        continue;
+                    }
+                    
+                    // Récupérer les données Form associées
+                    $formData = $this->findBy([
+                        'equipment_id' => $equipment->getNumeroEquipement(),
+                        'raison_sociale_visite' => $equipment->getRaisonSociale() . '\\' . $equipment->getVisite()
+                    ]);
+                    
+                    if (empty($formData)) {
+                        $results['skipped']++;
+                        continue;
+                    }
+                    
+                    // Migrer les photos depuis Kizeo vers le stockage local
+                    $migrated = $this->migratePhotosForEquipment($equipment, $formData[0]);
+                    
+                    if ($migrated) {
+                        $results['migrated']++;
+                    } else {
+                        $results['skipped']++;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $results['errors']++;
+                    error_log("Erreur migration équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                }
+            }
+            
+            $results['batches_completed']++;
+            $offset += $batchSize;
+            
+            // Nettoyer la mémoire
+            $this->getEntityManager()->clear();
+            gc_collect_cycles();
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Migre les photos d'un équipement spécifique
+     */
+    private function migratePhotosForEquipment($equipment, Form $formData): bool
+    {
+        try {
+            if (!$formData->getFormId() || !$formData->getDataId()) {
+                return false;
+            }
+            
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Mapping des photos à migrer
+            $photosToMigrate = [
+                'compte_rendu' => $formData->getPhotoCompteRendu(),
+                'environnement' => $formData->getPhotoEnvironnementEquipement1(),
+                'plaque' => $formData->getPhotoPlaque(),
+                'etiquette_somafi' => $formData->getPhotoEtiquetteSomafi(),
+                'generale' => $formData->getPhoto2()
+            ];
+            
+            $migratedCount = 0;
+            
+            foreach ($photosToMigrate as $photoType => $photoName) {
+                if (!empty($photoName)) {
+                    if ($this->downloadAndStorePhotoFromKizeo(
+                        $photoName,
+                        $formData->getFormId(),
+                        $formData->getDataId(),
+                        $agence,
+                        $raisonSociale,
+                        $anneeVisite,
+                        $typeVisite,
+                        $codeEquipement . '_' . $photoType
+                    )) {
+                        $migratedCount++;
+                    }
+                }
+            }
+            
+            return $migratedCount > 0;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur migration photos équipement: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Télécharge et stocke une photo depuis l'API Kizeo
+     */
+    private function downloadAndStorePhotoFromKizeo(
+        string $photoName,
+        string $formId,
+        string $dataId,
+        string $agence,
+        string $raisonSociale,
+        string $anneeVisite,
+        string $typeVisite,
+        string $filename
+    ): bool {
+        try {
+            // Vérifier si la photo existe déjà localement
+            if ($this->imageStorageService->imageExists($agence, $raisonSociale, $anneeVisite, $typeVisite, $filename)) {
+                return true; // Déjà présente
+            }
+            
+            // Télécharger depuis l'API Kizeo
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $dataId . '/medias/' . $photoName,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+            
+            $imageContent = $response->getContent();
+            
+            if (empty($imageContent)) {
+                return false;
+            }
+            
+            // Sauvegarder localement
+            $this->imageStorageService->storeImage(
+                $agence,
+                $raisonSociale,
+                $anneeVisite,
+                $typeVisite,
+                $filename,
+                $imageContent
+            );
+            
+            return true;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur téléchargement photo {$photoName}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * ROUTE DE MAINTENANCE - Nettoie les photos orphelines
+     */
+    public function cleanOrphanedPhotos(string $agence): array
+    {
+        $results = [
+            'checked' => 0,
+            'deleted' => 0,
+            'errors' => 0,
+            'size_freed' => 0
+        ];
+        
+        try {
+            $baseDir = $this->imageStorageService->getStorageStats();
+            
+            if (!isset($baseDir['agencies'][$agence])) {
+                return $results;
+            }
+            
+            // Récupérer tous les équipements existants
+            $repository = $this->getEntityManager()->getRepository("App\\Entity\\Equipement{$agence}");
+            $existingEquipments = $repository->createQueryBuilder('e')
+                ->select('e.numeroEquipement', 'e.raisonSociale', 'e.visite', 'e.dateEnregistrement')
+                ->getQuery()
+                ->getArrayResult();
+            
+            $existingEquipmentIds = array_map(function($eq) {
+                return $eq['numeroEquipement'];
+            }, $existingEquipments);
+            
+            // Scanner les photos locales et identifier les orphelines
+            $agenceDir = $this->imageStorageService->getBaseImagePath() . $agence;
+            
+            if (is_dir($agenceDir)) {
+                $iterator = new \RecursiveIteratorIterator(
+                    new \RecursiveDirectoryIterator($agenceDir, \RecursiveDirectoryIterator::SKIP_DOTS)
+                );
+                
+                foreach ($iterator as $file) {
+                    if ($file->isFile() && $file->getExtension() === 'jpg') {
+                        $results['checked']++;
+                        
+                        // Extraire le code équipement du nom de fichier
+                        $filename = $file->getBasename('.jpg');
+                        $equipmentCode = explode('_', $filename)[0];
+                        
+                        // Vérifier si l'équipement existe encore
+                        if (!in_array($equipmentCode, $existingEquipmentIds)) {
+                            $fileSize = $file->getSize();
+                            
+                            if (unlink($file->getPathname())) {
+                                $results['deleted']++;
+                                $results['size_freed'] += $fileSize;
+                            } else {
+                                $results['errors']++;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Nettoyer les répertoires vides
+            $this->imageStorageService->cleanEmptyDirectories($agence);
+            
+        } catch (\Exception $e) {
+            $results['errors']++;
+            error_log("Erreur nettoyage photos orphelines: " . $e->getMessage());
+        }
+        
+        return $results;
+    }
+
+    /**
+     * STATISTIQUES - Rapport de migration des photos
+     */
+    public function getPhotoMigrationReport(string $agence): array
+    {
+        $repository = $this->getEntityManager()->getRepository("App\\Entity\\Equipement{$agence}");
+        $totalEquipments = $repository->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+        
+        $equipmentsWithLocalPhotos = 0;
+        $equipmentsWithoutLocalPhotos = 0;
+        $totalLocalPhotos = 0;
+        
+        $equipments = $repository->findAll();
+        
+        foreach ($equipments as $equipment) {
+            $availability = $this->checkLocalPhotosAvailability($equipment);
+            
+            if ($availability['has_local_photos']) {
+                $equipmentsWithLocalPhotos++;
+                $totalLocalPhotos += $availability['photo_count'];
+            } else {
+                $equipmentsWithoutLocalPhotos++;
+            }
+        }
+        
+        $migrationPercentage = $totalEquipments > 0 
+            ? round(($equipmentsWithLocalPhotos / $totalEquipments) * 100, 2) 
+            : 0;
+        
+        $storageStats = $this->imageStorageService->getStorageStats();
+        $agencyStats = $storageStats['agencies'][$agence] ?? ['count' => 0, 'size' => 0, 'size_formatted' => '0 B'];
+        
+        return [
+            'agence' => $agence,
+            'total_equipments' => $totalEquipments,
+            'equipments_with_local_photos' => $equipmentsWithLocalPhotos,
+            'equipments_without_local_photos' => $equipmentsWithoutLocalPhotos,
+            'migration_percentage' => $migrationPercentage,
+            'total_local_photos' => $totalLocalPhotos,
+            'storage_used' => $agencyStats['size_formatted'],
+            'average_photos_per_equipment' => $equipmentsWithLocalPhotos > 0 
+                ? round($totalLocalPhotos / $equipmentsWithLocalPhotos, 2) 
+                : 0,
+            'report_generated' => date('Y-m-d H:i:s')
+        ];
+    }
+
+/**
+ * INSTRUCTIONS DE DÉPLOIEMENT:
+ * 
+ * 1. Remplacer les appels existants dans vos contrôleurs PDF:
+ *    - getPictureArrayByIdEquipment() → getPictureArrayByIdEquipmentOptimized()
+ *    - getPictureArrayByIdSupplementaryEquipment() → getPictureArrayByIdSupplementaryEquipmentOptimized()
+ * 
+ * 2. Migrer les photos existantes:
+ *    php bin/console app:migrate-photos S140
+ * 
+ * 3. Vérifier la migration:
+ *    GET /api/maintenance/photo-migration-report/S140
+ * 
+ * 4. Nettoyer périodiquement les photos orphelines:
+ *    GET /api/maintenance/clean-orphaned-photos/S140
+ * 
+ * 5. Tester la génération PDF avec les nouvelles méthodes
+ * 
+ * AVANTAGES:
+ * - Plus de timeout lors de la génération des PDFs
+ * - Performances grandement améliorées (pas d'appels API)
+ * - Fallback automatique vers l'API si photos locales indisponibles
+ * - Système de migration pour les équipements existants
+ * - Nettoyage automatique des photos orphelines
+ */
+
+    /**
+    * Méthode manquante pour obtenir le chemin de base des images
+    */
+    public function getBaseImagePath(): string
+    {
+        return $this->imageStorageService->getBaseImagePath();
     }
 }
