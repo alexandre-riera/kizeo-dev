@@ -360,10 +360,10 @@
         {% set equipment = equipmentData.equipment %}
         {% set pictures = equipmentData.pictures %}
         <div class="equipement">
-            <table class="info-table">
+            <table class="info-table"> 
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
+                        <img src="{{ 'https://www.backend-kizeo.somafi-group.fr/public/img/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
                     </td>
                     <td style="width: 70%;">
                         <table>
