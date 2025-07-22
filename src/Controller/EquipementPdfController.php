@@ -459,16 +459,22 @@ class EquipementPdfController extends AbstractController
 
     /**
      * Calcule les statistiques des équipements supplémentaires
+     * CORRECTION : Inclure tous les équipements supplémentaires valides
      */
     private function calculateSupplementaryStatistics(array $equipementsSupplementaires): array
     {
         $etatsCountSupplementaires = [];
+        $totalSupplementaires = 0;
         
         foreach ($equipementsSupplementaires as $equipmentData) {
             $equipment = $equipmentData['equipment'];
             $etat = $equipment->getEtat();
             
-            if ($etat && $etat !== "Equipement non présent sur site" && $etat !== "G") {
+            // ✅ CORRECTION : Ne pas exclure d'états sauf si vraiment inexistants
+            // Seuls les équipements "Equipement non présent sur site" sont exclus
+            if ($etat && $etat !== "Equipement non présent sur site") {
+                $totalSupplementaires++; // Compter tous les équipements valides
+                
                 if (!isset($etatsCountSupplementaires[$etat])) {
                     $etatsCountSupplementaires[$etat] = 0;
                 }
@@ -477,7 +483,8 @@ class EquipementPdfController extends AbstractController
         }
         
         return [
-            'etatsCount' => $etatsCountSupplementaires
+            'etatsCount' => $etatsCountSupplementaires,
+            'total' => $totalSupplementaires  // ✅ AJOUT : Total unifié
         ];
     }
 
