@@ -240,7 +240,7 @@
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
 
                                         {% endif %}
-                                        {% if equipment.etat == "Non présent" or equipment.etat == "Equipement non présent sur site" %}
+                                        {% if equipment.getAnomalies() == "Aucune anomalie" %}
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/absent.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                         {% endif %}
                                     
