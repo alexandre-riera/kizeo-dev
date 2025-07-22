@@ -363,7 +363,7 @@
             <table class="info-table"> 
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        {% set imageUrl = '/img/' ~ agence ~ '/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' %}
+                        {% set imageUrl = 'public/img/' ~ agence ~ '/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' %}
                         <img src="{{ imageUrl }}" 
                             class="main-photo" 
                             alt="Photo équipement {{ equipment.numeroEquipement }}"
