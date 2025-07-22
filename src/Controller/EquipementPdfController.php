@@ -30,6 +30,7 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Service\ImageStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,7 +95,7 @@ class EquipementPdfController extends AbstractController
      * Route: /client/equipements/pdf/{agence}/{id}
      */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
-    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
+    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager, ImageStorageService $imageStorageService): Response
     {
         // Initialiser les métriques de performance
         $startTime = microtime(true);
@@ -159,7 +160,7 @@ class EquipementPdfController extends AbstractController
                     $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
                     
                     // Récupérer l'image générale en base64
-                    $generalImageBase64 = $this->imageStorageService->getGeneralImageBase64(
+                    $generalImageBase64 = $this->$imageStorageService->getGeneralImageBase64(
                         $agence,
                         $raisonSociale,
                         $anneeVisite,
