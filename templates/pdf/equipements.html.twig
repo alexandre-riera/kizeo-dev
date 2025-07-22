@@ -190,15 +190,28 @@
     
     <div class="summary">
         <h3>Résumé</h3>
-        <p><strong>Nombre d'équipements visités :</strong> {{ equipmentsWithPictures|length }}</p>
+        <p><strong>Nombre d'équipements au contrat :</strong> 
+            {% if statistiques is defined and statistiques.totalAuContrat is defined %}
+                {{ statistiques.totalAuContrat }}
+            {% else %}
+                {{ (equipmentsWithPictures|filter(e => e.equipment.isEnMaintenance))|length }}
+            {% endif %}
+        </p>
         <p><strong>Nombre d'équipements inexistants :</strong> {{ equipementsNonPresents|length }}</p>
-        <p><strong>Nombre d'équipements supplémentaires :</strong> {{ equipementsSupplementaires|length }}</p>
+        <p><strong>Nombre d'équipements supplémentaires :</strong> 
+            {% if statistiquesSupplementaires is defined and statistiquesSupplementaires.total is defined %}
+                {{ statistiquesSupplementaires.total }}
+            {% else %}
+                {{ equipementsSupplementaires|length }}
+            {% endif %}
+        </p>
     </div>
     
     {# Tableau de statistiques #}
     {% if statistiques is defined %}
         <div class="stats-section">
             <div class="stats-title">Équipements visités</div>
+            <div class="stats-title">(Équipements au contrat - inexistants)</div>
             
             <table class="stats-table">
                 <thead>
@@ -306,58 +319,25 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% set etatsSupplementaires = {} %}
-                    {% for equipmentData in equipementsSupplementaires %}
-                        {% set equipment = equipmentData.equipment %}
-                        {% set etat = equipment.etat %}
-                        
-                        {# Compter les états des équipements supplémentaires #}
-                        {% if etat and etat != "Equipement non présent le jour de la visite" and etat != "G" %}
-                            {% if etatsSupplementaires[etat] is not defined %}
-                                {% set etatsSupplementaires = etatsSupplementaires|merge({(etat): 0}) %}
+                    {% if statistiquesSupplementaires is defined and statistiquesSupplementaires.etatsCount is defined %}
+                        {% for etat, count in statistiquesSupplementaires.etatsCount %}
+                            {% if count > 0 %}
+                                <tr>
+                                    <td style="text-align: center;">
+                                        {% if etat == "Rien à signaler le jour de la visite" or etat == "Bon état" %}
+                                            <div style="width: 15px; height: 15px; background-color: green; border-radius: 50%; margin: 0 auto;"></div>
+                                        {% elseif etat == "Travaux à prévoir" %}
+                                            <div style="width: 15px; height: 15px; background-color: orange; border-radius: 50%; margin: 0 auto;"></div>
+                                        {% else %}
+                                            <div style="width: 15px; height: 15px; background-color: red; border-radius: 50%; margin: 0 auto;"></div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ etat }}</td>
+                                    <td style="text-align: center;">{{ count }}</td>
+                                </tr>
                             {% endif %}
-                            {% set etatsSupplementaires = etatsSupplementaires|merge({(etat): etatsSupplementaires[etat] + 1}) %}
-                        {% endif %}
-                    {% endfor %}
-
-                    {# Afficher les statistiques par état #}
-                    {% for etat, count in etatsSupplementaires %}
-                        {% if count > 0 %}
-                            <tr>
-                                <td style="text-align: center;">
-                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="vert" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="orange" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Travaux curatifs" or etat == "C" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "E" or etat == "F" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="rouge" style="width: 20px; height: 20px;">
-                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                        <img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="noir" style="width: 20px; height: 20px;">
-                                    {% endif %}
-                                </td>
-                                <td style="text-align: center;">
-                                    {% if etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or etat == "A" %}
-                                        Bon état
-                                    {% elseif etat == "Travaux à prévoir" or etat == "B" %}
-                                        Travaux à prévoir
-                                    {% elseif etat == "Travaux curatifs" or etat == "C" %}
-                                        Travaux curatifs urgents
-                                    {% elseif etat == "Equipement à l'arrêt le jour de la visite" or etat == "Equipement mis à l'arrêt lors de l'intervention" or etat == "E" or etat == "F" %}
-                                        Équipement à l'arrêt
-                                    {% elseif etat == "Equipement inaccessible le jour de la visite" or etat == "D" %}
-                                        Équipement inaccessible
-                                    {% else %}
-                                        {{ etat }}
-                                    {% endif %}
-                                </td>
-                                <td style="text-align: center;">
-                                    {{ count }}
-                                </td>
-                            </tr>
-                        {% endif %}
-                    {% endfor %}
+                        {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
             

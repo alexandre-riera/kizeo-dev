@@ -54,7 +54,7 @@ services:
     # Configuration du contrôleur avec injection des dépendances
     App\Controller\SimplifiedMaintenanceController:
         arguments:
-            $imageStorageService: '@App\Service\ImageStorageService'
+            $imageStorageService: 'App\Service\ImageStorageService'
             $client: '@http_client'
             $logger: '@logger'
 
@@ -65,11 +65,11 @@ services:
             $client: '@http_client'
             $imageStorageService: '@App\Service\ImageStorageService'
 
-    # Configuration de la commande
+   # Configuration de la commande
     App\Command\MigratePhotosCommand:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            $formRepository: '@App\Repository\FormRepository'
-            $imageStorageService: '@App\Service\ImageStorageService'
+            $formRepository: '@App\Repository\FormRepository'  # ✅ CORRIGÉ aussi
+            $imageStorageService: '@App\Service\ImageStorageService'  # ✅ CORRIGÉ
         tags:
             - { name: 'console.command' }
