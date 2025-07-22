@@ -97,8 +97,8 @@
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                         {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                        
-                                        {% elseif equipment.getNumeroDeSerie() is null %}
+
+                                        {% elseif equipment.getNumeroDeSerie() is null or equipment.getNumeroDeSerie() == "NC" or equipment.getNumeroDeSerie() == "Nc" %}
                                         <td><figure><img style="height:35px;width:35px;" src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/absent.png') }} " alt="etat-equipement" /><figcaption>Absent</figcaption></figure></td>
                                     {% endif %}
                                     
