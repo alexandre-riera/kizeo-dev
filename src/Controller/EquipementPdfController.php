@@ -30,6 +30,7 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Repository\FormRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -94,7 +95,7 @@ class EquipementPdfController extends AbstractController
      * Route: /client/equipements/pdf/{agence}/{id}
      */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
-    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
+    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager, FormRepository $formRepository): Response
     {
         // Initialiser les métriques de performance
         $startTime = microtime(true);
