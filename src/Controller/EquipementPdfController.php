@@ -190,6 +190,17 @@ class EquipementPdfController extends AbstractController
                         }
                         $photoSource = !empty($picturesData) ? 'fallback' : 'none';
                     }
+
+                    // AJOUTEZ CES LOGS DE DEBUG
+                    error_log("=== DEBUG ÉQUIPEMENT {$equipment->getNumeroEquipement()} ===");
+                    error_log("Nombre de photos trouvées: " . count($picturesData));
+                    
+                    if (!empty($picturesData)) {
+                        foreach ($picturesData as $index => $picture) {
+                            error_log("Photo {$index}: type=" . ($picture->photo_type ?? 'unknown') . 
+                                    ", taille_base64=" . strlen($picture->picture ?? ''));
+                        }
+                    }
                     
                 } catch (\Exception $e) {
                     error_log("Erreur récupération photo générale pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
@@ -222,6 +233,14 @@ class EquipementPdfController extends AbstractController
 
             // URL de l'image d'agence
             $imageUrl = $this->getImageUrlForAgency($agence);
+
+            // Avant le rendu du template
+            error_log("=== TEMPLATE DATA ===");
+            error_log("Nombre total d'équipements: " . count($equipmentsWithPictures));
+            foreach ($equipmentsWithPictures as $i => $equipData) {
+                error_log("Équipement {$i}: " . $equipData['equipment']->getNumeroEquipement() . 
+                        " - Photos: " . count($equipData['pictures']));
+            }
             
             // GÉNÉRATION DU PDF avec template équipements (multi-équipements)
             $html = $this->renderView('pdf/equipements.html.twig', [
