@@ -216,7 +216,8 @@ class EquipementPdfController extends AbstractController
                 'imageUrl' => $imageUrl,
                 'clientAnneeFilter' => $clientAnneeFilter,
                 'clientVisiteFilter' => $clientVisiteFilter,
-                'statistiques' => $statistiques,
+                'statistiques' => $statistiques, // 🎯 Nouvelle variable ajoutée,
+                'statistiquesSupplementaires' => $statistiquesSupplementaires, // 🎯 Nouvelle variable
                 'statistiquesSupplementaires' => $statistiquesSupplementaires,
                 'dateDeDerniererVisite' => $dateDeDerniererVisite,
                 'clientSelectedInformations' => $clientSelectedInformations,
