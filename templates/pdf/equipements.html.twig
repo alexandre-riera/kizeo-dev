@@ -363,14 +363,7 @@
             <table class="info-table"> 
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        {% set imageUrl = 'public/img/' ~ agence ~ '/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' %}
-                        <img src="{{ imageUrl }}" 
-                            class="main-photo" 
-                            alt="Photo équipement {{ equipment.numeroEquipement }}"
-                            onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                        <div class="no-image" style="display: none;">
-                            <em>Aucune photo disponible</em>
-                        </div>
+                        <img src="{{ 'https://www.dev.backend-kizeo.somafi-group.fr/public/img/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
                     </td>
                     <td style="width: 70%;">
                         <table>
