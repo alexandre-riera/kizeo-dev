@@ -63,13 +63,13 @@ services:
         arguments:
             $registry: '@doctrine'
             $client: '@http_client'
-            $imageStorageService: '@App\Service\ImageStorageService'
+            $imageStorageService: 'App\Service\ImageStorageService'
 
     # Configuration de la commande
     App\Command\MigratePhotosCommand:
         arguments:
             $entityManager: '@doctrine.orm.entity_manager'
-            $formRepository: '@App\Repository\FormRepository'
-            $imageStorageService: '@App\Service\ImageStorageService'
+            $formRepository: 'App\Repository\FormRepository'
+            $imageStorageService: 'App\Service\ImageStorageService'
         tags:
             - { name: 'console.command' }
