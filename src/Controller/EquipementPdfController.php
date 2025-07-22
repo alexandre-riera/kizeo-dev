@@ -160,7 +160,7 @@ class EquipementPdfController extends AbstractController
                     $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
                     
                     // Récupérer l'image générale en base64
-                    $generalImageBase64 = $this->$imageStorageService->getGeneralImageBase64(
+                    $generalImageBase64 = $imageStorageService->getGeneralImageBase64(
                         $agence,
                         $raisonSociale,
                         $anneeVisite,
