@@ -3239,4 +3239,136 @@ class FormRepository extends ServiceEntityRepository
     {
         return $this->imageStorageService->getBaseImagePath();
     }
+
+    /**
+     * NOUVELLE MÉTHODE : Récupère uniquement la photo générale depuis le stockage local
+     * Recherche le fichier {code_equipement}_generale.jpg
+     */
+    public function getGeneralPhotoFromLocalStorage($equipment, EntityManagerInterface $entityManager): array
+    {
+        $picturesdata = [];
+        
+        try {
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Construire le nom exact du fichier que nous cherchons
+            $expectedFilename = $codeEquipement . '_generale.jpg';
+            
+            // Construire le chemin vers la photo générale
+            $photoPath = $this->imageStorageService->getImagePath(
+                $agence,
+                $raisonSociale,
+                $anneeVisite,
+                $typeVisite,
+                $codeEquipement . '_generale' // Sans l'extension .jpg
+            );
+            
+            // Vérifier si le fichier existe
+            if ($photoPath && file_exists($photoPath)) {
+                $pictureEncoded = base64_encode(file_get_contents($photoPath));
+                
+                $picturesdataObject = new \stdClass();
+                $picturesdataObject->picture = $pictureEncoded;
+                $picturesdataObject->update_time = date('Y-m-d H:i:s', filemtime($photoPath));
+                $picturesdataObject->photo_type = 'generale';
+                $picturesdataObject->filename = $expectedFilename;
+                $picturesdataObject->local_path = $photoPath;
+                $picturesdataObject->equipment_number = $codeEquipement;
+                
+                $picturesdata[] = $picturesdataObject;
+                
+                error_log("✅ Photo générale trouvée : {$expectedFilename} -> {$photoPath}");
+            } else {
+                error_log("❌ Photo générale NON trouvée : {$expectedFilename}");
+                error_log("Chemin recherché : " . ($photoPath ?? 'null'));
+                
+                // Tenter de lister les fichiers du dossier pour debug
+                $directory = dirname($photoPath ?? '');
+                if (is_dir($directory)) {
+                    $files = scandir($directory);
+                    $generalFiles = array_filter($files, function($file) use ($codeEquipement) {
+                        return strpos($file, $codeEquipement . '_generale') !== false;
+                    });
+                    
+                    if (!empty($generalFiles)) {
+                        error_log("Photos générales disponibles dans {$directory} : " . implode(', ', $generalFiles));
+                    } else {
+                        error_log("Aucune photo générale trouvée pour {$codeEquipement} dans {$directory}");
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération photo générale pour {$codeEquipement}: " . $e->getMessage());
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * MÉTHODE ALTERNATIVE : Si la structure de dossier est différente
+     * Recherche directement dans le dossier par scanning
+     */
+    public function findGeneralPhotoByScanning($equipment): array
+    {
+        $picturesdata = [];
+        
+        try {
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Construire le chemin du dossier
+            $baseDir = $this->imageStorageService->getBaseImagePath();
+            $cleanRaisonSociale = $this->imageStorageService->cleanFileName($raisonSociale);
+            $directory = $baseDir . $agence . '/' . $cleanRaisonSociale . '/' . $anneeVisite . '/' . $typeVisite;
+            
+            error_log("🔍 Recherche dans : {$directory}");
+            
+            if (is_dir($directory)) {
+                $files = scandir($directory);
+                $expectedFilename = $codeEquipement . '_generale.jpg';
+                
+                foreach ($files as $file) {
+                    if ($file === $expectedFilename) {
+                        $fullPath = $directory . '/' . $file;
+                        $pictureEncoded = base64_encode(file_get_contents($fullPath));
+                        
+                        $picturesdataObject = new \stdClass();
+                        $picturesdataObject->picture = $pictureEncoded;
+                        $picturesdataObject->update_time = date('Y-m-d H:i:s', filemtime($fullPath));
+                        $picturesdataObject->photo_type = 'generale';
+                        $picturesdataObject->filename = $file;
+                        $picturesdataObject->local_path = $fullPath;
+                        $picturesdataObject->equipment_number = $codeEquipement;
+                        
+                        $picturesdata[] = $picturesdataObject;
+                        
+                        error_log("✅ Photo trouvée par scan : {$file}");
+                        break;
+                    }
+                }
+                
+                if (empty($picturesdata)) {
+                    error_log("❌ Fichier {$expectedFilename} non trouvé dans {$directory}");
+                    error_log("Fichiers disponibles : " . implode(', ', array_filter($files, function($f) { 
+                        return $f !== '.' && $f !== '..'; 
+                    })));
+                }
+            } else {
+                error_log("❌ Dossier non trouvé : {$directory}");
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur scan photo générale pour {$codeEquipement}: " . $e->getMessage());
+        }
+        
+        return $picturesdata;
+    }
 }

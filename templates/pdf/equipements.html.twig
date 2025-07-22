@@ -363,15 +363,7 @@
             <table class="info-table">
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        {% for image in pictures %}
-                            <!-- {% if image.picture == (equipment.numeroEquipement ~ '_generale.jpg') %}
-                                {# Si vous souhaitez afficher plusieurs images, vous pouvez les gérer ici #}
-                                <img src="data:image/jpeg;base64,{{ image.picture }}" class="photo" alt="Photo équipement">
-                            {% else %}
-                                {# Affichage de la première image comme principale #}
-                            {% endif %} -->
-                            <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
-                        {% endfor %}
+                        <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
                     </td>
                     <td style="width: 70%;">
                         <table>

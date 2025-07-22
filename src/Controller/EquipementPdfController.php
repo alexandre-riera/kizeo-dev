@@ -150,43 +150,73 @@ class EquipementPdfController extends AbstractController
                 $picturesData = [];
                 $photoSource = 'none';
                 
+                // try {
+                //     // Distinguer entre équipements au contrat et supplémentaires
+                //     if ($equipment->isEnMaintenance()) {
+                //         // ÉQUIPEMENTS AU CONTRAT - Utiliser la méthode optimisée
+                //         $picturesData = $entityManager->getRepository(Form::class)
+                //             ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
+                //         $photoSource = !empty($picturesData) ? 'local' : 'none';
+                //     } else {
+                //         // ÉQUIPEMENTS SUPPLÉMENTAIRES - Utiliser la méthode spécialisée optimisée
+                //         $picturesData = $entityManager->getRepository(Form::class)
+                //             ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
+                //         $photoSource = !empty($picturesData) ? 'local' : 'none';
+                //     }
+                    
+                //     // Si pas de photos locales, fallback vers l'API (uniquement si nécessaire)
+                //     if (empty($picturesData) && $this->shouldUseFallback()) {
+                //         if ($equipment->isEnMaintenance()) {
+                //             $picturesData = $this->getEquipmentPicturesWithFallback($equipment, $entityManager);
+                //         } else {
+                //             $picturesData = $this->getSupplementaryEquipmentPicturesWithFallback($equipment, $entityManager);
+                //         }
+                //         $photoSource = !empty($picturesData) ? 'api_fallback' : 'none';
+                //     }
+                    
+                // } catch (\Exception $e) {
+                //     // Log l'erreur mais continue le traitement
+                //     error_log("Erreur récupération photos pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                //     $photoSource = 'none';
+                // }
+                
+                // // Compter les sources de photos pour statistiques
+                // $photoSourceStats[$photoSource]++;
+                
+                // $equipmentsWithPictures[] = [
+                //     'equipment' => $equipment,
+                //     'pictures' => $picturesData,
+                //     'photo_source' => $photoSource // Pour debugging
+                // ];
+
                 try {
-                    // Distinguer entre équipements au contrat et supplémentaires
-                    if ($equipment->isEnMaintenance()) {
-                        // ÉQUIPEMENTS AU CONTRAT - Utiliser la méthode optimisée
-                        $picturesData = $entityManager->getRepository(Form::class)
-                            ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
-                        $photoSource = !empty($picturesData) ? 'local' : 'none';
-                    } else {
-                        // ÉQUIPEMENTS SUPPLÉMENTAIRES - Utiliser la méthode spécialisée optimisée
-                        $picturesData = $entityManager->getRepository(Form::class)
-                            ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
-                        $photoSource = !empty($picturesData) ? 'local' : 'none';
+                    // 🎯 UTILISER LA NOUVELLE MÉTHODE
+                    $picturesData = $this->getGeneralPhotosForEquipment($equipment, $formRepository, $entityManager);
+                    
+                    $photoSource = 'none';
+                    if (!empty($picturesData)) {
+                        if (isset($picturesData[0]->local_path)) {
+                            $photoSource = 'local';
+                        } elseif (isset($picturesData[0]->photo_type) && $picturesData[0]->photo_type === 'generale_api') {
+                            $photoSource = 'api_fallback';
+                        }
                     }
                     
-                    // Si pas de photos locales, fallback vers l'API (uniquement si nécessaire)
-                    if (empty($picturesData) && $this->shouldUseFallback()) {
-                        if ($equipment->isEnMaintenance()) {
-                            $picturesData = $this->getEquipmentPicturesWithFallback($equipment, $entityManager);
-                        } else {
-                            $picturesData = $this->getSupplementaryEquipmentPicturesWithFallback($equipment, $entityManager);
-                        }
-                        $photoSource = !empty($picturesData) ? 'api_fallback' : 'none';
-                    }
+                    // Log pour debug
+                    error_log("📊 Équipement {$equipment->getNumeroEquipement()}: " . count($picturesData) . " photo(s) générale(s) - Source: {$photoSource}");
                     
                 } catch (\Exception $e) {
-                    // Log l'erreur mais continue le traitement
-                    error_log("Erreur récupération photos pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                    error_log("❌ Erreur équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
                     $photoSource = 'none';
+                    $picturesData = [];
                 }
                 
-                // Compter les sources de photos pour statistiques
                 $photoSourceStats[$photoSource]++;
                 
                 $equipmentsWithPictures[] = [
                     'equipment' => $equipment,
-                    'pictures' => $picturesData,
-                    'photo_source' => $photoSource // Pour debugging
+                    'pictures' => $picturesData, // Contient UNIQUEMENT les photos générales
+                    'photo_source' => $photoSource
                 ];
                 
                 // Récupérer la date de dernière visite
@@ -670,6 +700,56 @@ class EquipementPdfController extends AbstractController
                 return $basePath . 'rennes.jpg';
             default:
                 return $basePath . 'default.jpg'; // Image par défaut
+        }
+    }
+
+    /**
+     * Méthode mise à jour pour récupérer uniquement les photos générales
+     */
+    private function getGeneralPhotosForEquipment($equipment, $formRepository, EntityManagerInterface $entityManager): array
+    {
+        // Méthode 1 : Utiliser le service de stockage
+        $photos = $formRepository->getGeneralPhotoFromLocalStorage($equipment, $entityManager);
+        
+        // Méthode 2 : Si la première méthode ne fonctionne pas, essayer le scan
+        if (empty($photos)) {
+            error_log("🔄 Tentative de scan pour {$equipment->getNumeroEquipement()}");
+            $photos = $formRepository->findGeneralPhotoByScanning($equipment);
+        }
+        
+        // Méthode 3 : Fallback vers l'API si aucune photo locale trouvée
+        if (empty($photos)) {
+            error_log("🔄 Fallback API pour {$equipment->getNumeroEquipement()}");
+            $photos = $this->fallbackToApiForGeneralPhoto($equipment, $formRepository, $entityManager);
+        }
+        
+        return $photos;
+    }
+
+    /**
+     * Fallback vers l'API pour récupérer la photo générale
+     */
+    private function fallbackToApiForGeneralPhoto($equipment, $formRepository, EntityManagerInterface $entityManager): array
+    {
+        try {
+            // Récupérer toutes les photos via l'API
+            $allPhotos = $formRepository->getPictureArrayByIdEquipment([], $entityManager, $equipment);
+            
+            // Filtrer pour ne garder que les photos générales
+            $generalPhotos = [];
+            foreach ($allPhotos as $photo) {
+                // Ajouter un identifiant pour marquer comme photo générale
+                $photo->photo_type = 'generale_api';
+                $photo->equipment_number = $equipment->getNumeroEquipement();
+                $generalPhotos[] = $photo;
+                break; // Ne prendre que la première photo comme générale
+            }
+            
+            return $generalPhotos;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur fallback API pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+            return [];
         }
     }
 }
