@@ -14,6 +14,7 @@ class PdfGenerator
         $options->set('isHtml5ParserEnabled', true);
         $options->set('isRemoteEnabled', true); // Pour permettre le chargement d'images externes
         $options->set('isPHPEnabled', true);
+        $options->set('chroot', realpath(base_path()));
         $options->set('marginTop', 0);
         $options->set('marginBottom', 0);
         $options->set('marginLeft', 0);

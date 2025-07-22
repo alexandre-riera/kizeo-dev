@@ -355,7 +355,17 @@
         </div>
         <div class="page-break"></div>
     {% endif %}
-
+    {# DEBUG: Test avec une image factice #}
+    <div style="border: 2px solid red; padding: 10px; margin: 10px;">
+        <h3>TEST IMAGE DEBUG</h3>
+        <p>Nombre d'équipements: {{ equipmentsWithPictures|length }}</p>
+        {% for equipmentData in equipmentsWithPictures %}
+            <p>Équipement {{ equipmentData.equipment.numeroEquipement }}: {{ equipmentData.pictures|length }} photos</p>
+            {% if equipmentData.pictures|length > 0 %}
+                <p>Première photo: {{ equipmentData.pictures[0].picture|length }} caractères base64</p>
+            {% endif %}
+        {% endfor %}
+    </div>
     {% for equipmentData in equipmentsWithPictures %}
         {% set equipment = equipmentData.equipment %}
         {% set pictures = equipmentData.pictures %}
@@ -363,7 +373,17 @@
             <table class="info-table"> 
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        <img src="{{ 'https://www.dev.backend-kizeo.somafi-group.fr/public/img/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
+                        {% if pictures|length > 0 %}
+                            <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" 
+                                class="main-photo" 
+                                alt="Photo équipement {{ equipment.numeroEquipement }}"
+                                style="max-width: 200px; max-height: 200px; border: 2px solid red;">
+                            <p style="font-size: 10px;">Base64 length: {{ pictures[0].picture|length }}</p>
+                        {% else %}
+                            <div class="no-image" style="border: 2px solid blue; padding: 20px;">
+                                <em>Aucune photo disponible pour {{ equipment.numeroEquipement }}</em>
+                            </div>
+                        {% endif %}
                     </td>
                     <td style="width: 70%;">
                         <table>

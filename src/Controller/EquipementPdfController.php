@@ -150,37 +150,23 @@ class EquipementPdfController extends AbstractController
             foreach ($equipments as $equipment) {
                 $picturesData = [];
                 $photoSource = 'none';
-                $generalImageBase64 = null;
                 
-                try {
-                    // Extraire les informations pour construire le chemin
-                    $agence = $equipment->getCodeAgence();
-                    $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
-                    $anneeVisite = $clientAnneeFilter ?: date('Y', strtotime($equipment->getDateEnregistrement()));
-                    $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
+                // D'abord essayer de récupérer l'image _generale.jpg
+                $generalImageBase64 = $this->getGeneralImageForEquipment($equipment, $clientAnneeFilter, $clientVisiteFilter);
+                
+                if ($generalImageBase64) {
+                    $picturesdataObject = new \stdClass();
+                    $picturesdataObject->picture = $generalImageBase64;
+                    $picturesdataObject->photo_type = 'generale';
+                    $picturesdataObject->update_time = date('Y-m-d H:i:s');
                     
-                    // Récupérer l'image générale en base64
-                    $generalImageBase64 = $imageStorageService->getGeneralImageBase64(
-                        $agence,
-                        $raisonSociale,
-                        $anneeVisite,
-                        $typeVisite,
-                        $equipment->getNumeroEquipement()
-                    );
-                    
-                    if ($generalImageBase64) {
-                        $photoSource = 'local_general';
-                        // Créer un objet picture compatible avec le template
-                        $picturesdataObject = new \stdClass();
-                        $picturesdataObject->picture = $generalImageBase64;
-                        $picturesdataObject->photo_type = 'generale';
-                        $picturesdataObject->update_time = date('Y-m-d H:i:s');
-                        
-                        $picturesData[] = $picturesdataObject;
-                    }
-                    
-                    // Si pas d'image générale locale, fallback vers la méthode existante
-                    if (empty($picturesData)) {
+                    $picturesData[] = $picturesdataObject;
+                    $photoSource = 'local_general';
+                }
+                
+                // Si pas d'image générale, utiliser la méthode existante
+                if (empty($picturesData)) {
+                    try {
                         if ($equipment->isEnMaintenance()) {
                             $picturesData = $entityManager->getRepository(Form::class)
                                 ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
@@ -188,23 +174,11 @@ class EquipementPdfController extends AbstractController
                             $picturesData = $entityManager->getRepository(Form::class)
                                 ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
                         }
-                        $photoSource = !empty($picturesData) ? 'fallback' : 'none';
+                        $photoSource = !empty($picturesData) ? 'local' : 'none';
+                    } catch (\Exception $e) {
+                        error_log("Erreur fallback pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                        $photoSource = 'none';
                     }
-
-                    // AJOUTEZ CES LOGS DE DEBUG
-                    error_log("=== DEBUG ÉQUIPEMENT {$equipment->getNumeroEquipement()} ===");
-                    error_log("Nombre de photos trouvées: " . count($picturesData));
-                    
-                    if (!empty($picturesData)) {
-                        foreach ($picturesData as $index => $picture) {
-                            error_log("Photo {$index}: type=" . ($picture->photo_type ?? 'unknown') . 
-                                    ", taille_base64=" . strlen($picture->picture ?? ''));
-                        }
-                    }
-                    
-                } catch (\Exception $e) {
-                    error_log("Erreur récupération photo générale pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
-                    $photoSource = 'none';
                 }
                 
                 $equipmentsWithPictures[] = [
@@ -752,6 +726,42 @@ class EquipementPdfController extends AbstractController
         } catch (\Exception $e) {
             error_log("Erreur fallback API pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
             return [];
+        }
+    }
+
+    private function getGeneralImageForEquipment($equipment, $clientAnneeFilter, $clientVisiteFilter): ?string
+    {
+        try {
+            // Construire le chemin vers l'image _generale.jpg
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = $clientAnneeFilter ?: date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
+            $numeroEquipement = $equipment->getNumeroEquipement();
+            
+            // Nettoyer la raison sociale (comme dans ImageStorageService)
+            $cleanRaisonSociale = preg_replace('/[^a-zA-Z0-9_\-.]/', '_', $raisonSociale);
+            $cleanRaisonSociale = preg_replace('/_+/', '_', $cleanRaisonSociale);
+            $cleanRaisonSociale = trim($cleanRaisonSociale, '_');
+            
+            // Construire le chemin complet
+            $imagePath = $this->getParameter('kernel.project_dir') . '/public/img/' . 
+                        $agence . '/' . $cleanRaisonSociale . '/' . $anneeVisite . '/' . 
+                        $typeVisite . '/' . $numeroEquipement . '_generale.jpg';
+            
+            error_log("Recherche image: {$imagePath}");
+            
+            if (file_exists($imagePath)) {
+                error_log("Image trouvée pour {$numeroEquipement}");
+                return base64_encode(file_get_contents($imagePath));
+            } else {
+                error_log("Image NON trouvée pour {$numeroEquipement}");
+                return null;
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération image pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+            return null;
         }
     }
 }
