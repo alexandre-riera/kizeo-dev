@@ -538,4 +538,57 @@ class ImageStorageService
         ];
     }
 
+    /**
+     * Récupère l'URL de l'image générale d'un équipement
+     */
+    public function getGeneralImageUrl(
+        string $agence, 
+        string $raisonSociale, 
+        string $annee, 
+        string $typeVisite, 
+        string $codeEquipement
+    ): ?string {
+        // Chercher l'image avec le suffixe _generale
+        $generalImagePath = $this->getImagePath(
+            $agence,
+            $raisonSociale,
+            $annee,
+            $typeVisite,
+            $codeEquipement . '_generale'
+        );
+        
+        if ($generalImagePath) {
+            // Convertir le chemin absolu en URL relative
+            $relativePath = str_replace($this->baseImagePath, '/img/', $generalImagePath);
+            return $relativePath;
+        }
+        
+        return null;
+    }
+
+    /**
+     * Récupère l'image générale en base64 pour PDF
+     */
+    public function getGeneralImageBase64(
+        string $agence, 
+        string $raisonSociale, 
+        string $annee, 
+        string $typeVisite, 
+        string $codeEquipement
+    ): ?string {
+        $generalImagePath = $this->getImagePath(
+            $agence,
+            $raisonSociale,
+            $annee,
+            $typeVisite,
+            $codeEquipement . '_generale'
+        );
+        
+        if ($generalImagePath && file_exists($generalImagePath)) {
+            return base64_encode(file_get_contents($generalImagePath));
+        }
+        
+        return null;
+    }
+
 }
