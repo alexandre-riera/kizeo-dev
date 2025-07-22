@@ -60,8 +60,6 @@
                                 
                                 {% if equipment.getAnomalies() is not empty %}
                                     <td>{{ equipment.getAnomalies() }}</td>
-                                {% else %}
-                                    <td></td>
                                 {% endif %}
                                 {% if equipment.etat is not empty %}                                
                                     {%if equipment.etat == "A" %}
@@ -100,7 +98,7 @@
                                         {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                         
-                                        {% elseif equipment.statutDeMaintenance == "RAS" %}
+                                        {% elseif equipment.getNumeroDeSerie() is null %}
                                         <td><figure><img style="height:35px;width:35px;" src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/absent.png') }} " alt="etat-equipement" /><figcaption>Absent</figcaption></figure></td>
                                     {% endif %}
                                     
@@ -198,8 +196,6 @@
                                 
                                 {% if equipment.getAnomalies() is not empty %}
                                     <td>{{ equipment.getAnomalies() }}</td>
-                                {% else %}
-                                    <td></td>
                                 {% endif %}
                                 {% if equipment.etat is not empty %}
                                 
