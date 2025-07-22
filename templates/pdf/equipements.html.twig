@@ -190,14 +190,20 @@
     
     <div class="summary">
         <h3>Résumé</h3>
-        <p><strong>Nombre d'équipements visités :</strong> {{ equipmentsWithPictures|length }}</p>
+        <p><strong>Nombre d'équipements au contrat :</strong> 
+            {% if statistiques is defined and statistiques.totalAuContrat is defined %}
+                {{ statistiques.totalAuContrat }}
+            {% else %}
+                {{ (equipmentsWithPictures|filter(e => e.equipment.isEnMaintenance))|length }}
+            {% endif %}
+        </p>
         <p><strong>Nombre d'équipements inexistants :</strong> {{ equipementsNonPresents|length }}</p>
         <p><strong>Nombre d'équipements supplémentaires :</strong> 
-        {% if statistiquesSupplementaires is defined and statistiquesSupplementaires.total is defined %}
-            {{ statistiquesSupplementaires.total }}
-        {% else %}
-            {{ equipementsSupplementaires|length }}
-        {% endif %}
+            {% if statistiquesSupplementaires is defined and statistiquesSupplementaires.total is defined %}
+                {{ statistiquesSupplementaires.total }}
+            {% else %}
+                {{ equipementsSupplementaires|length }}
+            {% endif %}
         </p>
     </div>
     

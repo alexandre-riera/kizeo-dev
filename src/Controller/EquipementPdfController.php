@@ -135,8 +135,12 @@ class EquipementPdfController extends AbstractController
             // Récupérer les informations client
             $clientSelectedInformations = $this->getClientInformations($agence, $id, $entityManager);
 
+            // ✅ SOLUTION : Filtrer uniquement les équipements au contrat
+            $equipmentsAuContrat = array_filter($equipments, function($equipment) {
+                return $equipment->isEnMaintenance() === true;
+            });
             // Statistiques des équipements 
-            $statistiques = $this->calculateEquipmentStatistics($equipments);
+            $statistiques = $this->calculateEquipmentStatistics($equipmentsAuContrat);
 
             $equipmentsWithPictures = [];
             $dateDeDerniererVisite = "";
@@ -411,7 +415,7 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * Calcule les statistiques des équipements
+     * Calcule les statistiques uniquement pour les équipements AU CONTRAT
      */
     private function calculateEquipmentStatistics(array $equipments): array
     {
@@ -419,6 +423,11 @@ class EquipementPdfController extends AbstractController
         $counterInexistant = 0;
         
         foreach ($equipments as $equipment) {
+            // ✅ VÉRIFICATION : S'assurer qu'on ne traite que les équipements au contrat
+            if (!$equipment->isEnMaintenance()) {
+                continue; // Ignorer les équipements hors contrat
+            }
+            
             $etat = $equipment->getEtat();
             
             if ($etat === "Equipement non présent sur site" || $etat === "G") {
@@ -431,35 +440,16 @@ class EquipementPdfController extends AbstractController
             }
         }
         
-        $getLogoByEtat = function($etat) {
-            switch ($etat) {
-                case "Bon état":
-                case "Fonctionnement ok":
-                    return 'vert';
-                case "Travaux à prévoir":
-                    return 'orange';
-                case "Travaux curatifs":
-                case "Equipement à l'arrêt le jour de la visite":
-                case "Equipement mis à l'arrêt lors de l'intervention":
-                    return 'rouge';
-                case "Equipement inaccessible le jour de la visite":
-                case "Equipement non présent sur site":
-                    return 'noir';
-                default:
-                    return 'noir';
-            }
-        };
-        
         return [
             'etatsCount' => $etatsCount,
             'counterInexistant' => $counterInexistant,
-            'getLogoByEtat' => $getLogoByEtat
+            'totalAuContrat' => count($equipments) // ✅ AJOUT : Total des équipements au contrat
         ];
     }
 
     /**
-     * Calcule les statistiques des équipements supplémentaires
-     * CORRECTION : Inclure tous les équipements supplémentaires valides
+     * Calcule les statistiques des équipements supplémentaires (HORS CONTRAT)
+     * avec conversion des codes d'état en libellés lisibles
      */
     private function calculateSupplementaryStatistics(array $equipementsSupplementaires): array
     {
@@ -468,24 +458,56 @@ class EquipementPdfController extends AbstractController
         
         foreach ($equipementsSupplementaires as $equipmentData) {
             $equipment = $equipmentData['equipment'];
-            $etat = $equipment->getEtat();
             
-            // ✅ CORRECTION : Ne pas exclure d'états sauf si vraiment inexistants
-            // Seuls les équipements "Equipement non présent sur site" sont exclus
-            if ($etat && $etat !== "Equipement non présent sur site") {
-                $totalSupplementaires++; // Compter tous les équipements valides
+            // ✅ VÉRIFICATION : S'assurer qu'on ne traite que les équipements hors contrat
+            if ($equipment->isEnMaintenance()) {
+                continue; // Ignorer les équipements au contrat
+            }
+            
+            $etatCode = $equipment->getEtat();
+            
+            // ✅ CONVERSION des codes d'état en libellés lisibles
+            $etatLibelle = $this->convertEtatCodeToLibelle($etatCode);
+            
+            if ($etatLibelle && $etatCode !== "Equipement non présent sur site" && $etatCode !== "G") {
+                $totalSupplementaires++;
                 
-                if (!isset($etatsCountSupplementaires[$etat])) {
-                    $etatsCountSupplementaires[$etat] = 0;
+                if (!isset($etatsCountSupplementaires[$etatLibelle])) {
+                    $etatsCountSupplementaires[$etatLibelle] = 0;
                 }
-                $etatsCountSupplementaires[$etat]++;
+                $etatsCountSupplementaires[$etatLibelle]++;
             }
         }
         
         return [
             'etatsCount' => $etatsCountSupplementaires,
-            'total' => $totalSupplementaires  // ✅ AJOUT : Total unifié
+            'total' => $totalSupplementaires
         ];
+    }
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Convertit les codes d'état en libellés lisibles
+     */
+    private function convertEtatCodeToLibelle(string $etatCode): string
+    {
+        switch ($etatCode) {
+            case 'A':
+                return 'Bon état';
+            case 'B':
+                return 'Travaux à prévoir';
+            case 'C':
+                return 'Travaux curatifs urgents';
+            case 'D':
+                return 'Equipement inaccessible';
+            case 'E':
+            case 'F':
+                return 'Equipement à l\'arrêt';
+            case 'G':
+                return 'Equipement non présent sur site';
+            default:
+                // Si ce n'est pas un code, retourner tel quel (déjà un libellé)
+                return $etatCode;
+        }
     }
 
     /**
