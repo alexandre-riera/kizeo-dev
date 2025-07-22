@@ -60,6 +60,8 @@
                                 
                                 {% if equipment.getAnomalies() is not empty %}
                                     <td>{{ equipment.getAnomalies() }}</td>
+                                {% else %}
+                                    <td></td>
                                 {% endif %}
                                 {% if equipment.etat is not empty %}                                
                                     {%if equipment.etat == "A" %}
