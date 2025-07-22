@@ -235,9 +235,9 @@
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                         {% elseif equipment.statutDeMaintenance == "Inaccessible" %}
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
-                                        
-                                        {% elseif equipment.statutDeMaintenance == "Non présent" %}
-                                        <td>{{ equipment.getStatutDeMaintenance() }}</td>
+
+                                        {% elseif equipment.etat == "Non présent" or equipment.etat == "Equipement non présent sur site" %}
+                                        <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/absent.png') }} " alt="etat-equipement" /><figcaption>{{ equipment.getStatutDeMaintenance() }}</figcaption></figure></td>
                                     {% endif %}
                                     
                                     <td>
