@@ -370,7 +370,7 @@
                             {% else %}
                                 {# Affichage de la première image comme principale #}
                             {% endif %} -->
-                            <img src="data:image/jpeg;base64,(equipment.numeroEquipement ~ '_generale.jpg')" class="main-photo" alt="Photo équipement">
+                            <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
                         {% endfor %}
                     </td>
                     <td style="width: 70%;">
