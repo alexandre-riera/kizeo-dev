@@ -241,11 +241,11 @@ class EquipementPdfController extends AbstractController
                     'code_equipement' => $equipment->getNumeroEquipement(), 
                     'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
                 ]);
-                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipmentOptimized($picturesArray, $entityManager, $equipment);
             } else {
                 // SUPPLÉMENTAIRES: photo_compte_rendu
                 // Équipements SUPPLÉMENTAIRES - nouvelle méthode spécialisée
-                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdSupplementaryEquipment($entityManager, $equipment);
+                $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdSupplementaryEquipmentOptimized($entityManager, $equipment);
             }
             
             $equipmentsWithPictures[] = [
