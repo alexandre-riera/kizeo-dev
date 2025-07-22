@@ -359,7 +359,6 @@
     {% for equipmentData in equipmentsWithPictures %}
         {% set equipment = equipmentData.equipment %}
         {% set pictures = equipmentData.pictures %}
-        {% dump(pictures) %}
         <div class="equipement">
             
             
@@ -367,9 +366,9 @@
                 <tr>
                     <td rowspan="5" class="equipment-image">
                         {% if pictures|length > 2 %}
-                            <img src="data:image/jpeg;base64,{{ pictures[2].picture }}" class="main-photo" alt="Photo équipement">
+                            <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ "_generale.jpg" }}" class="main-photo" alt="Photo équipement">
                         {% elseif pictures|length > 0 %}
-                            <img src="data:image/jpeg;base64,{{ pictures[1].picture }}" class="main-photo" alt="Photo équipement">
+                            <img src="data:image/jpeg;base64,{{ equipment.numeroEquipement ~ "_generale.jpg" }}" class="main-photo" alt="Photo équipement">
                         {% else %}
                             {# Si aucune photo n'est disponible, afficher un message #}
                             <div class="no-image">
