@@ -1,3 +1,266 @@
+
+Tous les projets
+Gestion de parc équipements
+Privé
+Application en PHP sous Symfony interfaçant les données issues de KIZEO FORMS pour afficher en front le parc équipement d'un client sous forme de tableau
+
+
+
+
+Removing PDF White Margins with DOMPDF
+Dernier message il y a 14 heures
+PDF Equipment Image Display Issue
+Dernier message il y a 15 heures
+PDF Equipment Report Counting Error
+Dernier message il y a 1 jour
+Symfony Service Injection Error
+Dernier message il y a 1 jour
+PDF Generator Code Refactoring
+Dernier message il y a 1 jour
+Local Photo Storage for Equipment
+Dernier message il y a 1 jour
+PDF Generation Automation Route
+Dernier message il y a 1 jour
+Symfony Twig Template Rendering Error
+Dernier message il y a 4 jours
+Off-Contract Equipment Registration Issue
+Dernier message il y a 5 jours
+Symfony Agency Role Selection Issue
+Dernier message il y a 6 jours
+User Agency Role Management
+Dernier message il y a 6 jours
+Symfony Redis Configuration Error
+Dernier message il y a 12 jours
+Cron Task Troubleshooting in PHP
+Dernier message il y a 12 jours
+Updating Photo Retrieval Function
+Dernier message il y a 13 jours
+Duplicate Template Line Issue
+Dernier message il y a 13 jours
+PDF Equipment Anomalies Display Issue
+Dernier message il y a 13 jours
+PDF Generation Performance Timeout
+Dernier message il y a 14 jours
+Je veux enregistrer en base de...
+Dernier message il y a 14 jours
+Database Photo Saving Issue
+Dernier message il y a 15 jours
+PDF Equipment Table Generation
+Dernier message il y a 15 jours
+PDF Equipment Photos Display Issue
+Dernier message il y a 15 jours
+Kizeo Forms Equipment List Update
+Dernier message il y a 18 jours
+Database Sync and Caching Issue
+Dernier message il y a 19 jours
+Kizeo Forms Webhook GET Request Issues
+Dernier message il y a 19 jours
+Technical Documentation for Form Submission System
+Dernier message il y a 22 jours
+Kizeo Forms Equipment List Update
+Dernier message il y a 22 jours
+PHP Entity Type Mismatch Errors
+Dernier message il y a 22 jours
+Redis Cache TTL Adjustment
+Dernier message il y a 26 jours
+PHP Controller Refactoring Strategy
+Dernier message il y a 26 jours
+Equipment Contract Update Logic
+Dernier message il y a 26 jours
+Symfony Submission Processing Performance
+Dernier message il y a 26 jours
+SMTP Authentication Error in Password Reset
+Dernier message il y a 26 jours
+PHP Array vs String Type Error
+Dernier message il y a 27 jours
+Kizeo Forms API Data Retrieval Issue
+Dernier message il y a 27 jours
+Symfony Maintenance API Documentation
+Dernier message il y a 29 jours
+Equipment Numbering Error in Contract System
+Dernier message il y a 29 jours
+Equipment Log Processing System
+Dernier message il y a 29 jours
+S140 API Integration Issue
+Dernier message il y a 29 jours
+Kizeo Forms API Documentation
+Dernier message il y a 1 mois
+PHP Memory Exhaustion Error
+Dernier message il y a 1 mois
+Optimizing Form Data Controller
+Dernier message il y a 1 mois
+PHP Form Photo Upload Optimization
+Dernier message il y a 1 mois
+Form Controller Code Update
+Dernier message il y a 1 mois
+Marking Forms as Unread API Route
+Dernier message il y a 1 mois
+Kizeo Forms API Data Registration Issue
+Dernier message il y a 1 mois
+Database Update Issue with Equipment Data
+Dernier message il y a 1 mois
+DomPdf Margin Removal Techniques
+Dernier message il y a 1 mois
+PHP Kizeo Equipment Sync Error
+Dernier message il y a 1 mois
+Kizeo Forms Equipment Data Sync Issue
+Dernier message il y a 1 mois
+Generating PDF Report with Equipment Status Statistics
+Dernier message il y a 1 mois
+Generating PDF with Equipment Status Statistics
+Dernier message il y a 1 mois
+Generating PDF reports for filtered equipment
+Dernier message il y a 2 mois
+Generating PDF Reports for Client Equipment Data
+Dernier message il y a 2 mois
+Connaissances du projet
+14 % de la capacité du projet utilisée
+Récupération en cours
+
+PdfGenerator.php
+47 lignes
+
+php
+
+
+
+FormRepository.php
+3 244 lignes
+
+php
+
+
+
+EquipementPdfController.php
+725 lignes
+
+php
+
+
+
+templates/pdf/equipements.html.twig
+566 lignes
+
+text
+
+
+
+SimplifiedMaintenanceController.php
+6 259 lignes
+
+php
+
+
+
+HomeController.php
+734 lignes
+
+php
+
+
+
+templates/home/index.html.twig
+779 lignes
+
+text
+
+
+
+config/security.yaml
+62 lignes
+
+yaml
+
+
+
+templates/user/edit.html.twig
+181 lignes
+
+text
+
+
+
+templates/pdf/equipements.html.twig
+454 lignes
+
+text
+
+
+
+ImageStorageService.php
+235 lignes
+
+php
+
+
+
+Contenu 1 équipement
+5 301 lignes
+
+text
+
+
+
+EquipementS10.php
+563 lignes
+
+php
+
+
+
+Procédure de Reset - Système Kizeo Forms.md
+300 lignes
+
+md
+
+
+
+ProcessKizeoFormsCommand.php
+128 lignes
+
+php
+
+
+
+Documentation Technique - Système de Gestion des Équipements Kizeo Forms.md
+1 088 lignes
+
+md
+
+
+
+TestRedisCommand.php
+53 lignes
+
+php
+
+
+
+services.yaml
+39 lignes
+
+yaml
+
+
+
+Documentation API - Maintenance Optimisée.md
+276 lignes
+
+md
+
+
+Formulaires et leur nombre de soumissions à traiter.png
+
+equipements_client_5454_S50_filtered_2025_CE1.pdf
+pdf
+
+
+
+EquipementPdfController.php
+33.05 Ko •725 lignes
+•
+Le formatage peut être différent de la source
+
 <?php
 // src/Controller/EquipementPdfController.php
 namespace App\Controller;
@@ -30,7 +293,6 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
-use App\Service\ImageStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -95,7 +357,7 @@ class EquipementPdfController extends AbstractController
      * Route: /client/equipements/pdf/{agence}/{id}
      */
     #[Route('/client/equipements/pdf/{agence}/{id}', name: 'client_equipements_pdf')]
-    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager, ImageStorageService $imageStorageService): Response
+    public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
         // Initialiser les métriques de performance
         $startTime = microtime(true);
@@ -151,40 +413,43 @@ class EquipementPdfController extends AbstractController
                 $picturesData = [];
                 $photoSource = 'none';
                 
-                // D'abord essayer de récupérer l'image _generale.jpg
-                $generalImageBase64 = $this->getGeneralImageForEquipment($equipment, $clientAnneeFilter, $clientVisiteFilter);
-                
-                if ($generalImageBase64) {
-                    $picturesdataObject = new \stdClass();
-                    $picturesdataObject->picture = $generalImageBase64;
-                    $picturesdataObject->photo_type = 'generale';
-                    $picturesdataObject->update_time = date('Y-m-d H:i:s');
-                    
-                    $picturesData[] = $picturesdataObject;
-                    $photoSource = 'local_general';
-                }
-                
-                // Si pas d'image générale, utiliser la méthode existante
-                if (empty($picturesData)) {
-                    try {
-                        if ($equipment->isEnMaintenance()) {
-                            $picturesData = $entityManager->getRepository(Form::class)
-                                ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
-                        } else {
-                            $picturesData = $entityManager->getRepository(Form::class)
-                                ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
-                        }
+                try {
+                    // Distinguer entre équipements au contrat et supplémentaires
+                    if ($equipment->isEnMaintenance()) {
+                        // ÉQUIPEMENTS AU CONTRAT - Utiliser la méthode optimisée
+                        $picturesData = $entityManager->getRepository(Form::class)
+                            ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
                         $photoSource = !empty($picturesData) ? 'local' : 'none';
-                    } catch (\Exception $e) {
-                        error_log("Erreur fallback pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
-                        $photoSource = 'none';
+                    } else {
+                        // ÉQUIPEMENTS SUPPLÉMENTAIRES - Utiliser la méthode spécialisée optimisée
+                        $picturesData = $entityManager->getRepository(Form::class)
+                            ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
+                        $photoSource = !empty($picturesData) ? 'local' : 'none';
                     }
+                    
+                    // Si pas de photos locales, fallback vers l'API (uniquement si nécessaire)
+                    if (empty($picturesData) && $this->shouldUseFallback()) {
+                        if ($equipment->isEnMaintenance()) {
+                            $picturesData = $this->getEquipmentPicturesWithFallback($equipment, $entityManager);
+                        } else {
+                            $picturesData = $this->getSupplementaryEquipmentPicturesWithFallback($equipment, $entityManager);
+                        }
+                        $photoSource = !empty($picturesData) ? 'api_fallback' : 'none';
+                    }
+                    
+                } catch (\Exception $e) {
+                    // Log l'erreur mais continue le traitement
+                    error_log("Erreur récupération photos pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                    $photoSource = 'none';
                 }
+                
+                // Compter les sources de photos pour statistiques
+                $photoSourceStats[$photoSource]++;
                 
                 $equipmentsWithPictures[] = [
                     'equipment' => $equipment,
                     'pictures' => $picturesData,
-                    'photo_source' => $photoSource
+                    'photo_source' => $photoSource // Pour debugging
                 ];
                 
                 // Récupérer la date de dernière visite
@@ -207,14 +472,6 @@ class EquipementPdfController extends AbstractController
 
             // URL de l'image d'agence
             $imageUrl = $this->getImageUrlForAgency($agence);
-
-            // Avant le rendu du template
-            error_log("=== TEMPLATE DATA ===");
-            error_log("Nombre total d'équipements: " . count($equipmentsWithPictures));
-            foreach ($equipmentsWithPictures as $i => $equipData) {
-                error_log("Équipement {$i}: " . $equipData['equipment']->getNumeroEquipement() . 
-                        " - Photos: " . count($equipData['pictures']));
-            }
             
             // GÉNÉRATION DU PDF avec template équipements (multi-équipements)
             $html = $this->renderView('pdf/equipements.html.twig', [
@@ -726,42 +983,6 @@ class EquipementPdfController extends AbstractController
         } catch (\Exception $e) {
             error_log("Erreur fallback API pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
             return [];
-        }
-    }
-
-    private function getGeneralImageForEquipment($equipment, $clientAnneeFilter, $clientVisiteFilter): ?string
-    {
-        try {
-            // Construire le chemin vers l'image _generale.jpg
-            $agence = $equipment->getCodeAgence();
-            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
-            $anneeVisite = $clientAnneeFilter ?: date('Y', strtotime($equipment->getDateEnregistrement()));
-            $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
-            $numeroEquipement = $equipment->getNumeroEquipement();
-            
-            // Nettoyer la raison sociale (comme dans ImageStorageService)
-            $cleanRaisonSociale = preg_replace('/[^a-zA-Z0-9_\-.]/', '_', $raisonSociale);
-            $cleanRaisonSociale = preg_replace('/_+/', '_', $cleanRaisonSociale);
-            $cleanRaisonSociale = trim($cleanRaisonSociale, '_');
-            
-            // Construire le chemin complet
-            $imagePath = $this->getParameter('kernel.project_dir') . '/public/img/' . 
-                        $agence . '/' . $cleanRaisonSociale . '/' . $anneeVisite . '/' . 
-                        $typeVisite . '/' . $numeroEquipement . '_generale.jpg';
-            
-            error_log("Recherche image: {$imagePath}");
-            
-            if (file_exists($imagePath)) {
-                error_log("Image trouvée pour {$numeroEquipement}");
-                return base64_encode(file_get_contents($imagePath));
-            } else {
-                error_log("Image NON trouvée pour {$numeroEquipement}");
-                return null;
-            }
-            
-        } catch (\Exception $e) {
-            error_log("Erreur récupération image pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
-            return null;
         }
     }
 }
