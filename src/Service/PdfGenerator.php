@@ -41,7 +41,7 @@ class PdfGenerator
         // $htmlWithExtraCSS = $this->addAntiMarginCSS($html);
         
         $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($htmlWithExtraCSS);
+        // $dompdf->loadHtml($htmlWithExtraCSS);
         
         // 🔧 Configuration du papier avec marges explicites à 0
         $dompdf->setPaper('A4', 'portrait');
