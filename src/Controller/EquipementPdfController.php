@@ -253,9 +253,7 @@ class EquipementPdfController extends AbstractController
             $filename .= '.pdf';
             
             // Générer le PDF
-            // $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
-            // 🎯 NOUVELLE VERSION sans marges
-            $pdfContent = $this->pdfGenerator->generatePdfNoMargins($html, $filename);
+            $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
             
             // Log des métriques de performance
             $totalTime = round(microtime(true) - $startTime, 2);
