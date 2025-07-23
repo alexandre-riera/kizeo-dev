@@ -363,7 +363,15 @@
             <table class="info-table"> 
                 <tr>
                     <td rowspan="5" class="equipment-image">
-                        <img src="{{ 'https://www.dev.backend-kizeo.somafi-group.fr/public/img/' ~ clientSelectedInformations.getRaisonSociale() ~ '/' ~ clientAnneeFilter ~ '/' ~ clientVisiteFilter ~ '/' ~ equipment.numeroEquipement ~ '_generale.jpg' }}" class="main-photo" alt="Photo équipement">
+                        {% if pictures|length > 0 %}
+                            <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" 
+                                class="main-photo" 
+                                alt="Photo équipement {{ equipment.numeroEquipement }}">
+                        {% else %}
+                            <div class="no-image">
+                                <em>Aucune photo disponible</em>
+                            </div>
+                        {% endif %}
                     </td>
                     <td style="width: 70%;">
                         <table>
@@ -475,9 +483,11 @@
                     <table class="info-table">
                         
                         <tr>
-                            <td rowspan="6" class="equipment-image"> {# Changé de 5 à 6 pour inclure les anomalies #}
+                            <td rowspan="5" class="equipment-image">
                                 {% if pictures|length > 0 %}
-                                    <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="main-photo" alt="Photo équipement">
+                                    <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" 
+                                        class="main-photo" 
+                                        alt="Photo équipement {{ equipment.numeroEquipement }}">
                                 {% else %}
                                     <div class="no-image">
                                         <em>Aucune photo disponible</em>

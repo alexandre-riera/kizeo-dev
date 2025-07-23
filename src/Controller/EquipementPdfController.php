@@ -30,6 +30,7 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Service\ImageStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -39,10 +40,12 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 class EquipementPdfController extends AbstractController
 {
     private $pdfGenerator;
+    private $imageStorageService;
     
-    public function __construct(PdfGenerator $pdfGenerator)
+    public function __construct(PdfGenerator $pdfGenerator, ImageStorageService $imageStorageService)
     {
         $this->pdfGenerator = $pdfGenerator;
+        $this->imageStorageService = $imageStorageService;
     }
     
     /**
@@ -149,44 +152,56 @@ class EquipementPdfController extends AbstractController
             foreach ($equipments as $equipment) {
                 $picturesData = [];
                 $photoSource = 'none';
+                $generalImageBase64 = null;
                 
                 try {
-                    // Distinguer entre équipements au contrat et supplémentaires
-                    if ($equipment->isEnMaintenance()) {
-                        // ÉQUIPEMENTS AU CONTRAT - Utiliser la méthode optimisée
-                        $picturesData = $entityManager->getRepository(Form::class)
-                            ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
-                        $photoSource = !empty($picturesData) ? 'local' : 'none';
-                    } else {
-                        // ÉQUIPEMENTS SUPPLÉMENTAIRES - Utiliser la méthode spécialisée optimisée
-                        $picturesData = $entityManager->getRepository(Form::class)
-                            ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
-                        $photoSource = !empty($picturesData) ? 'local' : 'none';
+                    // Extraire les informations pour construire le chemin
+                    $agence = $equipment->getCodeAgence();
+                    $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+                    $anneeVisite = $clientAnneeFilter ?: date('Y', strtotime($equipment->getDateEnregistrement()));
+                    $typeVisite = $clientVisiteFilter ?: $equipment->getVisite();
+                    
+                    // Récupérer l'image générale en base64
+                    $generalImageBase64 = $this->imageStorageService->getGeneralImageBase64(
+                        $agence,
+                        $raisonSociale,
+                        $anneeVisite,
+                        $typeVisite,
+                        $equipment->getNumeroEquipement()
+                    );
+                    
+                    if ($generalImageBase64) {
+                        $photoSource = 'local_general';
+                        // Créer un objet picture compatible avec le template
+                        $picturesdataObject = new \stdClass();
+                        $picturesdataObject->picture = $generalImageBase64;
+                        $picturesdataObject->photo_type = 'generale';
+                        $picturesdataObject->update_time = date('Y-m-d H:i:s');
+                        
+                        $picturesData[] = $picturesdataObject;
                     }
                     
-                    // Si pas de photos locales, fallback vers l'API (uniquement si nécessaire)
-                    if (empty($picturesData) && $this->shouldUseFallback()) {
+                    // Si pas d'image générale locale, fallback vers la méthode existante
+                    if (empty($picturesData)) {
                         if ($equipment->isEnMaintenance()) {
-                            $picturesData = $this->getEquipmentPicturesWithFallback($equipment, $entityManager);
+                            $picturesData = $entityManager->getRepository(Form::class)
+                                ->getPictureArrayByIdEquipmentOptimized($equipment, $entityManager);
                         } else {
-                            $picturesData = $this->getSupplementaryEquipmentPicturesWithFallback($equipment, $entityManager);
+                            $picturesData = $entityManager->getRepository(Form::class)
+                                ->getPictureArrayByIdSupplementaryEquipmentOptimized($equipment, $entityManager);
                         }
-                        $photoSource = !empty($picturesData) ? 'api_fallback' : 'none';
+                        $photoSource = !empty($picturesData) ? 'fallback' : 'none';
                     }
                     
                 } catch (\Exception $e) {
-                    // Log l'erreur mais continue le traitement
-                    error_log("Erreur récupération photos pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+                    error_log("Erreur récupération photo générale pour équipement {$equipment->getNumeroEquipement()}: " . $e->getMessage());
                     $photoSource = 'none';
                 }
-                
-                // Compter les sources de photos pour statistiques
-                $photoSourceStats[$photoSource]++;
                 
                 $equipmentsWithPictures[] = [
                     'equipment' => $equipment,
                     'pictures' => $picturesData,
-                    'photo_source' => $photoSource // Pour debugging
+                    'photo_source' => $photoSource
                 ];
                 
                 // Récupérer la date de dernière visite

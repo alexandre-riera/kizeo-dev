@@ -20,11 +20,6 @@ class PdfGenerator
         $options->set('debugLayoutBlocks', false);
         $options->set('debugLayoutInline', false);
         $options->set('debugLayoutPaddingBox', false);
-
-        $options->set('marginTop', 0);
-        $options->set('marginBottom', 0);
-        $options->set('marginLeft', 0);
-        $options->set('marginRight', 0);
         
         // Pour les images base64
         $options->set('enable_font_subsetting', true);
