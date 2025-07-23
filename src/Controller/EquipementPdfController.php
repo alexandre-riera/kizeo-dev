@@ -255,10 +255,7 @@ class EquipementPdfController extends AbstractController
             // Générer le PDF
             // $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
             // 🎯 NOUVELLE VERSION sans marges
-            // $pdfContent = $this->pdfGenerator->generatePdfNoMargins($html, $filename);
-            // OU alternative : Nettoyer le HTML avant génération
-            $cleanHtml = $this->cleanHtmlForPdf($html);
-            $pdfContent = $this->pdfGenerator->generatePdf($cleanHtml, $filename);
+            $pdfContent = $this->pdfGenerator->generatePdfNoMargins($html, $filename);
             
             // Log des métriques de performance
             $totalTime = round(microtime(true) - $startTime, 2);
@@ -282,30 +279,6 @@ class EquipementPdfController extends AbstractController
             // En cas d'erreur majeure, fallback vers l'ancienne méthode complète
             return $this->generateClientEquipementsPdfFallback($request, $agence, $id, $entityManager, $e);
         }
-    }
-
-    /**
-    * 🆕 Méthode helper pour nettoyer le HTML et supprimer les marges problématiques
-     */
-    private function cleanHtmlForPdf($html)
-    {
-        // Supprimer le padding-top problématique
-        $html = str_replace('padding-top: 150px;', 'padding-top: 0px;', $html);
-        
-        // Ajouter du CSS anti-marge supplémentaire
-        $extraCSS = '
-            <style>
-                @page { margin: 0mm !important; }
-                body { margin: 0 !important; padding: 20px 15px !important; }
-            </style>
-        ';
-        
-        // Injecter le CSS
-        if (strpos($html, '</head>') !== false) {
-            $html = str_replace('</head>', $extraCSS . '</head>', $html);
-        }
-        
-        return $html;
     }
 
     /**
