@@ -38,7 +38,7 @@ class PdfGenerator
         $options->set('defaultMediaType', 'print');
         
         // 🎯 NOUVELLE OPTION : Ajuster le CSS pour supprimer les marges
-        $htmlWithExtraCSS = $this->addAntiMarginCSS($html);
+        // $htmlWithExtraCSS = $this->addAntiMarginCSS($html);
         
         $dompdf = new Dompdf($options);
         $dompdf->loadHtml($htmlWithExtraCSS);
@@ -47,7 +47,7 @@ class PdfGenerator
         $dompdf->setPaper('A4', 'portrait');
         
         // 🎯 NOUVEAU : Forcer les marges à 0 après le setPaper
-        $dompdf->getCanvas()->get_cpdf()->selectFont('Helvetica');
+        // $dompdf->getCanvas()->get_cpdf()->selectFont('Helvetica');
         
         $dompdf->render();
         
