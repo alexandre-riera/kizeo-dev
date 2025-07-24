@@ -54,7 +54,7 @@ services:
     # Configuration du contrôleur avec injection des dépendances
     App\Controller\SimplifiedMaintenanceController:
         arguments:
-            $imageStorageService: 'App\Service\ImageStorageService'
+            $imageStorageService: '@App\Service\ImageStorageService'
             $client: '@http_client'
             $logger: '@logger'
 
