@@ -139,14 +139,18 @@
         <div class="galerie-photos">
             <h4>Galerie photos</h4>
             <div class="picture_container">
-                {% for picture in picturesData %}
-                    <div class="card">
-                    <img class="card-img-top" src="{{ 'data://image/jpeg;base64,' ~ picture.picture }}" >
-                        <div class="card-body">
-                            <p class="card-text">{{ picture.update_time }}</p>
+                {% if picturesData|length > 0 %}
+                    {% for pictureData in picturesData %}
+                        <div class="photo-container">
+                            <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
+                            <div class="photo-caption">
+                                Date de mise à jour : {{ pictureData.update_time ? pictureData.update_time|date('d/m/Y H:i') : 'Non renseigné' }}
+                            </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                {% else %}
+                    <p>Aucune photo disponible pour cet équipement.</p>
+                {% endif %}
             </div>
         </div>
     {% endif %}
