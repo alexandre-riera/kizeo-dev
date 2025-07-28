@@ -141,7 +141,7 @@
             <div class="picture_container">
                 {% if picturesData|length > 0 %}
                     {% for pictureData in picturesData %}
-                        {% $pictureData %}
+                        {% pictureData %}
                         <div class="photo-container">
                             <img src="data:image/jpeg;base64,{{ pictureData.picture }}" class="photo" alt="Photo équipement">
                             <div class="photo-caption">
