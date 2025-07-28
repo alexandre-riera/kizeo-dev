@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 
 #[Route('/admin/user')]
 #[IsGranted('ROLE_ADMIN')]
@@ -33,18 +34,54 @@ final class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Hacher le mot de passe
-            $hashedPassword = $passwordHasher->hashPassword(
-                $user,
-                $form->get('password')->getData()
-            );
-            $user->setPassword($hashedPassword);
-            
-            $entityManager->persist($user);
-            $entityManager->flush();
+            try {
+                // Récupérer le mot de passe du formulaire
+                $plainPassword = $form->get('password')->getData();
+                
+                if (empty($plainPassword)) {
+                    $this->addFlash('error', 'Le mot de passe est obligatoire.');
+                    return $this->render('user/new.html.twig', [
+                        'user' => $user,
+                        'form' => $form,
+                    ]);
+                }
 
-            $this->addFlash('success', 'L\'utilisateur a été créé avec succès.');
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                // Hacher le mot de passe
+                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+                $user->setPassword($hashedPassword);
+                
+                // Vérifier que l'utilisateur a au moins un rôle
+                $roles = $user->getRoles();
+                if (empty($roles) || (count($roles) === 1 && $roles[0] === 'ROLE_USER')) {
+                    $this->addFlash('error', 'Au moins un rôle doit être assigné à l\'utilisateur.');
+                    return $this->render('user/new.html.twig', [
+                        'user' => $user,
+                        'form' => $form,
+                    ]);
+                }
+                
+                $entityManager->persist($user);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'L\'utilisateur a été créé avec succès.');
+                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                
+            } catch (UniqueConstraintViolationException $e) {
+                $this->addFlash('error', 'Cet email est déjà utilisé par un autre utilisateur.');
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Une erreur est survenue lors de la création de l\'utilisateur : ' . $e->getMessage());
+            }
+        }
+
+        // Afficher les erreurs de validation
+        if ($form->isSubmitted() && !$form->isValid()) {
+            $errors = [];
+            foreach ($form->getErrors(true) as $error) {
+                $errors[] = $error->getMessage();
+            }
+            if (!empty($errors)) {
+                $this->addFlash('error', 'Erreurs de validation : ' . implode(', ', $errors));
+            }
         }
 
         return $this->render('user/new.html.twig', [
@@ -68,20 +105,24 @@ final class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Vérifier si un nouveau mot de passe a été fourni
-            $password = $form->get('password')->getData();
-            if ($password) {
-                $hashedPassword = $passwordHasher->hashPassword(
-                    $user,
-                    $password
-                );
-                $user->setPassword($hashedPassword);
-            }
-            
-            $entityManager->flush();
+            try {
+                // Vérifier si un nouveau mot de passe a été fourni
+                $password = $form->get('password')->getData();
+                if ($password) {
+                    $hashedPassword = $passwordHasher->hashPassword($user, $password);
+                    $user->setPassword($hashedPassword);
+                }
+                
+                $entityManager->flush();
 
-            $this->addFlash('success', 'L\'utilisateur a été modifié avec succès.');
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                $this->addFlash('success', 'L\'utilisateur a été modifié avec succès.');
+                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                
+            } catch (UniqueConstraintViolationException $e) {
+                $this->addFlash('error', 'Cet email est déjà utilisé par un autre utilisateur.');
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Une erreur est survenue lors de la modification de l\'utilisateur : ' . $e->getMessage());
+            }
         }
 
         return $this->render('user/edit.html.twig', [
@@ -94,9 +135,13 @@ final class UserController extends AbstractController
     public function delete(Request $request, User $user, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($user);
-            $entityManager->flush();
-            $this->addFlash('success', 'L\'utilisateur a été supprimé avec succès.');
+            try {
+                $entityManager->remove($user);
+                $entityManager->flush();
+                $this->addFlash('success', 'L\'utilisateur a été supprimé avec succès.');
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
+            }
         }
 
         return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);

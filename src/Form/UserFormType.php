@@ -7,6 +7,7 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
@@ -22,15 +23,35 @@ class UserFormType extends AbstractType
         $builder
             ->add('first_name', TextType::class, [
                 'label' => 'Prénom',
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le prénom est obligatoire']),
+                    new Length([
+                        'min' => 2,
+                        'max' => 255,
+                        'minMessage' => 'Le prénom doit comporter au moins {{ limit }} caractères'
+                    ])
+                ]
             ])
             ->add('last_name', TextType::class, [
                 'label' => 'Nom',
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Le nom est obligatoire']),
+                    new Length([
+                        'min' => 2,
+                        'max' => 255,
+                        'minMessage' => 'Le nom doit comporter au moins {{ limit }} caractères'
+                    ])
+                ]
             ])
             ->add('email', EmailType::class, [
                 'label' => 'E-mail',
-                'attr' => ['class' => 'form-control']
+                'attr' => ['class' => 'form-control'],
+                'constraints' => [
+                    new NotBlank(['message' => 'L\'email est obligatoire']),
+                    new Email(['message' => 'L\'email n\'est pas valide'])
+                ]
             ])
             ->add('roles', ChoiceType::class, [
                 'label' => 'Rôles',
@@ -58,17 +79,41 @@ class UserFormType extends AbstractType
                 ],
                 'multiple' => true,
                 'expanded' => true,
-                'attr' => ['class' => 'form-check']
+                'attr' => ['class' => 'form-check'],
+                'constraints' => [
+                    new NotBlank(['message' => 'Au moins un rôle doit être sélectionné'])
+                ]
             ]);
 
-        // Ajouter un event listener pour transformer les rôles
+        // Gestion du mot de passe
+        $passwordConstraints = [
+            new Length([
+                'min' => 6,
+                'minMessage' => 'Le mot de passe doit comporter au moins {{ limit }} caractères',
+                'max' => 4096,
+            ]),
+        ];
+        
+        if (!$options['is_edit']) {
+            $passwordConstraints[] = new NotBlank(['message' => 'Le mot de passe est obligatoire']);
+        }
+        
+        $builder->add('password', PasswordType::class, [
+            'label' => 'Mot de passe',
+            'mapped' => false,
+            'required' => !$options['is_edit'],
+            'attr' => ['class' => 'form-control'],
+            'constraints' => $passwordConstraints,
+            'help' => $options['is_edit'] ? 'Laissez vide pour conserver le mot de passe actuel' : null,
+        ]);
+
+        // Event listeners pour traiter les rôles
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) {
             $user = $event->getData();
             if ($user && $user->getRoles()) {
                 $roles = $user->getRoles();
-                // Assurer que c'est un tableau simple
+                // Retirer ROLE_USER automatique et réindexer
                 if (is_array($roles)) {
-                    // Retirer ROLE_USER automatique et réindexer
                     $roles = array_values(array_filter($roles, function($role) {
                         return $role !== 'ROLE_USER';
                     }));
@@ -79,32 +124,31 @@ class UserFormType extends AbstractType
 
         $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event) {
             $data = $event->getData();
-            if (isset($data['roles']) && is_array($data['roles'])) {
-                // S'assurer que les rôles sont dans un tableau indexé numériquement
-                $data['roles'] = array_values($data['roles']);
-                $event->setData($data);
+            
+            // S'assurer que les champs texte ne sont pas vides
+            if (isset($data['first_name'])) {
+                $data['first_name'] = trim($data['first_name']);
             }
+            if (isset($data['last_name'])) {
+                $data['last_name'] = trim($data['last_name']);
+            }
+            if (isset($data['email'])) {
+                $data['email'] = trim($data['email']);
+            }
+            
+            // Traitement des rôles
+            if (isset($data['roles']) && is_array($data['roles'])) {
+                // Filtrer les rôles vides et s'assurer que c'est un tableau indexé numériquement
+                $data['roles'] = array_values(array_filter($data['roles']));
+                
+                // S'assurer qu'au moins un rôle est sélectionné
+                if (empty($data['roles'])) {
+                    $data['roles'] = ['ROLE_USER']; // Valeur par défaut
+                }
+            }
+            
+            $event->setData($data);
         });
-
-        $passwordConstraints = [
-            new Length([
-                'min' => 6,
-                'minMessage' => 'Le mot de passe doit comporter au moins {{ limit }} caractères',
-                'max' => 4096,
-            ]),
-        ];
-        
-        // Ajouter le champ plainPassword
-        $builder->add('password', PasswordType::class, [
-            'label' => 'Mot de passe',
-            'mapped' => false,
-            'required' => !$options['is_edit'],
-            'attr' => ['class' => 'form-control'],
-            'constraints' => $options['is_edit'] 
-                ? $passwordConstraints 
-                : array_merge($passwordConstraints, [new NotBlank(['message' => 'Veuillez entrer un mot de passe'])]),
-            'help' => $options['is_edit'] ? 'Laissez vide pour conserver le mot de passe actuel' : null,
-        ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
