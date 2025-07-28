@@ -666,7 +666,6 @@ class HomeController extends AbstractController
                 $equipment = $entityManager->getRepository(EquipementS50::class)->findOneBy(['id' => $id]); // L'ID remonté est bon
                 $picturesArray = $entityManager->getRepository(Form::class)->findBy(array('code_equipement' => $equipment->getNumeroEquipement(), 'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()));
                 $picturesData = $entityManager->getRepository(Form::class)->getPictureArrayByIdEquipmentOptimized($picturesArray, $entityManager, $equipment);
-                dd($picturesData);
                 break;
             case 'S60':
                 $equipment = $entityManager->getRepository(EquipementS60::class)->findOneBy(['id' => $id]); // L'ID remonté est bon
