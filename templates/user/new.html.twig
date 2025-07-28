@@ -109,55 +109,84 @@
     <br />
     <div class="container py-4">
         <h1>Créer un nouvel utilisateur</h1>
-    
+        
+        {# Affichage des messages flash #}
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+
         <div class="card">
             <div class="card-body">
+                {# IMPORTANT: Utiliser form_start et form_end pour inclure automatiquement le token CSRF #}
                 {{ form_start(form) }}
-                    {{ form_row(form.first_name) }}
-                    {{ form_row(form.last_name) }}
+                    
+                    {# Afficher les erreurs générales du formulaire #}
+                    {{ form_errors(form) }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            {{ form_row(form.first_name) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_row(form.last_name) }}
+                        </div>
+                    </div>
+                    
                     {{ form_row(form.email) }}
+                    {{ form_row(form.password) }}
                     
                     {# Personnalisation du rendu des rôles #}
                     <div class="mb-3">
                         {{ form_label(form.roles) }}
+                        {{ form_errors(form.roles) }}
                         <div class="role-container border rounded p-3">
                             {% set role_groups = {
                                 'Globaux': ['ROLE_ADMIN'],
-                                'SOMAFI': ['ROLE_SOMAFI'],
-                                'Agences': ['ROLE_S10', 'ROLE_S40', 'ROLE_S50', 'ROLE_S60', 'ROLE_S70', 'ROLE_S80', 'ROLE_S90', 'ROLE_S100', 'ROLE_S110', 'ROLE_S120', 'ROLE_S130', 'ROLE_S140', 'ROLE_S150', 'ROLE_S160', 'ROLE_S170'],
+                                'SOMAFI': ['ROLE_SOMAFI', 'ROLE_SOMAFI_EDIT'],
+                                'Agences': [
+                                    'ROLE_S10', 'ROLE_S40', 'ROLE_S50', 'ROLE_S60', 
+                                    'ROLE_S70', 'ROLE_S80', 'ROLE_S100', 'ROLE_S120', 
+                                    'ROLE_S130', 'ROLE_S140', 'ROLE_S150', 'ROLE_S160', 'ROLE_S170'
+                                ],
                                 'KUEHNE': ['ROLE_ADMIN_KUEHNE', 'ROLE_USER_KUEHNE'],
                                 'GLS': ['ROLE_ADMIN_GLS', 'ROLE_USER_GLS']
                             } %}
                             
                             {% for group_name, group_roles in role_groups %}
-                                <div class="role-group mb-2">
-                                    <h6 class="text-muted mb-2">{{ group_name }}</h6>
-                                    <div class="d-flex flex-wrap gap-3">
-                                        {% for child in form.roles.children %}
+                                <div class="role-group mb-3">
+                                    <h6 class="fw-bold text-primary">{{ group_name }}</h6>
+                                    <div class="row">
+                                        {% for child in form.roles %}
                                             {% if child.vars.value in group_roles %}
-                                                <div class="form-check">
-                                                    {{ form_widget(child, {'attr': {'class': 'form-check-input'}}) }}
-                                                    {{ form_label(child, null, {'label_attr': {'class': 'form-check-label'}}) }}
+                                                <div class="col-md-4 col-sm-6">
+                                                    <div class="form-check">
+                                                        {{ form_widget(child) }}
+                                                        {{ form_label(child) }}
+                                                    </div>
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
                                     </div>
                                 </div>
-                                {% if not loop.last %}
-                                    <hr class="my-2">
-                                {% endif %}
                             {% endfor %}
                         </div>
-                        {{ form_errors(form.roles) }}
                     </div>
                     
-                    {{ form_row(form.password) }}
-                    
-                    <div class="mt-4">
-                        <a href="{{ path('app_user_index') }}" class="btn btn-secondary">Annuler</a>
-                        <button type="submit" class="btn btn-success">Enregistrer</button>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Créer l'utilisateur
+                        </button>
+                        <a href="{{ path('app_user_index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Annuler
+                        </a>
                     </div>
-                {{ form_end(form, {'render_rest': false}) }}
+                    
+                {{ form_end(form) }}
             </div>
         </div>
     </div>

@@ -30,57 +30,75 @@ final class UserController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
         $user = new User();
-        $form = $this->createForm(UserFormType::class, $user);
+        
+        // Créer le formulaire avec gestion CSRF explicite
+        $form = $this->createForm(UserFormType::class, $user, [
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id' => 'user_item',
+        ]);
+        
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            try {
-                // Récupérer le mot de passe du formulaire
-                $plainPassword = $form->get('password')->getData();
-                
-                if (empty($plainPassword)) {
-                    $this->addFlash('error', 'Le mot de passe est obligatoire.');
-                    return $this->render('user/new.html.twig', [
-                        'user' => $user,
-                        'form' => $form,
-                    ]);
-                }
-
-                // Hacher le mot de passe
-                $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
-                $user->setPassword($hashedPassword);
-                
-                // Vérifier que l'utilisateur a au moins un rôle
-                $roles = $user->getRoles();
-                if (empty($roles) || (count($roles) === 1 && $roles[0] === 'ROLE_USER')) {
-                    $this->addFlash('error', 'Au moins un rôle doit être assigné à l\'utilisateur.');
-                    return $this->render('user/new.html.twig', [
-                        'user' => $user,
-                        'form' => $form,
-                    ]);
-                }
-                
-                $entityManager->persist($user);
-                $entityManager->flush();
-
-                $this->addFlash('success', 'L\'utilisateur a été créé avec succès.');
-                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
-                
-            } catch (UniqueConstraintViolationException $e) {
-                $this->addFlash('error', 'Cet email est déjà utilisé par un autre utilisateur.');
-            } catch (\Exception $e) {
-                $this->addFlash('error', 'Une erreur est survenue lors de la création de l\'utilisateur : ' . $e->getMessage());
+        if ($form->isSubmitted()) {
+            // Debug CSRF (à retirer après résolution)
+            if (!$this->isCsrfTokenValid('user_item', $request->request->get('_token'))) {
+                $this->addFlash('error', 'Token CSRF invalide. Veuillez réessayer.');
+                return $this->render('user/new.html.twig', [
+                    'user' => $user,
+                    'form' => $form,
+                ]);
             }
-        }
 
-        // Afficher les erreurs de validation
-        if ($form->isSubmitted() && !$form->isValid()) {
-            $errors = [];
-            foreach ($form->getErrors(true) as $error) {
-                $errors[] = $error->getMessage();
-            }
-            if (!empty($errors)) {
-                $this->addFlash('error', 'Erreurs de validation : ' . implode(', ', $errors));
+            if ($form->isValid()) {
+                try {
+                    // Récupérer le mot de passe du formulaire
+                    $plainPassword = $form->get('password')->getData();
+                    
+                    if (empty($plainPassword)) {
+                        $this->addFlash('error', 'Le mot de passe est obligatoire.');
+                        return $this->render('user/new.html.twig', [
+                            'user' => $user,
+                            'form' => $form,
+                        ]);
+                    }
+
+                    // Hacher le mot de passe
+                    $hashedPassword = $passwordHasher->hashPassword($user, $plainPassword);
+                    $user->setPassword($hashedPassword);
+                    
+                    // Vérifier que l'utilisateur a au moins un rôle (autre que ROLE_USER)
+                    $roles = $user->getRoles();
+                    $nonUserRoles = array_filter($roles, fn($role) => $role !== 'ROLE_USER');
+                    
+                    if (empty($nonUserRoles)) {
+                        $this->addFlash('error', 'Au moins un rôle doit être assigné à l\'utilisateur.');
+                        return $this->render('user/new.html.twig', [
+                            'user' => $user,
+                            'form' => $form,
+                        ]);
+                    }
+                    
+                    $entityManager->persist($user);
+                    $entityManager->flush();
+
+                    $this->addFlash('success', 'L\'utilisateur a été créé avec succès.');
+                    return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                    
+                } catch (UniqueConstraintViolationException $e) {
+                    $this->addFlash('error', 'Cet email est déjà utilisé par un autre utilisateur.');
+                } catch (\Exception $e) {
+                    $this->addFlash('error', 'Une erreur est survenue lors de la création de l\'utilisateur : ' . $e->getMessage());
+                }
+            } else {
+                // Afficher les erreurs de validation
+                $errors = [];
+                foreach ($form->getErrors(true) as $error) {
+                    $errors[] = $error->getMessage();
+                }
+                if (!empty($errors)) {
+                    $this->addFlash('error', 'Erreurs de validation : ' . implode(', ', $errors));
+                }
             }
         }
 
@@ -101,7 +119,13 @@ final class UserController extends AbstractController
     #[Route('/{id}/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, User $user, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
-        $form = $this->createForm(UserFormType::class, $user, ['is_edit' => true]);
+        $form = $this->createForm(UserFormType::class, $user, [
+            'is_edit' => true,
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id' => 'user_edit_' . $user->getId(),
+        ]);
+        
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -142,6 +166,8 @@ final class UserController extends AbstractController
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Erreur lors de la suppression : ' . $e->getMessage());
             }
+        } else {
+            $this->addFlash('error', 'Token CSRF invalide pour la suppression.');
         }
 
         return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
