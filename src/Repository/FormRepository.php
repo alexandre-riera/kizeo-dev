@@ -2636,8 +2636,21 @@ class FormRepository extends ServiceEntityRepository
     public function getPictureArrayByIdEquipmentOptimized($equipment, EntityManagerInterface $entityManager): array
     {
         $picturesdata = [];
-        
+    
         try {
+            // NOUVELLE VÉRIFICATION: S'assurer que $equipment est un objet et non un array
+            if (is_array($equipment)) {
+                error_log("ERREUR: getPictureArrayByIdEquipmentOptimized appelé avec un array au lieu d'un objet Equipment");
+                // Fallback vers l'ancienne méthode si c'est un array
+                return [];
+            }
+            
+            // Vérifier que l'objet a les méthodes nécessaires
+            if (!method_exists($equipment, 'getCodeAgence')) {
+                error_log("ERREUR: L'objet passé n'a pas la méthode getCodeAgence()");
+                return [];
+            }
+            
             // Extraire les informations nécessaires de l'équipement
             $agence = $equipment->getCodeAgence();
             $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
@@ -2675,7 +2688,7 @@ class FormRepository extends ServiceEntityRepository
             }
             
         } catch (\Exception $e) {
-            error_log("Erreur récupération photos locales pour {$codeEquipement}: " . $e->getMessage());
+            error_log("Erreur récupération photos locales pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
             // Fallback vers l'ancienne méthode en cas d'erreur
             return $this->getPictureArrayByIdEquipmentFallback($equipment, $entityManager);
         }
