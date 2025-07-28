@@ -31,25 +31,11 @@ final class UserController extends AbstractController
     {
         $user = new User();
         
-        // Créer le formulaire avec gestion CSRF explicite
-        $form = $this->createForm(UserFormType::class, $user, [
-            'csrf_protection' => true,
-            'csrf_field_name' => '_token',
-            'csrf_token_id' => 'user_item',
-        ]);
-        
+        // Créer le formulaire avec la configuration CSRF par défaut
+        $form = $this->createForm(UserFormType::class, $user);
         $form->handleRequest($request);
 
         if ($form->isSubmitted()) {
-            // Debug CSRF (à retirer après résolution)
-            if (!$this->isCsrfTokenValid('user_item', $request->request->get('_token'))) {
-                $this->addFlash('error', 'Token CSRF invalide. Veuillez réessayer.');
-                return $this->render('user/new.html.twig', [
-                    'user' => $user,
-                    'form' => $form,
-                ]);
-            }
-
             if ($form->isValid()) {
                 try {
                     // Récupérer le mot de passe du formulaire
@@ -91,13 +77,13 @@ final class UserController extends AbstractController
                     $this->addFlash('error', 'Une erreur est survenue lors de la création de l\'utilisateur : ' . $e->getMessage());
                 }
             } else {
-                // Afficher les erreurs de validation
+                // Afficher les erreurs de validation (incluant CSRF)
                 $errors = [];
                 foreach ($form->getErrors(true) as $error) {
                     $errors[] = $error->getMessage();
                 }
                 if (!empty($errors)) {
-                    $this->addFlash('error', 'Erreurs de validation : ' . implode(', ', $errors));
+                    $this->addFlash('error', 'Erreurs de validation : ' . implode(' | ', $errors));
                 }
             }
         }
@@ -119,13 +105,7 @@ final class UserController extends AbstractController
     #[Route('/{id}/edit', name: 'app_user_edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, User $user, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher): Response
     {
-        $form = $this->createForm(UserFormType::class, $user, [
-            'is_edit' => true,
-            'csrf_protection' => true,
-            'csrf_field_name' => '_token',
-            'csrf_token_id' => 'user_edit_' . $user->getId(),
-        ]);
-        
+        $form = $this->createForm(UserFormType::class, $user, ['is_edit' => true]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

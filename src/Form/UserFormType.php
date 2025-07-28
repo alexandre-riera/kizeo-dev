@@ -156,6 +156,8 @@ class UserFormType extends AbstractType
         $resolver->setDefaults([
             'data_class' => User::class,
             'is_edit' => false,
+            // Configuration CSRF simplifiée - utilise le nom du formulaire par défaut
+            'csrf_protection' => true,
         ]);
     }
 }
