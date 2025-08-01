@@ -193,14 +193,14 @@ class EmailService
                 </div>
                 
                 <!-- PIED DE PAGE CONTACT -->
-                <div style='background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; padding: 20px; text-align: center; font-size: 12px;'>
-                    <div style='margin-bottom: 10px;'>
+                <div style='background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: black; padding: 20px; text-align: center; font-size: 12px;'>
+                    <div style='margin-bottom: 10px; color:black;'>
                         <strong>SOMAFI Grenoble</strong> | 52 rue de Corporat | Centr'Alp | 38430 MOIRANS
                     </div>
-                    <div style='margin-bottom: 10px;'>
+                    <div style='margin-bottom: 10px; color:black;'>
                         Tél. 04.76.32.66.99 | <a href='mailto:grenoble@somafi-group.fr' style='color: #3498db;'>grenoble@somafi-group.fr</a>
                     </div>
-                    <div style='opacity: 0.8;'>
+                    <div style='opacity: 0.8; color:black;'>
                         🔐 Email sécurisé - " . date('Y') . " | Lien valide jusqu'au " . date('d/m/Y', strtotime('+30 days')) . "
                     </div>
                 </div>
