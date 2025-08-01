@@ -589,36 +589,48 @@ class EquipementPdfController extends AbstractController
                 $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $id]);
                 
                 if ($contact) {
-                    // Essayer différentes méthodes pour récupérer nom et email
                     $nom = '';
                     $email = '';
                     
-                    // Récupération du nom - tester plusieurs getters possibles
+                    // Pour ContactS50, tester les méthodes disponibles
+                    // Récupération du nom/raison sociale
                     if (method_exists($contact, 'getRaisonSociale')) {
                         $nom = $contact->getRaisonSociale();
                     } elseif (method_exists($contact, 'getNom')) {
                         $nom = $contact->getNom();
-                    } elseif (method_exists($contact, 'getNomContact')) {
-                        $nom = $contact->getNomContact();
                     } elseif (method_exists($contact, 'getLibelle')) {
                         $nom = $contact->getLibelle();
+                    } elseif (method_exists($contact, 'getNomContact')) {
+                        $nom = $contact->getNomContact();
                     }
                     
-                    // Récupération de l'email - tester plusieurs getters possibles
+                    // Récupération de l'email - tester plusieurs possibilités
                     if (method_exists($contact, 'getEmail')) {
                         $email = $contact->getEmail();
                     } elseif (method_exists($contact, 'getEmailContact')) {
                         $email = $contact->getEmailContact();
                     } elseif (method_exists($contact, 'getMail')) {
                         $email = $contact->getMail();
+                    } elseif (method_exists($contact, 'getEmailClient')) {
+                        $email = $contact->getEmailClient();
                     }
+                    
+                    // Debug pour voir les méthodes disponibles sur ContactS50
+                    error_log("DEBUG ContactS50 - Méthodes disponibles: " . implode(', ', get_class_methods($contact)));
+                    error_log("DEBUG ContactS50 - Nom trouvé: " . ($nom ?: 'VIDE'));
+                    error_log("DEBUG ContactS50 - Email trouvé: " . ($email ?: 'VIDE'));
                     
                     return [
                         'nom' => $nom ?: "Client {$id}",
                         'email' => $email ?: '',
-                        'id_contact' => $id
+                        'id_contact' => $id,
+                        'agence' => $agence
                     ];
+                } else {
+                    error_log("DEBUG: Contact non trouvé pour ID {$id} dans {$contactEntity}");
                 }
+            } else {
+                error_log("DEBUG: Classe {$contactEntity} n'existe pas");
             }
         } catch (\Exception $e) {
             error_log("Erreur récupération client info: " . $e->getMessage());
@@ -627,24 +639,177 @@ class EquipementPdfController extends AbstractController
         return [
             'nom' => "Client {$id}",
             'email' => '',
-            'id_contact' => $id
+            'id_contact' => $id,
+            'agence' => $agence
         ];
     }
 
+    // ===== 2. AJOUT DE LA ROUTE API POUR RÉCUPÉRER LES INFOS CLIENT =====
     #[Route('/api/client-info/{agence}/{id}', name: 'api_client_info', methods: ['GET'])]
     public function getClientInfoApi(
         string $agence,
         string $id,
         EntityManagerInterface $entityManager
     ): JsonResponse {
-        $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+        try {
+            $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            
+            return new JsonResponse([
+                'success' => true,
+                'client' => $clientInfo,
+                'debug' => [
+                    'agence' => $agence,
+                    'id' => $id,
+                    'entity_class' => "App\\Entity\\Contact{$agence}"
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'client' => [
+                    'nom' => "Client {$id}",
+                    'email' => '',
+                    'id_contact' => $id,
+                    'agence' => $agence
+                ]
+            ], 500);
+        }
+    }
+    private function getEquipmentsByAgency(string $agence, string $clientId, EntityManagerInterface $entityManager, ?string $anneeFilter = null, ?string $visiteFilter = null): array
+    {
+        $equipmentEntity = "App\\Entity\\Equipement{$agence}";
         
-        return new JsonResponse([
-            'success' => true,
-            'client' => $clientInfo
-        ]);
+        if (!class_exists($equipmentEntity)) {
+            error_log("ERREUR: Classe d'équipement {$equipmentEntity} n'existe pas");
+            return [];
+        }
+        
+        try {
+            $criteria = ['id_contact' => $clientId];
+            
+            // Ajouter les filtres si spécifiés
+            if ($anneeFilter) {
+                $criteria['annee'] = $anneeFilter;
+            }
+            if ($visiteFilter) {
+                $criteria['visite'] = $visiteFilter;
+            }
+            
+            $equipments = $entityManager->getRepository($equipmentEntity)->findBy(
+                $criteria,
+                ['numero_equipement' => 'ASC']
+            );
+            
+            error_log("DEBUG: Récupération équipements {$agence} pour client {$clientId} - Trouvés: " . count($equipments));
+            
+            if (empty($equipments)) {
+                // Essayer sans les filtres pour voir s'il y a des équipements
+                $allEquipments = $entityManager->getRepository($equipmentEntity)->findBy(
+                    ['id_contact' => $clientId],
+                    ['numero_equipement' => 'ASC']
+                );
+                
+                error_log("DEBUG: Total équipements sans filtre pour client {$clientId}: " . count($allEquipments));
+                
+                // Si pas d'équipements du tout, l'erreur est légitime
+                if (empty($allEquipments)) {
+                    throw new \Exception("Aucun équipement trouvé pour ce client. Vérifiez l'ID client et l'agence.");
+                }
+                
+                // Si il y a des équipements mais pas avec les filtres, utiliser tous les équipements
+                return $allEquipments;
+            }
+            
+            return $equipments;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération équipements {$agence}: " . $e->getMessage());
+            throw $e;
+        }
     }
 
+    // ===== 4. MÉTHODE POUR TESTER LA CONNEXION À LA BASE DE DONNÉES ContactS50 =====
+    #[Route('/api/test-contact/{agence}/{id}', name: 'api_test_contact', methods: ['GET'])]
+    public function testContactConnection(
+        string $agence,
+        string $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $contactEntity = "App\\Entity\\Contact{$agence}";
+            
+            if (!class_exists($contactEntity)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Classe {$contactEntity} n'existe pas"
+                ]);
+            }
+            
+            // Récupérer le contact
+            $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $id]);
+            
+            if (!$contact) {
+                // Essayer de lister quelques contacts pour debug
+                $allContacts = $entityManager->getRepository($contactEntity)->findBy([], [], 5);
+                
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Contact {$id} non trouvé",
+                    'debug' => [
+                        'entity' => $contactEntity,
+                        'total_contacts_sample' => count($allContacts),
+                        'sample_ids' => array_map(function($c) {
+                            return method_exists($c, 'getIdContact') ? $c->getIdContact() : 'N/A';
+                        }, $allContacts)
+                    ]
+                ]);
+            }
+            
+            // Analyser les méthodes disponibles
+            $methods = get_class_methods($contact);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            // Tester les getters pour nom et email
+            $testResults = [];
+            foreach ($getterMethods as $method) {
+                try {
+                    $value = $contact->$method();
+                    if (is_string($value) && !empty($value)) {
+                        $testResults[$method] = substr($value, 0, 50); // Limiter pour l'affichage
+                    }
+                } catch (\Exception $e) {
+                    // Ignorer les méthodes qui requirent des paramètres
+                }
+            }
+            
+            return new JsonResponse([
+                'success' => true,
+                'contact_found' => true,
+                'entity' => $contactEntity,
+                'available_getters' => $getterMethods,
+                'test_values' => $testResults,
+                'potential_email_methods' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'email') !== false || stripos($method, 'mail') !== false;
+                }),
+                'potential_name_methods' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'nom') !== false || 
+                        stripos($method, 'raison') !== false || 
+                        stripos($method, 'libelle') !== false ||
+                        stripos($method, 'name') !== false;
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
     /**
      * NOUVELLE MÉTHODE: Fallback complet vers l'ancienne méthode
      */ 
