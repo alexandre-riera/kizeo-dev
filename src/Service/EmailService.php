@@ -37,7 +37,7 @@ class EmailService
     }
 
     /**
-     * Envoie le lien PDF par email au client
+     * Envoie le lien PDF par email au client avec le bon sender
      */
     public function sendPdfLinkToClient(
         string $agence,
@@ -46,6 +46,7 @@ class EmailService
         string $shortUrl,
         string $annee,
         string $visite,
+        string $senderTrigramme = 'system', // ✅ Nouveau paramètre
         string $customMessage = ''
     ): bool {
         try {
@@ -68,7 +69,8 @@ class EmailService
             $this->logger->info("Email sécurisé envoyé à {$clientEmail} pour l'agence {$agence}", [
                 'short_url' => $shortUrl,
                 'client' => $clientName,
-                'agence' => $agence
+                'agence' => $agence,
+                'sender' => $senderTrigramme // ✅ Log du sender
             ]);
             
             return true;
@@ -77,6 +79,7 @@ class EmailService
             $this->logger->error("Erreur envoi email: " . $e->getMessage(), [
                 'agence' => $agence,
                 'client_email' => $clientEmail,
+                'sender' => $senderTrigramme,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -409,7 +412,7 @@ class EmailService
             ];
         }
     }
-
+    
     /**
      * Envoie un email de notification interne
      */

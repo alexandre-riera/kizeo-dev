@@ -701,13 +701,15 @@ class EquipementPdfController extends AbstractController
             
             // Envoyer l'email
             $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            $userTrigramme = $this->generateUserTrigramme();
             $emailSent = $this->emailService->sendPdfLinkToClient(
                 $agence,
-                $clientEmail,
-                $clientInfo['nom'] ?? "Client $id",
+                $clientInfo['email'],
+                $clientInfo['nom'] ?: "Client $id",
                 $shortUrl,
                 $annee,
-                $visite
+                $visite,
+                $userTrigramme // ✅ Passer le trigramme
             );
             
             // Enregistrer l'envoi
@@ -728,6 +730,9 @@ class EquipementPdfController extends AbstractController
         }
     }
 
+    /**
+     * Méthode corrigée pour enregistrer l'envoi d'email avec le bon sender
+     */
     private function recordEmailSent(string $agence, string $clientId, string $shortUrl, bool $success, EntityManagerInterface $entityManager): void
     {
         try {
@@ -743,7 +748,11 @@ class EquipementPdfController extends AbstractController
                     $mail->setPdfUrl($shortUrl);
                     $mail->setIsPdfSent($success);
                     $mail->setSentAt(new \DateTimeImmutable());
-                    $mail->setSender('system');
+                    
+                    // ✅ CORRECTION : Utiliser le trigramme de l'utilisateur connecté
+                    $userTrigramme = $this->generateUserTrigramme();
+                    $mail->setSender($userTrigramme);
+                    
                     $mail->setPdfFilename("client_{$clientId}.pdf");
                     
                     $entityManager->persist($mail);
@@ -754,6 +763,49 @@ class EquipementPdfController extends AbstractController
             // Log l'erreur mais ne pas faire échouer la requête principale
             error_log("Erreur enregistrement email: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Génère le trigramme à partir des informations de l'utilisateur connecté
+     * Format: 1ère lettre du prénom + 2 premières lettres du nom (en majuscules)
+     */
+    private function generateUserTrigramme(): string
+    {
+        $user = $this->getUser();
+        
+        if (!$user) {
+            return 'SYS'; // Fallback si pas d'utilisateur connecté
+        }
+        die('DEBUG: Méthodes de l\'utilisateur: ' . implode(', ', get_class_methods($user)));
+        $firstName = $user->getFirstName() ?? '';
+        $lastName = $user->getLastName() ?? '';
+        
+        // Nettoyer et normaliser les chaînes
+        $firstName = strtoupper(trim($firstName));
+        $lastName = strtoupper(trim($lastName));
+        
+        // Construire le trigramme
+        $trigramme = '';
+        
+        // 1ère lettre du prénom
+        if (!empty($firstName)) {
+            $trigramme .= substr($firstName, 0, 1);
+        } else {
+            $trigramme .= 'X'; // Fallback
+        }
+        
+        // 2 premières lettres du nom
+        if (!empty($lastName)) {
+            if (strlen($lastName) >= 2) {
+                $trigramme .= substr($lastName, 0, 2);
+            } else {
+                $trigramme .= $lastName . 'X'; // Compléter avec X si nom trop court
+            }
+        } else {
+            $trigramme .= 'XX'; // Fallback
+        }
+        
+        return $trigramme;
     }
 
     private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
