@@ -1,0 +1,144 @@
+iv class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Gestion des liens courts</h1>
+            
+            <!-- Statistiques globales -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary">
+                        <div class="card-body">
+                            <h5 class="card-title">Total liens</h5>
+                            <h2>{{ stats.total_links }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-success">
+                        <div class="card-body">
+                            <h5 class="card-title">Liens actifs</h5>
+                            <h2>{{ stats.active_links }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-info">
+                        <div class="card-body">
+                            <h5 class="card-title">Total clics</h5>
+                            <h2>{{ stats.total_clicks }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-white bg-warning">
+                        <div class="card-body">
+                            <h5 class="card-title">Liens expirés</h5>
+                            <h2>{{ stats.expired_links }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="mb-3">
+                <button id="cleanup-btn" class="btn btn-warning">
+                    <i class="fas fa-trash"></i> Nettoyer les liens expirés
+                </button>
+                <a href="{{ path('admin_short_links_api_stats') }}" class="btn btn-info">
+                    <i class="fas fa-chart-bar"></i> Statistiques API
+                </a>
+            </div>
+            
+            <!-- Tableau des liens -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Liste des liens courts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Code court</th>
+                                    <th>Agence</th>
+                                    <th>Client</th>
+                                    <th>Année</th>
+                                    <th>Visite</th>
+                                    <th>Créé le</th>
+                                    <th>Expire le</th>
+                                    <th>Clics</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for link in links %}
+                                <tr>
+                                    <td>
+                                        <code>{{ link.shortCode }}</code>
+                                        <button class="btn btn-sm btn-outline-secondary" 
+                                                onclick="copyToClipboard('{{ url('short_link_redirect', {shortCode: link.shortCode}) }}')">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </td>
+                                    <td><span class="badge badge-secondary">{{ link.agence }}</span></td>
+                                    <td>{{ link.clientId }}</td>
+                                    <td>{{ link.annee }}</td>
+                                    <td>{{ link.visite }}</td>
+                                    <td>{{ link.createdAt|date('d/m/Y H:i') }}</td>
+                                    <td>
+                                        {% if link.expiresAt %}
+                                            {{ link.expiresAt|date('d/m/Y H:i') }}
+                                        {% else %}
+                                            <span class="text-muted">Jamais</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-info">{{ link.clickCount }}</span>
+                                    </td>
+                                    <td>
+                                        {% if link.isExpired %}
+                                            <span class="badge badge-danger">Expiré</span>
+                                        {% else %}
+                                            <span class="badge badge-success">Actif</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        alert('Lien copié dans le presse-papiers !');
+    });
+}
+
+document.getElementById('cleanup-btn').addEventListener('click', function() {
+    if (confirm('Êtes-vous sûr de vouloir supprimer tous les liens expirés ?')) {
+        fetch('{{ path("admin_short_links_cleanup") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert('Erreur : ' + data.message);
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

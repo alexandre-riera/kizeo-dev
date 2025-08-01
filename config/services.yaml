@@ -73,3 +73,15 @@ services:
             $imageStorageService: '@App\Service\ImageStorageService'  # ✅ CORRIGÉ
         tags:
             - { name: 'console.command' }
+        
+    App\Service\PdfStorageService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+
+    App\Service\ShortLinkService:
+        arguments:
+            $baseUrl: '%app.base_url%'
+
+    App\Service\EmailService:
+        arguments:
+            $mailer: '@mailer'

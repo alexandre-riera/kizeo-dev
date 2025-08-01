@@ -22,6 +22,7 @@ use App\Entity\EquipementS50;
 use App\Entity\EquipementS60;
 use App\Entity\EquipementS70;
 use App\Entity\EquipementS80;
+use App\Service\EmailService;
 use App\Service\PdfGenerator;
 use App\Entity\EquipementS100;
 use App\Entity\EquipementS120;
@@ -30,22 +31,31 @@ use App\Entity\EquipementS140;
 use App\Entity\EquipementS150;
 use App\Entity\EquipementS160;
 use App\Entity\EquipementS170;
+use App\Service\ShortLinkService;
+use App\Service\PdfStorageService;
 use App\Service\ImageStorageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 
 class EquipementPdfController extends AbstractController
 {
     private $pdfGenerator;
     private $imageStorageService;
+    private PdfStorageService $pdfStorageService;
+    private ShortLinkService $shortLinkService;
+    private EmailService $emailService;
     
-    public function __construct(PdfGenerator $pdfGenerator, ImageStorageService $imageStorageService)
+    public function __construct(PdfGenerator $pdfGenerator, ImageStorageService $imageStorageService, PdfStorageService $pdfStorageService, ShortLinkService $shortLinkService, EmailService $emailService)
     {
         $this->pdfGenerator = $pdfGenerator;
         $this->imageStorageService = $imageStorageService;
+        $this->pdfStorageService = $pdfStorageService;
+        $this->shortLinkService = $shortLinkService;
+        $this->emailService = $emailService;
     }
     
     /**
@@ -261,8 +271,59 @@ class EquipementPdfController extends AbstractController
             }
             $filename .= '.pdf';
             
-            // Générer le PDF
+            // 1. Génération du PDF existant
             $pdfContent = $this->pdfGenerator->generatePdf($html, $filename);
+
+            // 2. Stockage local du PDF
+            $storedPath = $this->pdfStorageService->storePdf(
+                $agence,
+                $id,
+                $clientAnneeFilter,
+                $clientVisiteFilter,
+                $pdfContent
+            );
+            
+            // 3. Création du lien court
+            $originalUrl = $request->getUriForPath("/pdf/download/{$agence}/{$id}/{$clientAnneeFilter}/{$clientVisiteFilter}");
+            $expiresAt = (new \DateTime())->modify('+30 days'); // Expire dans 30 jours
+            
+            $shortLink = $this->shortLinkService->createShortLink(
+                $originalUrl,
+                $agence,
+                $id,
+                $clientAnneeFilter,
+                $clientVisiteFilter,
+                $expiresAt
+            );
+            
+            $shortUrl = $this->shortLinkService->getShortUrl($shortLink->getShortCode());
+            
+            // 4. Retourner le PDF directement OU envoyer par email selon le paramètre
+            $sendEmail = $request->query->getBoolean('send_email', false);
+            $clientEmail = $request->query->get('client_email');
+            
+            if ($sendEmail && $clientEmail) {
+                // Récupérer les infos client pour l'email
+                $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+                
+                $emailSent = $this->emailService->sendPdfLinkToClient(
+                    $agence,
+                    $clientEmail,
+                    $clientInfo['nom'] ?? 'Client',
+                    $shortUrl,
+                    $clientAnneeFilter,
+                    $clientVisiteFilter
+                );
+                
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'PDF généré et ' . ($emailSent ? 'email envoyé' : 'erreur envoi email'),
+                    'pdf_stored' => true,
+                    'storage_path' => basename($storedPath),
+                    'short_url' => $shortUrl,
+                    'email_sent' => $emailSent
+                ]);
+            }
             
             // Log des métriques de performance
             $totalTime = round(microtime(true) - $startTime, 2);
@@ -271,7 +332,10 @@ class EquipementPdfController extends AbstractController
             // Headers avec informations de debug
             $headers = [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => "inline; filename=\"$filename\"",
+                'Content-Disposition' => "inline; filename=\"client_{$id}_{$clientAnneeFilter}_{$clientVisiteFilter}.pdf\"",
+                'X-PDF-Stored' => 'true',
+                'X-Short-URL' => $shortUrl,
+                'X-Storage-Path' => basename($storedPath),
                 'X-Equipment-Count' => count($equipments),
                 'X-Local-Photos' => $photoSourceStats['local'],
                 'X-Fallback-Photos' => $photoSourceStats['api_fallback'],
@@ -286,6 +350,165 @@ class EquipementPdfController extends AbstractController
             // En cas d'erreur majeure, fallback vers l'ancienne méthode complète
             return $this->generateClientEquipementsPdfFallback($request, $agence, $id, $entityManager, $e);
         }
+    }
+
+    /**
+     * Route pour télécharger un PDF stocké
+     */
+    #[Route('/pdf/download/{agence}/{clientId}/{annee}/{visite}', name: 'pdf_download')]
+    public function downloadStoredPdf(
+        string $agence,
+        string $clientId,
+        string $annee,
+        string $visite
+    ): Response {
+        $pdfPath = $this->pdfStorageService->getPdfPath($agence, $clientId, $annee, $visite);
+        
+        if (!$pdfPath) {
+            throw $this->createNotFoundException('PDF non trouvé');
+        }
+        
+        $pdfContent = file_get_contents($pdfPath);
+        $filename = "client_{$clientId}_{$annee}_{$visite}.pdf";
+        
+        return new Response($pdfContent, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"",
+            'Cache-Control' => 'private, max-age=3600',
+            'Last-Modified' => date('D, d M Y H:i:s', filemtime($pdfPath)) . ' GMT'
+        ]);
+    }
+
+    /**
+     * Route pour redirection des liens courts
+     */
+    #[Route('/s/{shortCode}', name: 'short_link_redirect')]
+    public function redirectShortLink(string $shortCode): Response
+    {
+        $shortLink = $this->shortLinkService->getByShortCode($shortCode);
+        
+        if (!$shortLink) {
+            throw $this->createNotFoundException('Lien non trouvé ou expiré');
+        }
+        
+        // Enregistrer l'accès
+        $this->shortLinkService->recordAccess($shortLink);
+        
+        // Rediriger vers l'URL originale
+        return $this->redirect($shortLink->getOriginalUrl());
+    }
+
+    /**
+     * NOUVELLE ROUTE pour envoyer un PDF existant par email
+     */
+    #[Route('/client/equipements/send-email/{agence}/{id}', name: 'send_pdf_email', methods: ['POST'])]
+    public function sendPdfByEmail(
+        Request $request,
+        string $agence,
+        string $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $annee = $request->request->get('annee', date('Y'));
+            $visite = $request->request->get('visite', 'CEA');
+            $clientEmail = $request->request->get('client_email');
+            
+            if (!$clientEmail) {
+                throw new \InvalidArgumentException('Email client requis');
+            }
+            
+            // Vérifier que le PDF existe ou le générer
+            $pdfPath = $this->pdfStorageService->getPdfPath($agence, $id, $annee, $visite);
+            if (!$pdfPath) {
+                // Rediriger vers la génération avec stockage
+                $redirectUrl = $this->generateUrl('client_equipements_pdf', [
+                    'agence' => $agence,
+                    'id' => $id
+                ]) . "?clientAnneeFilter={$annee}&clientVisiteFilter={$visite}&action=email&client_email=" . urlencode($clientEmail) . "&json=true";
+                
+                // Faire un appel interne pour générer le PDF
+                $subRequest = Request::create($redirectUrl);
+                $response = $this->generateClientEquipementsPdf($subRequest, $agence, $id, $entityManager);
+                
+                return $response;
+            }
+            
+            // Créer ou récupérer le lien court
+            $downloadUrl = $this->generateUrl('pdf_download', [
+                'agence' => $agence,
+                'clientId' => $id,
+                'annee' => $annee,
+                'visite' => $visite
+            ], true);
+            
+            $shortLink = $this->shortLinkService->createShortLink(
+                $downloadUrl, $agence, $id, $annee, $visite,
+                (new \DateTime())->modify('+30 days')
+            );
+            
+            $shortUrl = $this->shortLinkService->getShortUrl($shortLink->getShortCode());
+            
+            // Envoyer l'email
+            $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            $emailSent = $this->emailService->sendPdfLinkToClient(
+                $agence,
+                $clientEmail,
+                $clientInfo['nom'] ?? "Client $id",
+                $shortUrl,
+                $annee,
+                $visite
+            );
+            
+            // Enregistrer l'envoi
+            $this->recordEmailSent($agence, $id, $shortUrl, $emailSent, $entityManager);
+            
+            return new JsonResponse([
+                'success' => $emailSent,
+                'message' => $emailSent ? 'Email envoyé avec succès' : 'Erreur lors de l\'envoi',
+                'short_url' => $shortUrl,
+                'short_code' => $shortLink->getShortCode()
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function recordEmailSent(string $agence, string $clientId, string $shortUrl, bool $success, EntityManagerInterface $entityManager): void
+    {
+        try {
+            $mailEntity = "App\\Entity\\Mail{$agence}";
+            $contactEntity = "App\\Entity\\Contact{$agence}";
+            
+            if (class_exists($mailEntity)) {
+                $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $clientId]);
+                
+                if ($contact) {
+                    $mail = new $mailEntity();
+                    $mail->setIdContact($contact);
+                    $mail->setPdfUrl($shortUrl);
+                    $mail->setIsPdfSent($success);
+                    $mail->setSentAt(new \DateTimeImmutable());
+                    $mail->setSender('system');
+                    $mail->setPdfFilename("client_{$clientId}.pdf");
+                    
+                    $entityManager->persist($mail);
+                    $entityManager->flush();
+                }
+            }
+        } catch (\Exception $e) {
+            // Log l'erreur mais ne pas faire échouer la requête principale
+            error_log("Erreur enregistrement email: " . $e->getMessage());
+        }
+    }
+
+    private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
+    {
+        // Récupérer les informations client depuis la base
+        return ['nom' => 'Client Name']; // Placeholder
     }
 
     /**
