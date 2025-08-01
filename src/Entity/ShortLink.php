@@ -46,6 +46,8 @@ class ShortLink
     #[ORM\Column(type: "datetime", nullable: true)]
     private ?\DateTimeInterface $lastAccessedAt = null;
 
+
+
     // Getters et Setters
     public function getId(): ?int { return $this->id; }
     

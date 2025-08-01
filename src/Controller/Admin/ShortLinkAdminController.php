@@ -106,7 +106,7 @@ class ShortLinkAdminController extends AbstractController
         // Activité récente (derniers 10 accès)
         $recentLinks = $this->repository->createQueryBuilder('s')
             ->where('s.clickCount > 0')
-            ->orderBy('s.lastAccessAt', 'DESC')
+            ->orderBy('s.lastAccessedAt', 'DESC')
             ->setMaxResults(10)
             ->getQuery()
             ->getResult();
@@ -116,7 +116,7 @@ class ShortLinkAdminController extends AbstractController
                 'agence' => $link->getAgence(),
                 'client_id' => $link->getClientId(),
                 'clicks' => $link->getClickCount(),
-                'last_access' => $link->getLastAccessAt()?->format('d/m/Y H:i')
+                'last_access' => $link->getLastAccessedAt()?->format('d/m/Y H:i')
             ];
         }
         
