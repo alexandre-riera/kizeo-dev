@@ -582,11 +582,67 @@ class EquipementPdfController extends AbstractController
 
     private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
     {
-        // Récupérer les informations client depuis la base
+        try {
+            $contactEntity = "App\\Entity\\Contact{$agence}";
+            
+            if (class_exists($contactEntity)) {
+                $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $id]);
+                
+                if ($contact) {
+                    // Essayer différentes méthodes pour récupérer nom et email
+                    $nom = '';
+                    $email = '';
+                    
+                    // Récupération du nom - tester plusieurs getters possibles
+                    if (method_exists($contact, 'getRaisonSociale')) {
+                        $nom = $contact->getRaisonSociale();
+                    } elseif (method_exists($contact, 'getNom')) {
+                        $nom = $contact->getNom();
+                    } elseif (method_exists($contact, 'getNomContact')) {
+                        $nom = $contact->getNomContact();
+                    } elseif (method_exists($contact, 'getLibelle')) {
+                        $nom = $contact->getLibelle();
+                    }
+                    
+                    // Récupération de l'email - tester plusieurs getters possibles
+                    if (method_exists($contact, 'getEmail')) {
+                        $email = $contact->getEmail();
+                    } elseif (method_exists($contact, 'getEmailContact')) {
+                        $email = $contact->getEmailContact();
+                    } elseif (method_exists($contact, 'getMail')) {
+                        $email = $contact->getMail();
+                    }
+                    
+                    return [
+                        'nom' => $nom ?: "Client {$id}",
+                        'email' => $email ?: '',
+                        'id_contact' => $id
+                    ];
+                }
+            }
+        } catch (\Exception $e) {
+            error_log("Erreur récupération client info: " . $e->getMessage());
+        }
+        
         return [
-            'nom' => 'Client Name',
-            'email' => ''
+            'nom' => "Client {$id}",
+            'email' => '',
+            'id_contact' => $id
         ];
+    }
+
+    #[Route('/api/client-info/{agence}/{id}', name: 'api_client_info', methods: ['GET'])]
+    public function getClientInfoApi(
+        string $agence,
+        string $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+        
+        return new JsonResponse([
+            'success' => true,
+            'client' => $clientInfo
+        ]);
     }
 
     /**

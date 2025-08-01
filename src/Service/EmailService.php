@@ -89,113 +89,118 @@ class EmailService
      */
     private function buildSecureEmailTemplate(
         string $clientName, 
-        string $shortUrl, // ⚠️ Lien court sécurisé uniquement
+        string $shortUrl,
         string $agence, 
         string $annee, 
         string $visite
     ): string {
         return "
-        <html>
+        <!DOCTYPE html>
+        <html lang='fr'>
         <head>
-            <meta charset='utf-8'>
+            <meta charset='UTF-8'>
             <meta name='viewport' content='width=device-width, initial-scale=1.0'>
             <title>Rapport d'équipements SOMAFI</title>
         </head>
-        <body style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4;'>
-            <!-- En-tête SOMAFI -->
-            <div style='background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%); color: white; padding: 30px 20px; text-align: center; border-radius: 8px 8px 0 0;'>
-                <h1 style='margin: 0; font-size: 24px; font-weight: bold;'>
-                    🏢 SOMAFI {$agence}
-                </h1>
-                <p style='margin: 5px 0 0 0; font-size: 16px; opacity: 0.9;'>
-                    Rapport d'équipements
-                </p>
-            </div>
-            
-            <!-- Corps du message -->
-            <div style='background-color: white; padding: 30px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);'>
-                <h2 style='color: #2c3e50; margin-top: 0;'>Bonjour {$clientName},</h2>
+        <body style='font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;'>
+            <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);'>
                 
-                <p style='color: #34495e; line-height: 1.6;'>
-                    Nous avons le plaisir de vous transmettre le rapport d'équipements suite à notre visite de maintenance.
-                </p>
-                
-                <!-- Informations de la visite -->
-                <div style='background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3498db;'>
-                    <h3 style='color: #2c3e50; margin-top: 0; margin-bottom: 15px;'>📋 Détails de la visite</h3>
-                    <table style='width: 100%; border-collapse: collapse;'>
-                        <tr>
-                            <td style='padding: 5px 0; font-weight: bold; color: #2c3e50;'>Année :</td>
-                            <td style='padding: 5px 0; color: #34495e;'>{$annee}</td>
-                        </tr>
-                        <tr>
-                            <td style='padding: 5px 0; font-weight: bold; color: #2c3e50;'>Type de visite :</td>
-                            <td style='padding: 5px 0; color: #34495e;'>{$visite}</td>
-                        </tr>
-                        <tr>
-                            <td style='padding: 5px 0; font-weight: bold; color: #2c3e50;'>Agence :</td>
-                            <td style='padding: 5px 0; color: #34495e;'>{$agence}</td>
-                        </tr>
-                    </table>
+                <!-- EN-TÊTE SOMAFI AMÉLIORÉ -->
+                <div style='background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%); color: white; padding: 25px; text-align: center; position: relative;'>
+                    <!-- Logo SOMAFI en texte stylisé -->
+                    <div style='font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;'>
+                        🏢 SOMAFI
+                    </div>
+                    <div style='font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;'>
+                        Grenoble • Agence {$agence}
+                    </div>
+                    <!-- Badge avec couverture nationale -->
+                    <div style='position: absolute; top: 15px; right: 15px; background: rgba(255,215,0,0.9); color: #1a365d; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold;'>
+                        🇫🇷 Couverture Nationale
+                    </div>
                 </div>
                 
-                <!-- Bouton de téléchargement sécurisé -->
-                <div style='text-align: center; margin: 35px 0;'>
-                    <a href='{$shortUrl}' 
-                       style='background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); 
-                              color: white; 
-                              padding: 15px 35px; 
-                              text-decoration: none; 
-                              border-radius: 25px; 
-                              font-weight: bold;
-                              display: inline-block;
-                              font-size: 16px;
-                              transition: all 0.3s ease;
-                              box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);'>
-                        📄 Télécharger le rapport PDF
-                    </a>
-                </div>
-                
-                <!-- Informations de sécurité -->
-                <div style='background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); 
-                           border: 1px solid #f39c12; 
-                           padding: 20px; 
-                           border-radius: 8px; 
-                           margin: 25px 0;'>
-                    <h4 style='color: #d68910; margin-top: 0; margin-bottom: 15px;'>
-                        🔒 Informations importantes
-                    </h4>
-                    <ul style='color: #8e6a0a; margin: 0; padding-left: 20px; line-height: 1.6;'>
-                        <li><strong>Lien sécurisé et personnel</strong> - Ne pas partager</li>
-                        <li><strong>Validité :</strong> 30 jours à compter de cet email</li>
-                        <li><strong>Accès unique</strong> - Chaque clic est enregistré</li>
-                        <li><strong>Support :</strong> Contactez-nous en cas de problème</li>
-                    </ul>
-                </div>
-                
-                <!-- Message de support -->
-                <div style='border-top: 1px solid #ecf0f1; padding-top: 20px; margin-top: 30px;'>
-                    <p style='color: #7f8c8d; line-height: 1.6; margin-bottom: 5px;'>
-                        Pour toute question concernant ce rapport, n'hésitez pas à nous contacter.
+                <!-- CORPS DU MESSAGE -->
+                <div style='padding: 30px;'>
+                    <h2 style='color: #2c3e50; margin: 0 0 20px 0; font-size: 22px;'>
+                        Bonjour {$clientName},
+                    </h2>
+                    
+                    <p style='color: #34495e; line-height: 1.6; margin-bottom: 25px; font-size: 16px;'>
+                        Nous avons le plaisir de vous transmettre le rapport d'équipements suite à notre visite de maintenance.
                     </p>
-                    <p style='color: #2c3e50; font-weight: 500; margin: 0;'>
-                        Cordialement,<br>
-                        L'équipe SOMAFI {$agence}
-                    </p>
+                    
+                    <!-- INFORMATIONS DE LA VISITE - STYLE AMÉLIORÉ -->
+                    <div style='background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #3498db; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                        <h3 style='color: #2c3e50; margin: 0 0 15px 0; font-size: 18px;'>📋 Détails de la visite</h3>
+                        <div style='display: table; width: 100%;'>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50; width: 30%;'>Année :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$annee}</div>
+                            </div>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50;'>Type de visite :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$visite}</div>
+                            </div>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50;'>Agence :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$agence}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- BOUTON DE TÉLÉCHARGEMENT AMÉLIORÉ -->
+                    <div style='text-align: center; margin: 35px 0;'>
+                        <a href='{$shortUrl}' 
+                        style='background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); 
+                                color: white; 
+                                padding: 16px 40px; 
+                                text-decoration: none; 
+                                border-radius: 30px; 
+                                font-weight: bold;
+                                display: inline-block;
+                                font-size: 16px;
+                                box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+                                transition: all 0.3s ease;'>
+                            📄 Télécharger le rapport PDF
+                        </a>
+                    </div>
+                    
+                    <!-- INFORMATIONS SÉCURITÉ ET VALIDITÉ -->
+                    <div style='background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%); 
+                            border: 1px solid #f39c12; 
+                            border-radius: 8px; 
+                            padding: 15px; 
+                            margin: 25px 0;'>
+                        <div style='color: #8b6914; font-size: 14px; text-align: center;'>
+                            <strong>🔐 Informations importantes</strong><br>
+                            • Lien sécurisé et personnel - Ne pas partager<br>
+                            • Validité : 30 jours à compter de cet email<br>
+                            • Chaque clic est enregistré pour votre sécurité
+                        </div>
+                    </div>
+                    
+                    <div style='margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;'>
+                        <p style='color: #7f8c8d; font-size: 14px; margin: 0; line-height: 1.5;'>
+                            Pour toute question concernant ce rapport, n'hésitez pas à nous contacter.<br>
+                            Cordialement,<br>
+                            <strong>L'équipe SOMAFI {$agence}</strong>
+                        </p>
+                    </div>
                 </div>
-            </div>
-            
-            <!-- Pied de page -->
-            <div style='background-color: #34495e; color: #bdc3c7; padding: 20px; text-align: center; font-size: 12px; margin-top: 20px; border-radius: 8px;'>
-                <p style='margin: 0 0 5px 0;'>
-                    <strong>SOMAFI Grenoble</strong> | 52 rue de Corporat | 38430 MOIRANS
-                </p>
-                <p style='margin: 0 0 10px 0;'>
-                    Tél. 04.76.32.66.99 | Email automatique - Ne pas répondre
-                </p>
-                <p style='margin: 0; opacity: 0.8;'>
-                    🔐 Email sécurisé - " . date('Y') . " | Lien valide jusqu'au " . date('d/m/Y', strtotime('+30 days')) . "
-                </p>
+                
+                <!-- PIED DE PAGE CONTACT -->
+                <div style='background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; padding: 20px; text-align: center; font-size: 12px;'>
+                    <div style='margin-bottom: 10px;'>
+                        <strong>SOMAFI Grenoble</strong> | 52 rue de Corporat | Centr'Alp | 38430 MOIRANS
+                    </div>
+                    <div style='margin-bottom: 10px;'>
+                        Tél. 04.76.32.66.99 | <a href='mailto:grenoble@somafi-group.fr' style='color: #3498db;'>grenoble@somafi-group.fr</a>
+                    </div>
+                    <div style='opacity: 0.8;'>
+                        🔐 Email sécurisé - " . date('Y') . " | Lien valide jusqu'au " . date('d/m/Y', strtotime('+30 days')) . "
+                    </div>
+                </div>
             </div>
         </body>
         </html>";
