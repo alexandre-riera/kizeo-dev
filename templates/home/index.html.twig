@@ -269,15 +269,17 @@
                         </li>#}
                         {% if is_granted('ROLE_ADMIN') %}
                             <li class="nav-item">
-                                <a class="nav-link align-items-center" data-bs-toggle="collapse" href="#collapseUsers" role="button" aria-expanded="false" aria-controls="collapseUsers">
-                                    <i class="fa-solid fa-user"></i>
-                                    <span style="font-size:16px;">Gestion des utilisateurs</span>
+                                <a class="nav-link align-items-center" data-bs-toggle="collapse" href="#collapseAdmin" role="button" aria-expanded="false" aria-controls="collapseAdmin">
+                                    <i class="fa-solid fa-cog"></i>
+                                    <span style="font-size:16px;">Administration</span>
                                     <i class="ms-1 fa-solid fa-caret-down"></i>
                                 </a>
-                                <div class="collapse" id="collapseUsers">
+                                <div class="collapse" id="collapseAdmin">
                                     <ul class="nav flex-column">
                                         <li class="nav-item">
-                                            <a class="nav-link ms-3" href="{{ path('app_user_index') }}">Liste</a>
+                                            <a class="nav-link ms-3" href="{{ path('admin_short_links_index') }}">
+                                                <i class="fa-solid fa-link"></i> Liens Courts
+                                            </a>
                                         </li>
                                         <li class="nav-item">
                                             <a class="nav-link ms-3" href="{{ path('app_user_new') }}">Nouvel utilisateur</a>
@@ -714,7 +716,7 @@
                 </div>
             </nav>
     {% endif %}
-    <script>
+    {# <script>
     console.log('=== DEBUG INFORMATIONS ===');
     console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }}');
     console.log('Agence Selected:', '{{ agenceSelected|default("") }}');
@@ -804,5 +806,107 @@
         // Mettre à jour au chargement initial
         updatePdfButton();
     });
-    </script>
+    </script> #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== INITIALIZATION PDF ENHANCED ===');
+            
+            // Pré-remplir l'email client s'il est disponible dans les données
+            const clientEmail = document.getElementById('current-client-email')?.value;
+            const clientName = document.getElementById('current-client-name')?.value;
+            
+            // Ajouter un event listener pour pré-remplir le modal d'email
+            document.addEventListener('emailModalOpened', function() {
+                if (clientEmail && document.getElementById('clientEmail')) {
+                    document.getElementById('clientEmail').value = clientEmail;
+                }
+                if (clientName && document.getElementById('clientName')) {
+                    document.getElementById('clientName').value = clientName;
+                }
+            });
+            
+            // Gestion des filtres pour le bouton PDF
+            const anneeSelect = document.getElementById('clientAnneeFilter');
+            const visiteSelect = document.getElementById('clientVisiteFilter');
+            
+            function updatePdfButton() {
+                const pdfButton = document.getElementById('pdf-button');
+                if (!pdfButton) return;
+                
+                const baseUrl = pdfButton.href.split('?')[0];
+                const url = new URL(baseUrl);
+                
+                const anneeValue = anneeSelect ? anneeSelect.value : '';
+                const visiteValue = visiteSelect ? visiteSelect.value : '';
+                
+                if (anneeValue) {
+                    url.searchParams.set('clientAnneeFilter', anneeValue);
+                }
+                if (visiteValue) {
+                    url.searchParams.set('clientVisiteFilter', visiteValue);
+                }
+                
+                pdfButton.href = url.toString();
+                
+                // Mettre à jour le texte du bouton pour afficher les filtres
+                const buttonSmall = pdfButton.querySelector('small');
+                if (anneeValue || visiteValue) {
+                    let filterText = '';
+                    if (anneeValue) filterText += anneeValue;
+                    if (visiteValue) filterText += (filterText ? ' - ' : '') + visiteValue;
+                    
+                    if (buttonSmall) {
+                        buttonSmall.textContent = '(' + filterText + ')';
+                    } else {
+                        const smallElement = document.createElement('small');
+                        smallElement.className = 'd-block';
+                        smallElement.textContent = '(' + filterText + ')';
+                        pdfButton.appendChild(smallElement);
+                    }
+                } else if (buttonSmall) {
+                    buttonSmall.textContent = '';
+                }
+            }
+            
+            // Écouter les changements sur les sélecteurs
+            if (anneeSelect) {
+                anneeSelect.addEventListener('change', updatePdfButton);
+            }
+            if (visiteSelect) {
+                visiteSelect.addEventListener('change', updatePdfButton);
+            }
+            
+            // Mettre à jour au chargement initial
+            updatePdfButton();
+            
+            // Intercepter la soumission du formulaire de filtres
+            $('#filterForm').on('submit', function(e) {
+                e.preventDefault();
+                
+                // Récupérer les données du formulaire
+                var formData = $(this).serialize();
+                
+                // Envoyer la requête AJAX
+                $.ajax({
+                    url: '/ajax/filter-equipment',
+                    type: 'GET',
+                    data: formData,
+                    success: function(response) {
+                        // Mettre à jour le conteneur du tableau
+                        $('#equipment-table-container').html(response);
+                        // Réinitialiser Bootstrap Table si elle existe
+                        if (typeof $('#table').bootstrapTable === 'function') {
+                            $('#table').bootstrapTable();
+                        }
+                        // Mettre à jour le bouton PDF après le filtrage AJAX
+                        updatePdfButton();
+                    },
+                    error: function(xhr) {
+                        console.error('Erreur lors du chargement des données:', xhr.responseText);
+                        alert('Erreur lors du filtrage des équipements');
+                    }
+                });
+            });
+        });
+        </script>
 {% endblock %}
