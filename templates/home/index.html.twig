@@ -720,381 +720,330 @@
             </nav>
     {% endif %}
     <script>
-        console.log('=== DEBUG INFORMATIONS ===');
-        console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }}');
-        console.log('Agence Selected:', '{{ agenceSelected|default("") }}');
-        console.log('Client Selected:', '{{ clientSelected|default("") }}');
-        console.log('Request Method:', '{{ app.request.method }}'); 
+    console.log('=== DEBUG INFORMATIONS ===');
+    console.log('User Agencies:', '{{ userAgencies|default([])|json_encode|raw }}');
+    console.log('Agence Selected:', '{{ agenceSelected|default("") }}');
+    console.log('Client Selected:', '{{ clientSelected|default("") }}');
+    console.log('ID Client Selected:', '{{ idClientSelected|default("") }}'); // ← LA VARIABLE QUI CONTIENT L'ID !
+    console.log('Request Method:', '{{ app.request.method }}'); 
 
-        // ===== VARIABLES GLOBALES =====
-        let currentClientInfo = {
-            nom: '',
-            email: '',
-            id_contact: ''
-        };
+    // ===== VARIABLES GLOBALES SIMPLES =====
+    let currentClientInfo = {
+        nom: '{{ clientSelected|default("") }}', // Nom du client depuis Twig
+        email: '',
+        id_contact: '{{ idClientSelected|default("") }}' // ID du client depuis Twig
+    };
 
-        // ===== FONCTIONS POUR LA GESTION DES INFORMATIONS CLIENT =====
-        async function fetchClientInfo() {
-            const agence = '{{ agenceSelected|default("") }}';
-            const clientId = '{{ clientSelected|default("") }}';
-            
-            console.log('🔍 Tentative récupération client info:', { agence, clientId });
-            
-            if (!agence || !clientId) {
-                console.warn('⚠️ Agence ou client ID manquant:', { agence, clientId });
-                return;
-            }
-            
-            try {
-                const url = `/api/client-info/${agence}/${clientId}`;
-                console.log('📡 Appel API:', url);
-                
-                const response = await fetch(url);
-                console.log('📨 Réponse API status:', response.status);
-                
-                const data = await response.json();
-                console.log('📊 Données reçues:', data);
-                
-                if (data.success && data.client) {
-                    currentClientInfo = data.client;
-                    console.log('✅ Client info récupérées avec succès:', currentClientInfo);
-                    
-                    // Vérifier si l'email est présent
-                    if (currentClientInfo.email) {
-                        console.log('📧 Email client trouvé:', currentClientInfo.email);
-                    } else {
-                        console.warn('⚠️ Pas d\'email trouvé pour le client');
-                    }
-                } else {
-                    console.warn('⚠️ Réponse API invalide:', data);
-                }
-            } catch (error) {
-                console.error('❌ Erreur récupération client info:', error);
-            }
+    // ===== FONCTION SIMPLE POUR RÉCUPÉRER L'EMAIL =====
+    async function fetchClientInfo() {
+        const agence = '{{ agenceSelected|default("") }}';
+        const clientId = '{{ idClientSelected|default("") }}'; // ← UTILISER idClientSelected !
+        
+        console.log('🔍 Récupération email pour:', { agence, clientId });
+        
+        if (!agence || !clientId) {
+            console.warn('⚠️ Agence ou client ID manquant');
+            return;
         }
+        
+        try {
+            const url = `/api/client-info/${agence}/${clientId}`;
+            console.log('📡 Appel API:', url);
+            
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            console.log('📊 Réponse API:', data);
+            
+            if (data.success && data.client && data.client.email) {
+                currentClientInfo.email = data.client.email;
+                console.log('✅ Email récupéré:', currentClientInfo.email);
+            } else {
+                console.warn('⚠️ Pas d\'email trouvé dans la réponse API');
+            }
+        } catch (error) {
+            console.error('❌ Erreur récupération email:', error);
+        }
+    }
 
-        // ===== FONCTIONS POUR LA MODAL EMAIL =====
-        function showEmailModal() {
-            // Récupérer les valeurs actuelles des filtres
+    // ===== FONCTION POUR AFFICHER LA MODAL EMAIL =====
+    function showEmailModal() {
+        const anneeSelect = document.getElementById('clientAnneeFilter');
+        const visiteSelect = document.getElementById('clientVisiteFilter');
+        const anneeValue = anneeSelect ? anneeSelect.value : new Date().getFullYear();
+        const visiteValue = visiteSelect ? visiteSelect.value : 'CEA';
+        
+        console.log('🔧 Ouverture modal avec infos:', currentClientInfo);
+        
+        // Créer la modal
+        const modalHtml = `
+            <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="emailModalLabel">
+                                <i class="fa-solid fa-envelope"></i> Envoyer le PDF par email
+                            </h5>
+                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="emailForm">
+                                <div class="mb-3">
+                                    <label for="clientEmailInput" class="form-label">
+                                        <i class="fa-solid fa-at"></i> Email du client *
+                                    </label>
+                                    <input type="email" 
+                                           class="form-control" 
+                                           id="clientEmailInput" 
+                                           value="${currentClientInfo.email || ''}" 
+                                           placeholder="client@exemple.fr" 
+                                           required>
+                                    <div class="form-text">L'email où envoyer le lien de téléchargement sécurisé</div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="clientNameInput" class="form-label">
+                                        <i class="fa-solid fa-user"></i> Nom du client
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="clientNameInput" 
+                                           value="${currentClientInfo.nom || ''}" 
+                                           placeholder="Nom du client (optionnel)">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="customMessageInput" class="form-label">
+                                        <i class="fa-solid fa-message"></i> Message personnalisé
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="customMessageInput" 
+                                              rows="3" 
+                                              placeholder="Message personnalisé à ajouter dans l'email (optionnel)"></textarea>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <h6><i class="fa-solid fa-info-circle"></i> Détails du rapport</h6>
+                                    <ul class="mb-0">
+                                        <li><strong>Année :</strong> ${anneeValue}</li>
+                                        <li><strong>Type de visite :</strong> ${visiteValue}</li>
+                                        <li><strong>Client :</strong> ${currentClientInfo.nom}</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="alert alert-warning">
+                                    <small>
+                                        <i class="fa-solid fa-shield-alt"></i> 
+                                        <strong>Le client recevra un lien sécurisé valable 30 jours pour télécharger son rapport PDF.</strong>
+                                    </small>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fa-solid fa-times"></i> Annuler
+                            </button>
+                            <button type="button" class="btn btn-success" id="sendEmailBtn">
+                                <i class="fa-solid fa-paper-plane"></i> Envoyer l'email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Supprimer l'ancienne modal
+        const existingModal = document.getElementById('emailModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Ajouter la nouvelle modal
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Afficher la modal
+        const modal = new bootstrap.Modal(document.getElementById('emailModal'));
+        modal.show();
+        
+        // Ajouter l'événement d'envoi
+        document.getElementById('sendEmailBtn').addEventListener('click', sendPdfByEmail);
+    }
+
+    // ===== FONCTION SIMPLE POUR ENVOYER L'EMAIL =====
+    async function sendPdfByEmail() {
+        const emailInput = document.getElementById('clientEmailInput');
+        const nameInput = document.getElementById('clientNameInput');
+        const messageInput = document.getElementById('customMessageInput');
+        const sendBtn = document.getElementById('sendEmailBtn');
+        
+        const clientEmail = emailInput.value.trim();
+        const clientName = nameInput.value.trim();
+        const customMessage = messageInput.value.trim();
+        
+        if (!clientEmail) {
+            alert('Veuillez saisir un email valide');
+            emailInput.focus();
+            return;
+        }
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(clientEmail)) {
+            alert('Format d\'email invalide');
+            emailInput.focus();
+            return;
+        }
+        
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...';
+        
+        try {
+            const agence = '{{ agenceSelected|default("") }}';
+            const clientId = '{{ idClientSelected|default("") }}'; // ← UTILISER idClientSelected !
+            
+            console.log('📤 Envoi pour:', { agence, clientId, clientEmail });
+            
             const anneeSelect = document.getElementById('clientAnneeFilter');
             const visiteSelect = document.getElementById('clientVisiteFilter');
             const anneeValue = anneeSelect ? anneeSelect.value : new Date().getFullYear();
             const visiteValue = visiteSelect ? visiteSelect.value : 'CEA';
             
-            // Créer la modal dynamiquement
-            const modalHtml = `
-                <div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-lg">
-                        <div class="modal-content">
-                            <div class="modal-header bg-primary text-white">
-                                <h5 class="modal-title" id="emailModalLabel">
-                                    <i class="fa-solid fa-envelope"></i> Envoyer le PDF par email
-                                </h5>
-                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="emailForm">
-                                    <div class="mb-3">
-                                        <label for="clientEmailInput" class="form-label">
-                                            <i class="fa-solid fa-at"></i> Email du client *
-                                        </label>
-                                        <input type="email" 
-                                            class="form-control" 
-                                            id="clientEmailInput" 
-                                            value="${currentClientInfo.email || ''}" 
-                                            placeholder="client@exemple.fr" 
-                                            required>
-                                        <div class="form-text">L'email où envoyer le lien de téléchargement sécurisé</div>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="clientNameInput" class="form-label">
-                                            <i class="fa-solid fa-user"></i> Nom du client
-                                        </label>
-                                        <input type="text" 
-                                            class="form-control" 
-                                            id="clientNameInput" 
-                                            value="${currentClientInfo.nom || ''}" 
-                                            placeholder="Nom du client (optionnel)">
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <label for="customMessageInput" class="form-label">
-                                            <i class="fa-solid fa-message"></i> Message personnalisé
-                                        </label>
-                                        <textarea class="form-control" 
-                                                id="customMessageInput" 
-                                                rows="3" 
-                                                placeholder="Message personnalisé à ajouter dans l'email (optionnel)"></textarea>
-                                    </div>
-                                    
-                                    <!-- Informations sur le PDF -->
-                                    <div class="alert alert-info">
-                                        <h6><i class="fa-solid fa-info-circle"></i> Détails du rapport</h6>
-                                        <ul class="mb-0">
-                                            <li><strong>Année :</strong> ${anneeValue}</li>
-                                            <li><strong>Type de visite :</strong> ${visiteValue}</li>
-                                            <li><strong>Client :</strong> ${currentClientInfo.nom || currentClientInfo.id_contact}</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <!-- Informations de sécurité -->
-                                    <div class="alert alert-warning">
-                                        <small>
-                                            <i class="fa-solid fa-shield-alt"></i> 
-                                            <strong>Le client recevra un lien sécurisé valable 30 jours pour télécharger son rapport PDF.</strong>
-                                        </small>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                    <i class="fa-solid fa-times"></i> Annuler
-                                </button>
-                                <button type="button" class="btn btn-success" id="sendEmailBtn">
-                                    <i class="fa-solid fa-paper-plane"></i> Envoyer l'email
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const formData = new FormData();
+            formData.append('client_email', clientEmail);
+            formData.append('client_name', clientName || currentClientInfo.nom);
+            formData.append('annee', anneeValue);
+            formData.append('visite', visiteValue);
+            formData.append('custom_message', customMessage);
             
-            // Supprimer l'ancienne modal si elle existe
-            const existingModal = document.getElementById('emailModal');
-            if (existingModal) {
-                existingModal.remove();
-            }
-            
-            // Ajouter la nouvelle modal au DOM
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Afficher la modal
-            const modal = new bootstrap.Modal(document.getElementById('emailModal'));
-            modal.show();
-            
-            // Ajouter l'événement pour l'envoi
-            document.getElementById('sendEmailBtn').addEventListener('click', sendPdfByEmail);
-        }
-
-        // Fonction pour envoyer le PDF par email
-        async function sendPdfByEmail() {
-            const emailInput = document.getElementById('clientEmailInput');
-            const nameInput = document.getElementById('clientNameInput');
-            const messageInput = document.getElementById('customMessageInput');
-            const sendBtn = document.getElementById('sendEmailBtn');
-            
-            const clientEmail = emailInput.value.trim();
-            const clientName = nameInput.value.trim();
-            const customMessage = messageInput.value.trim();
-            
-            // Validation
-            if (!clientEmail) {
-                alert('Veuillez saisir un email valide');
-                emailInput.focus();
-                return;
-            }
-            
-            // Validation email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(clientEmail)) {
-                alert('Format d\'email invalide');
-                emailInput.focus();
-                return;
-            }
-            
-            // État de chargement
-            sendBtn.disabled = true;
-            sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...';
-            
-            try {
-                const agence = '{{ agenceSelected|default("") }}';
-                const clientId = '{{ clientSelected|default("") }}';
-                const anneeSelect = document.getElementById('clientAnneeFilter');
-                const visiteSelect = document.getElementById('clientVisiteFilter');
-                const anneeValue = anneeSelect ? anneeSelect.value : new Date().getFullYear();
-                const visiteValue = visiteSelect ? visiteSelect.value : 'CEA';
-                
-                // Créer le FormData
-                const formData = new FormData();
-                formData.append('client_email', clientEmail);
-                formData.append('client_name', clientName || currentClientInfo.nom);
-                formData.append('annee', anneeValue);
-                formData.append('visite', visiteValue);
-                formData.append('custom_message', customMessage);
-                
-                // Envoyer la requête
-                const response = await fetch(`/client/equipements/send-email/${agence}/${clientId}`, {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    // Succès
-                    alert('✅ Email envoyé avec succès !\n\nLe client recevra un lien sécurisé pour télécharger son rapport.');
-                    
-                    // Fermer la modal
-                    const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
-                    modal.hide();
-                    
-                    // Optionnel : afficher des détails
-                    if (result.short_url) {
-                        console.log('Lien court créé:', result.short_url);
-                    }
-                    
-                } else {
-                    // Erreur
-                    alert('❌ Erreur lors de l\'envoi :\n' + (result.message || result.error || 'Erreur inconnue'));
-                }
-                
-            } catch (error) {
-                console.error('Erreur envoi email:', error);
-                alert('❌ Erreur de connexion. Veuillez réessayer.');
-                
-            } finally {
-                // Restaurer le bouton
-                sendBtn.disabled = false;
-                sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer l\'email';
-            }
-        }
-
-        // ===== FONCTIONS POUR LE BOUTON PDF =====
-        function updatePdfButton() {
-            const pdfButton = document.getElementById('pdf-button');
-            if (!pdfButton) return;
-            
-            const baseUrl = pdfButton.href.split('?')[0];
-            const url = new URL(baseUrl);
-            
-            const anneeSelect = document.getElementById('clientAnneeFilter');
-            const visiteSelect = document.getElementById('clientVisiteFilter');
-            const anneeValue = anneeSelect ? anneeSelect.value : '';
-            const visiteValue = visiteSelect ? visiteSelect.value : '';
-            
-            if (anneeValue) url.searchParams.set('clientAnneeFilter', anneeValue);
-            if (visiteValue) url.searchParams.set('clientVisiteFilter', visiteValue);
-            
-            pdfButton.href = url.toString();
-            
-            // Mettre à jour le texte du petit élément
-            const buttonSmall = pdfButton.querySelector('small');
-            if (anneeValue || visiteValue) {
-                const filterText = (anneeValue ? anneeValue : '') + (anneeValue && visiteValue ? ' - ' : '') + (visiteValue ? visiteValue : '');
-                
-                if (buttonSmall) {
-                    buttonSmall.textContent = '(' + filterText + ')';
-                } else {
-                    const smallElement = document.createElement('small');
-                    smallElement.className = 'd-block';
-                    smallElement.textContent = '(' + filterText + ')';
-                    pdfButton.appendChild(smallElement);
-                }
-            } else if (buttonSmall) {
-                buttonSmall.textContent = '';
-            }
-
-            // Ajouter le bouton email s'il n'existe pas déjà
-            addEmailButtonIfNeeded();
-        }
-
-        // Fonction pour ajouter le bouton email
-        function addEmailButtonIfNeeded() {
-            const pdfButton = document.getElementById('pdf-button');
-            const pdfContainer = pdfButton ? pdfButton.parentElement : null;
-            if (!pdfContainer) return;
-            
-            // Vérifier si le bouton email existe déjà
-            if (pdfContainer.querySelector('#email-button')) return;
-            
-            // Créer le bouton email
-            const emailButton = document.createElement('button');
-            emailButton.id = 'email-button';
-            emailButton.className = 'btn btn-primary btn-lg ms-2';
-            emailButton.innerHTML = '<i class="fa-solid fa-envelope"></i> Envoyer par email';
-            emailButton.style.marginTop = '10px';
-            emailButton.addEventListener('click', showEmailModal);
-            
-            // Ajouter le bouton après le bouton PDF
-            pdfButton.parentNode.insertBefore(emailButton, pdfButton.nextSibling);
-        }
-
-        // ===== INITIALISATION PRINCIPALE =====
-        $(document).ready(function() {
-            console.log('🚀 Initialisation complète du script PDF Enhanced');
-            console.log('📋 Variables Twig disponibles:');
-            console.log('  - agenceSelected:', '{{ agenceSelected|default("VIDE") }}');
-            console.log('  - clientSelected:', '{{ clientSelected|default("VIDE") }}');
-            
-            // Récupérer les informations client APRÈS que le DOM soit prêt
-            setTimeout(fetchClientInfo, 100); // Petit délai pour s'assurer que tout est initialisé
-            
-            // Éléments DOM
-            const anneeSelect = document.getElementById('clientAnneeFilter');
-            const visiteSelect = document.getElementById('clientVisiteFilter');
-            const pdfButton = document.getElementById('pdf-button');
-            
-            // Écouter les changements sur les sélecteurs
-            if (anneeSelect) {
-                anneeSelect.addEventListener('change', updatePdfButton);
-            }
-            if (visiteSelect) {
-                visiteSelect.addEventListener('change', updatePdfButton);
-            }
-            
-            // Mettre à jour au chargement initial
-            updatePdfButton();
-            
-            // Intercepter la soumission du formulaire de filtres (AJAX)
-            $('#filterForm').on('submit', function(e) {
-                e.preventDefault();
-                
-                // Récupérer les données du formulaire
-                var formData = $(this).serialize();
-                
-                // Envoyer la requête AJAX
-                $.ajax({
-                    url: '/ajax/filter-equipment',
-                    type: 'GET',
-                    data: formData,
-                    success: function(response) {
-                        // Mettre à jour le conteneur du tableau
-                        $('#equipment-table-container').html(response);
-                        
-                        // Réinitialiser Bootstrap Table si elle existe
-                        if (typeof $('#table').bootstrapTable === 'function') {
-                            $('#table').bootstrapTable();
-                        }
-                        
-                        // Mettre à jour le bouton PDF après le filtrage AJAX
-                        updatePdfButton();
-                        
-                        console.log('✅ Tableau mis à jour via AJAX');
-                    },
-                    error: function(xhr) {
-                        console.error('❌ Erreur lors du chargement des données:', xhr.responseText);
-                        alert('Erreur lors du filtrage des équipements');
-                    }
-                });
+            const response = await fetch(`/client/equipements/send-email/${agence}/${clientId}`, {
+                method: 'POST',
+                body: formData
             });
             
-            // Event listener pour pré-remplir le modal d'email
-            document.addEventListener('emailModalOpened', function() {
-                const clientEmailField = document.getElementById('clientEmail');
-                const clientNameField = document.getElementById('clientName');
-                
-                if (currentClientInfo.email && clientEmailField) {
-                    clientEmailField.value = currentClientInfo.email;
-                }
-                if (currentClientInfo.nom && clientNameField) {
-                    clientNameField.value = currentClientInfo.nom;
+            console.log('📨 Statut:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erreur ${response.status}: ${errorText}`);
+            }
+            
+            const result = await response.json();
+            console.log('📊 Résultat:', result);
+            
+            if (result.success) {
+                alert('✅ Email envoyé avec succès !');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('emailModal'));
+                modal.hide();
+            } else {
+                alert('❌ Erreur : ' + (result.message || result.error || 'Erreur inconnue'));
+            }
+            
+        } catch (error) {
+            console.error('❌ Erreur:', error);
+            alert('❌ Erreur : ' + error.message);
+        } finally {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer l\'email';
+        }
+    }
+
+    // ===== FONCTION POUR LE BOUTON PDF =====
+    function updatePdfButton() {
+        const pdfButton = document.getElementById('pdf-button');
+        if (!pdfButton) return;
+        
+        const baseUrl = pdfButton.href.split('?')[0];
+        const url = new URL(baseUrl);
+        
+        const anneeSelect = document.getElementById('clientAnneeFilter');
+        const visiteSelect = document.getElementById('clientVisiteFilter');
+        const anneeValue = anneeSelect ? anneeSelect.value : '';
+        const visiteValue = visiteSelect ? visiteSelect.value : '';
+        
+        if (anneeValue) url.searchParams.set('clientAnneeFilter', anneeValue);
+        if (visiteValue) url.searchParams.set('clientVisiteFilter', visiteValue);
+        
+        pdfButton.href = url.toString();
+        
+        const buttonSmall = pdfButton.querySelector('small');
+        if (anneeValue || visiteValue) {
+            const filterText = (anneeValue ? anneeValue : '') + (anneeValue && visiteValue ? ' - ' : '') + (visiteValue ? visiteValue : '');
+            
+            if (buttonSmall) {
+                buttonSmall.textContent = '(' + filterText + ')';
+            } else {
+                const smallElement = document.createElement('small');
+                smallElement.className = 'd-block';
+                smallElement.textContent = '(' + filterText + ')';
+                pdfButton.appendChild(smallElement);
+            }
+        } else if (buttonSmall) {
+            buttonSmall.textContent = '';
+        }
+
+        addEmailButtonIfNeeded();
+    }
+
+    // ===== AJOUTER LE BOUTON EMAIL =====
+    function addEmailButtonIfNeeded() {
+        const pdfButton = document.getElementById('pdf-button');
+        const pdfContainer = pdfButton ? pdfButton.parentElement : null;
+        if (!pdfContainer || pdfContainer.querySelector('#email-button')) return;
+        
+        const emailButton = document.createElement('button');
+        emailButton.id = 'email-button';
+        emailButton.className = 'btn btn-primary btn-lg ms-2';
+        emailButton.innerHTML = '<i class="fa-solid fa-envelope"></i> Envoyer par email';
+        emailButton.style.marginTop = '10px';
+        emailButton.addEventListener('click', showEmailModal);
+        
+        pdfButton.parentNode.insertBefore(emailButton, pdfButton.nextSibling);
+    }
+
+    // ===== INITIALISATION =====
+    $(document).ready(function() {
+        console.log('🚀 Initialisation simple');
+        
+        // Récupérer l'email du client
+        fetchClientInfo();
+        
+        const anneeSelect = document.getElementById('clientAnneeFilter');
+        const visiteSelect = document.getElementById('clientVisiteFilter');
+        
+        if (anneeSelect) {
+            anneeSelect.addEventListener('change', updatePdfButton);
+        }
+        if (visiteSelect) {
+            visiteSelect.addEventListener('change', updatePdfButton);
+        }
+        
+        updatePdfButton();
+        
+        // AJAX pour les filtres (code existant)
+        $('#filterForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            
+            $.ajax({
+                url: '/ajax/filter-equipment',
+                type: 'GET',
+                data: formData,
+                success: function(response) {
+                    $('#equipment-table-container').html(response);
+                    if (typeof $('#table').bootstrapTable === 'function') {
+                        $('#table').bootstrapTable();
+                    }
+                    updatePdfButton();
+                },
+                error: function(xhr) {
+                    console.error('Erreur AJAX:', xhr.responseText);
+                    alert('Erreur lors du filtrage des équipements');
                 }
             });
-            
-            console.log('✅ Script PDF Enhanced initialisé avec succès');
         });
-    </script>
+        
+        console.log('✅ Initialisation terminée');
+    });
+</script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             console.log('=== INITIALIZATION PDF ENHANCED ===');
