@@ -738,17 +738,35 @@
             const agence = '{{ agenceSelected|default("") }}';
             const clientId = '{{ clientSelected|default("") }}';
             
-            if (!agence || !clientId) return;
+            console.log('🔍 Tentative récupération client info:', { agence, clientId });
+            
+            if (!agence || !clientId) {
+                console.warn('⚠️ Agence ou client ID manquant:', { agence, clientId });
+                return;
+            }
             
             try {
-                const response = await fetch(`/api/client-info/${agence}/${clientId}`);
+                const url = `/api/client-info/${agence}/${clientId}`;
+                console.log('📡 Appel API:', url);
+                
+                const response = await fetch(url);
+                console.log('📨 Réponse API status:', response.status);
+                
                 const data = await response.json();
+                console.log('📊 Données reçues:', data);
                 
                 if (data.success && data.client) {
                     currentClientInfo = data.client;
-                    console.log('✅ Client info récupérées:', currentClientInfo);
+                    console.log('✅ Client info récupérées avec succès:', currentClientInfo);
+                    
+                    // Vérifier si l'email est présent
+                    if (currentClientInfo.email) {
+                        console.log('📧 Email client trouvé:', currentClientInfo.email);
+                    } else {
+                        console.warn('⚠️ Pas d\'email trouvé pour le client');
+                    }
                 } else {
-                    console.warn('⚠️ Pas d\'infos client trouvées');
+                    console.warn('⚠️ Réponse API invalide:', data);
                 }
             } catch (error) {
                 console.error('❌ Erreur récupération client info:', error);
@@ -1005,9 +1023,12 @@
         // ===== INITIALISATION PRINCIPALE =====
         $(document).ready(function() {
             console.log('🚀 Initialisation complète du script PDF Enhanced');
+            console.log('📋 Variables Twig disponibles:');
+            console.log('  - agenceSelected:', '{{ agenceSelected|default("VIDE") }}');
+            console.log('  - clientSelected:', '{{ clientSelected|default("VIDE") }}');
             
-            // Récupérer les informations client
-            fetchClientInfo();
+            // Récupérer les informations client APRÈS que le DOM soit prêt
+            setTimeout(fetchClientInfo, 100); // Petit délai pour s'assurer que tout est initialisé
             
             // Éléments DOM
             const anneeSelect = document.getElementById('clientAnneeFilter');

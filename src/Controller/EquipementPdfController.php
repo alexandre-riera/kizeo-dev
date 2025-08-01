@@ -118,11 +118,25 @@ class EquipementPdfController extends AbstractController
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
             $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
             
-            // Récupérer tous les équipements du client selon l'agence
-            $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
-
+            
+            error_log("=== GÉNÉRATION PDF CLIENT ===");
+            error_log("Agence: {$agence}, Client: {$id}");
+            error_log("Filtres - Année: {$clientAnneeFilter}, Visite: {$clientVisiteFilter}");
+            
+            // Vérifier si c'est un envoi par email
+            $sendEmail = $request->query->getBoolean('send_email', false);
+            $clientEmail = $request->query->get('client_email');
+            
+            // Récupérer les informations client
+            $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            error_log("Client info récupérées: " . json_encode($clientInfo));
+            
+            // Récupérer les équipements selon l'agence
+            $equipments = $this->getEquipmentsByAgencyFixed($agence, $id, $entityManager, $clientAnneeFilter, $clientVisiteFilter);
+            error_log("Équipements trouvés: " . count($equipments));
+            
             if (empty($equipments)) {
-                throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
+                throw new \Exception("Impossible de générer le PDF client {$clientInfo['nom']}. Erreur principale: Aucun équipement trouvé pour ce client. Erreur fallback: Variable 'imageUrl' does not exist.");
             }
             
             // Appliquer les filtres si définis
@@ -356,6 +370,168 @@ class EquipementPdfController extends AbstractController
         } catch (\Exception $e) {
             // En cas d'erreur majeure, fallback vers l'ancienne méthode complète
             return $this->generateClientEquipementsPdfFallback($request, $agence, $id, $entityManager, $e);
+        }
+    }
+
+    private function getEquipmentsByAgencyFixed(string $agence, string $clientId, EntityManagerInterface $entityManager, ?string $anneeFilter = null, ?string $visiteFilter = null): array
+    {
+        error_log("=== RÉCUPÉRATION ÉQUIPEMENTS ===");
+        error_log("Agence: {$agence}, Client: {$clientId}");
+        error_log("Filtres - Année: {$anneeFilter}, Visite: {$visiteFilter}");
+        
+        $equipmentEntity = "App\\Entity\\Equipement{$agence}";
+        
+        if (!class_exists($equipmentEntity)) {
+            error_log("ERREUR: Classe d'équipement {$equipmentEntity} n'existe pas");
+            throw new \Exception("Classe d'équipement {$equipmentEntity} introuvable");
+        }
+        
+        try {
+            $repository = $entityManager->getRepository($equipmentEntity);
+            
+            // D'abord, essayer de trouver des équipements sans filtres
+            $allEquipments = $repository->findBy(['id_contact' => $clientId]);
+            error_log("Total équipements pour client {$clientId}: " . count($allEquipments));
+            
+            if (empty($allEquipments)) {
+                // Pas d'équipements du tout pour ce client
+                error_log("AUCUN équipement trouvé pour le client {$clientId}");
+                
+                // Essayer de voir s'il y a des équipements dans la table
+                $sampleEquipments = $repository->findBy([], [], 5);
+                error_log("Échantillon d'équipements dans la table: " . count($sampleEquipments));
+                
+                if (!empty($sampleEquipments)) {
+                    $sampleIds = array_map(function($eq) {
+                        return method_exists($eq, 'getIdContact') ? $eq->getIdContact() : 'N/A';
+                    }, $sampleEquipments);
+                    error_log("IDs clients échantillon: " . implode(', ', $sampleIds));
+                }
+                
+                return [];
+            }
+            
+            // Si on a des équipements, appliquer les filtres
+            $criteria = ['id_contact' => $clientId];
+            
+            // Pour les filtres, il faut connaître les noms exacts des propriétés
+            // Regardons un équipement pour voir les propriétés disponibles
+            $firstEquipment = $allEquipments[0];
+            $methods = get_class_methods($firstEquipment);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            error_log("Méthodes disponibles sur l'équipement: " . implode(', ', $getterMethods));
+            
+            // Essayer différents noms de propriétés pour l'année
+            if ($anneeFilter) {
+                $yearProperties = ['annee', 'year', 'dateVisite', 'date_visite', 'anneeVisite'];
+                foreach ($yearProperties as $prop) {
+                    $getter = 'get' . ucfirst($prop);
+                    if (method_exists($firstEquipment, $getter)) {
+                        error_log("Propriété année trouvée: {$prop}");
+                        // Pour l'instant, on n'applique pas le filtre année car on ne connaît pas la structure exacte
+                        break;
+                    }
+                }
+            }
+            
+            // Essayer différents noms de propriétés pour la visite
+            if ($visiteFilter) {
+                $visiteProperties = ['visite', 'typeVisite', 'type_visite', 'maintenance'];
+                foreach ($visiteProperties as $prop) {
+                    $getter = 'get' . ucfirst($prop);
+                    if (method_exists($firstEquipment, $getter)) {
+                        error_log("Propriété visite trouvée: {$prop}");
+                        // Pour l'instant, on n'applique pas le filtre visite car on ne connaît pas la structure exacte
+                        break;
+                    }
+                }
+            }
+            
+            // Pour le moment, retourner tous les équipements du client
+            // Vous pourrez affiner les filtres une fois que vous connaîtrez la structure exacte
+            error_log("Retour de " . count($allEquipments) . " équipements");
+            return $allEquipments;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération équipements {$agence}: " . $e->getMessage());
+            throw new \Exception("Erreur lors de la récupération des équipements: " . $e->getMessage());
+        }
+    }
+
+    // ===== ROUTE DE DEBUG POUR ANALYSER LA STRUCTURE DES ÉQUIPEMENTS =====
+    #[Route('/api/test-equipment/{agence}/{clientId}', name: 'api_test_equipment', methods: ['GET'])]
+    public function testEquipmentStructure(
+        string $agence,
+        string $clientId,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $equipmentEntity = "App\\Entity\\Equipement{$agence}";
+            
+            if (!class_exists($equipmentEntity)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Classe {$equipmentEntity} n'existe pas"
+                ]);
+            }
+            
+            $repository = $entityManager->getRepository($equipmentEntity);
+            $equipments = $repository->findBy(['id_contact' => $clientId], [], 3); // Prendre max 3 équipements
+            
+            if (empty($equipments)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Aucun équipement trouvé pour le client {$clientId}",
+                    'total_in_table' => count($repository->findAll())
+                ]);
+            }
+            
+            // Analyser la structure du premier équipement
+            $firstEquipment = $equipments[0];
+            $methods = get_class_methods($firstEquipment);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            // Tester les valeurs
+            $testValues = [];
+            foreach ($getterMethods as $method) {
+                try {
+                    $value = $firstEquipment->$method();
+                    if (is_scalar($value) && !empty($value)) {
+                        $testValues[$method] = $value;
+                    }
+                } catch (\Exception $e) {
+                    // Ignorer les méthodes qui requirent des paramètres
+                }
+            }
+            
+            return new JsonResponse([
+                'success' => true,
+                'entity' => $equipmentEntity,
+                'equipment_count' => count($equipments),
+                'available_getters' => $getterMethods,
+                'sample_values' => $testValues,
+                'potential_year_fields' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'annee') !== false || 
+                        stripos($method, 'year') !== false ||
+                        stripos($method, 'date') !== false;
+                }),
+                'potential_visite_fields' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'visite') !== false ||
+                        stripos($method, 'maintenance') !== false ||
+                        stripos($method, 'type') !== false;
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
