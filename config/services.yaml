@@ -80,7 +80,7 @@ services:
 
     App\Service\ShortLinkService:
         arguments:
-            $baseUrl: '%app.base_url%'
+            $baseUrl: '%env(APP_BASE_URL)%'
 
     App\Service\EmailService:
         arguments:
