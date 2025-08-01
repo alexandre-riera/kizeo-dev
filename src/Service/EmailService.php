@@ -114,7 +114,7 @@ class EmailService
                     <div style='font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;'>
                         🏢 SOMAFI
                     </div>
-                    <div style='font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px;'>
+                    <div style='font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; color:black;'>
                         Grenoble • Agence {$agence}
                     </div>
                     <!-- Badge avec couverture nationale -->
@@ -156,7 +156,7 @@ class EmailService
                     <div style='text-align: center; margin: 35px 0;'>
                         <a href='{$shortUrl}' 
                         style='background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); 
-                                color: white; 
+                                color: black; 
                                 padding: 16px 40px; 
                                 text-decoration: none; 
                                 border-radius: 30px; 
@@ -165,7 +165,7 @@ class EmailService
                                 font-size: 16px;
                                 box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
                                 transition: all 0.3s ease;'>
-                            📄 Télécharger le rapport PDF
+                            📄 Télécharger le rapport PDF {{  shortUrl }}
                         </a>
                     </div>
                     
