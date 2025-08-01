@@ -776,7 +776,7 @@ class EquipementPdfController extends AbstractController
         if (!$user) {
             return 'SYS'; // Fallback si pas d'utilisateur connecté
         }
-        die('DEBUG: Méthodes de l\'utilisateur: ' . implode(', ', get_class_methods($user)));
+        dump('DEBUG: Méthodes de l\'utilisateur: ' . implode(', ', get_class_methods($user)));
         $firstName = $user->getFirstName() ?? '';
         $lastName = $user->getLastName() ?? '';
         
