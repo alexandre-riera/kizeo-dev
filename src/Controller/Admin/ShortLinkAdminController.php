@@ -31,22 +31,16 @@ class ShortLinkAdminController extends AbstractController
     }
 
     /**
-     * Page principale d'administration
+     * Liste des liens courts avec statistiques - CORRIGÉE
      */
     #[Route('/', name: 'index')]
     public function index(Request $request): Response
     {
-        // Vérifier les permissions
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        
         $page = $request->query->getInt('page', 1);
         $agence = $request->query->get('agence');
-        $limit = 50;
         
         $qb = $this->repository->createQueryBuilder('s')
-            ->orderBy('s.createdAt', 'DESC')
-            ->setMaxResults($limit)
-            ->setFirstResult(($page - 1) * $limit);
+            ->orderBy('s.createdAt', 'DESC');
         
         if ($agence) {
             $qb->andWhere('s.agence = :agence')
@@ -56,13 +50,28 @@ class ShortLinkAdminController extends AbstractController
         $links = $qb->getQuery()->getResult();
         
         // Statistiques globales
-        $stats = $this->calculateStats($links);
+        $stats = [
+            'total_links' => count($links),
+            'total_clicks' => array_sum(array_map(fn($link) => $link->getClickCount(), $links)),
+            'expired_links' => count(array_filter($links, fn($link) => $link->isExpired())),
+            'active_links' => count(array_filter($links, fn($link) => !$link->isExpired()))
+        ];
+        
+        // CORRECTION : Créer la liste des agences manuellement au lieu d'utiliser |unique
+        $agencies = [];
+        foreach ($links as $link) {
+            $agenceLink = $link->getAgence();
+            if (!in_array($agenceLink, $agencies)) {
+                $agencies[] = $agenceLink;
+            }
+        }
+        sort($agencies); // Trier alphabétiquement
         
         return $this->render('admin/short_links/index.html.twig', [
             'links' => $links,
             'stats' => $stats,
-            'current_agence' => $agence,
-            'current_page' => $page
+            'agencies' => $agencies, // Passer la liste des agences au template
+            'current_agence' => $agence
         ]);
     }
 
@@ -72,10 +81,44 @@ class ShortLinkAdminController extends AbstractController
     #[Route('/api/stats', name: 'api_stats')]
     public function apiStats(): JsonResponse
     {
-        $this->denyAccessUnlessGranted('ROLE_ADMIN');
-        
         $links = $this->repository->findAll();
-        $stats = $this->calculateDetailedStats($links);
+        
+        $stats = [
+            'total_links' => count($links),
+            'total_clicks' => array_sum(array_map(fn($link) => $link->getClickCount(), $links)),
+            'links_by_agency' => [],
+            'clicks_by_agency' => [],
+            'recent_activity' => []
+        ];
+        
+        foreach ($links as $link) {
+            $agence = $link->getAgence();
+            
+            if (!isset($stats['links_by_agency'][$agence])) {
+                $stats['links_by_agency'][$agence] = 0;
+                $stats['clicks_by_agency'][$agence] = 0;
+            }
+            
+            $stats['links_by_agency'][$agence]++;
+            $stats['clicks_by_agency'][$agence] += $link->getClickCount();
+        }
+        
+        // Activité récente (derniers 10 accès)
+        $recentLinks = $this->repository->createQueryBuilder('s')
+            ->where('s.clickCount > 0')
+            ->orderBy('s.lastAccessAt', 'DESC')
+            ->setMaxResults(10)
+            ->getQuery()
+            ->getResult();
+        
+        foreach ($recentLinks as $link) {
+            $stats['recent_activity'][] = [
+                'agence' => $link->getAgence(),
+                'client_id' => $link->getClientId(),
+                'clicks' => $link->getClickCount(),
+                'last_access' => $link->getLastAccessAt()?->format('d/m/Y H:i')
+            ];
+        }
         
         return new JsonResponse($stats);
     }

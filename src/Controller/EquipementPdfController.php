@@ -283,9 +283,15 @@ class EquipementPdfController extends AbstractController
                 $pdfContent
             );
             
-            // 3. Création du lien court
-            $originalUrl = $request->getUriForPath("/pdf/download/{$agence}/{$id}/{$clientAnneeFilter}/{$clientVisiteFilter}");
-            $expiresAt = (new \DateTime())->modify('+30 days'); // Expire dans 30 jours
+            // Création du lien court SÉCURISÉ
+            $originalUrl = $this->generateUrl('pdf_secure_download', [
+                'agence' => $agence,
+                'clientId' => $id,
+                'annee' => $clientAnneeFilter,
+                'visite' => $clientVisiteFilter
+            ], true);
+            
+            $expiresAt = (new \DateTime())->modify('+30 days');
             
             $shortLink = $this->shortLinkService->createShortLink(
                 $originalUrl,
@@ -296,6 +302,7 @@ class EquipementPdfController extends AbstractController
                 $expiresAt
             );
             
+            // URL courte pour l'email (PAS l'URL de téléchargement direct)
             $shortUrl = $this->shortLinkService->getShortUrl($shortLink->getShortCode());
             
             // 4. Retourner le PDF directement OU envoyer par email selon le paramètre
@@ -380,7 +387,65 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * Route pour redirection des liens courts
+     * Route SÉCURISÉE pour télécharger un PDF stocké
+     * IMPORTANT: Cette route ne doit PAS être exposée directement au client
+     */
+    #[Route('/pdf/secure-download/{agence}/{clientId}/{annee}/{visite}', name: 'pdf_secure_download')]
+    public function secureDownloadPdf(
+        string $agence,
+        string $clientId,
+        string $annee,
+        string $visite,
+        Request $request
+    ): Response {
+        // SÉCURITÉ : Vérifier que la requête vient d'un lien court valide
+        $referer = $request->headers->get('referer');
+        $shortCode = $request->query->get('sc'); // Short code pour validation
+        
+        if (!$shortCode) {
+            throw $this->createAccessDeniedException('Accès non autorisé');
+        }
+        
+        // Valider le lien court
+        $shortLink = $this->shortLinkService->getByShortCode($shortCode);
+        if (!$shortLink || $shortLink->isExpired()) {
+            throw $this->createNotFoundException('Lien expiré ou invalide');
+        }
+        
+        // Vérifier que les paramètres correspondent au lien court
+        if ($shortLink->getAgence() !== $agence || 
+            $shortLink->getClientId() !== $clientId ||
+            $shortLink->getAnnee() !== $annee ||
+            $shortLink->getVisite() !== $visite) {
+            throw $this->createAccessDeniedException('Paramètres invalides');
+        }
+        
+        // Récupérer le PDF
+        $pdfPath = $this->pdfStorageService->getPdfPath($agence, $clientId, $annee, $visite);
+        
+        if (!$pdfPath) {
+            throw $this->createNotFoundException('PDF non trouvé');
+        }
+        
+        // Enregistrer l'accès
+        $this->shortLinkService->recordAccess($shortLink);
+        
+        $pdfContent = file_get_contents($pdfPath);
+        $filename = "rapport_equipements_{$clientId}_{$annee}_{$visite}.pdf";
+        
+        return new Response($pdfContent, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"",
+            'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'X-Robots-Tag' => 'noindex, nofollow',
+            'Last-Modified' => date('D, d M Y H:i:s', filemtime($pdfPath)) . ' GMT'
+        ]);
+    }
+
+    /**
+     * Route de redirection des liens courts SÉCURISÉE
      */
     #[Route('/s/{shortCode}', name: 'short_link_redirect')]
     public function redirectShortLink(string $shortCode): Response
@@ -388,14 +453,24 @@ class EquipementPdfController extends AbstractController
         $shortLink = $this->shortLinkService->getByShortCode($shortCode);
         
         if (!$shortLink) {
-            throw $this->createNotFoundException('Lien non trouvé ou expiré');
+            // Afficher une page d'erreur personnalisée au lieu d'une 404 technique
+            return $this->render('error/link_not_found.html.twig', [
+                'message' => 'Ce lien n\'est plus valide ou a expiré.'
+            ], new Response('', 410)); // 410 = Gone
         }
         
         // Enregistrer l'accès
         $this->shortLinkService->recordAccess($shortLink);
         
-        // Rediriger vers l'URL originale
-        return $this->redirect($shortLink->getOriginalUrl());
+        // SÉCURITÉ : Construire l'URL sécurisée avec le code de validation
+        $secureUrl = $this->generateUrl('pdf_secure_download', [
+            'agence' => $shortLink->getAgence(),
+            'clientId' => $shortLink->getClientId(),
+            'annee' => $shortLink->getAnnee(),
+            'visite' => $shortLink->getVisite()
+        ]) . '?sc=' . $shortCode;
+        
+        return $this->redirect($secureUrl);
     }
 
     /**
@@ -508,12 +583,15 @@ class EquipementPdfController extends AbstractController
     private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
     {
         // Récupérer les informations client depuis la base
-        return ['nom' => 'Client Name']; // Placeholder
+        return [
+            'nom' => 'Client Name',
+            'email' => ''
+        ];
     }
 
     /**
      * NOUVELLE MÉTHODE: Fallback complet vers l'ancienne méthode
-     */
+     */ 
     private function generateClientEquipementsPdfFallback(
         Request $request, 
         string $agence, 

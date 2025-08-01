@@ -5,481 +5,357 @@
 
 {% block stylesheets %}
     {{ parent() }}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.css">
     <style>
-        .stats-card {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border-radius: 10px;
             padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        
+        .links-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            border-bottom: 2px solid #dee2e6;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .status-active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-expired {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .short-url {
+            font-family: monospace;
+            background-color: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .agency-filter {
             margin-bottom: 20px;
         }
-        .expired-link { opacity: 0.6; }
-        .click-count { font-weight: bold; color: #28a745; }
-        .short-code { font-family: monospace; background: #f8f9fa; padding: 2px 6px; border-radius: 4px; }
     </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>
+                    <i class="fas fa-link"></i>
+                    Administration des Liens Courts
+                </h1>
+                <button class="btn btn-danger" onclick="cleanupExpiredLinks()">
+                    <i class="fas fa-trash"></i>
+                    Nettoyer les liens expirés
+                </button>
+            </div>
+
+            {# Statistiques globales #}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_links }}</div>
+                    <div class="stat-label">Total des liens</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.active_links }}</div>
+                    <div class="stat-label">Liens actifs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.expired_links }}</div>
+                    <div class="stat-label">Liens expirés</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ stats.total_clicks }}</div>
+                    <div class="stat-label">Total des clics</div>
+                </div>
+            </div>
+
+            {# Filtre par agence #}
+            <div class="agency-filter">
+                <form method="GET" class="d-flex align-items-center gap-3">
+                    <label for="agence" class="form-label mb-0">Filtrer par agence :</label>
+                    <select name="agence" id="agence" class="form-select" style="width: auto;" onchange="this.form.submit()">
+                        <option value="">Toutes les agences</option>
+                        {% for agency in agencies %}
+                            <option value="{{ agency }}" {{ current_agence == agency ? 'selected' : '' }}>
+                                {{ agency }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+
+            {# Table des liens #}
+            <div class="links-table">
+                <table class="table table-striped table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Code Court</th>
+                            <th>Agence</th>
+                            <th>Client</th>
+                            <th>Année/Visite</th>
+                            <th>Créé le</th>
+                            <th>Expire le</th>
+                            <th>Clics</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for link in links %}
+                            <tr>
+                                <td>
+                                    <code class="short-url">{{ link.shortCode }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ link.agence }}</span>
+                                </td>
+                                <td>{{ link.clientId }}</td>
+                                <td>
+                                    <small>
+                                        {{ link.annee }} - {{ link.visite }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <small>{{ link.createdAt|date('d/m/Y H:i') }}</small>
+                                </td>
+                                <td>
+                                    {% if link.expiresAt %}
+                                        <small>{{ link.expiresAt|date('d/m/Y H:i') }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Jamais</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ link.clickCount }}</span>
+                                </td>
+                                <td>
+                                    {% if link.isExpired %}
+                                        <span class="status-badge status-expired">Expiré</span>
+                                    {% else %}
+                                        <span class="status-badge status-active">Actif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary btn-sm" 
+                                                data-short-url="{{ path('short_link_redirect', {'shortCode': link.shortCode}) }}"
+                                                onclick="copyToClipboard(this.dataset.shortUrl)"
+                                                title="Copier le lien">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                        <a href="{{ link.originalUrl }}" 
+                                           class="btn btn-outline-info btn-sm"
+                                           target="_blank"
+                                           title="Voir l'original">
+                                            <i class="fas fa-external-link-alt"></i>
+                                        </a>
+                                        {% if link.isExpired %}
+                                            <button class="btn btn-outline-danger btn-sm" 
+                                                    data-link-id="{{ link.id }}"
+                                                    onclick="deleteLink(this.dataset.linkId)"
+                                                    title="Supprimer">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    <i class="fas fa-info-circle"></i>
+                                    Aucun lien court trouvé
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Modal de confirmation #}
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmAction">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.23.5/dist/bootstrap-table.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% endblock %}
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(function() {
+                // Afficher une notification de succès
+                showToast('Lien copié dans le presse-papiers !', 'success');
+            }).catch(function(err) {
+                console.error('Erreur lors de la copie:', err);
+                showToast('Erreur lors de la copie', 'error');
+            });
+        }
 
-{% block body %}
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-link-45deg"></i> Administration des Liens Courts</h1>
-        <div>
-            <button class="btn btn-danger" onclick="cleanupExpiredLinks()">
-                <i class="bi bi-trash"></i> Nettoyer les liens expirés
-            </button>
-            <button class="btn btn-info" onclick="refreshStats()">
-                <i class="bi bi-arrow-clockwise"></i> Actualiser
-            </button>
-        </div>
-    </div>
+        function deleteLink(linkId) {
+            document.getElementById('confirmMessage').textContent = 
+                'Êtes-vous sûr de vouloir supprimer ce lien court ?';
+            
+            document.getElementById('confirmAction').onclick = function() {
+                fetch('/admin/short-links/delete/' + linkId, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Lien supprimé avec succès', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Erreur lors de la suppression: ' + (data.message || 'Erreur inconnue'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showToast('Erreur lors de la suppression', 'error');
+                });
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+                modal.hide();
+            };
+            
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            modal.show();
+        }
 
-    {# Statistiques globales #}
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <h3 id="total-links">{{ stats.total_links }}</h3>
-                <p class="mb-0">Liens totaux</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <h3 id="total-clicks">{{ stats.total_clicks }}</h3>
-                <p class="mb-0">Clics totaux</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <h3 id="active-links">{{ stats.active_links }}</h3>
-                <p class="mb-0">Liens actifs</p>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="stats-card text-center">
-                <h3 id="expired-links">{{ stats.expired_links }}</h3>
-                <p class="mb-0">Liens expirés</p>
-            </div>
-        </div>
-    </div>
+        function cleanupExpiredLinks() {
+            document.getElementById('confirmMessage').textContent = 
+                'Êtes-vous sûr de vouloir supprimer tous les liens expirés ?';
+            
+            document.getElementById('confirmAction').onclick = function() {
+                fetch('/admin/short-links/cleanup', {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.count + ' liens expirés supprimés', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Erreur lors du nettoyage: ' + (data.message || 'Erreur inconnue'), 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur:', error);
+                    showToast('Erreur lors du nettoyage', 'error');
+                });
+                
+                const modal = bootstrap.Modal.getInstance(document.getElementById('confirmModal'));
+                modal.hide();
+            };
+            
+            const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+            modal.show();
+        }
 
-    {# Filtres #}
-    <div class="row mb-3">
-        <div class="col-md-4">
-            <select class="form-select" id="agence-filter" onchange="filterByAgency()">
-                <option value="">Toutes les agences</option>
-                <option value="S10" {{ current_agence == 'S10' ? 'selected' : '' }}>Group (S10)</option>
-                <option value="S40" {{ current_agence == 'S40' ? 'selected' : '' }}>St Etienne (S40)</option>
-                <option value="S50" {{ current_agence == 'S50' ? 'selected' : '' }}>Grenoble (S50)</option>
-                <option value="S60" {{ current_agence == 'S60' ? 'selected' : '' }}>Lyon (S60)</option>
-                <option value="S70" {{ current_agence == 'S70' ? 'selected' : '' }}>Bordeaux (S70)</option>
-                <option value="S80" {{ current_agence == 'S80' ? 'selected' : '' }}>Paris Nord (S80)</option>
-                <option value="S100" {{ current_agence == 'S100' ? 'selected' : '' }}>Montpellier (S100)</option>
-                <option value="S120" {{ current_agence == 'S120' ? 'selected' : '' }}>Hauts de France (S120)</option>
-                <option value="S130" {{ current_agence == 'S130' ? 'selected' : '' }}>Toulouse (S130)</option>
-                <option value="S140" {{ current_agence == 'S140' ? 'selected' : '' }}>Epinal (S140)</option>
-                <option value="S150" {{ current_agence == 'S150' ? 'selected' : '' }}>PACA (S150)</option>
-                <option value="S160" {{ current_agence == 'S160' ? 'selected' : '' }}>Rouen (S160)</option>
-                <option value="S170" {{ current_agence == 'S170' ? 'selected' : '' }}>Rennes (S170)</option>
-            </select>
-        </div>
-        <div class="col-md-4">
-            <input type="text" class="form-control" id="search-client" placeholder="Rechercher par ID client..." onkeyup="searchLinks()">
-        </div>
-        <div class="col-md-4">
-            <select class="form-select" id="status-filter" onchange="filterByStatus()">
-                <option value="">Tous les statuts</option>
-                <option value="active">Actifs seulement</option>
-                <option value="expired">Expirés seulement</option>
-            </select>
-        </div>
-    </div>
-
-    {# Tableau des liens #}
-    <div class="card">
-        <div class="card-header">
-            <h5><i class="bi bi-table"></i> Liste des Liens Courts</h5>
-        </div>
-        <div class="card-body">
-            <table class="table table-striped table-hover" id="links-table">
-                <thead>
-                    <tr>
-                        <th>Code Court</th>
-                        <th>Agence</th>
-                        <th>Client ID</th>
-                        <th>Année</th>
-                        <th>Visite</th>
-                        <th>Clics</th>
-                        <th>Créé le</th>
-                        <th>Expire le</th>
-                        <th>Statut</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for link in links %}
-                    <tr class="{{ link.isExpired ? 'expired-link' : '' }}" data-agence="{{ link.agence }}" data-client="{{ link.clientId }}">
-                        <td>
-                            <code class="short-code">{{ link.shortCode }}</code>
-                            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="copyToClipboard('{{ link.shortCode }}')" title="Copier le lien">
-                                <i class="bi bi-clipboard"></i>
-                            </button>
-                        </td>
-                        <td><span class="badge bg-primary">{{ link.agence }}</span></td>
-                        <td>{{ link.clientId }}</td>
-                        <td>{{ link.annee }}</td>
-                        <td>{{ link.visite }}</td>
-                        <td><span class="click-count">{{ link.clickCount }}</span></td>
-                        <td>{{ link.createdAt|date('d/m/Y H:i') }}</td>
-                        <td>
-                            {% if link.expiresAt %}
-                                {{ link.expiresAt|date('d/m/Y H:i') }}
-                            {% else %}
-                                <em>Jamais</em>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if link.isExpired %}
-                                <span class="badge bg-danger">Expiré</span>
-                            {% else %}
-                                <span class="badge bg-success">Actif</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            <div class="btn-group btn-group-sm">
-                                <a href="{{ link.originalUrl }}" class="btn btn-outline-primary" target="_blank" title="Ouvrir le PDF">
-                                    <i class="bi bi-eye"></i>
-                                </a>
-                                <button class="btn btn-outline-info" onclick="extendExpiry('{{ link.id }}')" title="Prolonger">
-                                    <i class="bi bi-clock"></i>
-                                </button>
-                                <button class="btn btn-outline-danger" onclick="deleteLink('{{ link.id }}')" title="Supprimer">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    {# Graphiques #}
-    <div class="row mt-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Liens par Agence</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="agencyChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5>Clics par Agence</h5>
-                </div>
-                <div class="card-body">
-                    <canvas id="clicksChart" height="200"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-{# Modal de prolongation #}
-<div class="modal fade" id="extendModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Prolonger la durée du lien</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <form id="extendForm">
-                    <input type="hidden" id="linkIdToExtend">
-                    <div class="mb-3">
-                        <label for="extensionDays" class="form-label">Prolonger de (jours) :</label>
-                        <select class="form-select" id="extensionDays">
-                            <option value="7">7 jours</option>
-                            <option value="30" selected>30 jours (par défaut)</option>
-                            <option value="60">60 jours</option>
-                            <option value="90">90 jours</option>
-                        </select>
+        // Fonction helper pour afficher les notifications
+        function showToast(message, type) {
+            const toast = document.createElement('div');
+            const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+            toast.className = 'toast align-items-center text-white ' + bgClass + ' border-0 position-fixed';
+            toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999;';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">
+                        ${message}
                     </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                <button type="button" class="btn btn-primary" onclick="confirmExtend()">Prolonger</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-// Variables globales
-let linksData = {{ links|json_encode|raw }};
-
-// Initialisation
-document.addEventListener('DOMContentLoaded', function() {
-    initializeCharts();
-    loadStats();
-});
-
-// Filtrage par agence
-function filterByAgency() {
-    const selectedAgency = document.getElementById('agence-filter').value;
-    const rows = document.querySelectorAll('#links-table tbody tr');
-    
-    rows.forEach(row => {
-        const agence = row.dataset.agence;
-        if (!selectedAgency || agence === selectedAgency) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-// Filtrage par statut
-function filterByStatus() {
-    const selectedStatus = document.getElementById('status-filter').value;
-    const rows = document.querySelectorAll('#links-table tbody tr');
-    
-    rows.forEach(row => {
-        const isExpired = row.classList.contains('expired-link');
-        
-        if (!selectedStatus || 
-            (selectedStatus === 'active' && !isExpired) ||
-            (selectedStatus === 'expired' && isExpired)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-// Recherche par client ID
-function searchLinks() {
-    const searchTerm = document.getElementById('search-client').value.toLowerCase();
-    const rows = document.querySelectorAll('#links-table tbody tr');
-    
-    rows.forEach(row => {
-        const clientId = row.dataset.client.toLowerCase();
-        if (clientId.includes(searchTerm)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-}
-
-// Copier dans le presse-papiers
-function copyToClipboard(shortCode) {
-    const fullUrl = `${window.location.origin}/s/${shortCode}`;
-    navigator.clipboard.writeText(fullUrl).then(() => {
-        showAlert('success', 'Lien copié dans le presse-papiers !');
-    });
-}
-
-// Prolonger un lien
-function extendExpiry(linkId) {
-    document.getElementById('linkIdToExtend').value = linkId;
-    const modal = new bootstrap.Modal(document.getElementById('extendModal'));
-    modal.show();
-}
-
-function confirmExtend() {
-    const linkId = document.getElementById('linkIdToExtend').value;
-    const days = document.getElementById('extensionDays').value;
-    
-    fetch(`/admin/short-links/extend/${linkId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ days: parseInt(days) })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAlert('success', 'Lien prolongé avec succès');
-            location.reload();
-        } else {
-            showAlert('error', data.message);
-        }
-    })
-    .catch(() => showAlert('error', 'Erreur lors de la prolongation'));
-    
-    bootstrap.Modal.getInstance(document.getElementById('extendModal')).hide();
-}
-
-// Supprimer un lien
-function deleteLink(linkId) {
-    if (confirm('Êtes-vous sûr de vouloir supprimer ce lien ?')) {
-        fetch(`/admin/short-links/delete/${linkId}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', 'Lien supprimé');
-                location.reload();
-            } else {
-                showAlert('error', data.message);
-            }
-        })
-        .catch(() => showAlert('error', 'Erreur lors de la suppression'));
-    }
-}
-
-// Nettoyer les liens expirés
-function cleanupExpiredLinks() {
-    if (confirm('Êtes-vous sûr de vouloir supprimer tous les liens expirés ?')) {
-        fetch('/admin/short-links/cleanup', {
-            method: 'POST'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                location.reload();
-            } else {
-                showAlert('error', data.message);
-            }
-        })
-        .catch(() => showAlert('error', 'Erreur lors du nettoyage'));
-    }
-}
-
-// Actualiser les statistiques
-function refreshStats() {
-    fetch('/admin/short-links/api/stats')
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('total-links').textContent = data.total_links;
-        document.getElementById('total-clicks').textContent = data.total_clicks;
-        document.getElementById('active-links').textContent = data.total_links - Object.keys(data.links_by_agency).length;
-        document.getElementById('expired-links').textContent = Object.keys(data.links_by_agency).length;
-        
-        updateCharts(data);
-        showAlert('success', 'Statistiques actualisées');
-    })
-    .catch(() => showAlert('error', 'Erreur lors de l\'actualisation'));
-}
-
-// Initialiser les graphiques
-function initializeCharts() {
-    // Graphique des liens par agence
-    const agencyCtx = document.getElementById('agencyChart').getContext('2d');
-    new Chart(agencyCtx, {
-        type: 'doughnut',
-        data: {
-            labels: {{ links|map(l => l.agence)|unique|values|json_encode|raw }},
-            datasets: [{
-                data: getAgencyData('links'),
-                backgroundColor: [
-                    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0',
-                    '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF',
-                    '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'
-                ]
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom'
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                </div>
+            `;
+            document.body.appendChild(toast);
+            
+            // Auto-suppression après 3 secondes
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.remove();
                 }
-            }
+            }, 3000);
         }
-    });
 
-    // Graphique des clics par agence
-    const clicksCtx = document.getElementById('clicksChart').getContext('2d');
-    new Chart(clicksCtx, {
-        type: 'bar',
-        data: {
-            labels: {{ links|map(l => l.agence)|unique|values|json_encode|raw }},
-            datasets: [{
-                label: 'Clics',
-                data: getAgencyData('clicks'),
-                backgroundColor: '#36A2EB',
-                borderColor: '#1E88E5',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-
-// Obtenir les données par agence
-function getAgencyData(type) {
-    const agencies = {};
-    
-    linksData.forEach(link => {
-        if (!agencies[link.agence]) {
-            agencies[link.agence] = { links: 0, clicks: 0 };
-        }
-        agencies[link.agence].links++;
-        agencies[link.agence].clicks += link.clickCount || 0;
-    });
-    
-    return Object.values(agencies).map(agency => agency[type]);
-}
-
-// Mettre à jour les graphiques
-function updateCharts(newData) {
-    // Ici vous pouvez mettre à jour les graphiques avec les nouvelles données
-    console.log('Mise à jour des graphiques avec:', newData);
-}
-
-// Charger les statistiques
-function loadStats() {
-    // Chargement initial des stats déjà fait par le template
-    console.log('Stats chargées');
-}
-
-// Afficher une alerte
-function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show position-fixed" 
-             style="top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    
-    const alertDiv = document.createElement('div');
-    alertDiv.innerHTML = alertHtml;
-    document.body.appendChild(alertDiv.firstElementChild);
-    
-    // Auto-remove after 5 seconds
-    setTimeout(() => {
-        const alert = document.querySelector(`.${alertClass}`);
-        if (alert) {
-            alert.remove();
-        }
-    }, 5000);
-}
-</script>
-
+        // Actualisation automatique des statistiques
+        setInterval(function() {
+            fetch('/admin/short-links/api/stats')
+                .then(response => response.json())
+                .then(data => {
+                    // Mise à jour des compteurs en temps réel
+                    const statCards = document.querySelectorAll('.stat-value');
+                    if (statCards.length >= 4) {
+                        statCards[0].textContent = data.total_links;
+                        statCards[1].textContent = data.active_links || 0;
+                        statCards[2].textContent = data.expired_links || 0;
+                        statCards[3].textContent = data.total_clicks;
+                    }
+                })
+                .catch(error => console.error('Erreur actualisation stats:', error));
+        }, 30000); // Toutes les 30 secondes
+    </script>
 {% endblock %}
