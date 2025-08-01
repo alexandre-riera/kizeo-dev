@@ -111,7 +111,7 @@ class EmailService
                 <!-- EN-TÊTE SOMAFI AMÉLIORÉ -->
                 <div style='background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%); color: white; padding: 25px; text-align: center; position: relative;'>
                     <!-- Logo SOMAFI en texte stylisé -->
-                    <div style='font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px;'>
+                    <div style='font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; color:black;'>
                         🏢 SOMAFI
                     </div>
                     <div style='font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; color:black;'>
@@ -165,7 +165,7 @@ class EmailService
                                 font-size: 16px;
                                 box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
                                 transition: all 0.3s ease;'>
-                            📄 Télécharger le rapport PDF {{  shortUrl }}
+                            📄 Télécharger le rapport PDF
                         </a>
                     </div>
                     
