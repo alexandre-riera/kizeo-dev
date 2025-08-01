@@ -190,6 +190,15 @@
                                            title="Voir l'original">
                                             <i class="fas fa-external-link-alt"></i>
                                         </a>
+                                        <!-- Prolonger (pour liens actifs) -->
+                                        {% if not link.isExpired %}
+                                            <button class="btn btn-outline-warning btn-sm" 
+                                                    data-link-id="{{ link.id }}"
+                                                    onclick="extendLink(this.dataset.linkId)"
+                                                    title="Prolonger">
+                                                <i class="fas fa-clock"></i>
+                                            </button>
+                                        {% endif %}
                                         {% if link.isExpired %}
                                             <button class="btn btn-outline-danger btn-sm" 
                                                     data-link-id="{{ link.id }}"
@@ -217,6 +226,24 @@
 </div>
 
 {# Modal de confirmation #}
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-danger" id="confirmAction">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal de confirmation -->
 <div class="modal fade" id="confirmModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -341,6 +368,33 @@
             }, 3000);
         }
 
+        function extendLink(linkId) {
+            // Demander le nombre de jours
+            const days = prompt('Prolonger de combien de jours ?', '30');
+            if (!days || isNaN(days)) return;
+            
+            fetch('/admin/short-links/extend/' + linkId, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ days: parseInt(days) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`Lien prolongé jusqu'au ${data.new_expiry}`, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast('Erreur: ' + (data.message || 'Erreur inconnue'), 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                showToast('Erreur lors de la prolongation', 'error');
+            });
+        }
         // Actualisation automatique des statistiques
         setInterval(function() {
             fetch('/admin/short-links/api/stats')
