@@ -82,7 +82,7 @@ class HomeController extends AbstractController
         $clientsEpinal = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_EPINAL"]);
         $clientsPaca = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_PACA"]);
         $clientsRouen = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_ROUEN"]);
-        $clientsRennes = $homeRepository->getListClientFromKizeoById($_ENV["TEST_CLIENTS_RENNES"]);
+        $clientsRennes = $homeRepository->getListClientFromKizeoById($_ENV["PROD_CLIENTS_RENNES"]);
         
         // Variables pour le template
         $agenceSelected = null;
