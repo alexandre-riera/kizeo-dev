@@ -118,11 +118,25 @@ class EquipementPdfController extends AbstractController
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
             $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
             
-            // Récupérer tous les équipements du client selon l'agence
-            $equipments = $this->getEquipmentsByClientAndAgence($agence, $id, $entityManager);
-
+            
+            error_log("=== GÉNÉRATION PDF CLIENT ===");
+            error_log("Agence: {$agence}, Client: {$id}");
+            error_log("Filtres - Année: {$clientAnneeFilter}, Visite: {$clientVisiteFilter}");
+            
+            // Vérifier si c'est un envoi par email
+            $sendEmail = $request->query->getBoolean('send_email', false);
+            $clientEmail = $request->query->get('client_email');
+            
+            // Récupérer les informations client
+            $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            error_log("Client info récupérées: " . json_encode($clientInfo));
+            
+            // Récupérer les équipements selon l'agence
+            $equipments = $this->getEquipmentsByAgencyFixed($agence, $id, $entityManager, $clientAnneeFilter, $clientVisiteFilter);
+            error_log("Équipements trouvés: " . count($equipments));
+            
             if (empty($equipments)) {
-                throw $this->createNotFoundException('Aucun équipement trouvé pour ce client');
+                throw new \Exception("Impossible de générer le PDF client {$clientInfo['nom']}. Erreur principale: Aucun équipement trouvé pour ce client. Erreur fallback: Variable 'imageUrl' does not exist.");
             }
             
             // Appliquer les filtres si définis
@@ -283,9 +297,15 @@ class EquipementPdfController extends AbstractController
                 $pdfContent
             );
             
-            // 3. Création du lien court
-            $originalUrl = $request->getUriForPath("/pdf/download/{$agence}/{$id}/{$clientAnneeFilter}/{$clientVisiteFilter}");
-            $expiresAt = (new \DateTime())->modify('+30 days'); // Expire dans 30 jours
+            // Création du lien court SÉCURISÉ
+            $originalUrl = $this->generateUrl('pdf_secure_download', [
+                'agence' => $agence,
+                'clientId' => $id,
+                'annee' => $clientAnneeFilter,
+                'visite' => $clientVisiteFilter
+            ], true);
+            
+            $expiresAt = (new \DateTime())->modify('+30 days');
             
             $shortLink = $this->shortLinkService->createShortLink(
                 $originalUrl,
@@ -296,6 +316,7 @@ class EquipementPdfController extends AbstractController
                 $expiresAt
             );
             
+            // URL courte pour l'email (PAS l'URL de téléchargement direct)
             $shortUrl = $this->shortLinkService->getShortUrl($shortLink->getShortCode());
             
             // 4. Retourner le PDF directement OU envoyer par email selon le paramètre
@@ -352,6 +373,168 @@ class EquipementPdfController extends AbstractController
         }
     }
 
+    private function getEquipmentsByAgencyFixed(string $agence, string $clientId, EntityManagerInterface $entityManager, ?string $anneeFilter = null, ?string $visiteFilter = null): array
+    {
+        error_log("=== RÉCUPÉRATION ÉQUIPEMENTS ===");
+        error_log("Agence: {$agence}, Client: {$clientId}");
+        error_log("Filtres - Année: {$anneeFilter}, Visite: {$visiteFilter}");
+        
+        $equipmentEntity = "App\\Entity\\Equipement{$agence}";
+        
+        if (!class_exists($equipmentEntity)) {
+            error_log("ERREUR: Classe d'équipement {$equipmentEntity} n'existe pas");
+            throw new \Exception("Classe d'équipement {$equipmentEntity} introuvable");
+        }
+        
+        try {
+            $repository = $entityManager->getRepository($equipmentEntity);
+            
+            // D'abord, essayer de trouver des équipements sans filtres
+            $allEquipments = $repository->findBy(['id_contact' => $clientId]);
+            error_log("Total équipements pour client {$clientId}: " . count($allEquipments));
+            
+            if (empty($allEquipments)) {
+                // Pas d'équipements du tout pour ce client
+                error_log("AUCUN équipement trouvé pour le client {$clientId}");
+                
+                // Essayer de voir s'il y a des équipements dans la table
+                $sampleEquipments = $repository->findBy([], [], 5);
+                error_log("Échantillon d'équipements dans la table: " . count($sampleEquipments));
+                
+                if (!empty($sampleEquipments)) {
+                    $sampleIds = array_map(function($eq) {
+                        return method_exists($eq, 'getIdContact') ? $eq->getIdContact() : 'N/A';
+                    }, $sampleEquipments);
+                    error_log("IDs clients échantillon: " . implode(', ', $sampleIds));
+                }
+                
+                return [];
+            }
+            
+            // Si on a des équipements, appliquer les filtres
+            $criteria = ['id_contact' => $clientId];
+            
+            // Pour les filtres, il faut connaître les noms exacts des propriétés
+            // Regardons un équipement pour voir les propriétés disponibles
+            $firstEquipment = $allEquipments[0];
+            $methods = get_class_methods($firstEquipment);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            error_log("Méthodes disponibles sur l'équipement: " . implode(', ', $getterMethods));
+            
+            // Essayer différents noms de propriétés pour l'année
+            if ($anneeFilter) {
+                $yearProperties = ['annee', 'year', 'dateVisite', 'date_visite', 'anneeVisite'];
+                foreach ($yearProperties as $prop) {
+                    $getter = 'get' . ucfirst($prop);
+                    if (method_exists($firstEquipment, $getter)) {
+                        error_log("Propriété année trouvée: {$prop}");
+                        // Pour l'instant, on n'applique pas le filtre année car on ne connaît pas la structure exacte
+                        break;
+                    }
+                }
+            }
+            
+            // Essayer différents noms de propriétés pour la visite
+            if ($visiteFilter) {
+                $visiteProperties = ['visite', 'typeVisite', 'type_visite', 'maintenance'];
+                foreach ($visiteProperties as $prop) {
+                    $getter = 'get' . ucfirst($prop);
+                    if (method_exists($firstEquipment, $getter)) {
+                        error_log("Propriété visite trouvée: {$prop}");
+                        // Pour l'instant, on n'applique pas le filtre visite car on ne connaît pas la structure exacte
+                        break;
+                    }
+                }
+            }
+            
+            // Pour le moment, retourner tous les équipements du client
+            // Vous pourrez affiner les filtres une fois que vous connaîtrez la structure exacte
+            error_log("Retour de " . count($allEquipments) . " équipements");
+            return $allEquipments;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération équipements {$agence}: " . $e->getMessage());
+            throw new \Exception("Erreur lors de la récupération des équipements: " . $e->getMessage());
+        }
+    }
+
+    // ===== ROUTE DE DEBUG POUR ANALYSER LA STRUCTURE DES ÉQUIPEMENTS =====
+    #[Route('/api/test-equipment/{agence}/{clientId}', name: 'api_test_equipment', methods: ['GET'])]
+    public function testEquipmentStructure(
+        string $agence,
+        string $clientId,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $equipmentEntity = "App\\Entity\\Equipement{$agence}";
+            
+            if (!class_exists($equipmentEntity)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Classe {$equipmentEntity} n'existe pas"
+                ]);
+            }
+            
+            $repository = $entityManager->getRepository($equipmentEntity);
+            $equipments = $repository->findBy(['id_contact' => $clientId], [], 3); // Prendre max 3 équipements
+            
+            if (empty($equipments)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Aucun équipement trouvé pour le client {$clientId}",
+                    'total_in_table' => count($repository->findAll())
+                ]);
+            }
+            
+            // Analyser la structure du premier équipement
+            $firstEquipment = $equipments[0];
+            $methods = get_class_methods($firstEquipment);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            // Tester les valeurs
+            $testValues = [];
+            foreach ($getterMethods as $method) {
+                try {
+                    $value = $firstEquipment->$method();
+                    if (is_scalar($value) && !empty($value)) {
+                        $testValues[$method] = $value;
+                    }
+                } catch (\Exception $e) {
+                    // Ignorer les méthodes qui requirent des paramètres
+                }
+            }
+            
+            return new JsonResponse([
+                'success' => true,
+                'entity' => $equipmentEntity,
+                'equipment_count' => count($equipments),
+                'available_getters' => $getterMethods,
+                'sample_values' => $testValues,
+                'potential_year_fields' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'annee') !== false || 
+                        stripos($method, 'year') !== false ||
+                        stripos($method, 'date') !== false;
+                }),
+                'potential_visite_fields' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'visite') !== false ||
+                        stripos($method, 'maintenance') !== false ||
+                        stripos($method, 'type') !== false;
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     /**
      * Route pour télécharger un PDF stocké
      */
@@ -380,7 +563,65 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * Route pour redirection des liens courts
+     * Route SÉCURISÉE pour télécharger un PDF stocké
+     * IMPORTANT: Cette route ne doit PAS être exposée directement au client
+     */
+    #[Route('/pdf/secure-download/{agence}/{clientId}/{annee}/{visite}', name: 'pdf_secure_download')]
+    public function secureDownloadPdf(
+        string $agence,
+        string $clientId,
+        string $annee,
+        string $visite,
+        Request $request
+    ): Response {
+        // SÉCURITÉ : Vérifier que la requête vient d'un lien court valide
+        $referer = $request->headers->get('referer');
+        $shortCode = $request->query->get('sc'); // Short code pour validation
+        
+        if (!$shortCode) {
+            throw $this->createAccessDeniedException('Accès non autorisé');
+        }
+        
+        // Valider le lien court
+        $shortLink = $this->shortLinkService->getByShortCode($shortCode);
+        if (!$shortLink || $shortLink->isExpired()) {
+            throw $this->createNotFoundException('Lien expiré ou invalide');
+        }
+        
+        // Vérifier que les paramètres correspondent au lien court
+        if ($shortLink->getAgence() !== $agence || 
+            $shortLink->getClientId() !== $clientId ||
+            $shortLink->getAnnee() !== $annee ||
+            $shortLink->getVisite() !== $visite) {
+            throw $this->createAccessDeniedException('Paramètres invalides');
+        }
+        
+        // Récupérer le PDF
+        $pdfPath = $this->pdfStorageService->getPdfPath($agence, $clientId, $annee, $visite);
+        
+        if (!$pdfPath) {
+            throw $this->createNotFoundException('PDF non trouvé');
+        }
+        
+        // Enregistrer l'accès
+        $this->shortLinkService->recordAccess($shortLink);
+        
+        $pdfContent = file_get_contents($pdfPath);
+        $filename = "rapport_equipements_{$clientId}_{$annee}_{$visite}.pdf";
+        
+        return new Response($pdfContent, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"",
+            'Cache-Control' => 'private, no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'X-Robots-Tag' => 'noindex, nofollow',
+            'Last-Modified' => date('D, d M Y H:i:s', filemtime($pdfPath)) . ' GMT'
+        ]);
+    }
+
+    /**
+     * Route de redirection des liens courts SÉCURISÉE
      */
     #[Route('/s/{shortCode}', name: 'short_link_redirect')]
     public function redirectShortLink(string $shortCode): Response
@@ -388,14 +629,24 @@ class EquipementPdfController extends AbstractController
         $shortLink = $this->shortLinkService->getByShortCode($shortCode);
         
         if (!$shortLink) {
-            throw $this->createNotFoundException('Lien non trouvé ou expiré');
+            // Afficher une page d'erreur personnalisée au lieu d'une 404 technique
+            return $this->render('error/link_not_found.html.twig', [
+                'message' => 'Ce lien n\'est plus valide ou a expiré.'
+            ], new Response('', 410)); // 410 = Gone
         }
         
         // Enregistrer l'accès
         $this->shortLinkService->recordAccess($shortLink);
         
-        // Rediriger vers l'URL originale
-        return $this->redirect($shortLink->getOriginalUrl());
+        // SÉCURITÉ : Construire l'URL sécurisée avec le code de validation
+        $secureUrl = $this->generateUrl('pdf_secure_download', [
+            'agence' => $shortLink->getAgence(),
+            'clientId' => $shortLink->getClientId(),
+            'annee' => $shortLink->getAnnee(),
+            'visite' => $shortLink->getVisite()
+        ]) . '?sc=' . $shortCode;
+        
+        return $this->redirect($secureUrl);
     }
 
     /**
@@ -450,13 +701,15 @@ class EquipementPdfController extends AbstractController
             
             // Envoyer l'email
             $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            $userTrigramme = $this->generateUserTrigramme();
             $emailSent = $this->emailService->sendPdfLinkToClient(
                 $agence,
-                $clientEmail,
-                $clientInfo['nom'] ?? "Client $id",
+                $clientInfo['email'],
+                $clientInfo['nom'] ?: "Client $id",
                 $shortUrl,
                 $annee,
-                $visite
+                $visite,
+                $userTrigramme // ✅ Passer le trigramme
             );
             
             // Enregistrer l'envoi
@@ -477,6 +730,9 @@ class EquipementPdfController extends AbstractController
         }
     }
 
+    /**
+     * Méthode corrigée pour enregistrer l'envoi d'email avec le bon sender
+     */
     private function recordEmailSent(string $agence, string $clientId, string $shortUrl, bool $success, EntityManagerInterface $entityManager): void
     {
         try {
@@ -492,7 +748,11 @@ class EquipementPdfController extends AbstractController
                     $mail->setPdfUrl($shortUrl);
                     $mail->setIsPdfSent($success);
                     $mail->setSentAt(new \DateTimeImmutable());
-                    $mail->setSender('system');
+                    
+                    // ✅ CORRECTION : Utiliser le trigramme de l'utilisateur connecté
+                    $userTrigramme = $this->generateUserTrigramme();
+                    $mail->setSender($userTrigramme);
+                    
                     $mail->setPdfFilename("client_{$clientId}.pdf");
                     
                     $entityManager->persist($mail);
@@ -505,15 +765,282 @@ class EquipementPdfController extends AbstractController
         }
     }
 
-    private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
+    /**
+     * Génère le trigramme à partir des informations de l'utilisateur connecté
+     * Format: 1ère lettre du prénom + 2 premières lettres du nom (en majuscules)
+     */
+    private function generateUserTrigramme(): string
     {
-        // Récupérer les informations client depuis la base
-        return ['nom' => 'Client Name']; // Placeholder
+        $user = $this->getUser();
+        
+        if (!$user) {
+            return 'SYS'; // Fallback si pas d'utilisateur connecté
+        }
+        dump('DEBUG: Méthodes de l\'utilisateur: ' . implode(', ', get_class_methods($user)));
+        $firstName = $user->getFirstName() ?? '';
+        $lastName = $user->getLastName() ?? '';
+        
+        // Nettoyer et normaliser les chaînes
+        $firstName = strtoupper(trim($firstName));
+        $lastName = strtoupper(trim($lastName));
+        
+        // Construire le trigramme
+        $trigramme = '';
+        
+        // 1ère lettre du prénom
+        if (!empty($firstName)) {
+            $trigramme .= substr($firstName, 0, 1);
+        } else {
+            $trigramme .= 'X'; // Fallback
+        }
+        
+        // 2 premières lettres du nom
+        if (!empty($lastName)) {
+            if (strlen($lastName) >= 2) {
+                $trigramme .= substr($lastName, 0, 2);
+            } else {
+                $trigramme .= $lastName . 'X'; // Compléter avec X si nom trop court
+            }
+        } else {
+            $trigramme .= 'XX'; // Fallback
+        }
+        
+        return $trigramme;
     }
 
+    private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
+    {
+        try {
+            $contactEntity = "App\\Entity\\Contact{$agence}";
+            
+            if (class_exists($contactEntity)) {
+                $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $id]);
+                
+                if ($contact) {
+                    $nom = '';
+                    $email = '';
+                    
+                    // Pour ContactS50, tester les méthodes disponibles
+                    // Récupération du nom/raison sociale
+                    if (method_exists($contact, 'getRaisonSociale')) {
+                        $nom = $contact->getRaisonSociale();
+                    } elseif (method_exists($contact, 'getNom')) {
+                        $nom = $contact->getNom();
+                    } elseif (method_exists($contact, 'getLibelle')) {
+                        $nom = $contact->getLibelle();
+                    } elseif (method_exists($contact, 'getNomContact')) {
+                        $nom = $contact->getNomContact();
+                    }
+                    
+                    // Récupération de l'email - tester plusieurs possibilités
+                    if (method_exists($contact, 'getEmail')) {
+                        $email = $contact->getEmail();
+                    } elseif (method_exists($contact, 'getEmailContact')) {
+                        $email = $contact->getEmailContact();
+                    } elseif (method_exists($contact, 'getMail')) {
+                        $email = $contact->getMail();
+                    } elseif (method_exists($contact, 'getEmailClient')) {
+                        $email = $contact->getEmailClient();
+                    }
+                    
+                    // Debug pour voir les méthodes disponibles sur ContactS50
+                    error_log("DEBUG ContactS50 - Méthodes disponibles: " . implode(', ', get_class_methods($contact)));
+                    error_log("DEBUG ContactS50 - Nom trouvé: " . ($nom ?: 'VIDE'));
+                    error_log("DEBUG ContactS50 - Email trouvé: " . ($email ?: 'VIDE'));
+                    
+                    return [
+                        'nom' => $nom ?: "Client {$id}",
+                        'email' => $email ?: '',
+                        'id_contact' => $id,
+                        'agence' => $agence
+                    ];
+                } else {
+                    error_log("DEBUG: Contact non trouvé pour ID {$id} dans {$contactEntity}");
+                }
+            } else {
+                error_log("DEBUG: Classe {$contactEntity} n'existe pas");
+            }
+        } catch (\Exception $e) {
+            error_log("Erreur récupération client info: " . $e->getMessage());
+        }
+        
+        return [
+            'nom' => "Client {$id}",
+            'email' => '',
+            'id_contact' => $id,
+            'agence' => $agence
+        ];
+    }
+
+    // ===== 2. AJOUT DE LA ROUTE API POUR RÉCUPÉRER LES INFOS CLIENT =====
+    #[Route('/api/client-info/{agence}/{id}', name: 'api_client_info', methods: ['GET'])]
+    public function getClientInfoApi(
+        string $agence,
+        string $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            
+            return new JsonResponse([
+                'success' => true,
+                'client' => $clientInfo,
+                'debug' => [
+                    'agence' => $agence,
+                    'id' => $id,
+                    'entity_class' => "App\\Entity\\Contact{$agence}"
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'client' => [
+                    'nom' => "Client {$id}",
+                    'email' => '',
+                    'id_contact' => $id,
+                    'agence' => $agence
+                ]
+            ], 500);
+        }
+    }
+    private function getEquipmentsByAgency(string $agence, string $clientId, EntityManagerInterface $entityManager, ?string $anneeFilter = null, ?string $visiteFilter = null): array
+    {
+        $equipmentEntity = "App\\Entity\\Equipement{$agence}";
+        
+        if (!class_exists($equipmentEntity)) {
+            error_log("ERREUR: Classe d'équipement {$equipmentEntity} n'existe pas");
+            return [];
+        }
+        
+        try {
+            $criteria = ['id_contact' => $clientId];
+            
+            // Ajouter les filtres si spécifiés
+            if ($anneeFilter) {
+                $criteria['annee'] = $anneeFilter;
+            }
+            if ($visiteFilter) {
+                $criteria['visite'] = $visiteFilter;
+            }
+            
+            $equipments = $entityManager->getRepository($equipmentEntity)->findBy(
+                $criteria,
+                ['numero_equipement' => 'ASC']
+            );
+            
+            error_log("DEBUG: Récupération équipements {$agence} pour client {$clientId} - Trouvés: " . count($equipments));
+            
+            if (empty($equipments)) {
+                // Essayer sans les filtres pour voir s'il y a des équipements
+                $allEquipments = $entityManager->getRepository($equipmentEntity)->findBy(
+                    ['id_contact' => $clientId],
+                    ['numero_equipement' => 'ASC']
+                );
+                
+                error_log("DEBUG: Total équipements sans filtre pour client {$clientId}: " . count($allEquipments));
+                
+                // Si pas d'équipements du tout, l'erreur est légitime
+                if (empty($allEquipments)) {
+                    throw new \Exception("Aucun équipement trouvé pour ce client. Vérifiez l'ID client et l'agence.");
+                }
+                
+                // Si il y a des équipements mais pas avec les filtres, utiliser tous les équipements
+                return $allEquipments;
+            }
+            
+            return $equipments;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération équipements {$agence}: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // ===== 4. MÉTHODE POUR TESTER LA CONNEXION À LA BASE DE DONNÉES ContactS50 =====
+    #[Route('/api/test-contact/{agence}/{id}', name: 'api_test_contact', methods: ['GET'])]
+    public function testContactConnection(
+        string $agence,
+        string $id,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $contactEntity = "App\\Entity\\Contact{$agence}";
+            
+            if (!class_exists($contactEntity)) {
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Classe {$contactEntity} n'existe pas"
+                ]);
+            }
+            
+            // Récupérer le contact
+            $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $id]);
+            
+            if (!$contact) {
+                // Essayer de lister quelques contacts pour debug
+                $allContacts = $entityManager->getRepository($contactEntity)->findBy([], [], 5);
+                
+                return new JsonResponse([
+                    'success' => false,
+                    'error' => "Contact {$id} non trouvé",
+                    'debug' => [
+                        'entity' => $contactEntity,
+                        'total_contacts_sample' => count($allContacts),
+                        'sample_ids' => array_map(function($c) {
+                            return method_exists($c, 'getIdContact') ? $c->getIdContact() : 'N/A';
+                        }, $allContacts)
+                    ]
+                ]);
+            }
+            
+            // Analyser les méthodes disponibles
+            $methods = get_class_methods($contact);
+            $getterMethods = array_filter($methods, function($method) {
+                return strpos($method, 'get') === 0;
+            });
+            
+            // Tester les getters pour nom et email
+            $testResults = [];
+            foreach ($getterMethods as $method) {
+                try {
+                    $value = $contact->$method();
+                    if (is_string($value) && !empty($value)) {
+                        $testResults[$method] = substr($value, 0, 50); // Limiter pour l'affichage
+                    }
+                } catch (\Exception $e) {
+                    // Ignorer les méthodes qui requirent des paramètres
+                }
+            }
+            
+            return new JsonResponse([
+                'success' => true,
+                'contact_found' => true,
+                'entity' => $contactEntity,
+                'available_getters' => $getterMethods,
+                'test_values' => $testResults,
+                'potential_email_methods' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'email') !== false || stripos($method, 'mail') !== false;
+                }),
+                'potential_name_methods' => array_filter($getterMethods, function($method) {
+                    return stripos($method, 'nom') !== false || 
+                        stripos($method, 'raison') !== false || 
+                        stripos($method, 'libelle') !== false ||
+                        stripos($method, 'name') !== false;
+                })
+            ]);
+            
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
     /**
      * NOUVELLE MÉTHODE: Fallback complet vers l'ancienne méthode
-     */
+     */ 
     private function generateClientEquipementsPdfFallback(
         Request $request, 
         string $agence, 

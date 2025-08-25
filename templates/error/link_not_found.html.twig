@@ -1,0 +1,147 @@
+{# templates/error/link_not_found.html.twig #}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lien non trouvé - SOMAFI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .error-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .error-message {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+        
+        .contact-info {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 25px;
+        }
+        
+        .contact-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .contact-details {
+            color: #5a6c7d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .btn-home {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+            color: white;
+        }
+        
+        .logo {
+            max-width: 150px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        {# Logo SOMAFI si disponible #}
+        <div class="mb-4">
+            <i class="fas fa-building logo-icon" style="font-size: 3rem; color: #667eea;"></i>
+            <h3 style="color: #2c3e50; margin-top: 10px;">SOMAFI</h3>
+        </div>
+        
+        <div class="error-icon">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        
+        <h1 class="error-title">Lien non trouvé</h1>
+        
+        <p class="error-message">
+            {{ message|default('Ce lien n\'est plus valide ou a expiré.') }}
+        </p>
+        
+        <div class="alert alert-warning" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Que faire ?</strong><br>
+            • Vérifiez que vous avez cliqué sur le bon lien<br>
+            • Le lien peut avoir expiré (validité de 30 jours)<br>
+            • Contactez votre technicien SOMAFI pour un nouveau lien
+        </div>
+        
+        <div class="contact-info">
+            <div class="contact-title">
+                <i class="fas fa-phone-alt me-2"></i>
+                Besoin d'aide ?
+            </div>
+            <div class="contact-details">
+                Contactez votre agence SOMAFI :<br>
+                <strong>📧 Email :</strong> contact@somafi-group.fr<br>
+                <strong>📞 Téléphone :</strong> 04 76 32 66 99<br>
+                <small class="text-muted">Du lundi au vendredi, 8h00 - 17h30</small>
+            </div>
+        </div>
+        
+        <a href="https://www.somafi-group.fr" class="btn-home">
+            <i class="fas fa-home me-2"></i>
+            Retour au site SOMAFI
+        </a>
+        
+        <div class="mt-4">
+            <small class="text-muted">
+                <i class="fas fa-shield-alt me-1"></i>
+                Lien sécurisé SOMAFI - {{ "now"|date("Y") }}
+            </small>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

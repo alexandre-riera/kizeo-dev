@@ -37,7 +37,7 @@ class EmailService
     }
 
     /**
-     * Envoie le lien PDF par email au client
+     * Envoie le lien PDF par email au client avec le bon sender
      */
     public function sendPdfLinkToClient(
         string $agence,
@@ -46,6 +46,7 @@ class EmailService
         string $shortUrl,
         string $annee,
         string $visite,
+        string $senderTrigramme = 'system', // ✅ Nouveau paramètre
         string $customMessage = ''
     ): bool {
         try {
@@ -55,25 +56,21 @@ class EmailService
                 return false;
             }
 
-            $senderEmail = $this->agencyEmails[$agence] ?? 'group@somafi-group.fr';
+            $senderEmail = $this->agencyEmails[$agence] ?? 'noreply@somafi-group.fr';
             
             $email = (new Email())
                 ->from($senderEmail)
                 ->to($clientEmail)
                 ->subject("Rapport d'équipements - {$clientName} - {$annee}")
-                ->html($this->buildEmailTemplate($clientName, $shortUrl, $agence, $annee, $visite, $customMessage));
-
-            // Ajouter une copie à l'agence
-            $email->cc($senderEmail);
+                ->html($this->buildSecureEmailTemplate($clientName, $shortUrl, $agence, $annee, $visite));
 
             $this->mailer->send($email);
             
-            $this->logger->info("Email envoyé avec succès à {$clientEmail} pour l'agence {$agence}", [
-                'agence' => $agence,
-                'client_email' => $clientEmail,
-                'client_name' => $clientName,
+            $this->logger->info("Email sécurisé envoyé à {$clientEmail} pour l'agence {$agence}", [
                 'short_url' => $shortUrl,
-                'sender' => $senderEmail
+                'client' => $clientName,
+                'agence' => $agence,
+                'sender' => $senderTrigramme // ✅ Log du sender
             ]);
             
             return true;
@@ -82,11 +79,143 @@ class EmailService
             $this->logger->error("Erreur envoi email: " . $e->getMessage(), [
                 'agence' => $agence,
                 'client_email' => $clientEmail,
+                'sender' => $senderTrigramme,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
             return false;
         }
+    }
+
+    /**
+     * Template HTML sécurisé pour l'email - CORRIGÉ
+     */
+    private function buildSecureEmailTemplate(
+        string $clientName, 
+        string $shortUrl,
+        string $agence, 
+        string $annee, 
+        string $visite
+    ): string {
+        return "
+        <!DOCTYPE html>
+        <html lang='fr'>
+        <head>
+            <meta charset='UTF-8'>
+            <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+            <title>Rapport d'équipements SOMAFI</title>
+        </head>
+        <body style='font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;'>
+            <div style='max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1);'>
+                
+                <!-- EN-TÊTE SOMAFI AMÉLIORÉ -->
+                <div style='background: linear-gradient(135deg, #1a365d 0%, #2d5a87 100%); color: white; padding: 25px; text-align: center; position: relative;'>
+                    <!-- Logo SOMAFI en texte stylisé -->
+                    <div style='font-size: 28px; font-weight: bold; letter-spacing: 2px; margin-bottom: 5px; color:black;'>
+                        🏢 SOMAFI
+                    </div>
+                    <div style='font-size: 14px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; color:black;'>
+                        Grenoble • Agence {$agence}
+                    </div>
+                    <!-- Badge avec couverture nationale -->
+                    <div style='position: absolute; top: 15px; right: 15px; background: rgba(255,215,0,0.9); color: #1a365d; padding: 5px 10px; border-radius: 15px; font-size: 11px; font-weight: bold;'>
+                        🇫🇷 Couverture Nationale
+                    </div>
+                </div>
+                
+                <!-- CORPS DU MESSAGE -->
+                <div style='padding: 30px;'>
+                    <h2 style='color: #2c3e50; margin: 0 0 20px 0; font-size: 22px;'>
+                        Bonjour {$clientName},
+                    </h2>
+                    
+                    <p style='color: #34495e; line-height: 1.6; margin-bottom: 25px; font-size: 16px;'>
+                        Nous avons le plaisir de vous transmettre le rapport d'équipements suite à notre visite de maintenance.
+                    </p>
+                    
+                    <!-- INFORMATIONS DE LA VISITE - STYLE AMÉLIORÉ -->
+                    <div style='background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-left: 4px solid #3498db; padding: 20px; border-radius: 8px; margin: 25px 0;'>
+                        <h3 style='color: #2c3e50; margin: 0 0 15px 0; font-size: 18px;'>📋 Détails de la visite</h3>
+                        <div style='display: table; width: 100%;'>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50; width: 30%;'>Année :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$annee}</div>
+                            </div>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50;'>Type de visite :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$visite}</div>
+                            </div>
+                            <div style='display: table-row;'>
+                                <div style='display: table-cell; padding: 8px 0; font-weight: bold; color: #2c3e50;'>Agence :</div>
+                                <div style='display: table-cell; padding: 8px 0; color: #34495e;'>{$agence}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- BOUTON DE TÉLÉCHARGEMENT AMÉLIORÉ -->
+                    <div style='text-align: center; margin: 35px 0;'>
+                        <a href='{$shortUrl}' 
+                        style='background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%); 
+                                color: black; 
+                                padding: 16px 40px; 
+                                text-decoration: none; 
+                                border-radius: 30px; 
+                                font-weight: bold;
+                                display: inline-block;
+                                font-size: 16px;
+                                box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+                                transition: all 0.3s ease;'>
+                            📄 Télécharger le rapport PDF
+                        </a>
+                    </div>
+                    
+                    <!-- INFORMATIONS SÉCURITÉ ET VALIDITÉ -->
+                    <div style='background: linear-gradient(135deg, #fff9e6 0%, #ffeaa7 100%); 
+                            border: 1px solid #f39c12; 
+                            border-radius: 8px; 
+                            padding: 15px; 
+                            margin: 25px 0;'>
+                        <div style='color: #8b6914; font-size: 14px; text-align: center;'>
+                            <strong>🔐 Informations importantes</strong><br>
+                            • Lien sécurisé et personnel - Ne pas partager<br>
+                            • Validité : 30 jours à compter de cet email<br>
+                            • Chaque clic est enregistré pour votre sécurité
+                        </div>
+                    </div>
+                    
+                    <div style='margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;'>
+                        <p style='color: #7f8c8d; font-size: 14px; margin: 0; line-height: 1.5;'>
+                            Pour toute question concernant ce rapport, n'hésitez pas à nous contacter.<br>
+                            Cordialement,<br>
+                            <strong>L'équipe SOMAFI {$agence}</strong>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- PIED DE PAGE CONTACT -->
+                <div style='background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: black; padding: 20px; text-align: center; font-size: 12px;'>
+                    <div style='margin-bottom: 10px; color:black;'>
+                        <strong>SOMAFI Grenoble</strong> | 52 rue de Corporat | Centr'Alp | 38430 MOIRANS
+                    </div>
+                    <div style='margin-bottom: 10px; color:black;'>
+                        Tél. 04.76.32.66.99 | <a href='mailto:grenoble@somafi-group.fr' style='color: #3498db;'>grenoble@somafi-group.fr</a>
+                    </div>
+                    <div style='opacity: 0.8; color:black;'>
+                        🔐 Email sécurisé - " . date('Y') . " | Lien valide jusqu'au " . date('d/m/Y', strtotime('+30 days')) . "
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>";
+    }
+    
+    /**
+     * Validation que l'URL est bien un lien court sécurisé
+     */
+    private function isSecureShortUrl(string $url): bool
+    {
+        // Vérifier que l'URL est bien un lien court (/s/xxxxx) et non une URL directe
+        return preg_match('/\/s\/[a-zA-Z0-9]{8,}$/', parse_url($url, PHP_URL_PATH)) === 1;
     }
 
     /**
@@ -283,7 +412,7 @@ class EmailService
             ];
         }
     }
-
+    
     /**
      * Envoie un email de notification interne
      */
