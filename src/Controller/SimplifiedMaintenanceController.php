@@ -113,7 +113,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 }
 
             } catch (\Exception $e) {
-                dump("Erreur récupération données formulaire {$formId}: " . $e->getMessage());
+                // dump("Erreur récupération données formulaire {$formId}: " . $e->getMessage());
                 continue;
             }
         }
@@ -288,7 +288,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 'timeout' => 10
             ]);
         } catch (\Exception $e) {
-            dump("Erreur markFormAsRead: " . $e->getMessage());
+          // dump("Erreur markFormAsRead: " . $e->getMessage());
         }
     }
 
@@ -414,13 +414,13 @@ class SimplifiedMaintenanceController extends AbstractController
         }
         // Recherche exacte d'abord
         if (isset($mappingTable[$libelleNormalized])) {
-            dump("Type trouvé (exact): {$libelleNormalized} -> " . $mappingTable[$libelleNormalized]);
+          // dump("Type trouvé (exact): {$libelleNormalized} -> " . $mappingTable[$libelleNormalized]);
             return $mappingTable[$libelleNormalized];
         }
         
         // Recherche par mots-clés pour les portes piétonnes
         if (str_contains($libelleNormalized, 'pieton') || str_contains($libelleNormalized, 'piéton')) {
-            dump("Type trouvé (mot-clé piéton): {$libelleNormalized} -> PPV");
+          // dump("Type trouvé (mot-clé piéton): {$libelleNormalized} -> PPV");
             return 'PPV';
         }
         // Recherche par mots-clés individuels pour plus de flexibilité
@@ -444,10 +444,10 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function getNextEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        dump("=== RECHERCHE PROCHAIN NUMÉRO ===");
-        dump("Type code: {$typeCode}");
-        dump("ID Client: {$idClient}");
-        dump("Entity class: {$entityClass}");
+      // dump("=== RECHERCHE PROCHAIN NUMÉRO ===");
+      // dump("Type code: {$typeCode}");
+      // dump("ID Client: {$idClient}");
+      // dump("Entity class: {$entityClass}");
         
         $repository = $entityManager->getRepository($entityClass);
         
@@ -460,35 +460,35 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // DÉBOGAGE : Afficher la requête SQL générée
         $query = $qb->getQuery();
-        dump("SQL généré: " . $query->getSQL());
-        dump("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
+      // dump("SQL généré: " . $query->getSQL());
+      // dump("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
         
         $equipements = $query->getResult();
         
-        dump("Nombre d'équipements trouvés: " . count($equipements));
+      // dump("Nombre d'équipements trouvés: " . count($equipements));
         
         $dernierNumero = 0;
         
         foreach ($equipements as $equipement) {
             $numeroEquipement = $equipement->getNumeroEquipement();
-            dump("Numéro équipement analysé: " . $numeroEquipement);
+          // dump("Numéro équipement analysé: " . $numeroEquipement);
             
             // Pattern pour extraire le numéro (ex: PPV01 -> 01, PPV02 -> 02)
             if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
                 $numero = (int)$matches[1];
-                dump("Numéro extrait: " . $numero);
+              // dump("Numéro extrait: " . $numero);
                 
                 if ($numero > $dernierNumero) {
                     $dernierNumero = $numero;
-                    dump("Nouveau dernier numéro: " . $dernierNumero);
+                  // dump("Nouveau dernier numéro: " . $dernierNumero);
                 }
             } else {
-                dump("Pattern non reconnu pour: " . $numeroEquipement);
+              // dump("Pattern non reconnu pour: " . $numeroEquipement);
             }
         }
         
         $prochainNumero = $dernierNumero + 1;
-        dump("Prochain numéro calculé: " . $prochainNumero);
+      // dump("Prochain numéro calculé: " . $prochainNumero);
         
         return $prochainNumero;
     }
@@ -498,23 +498,23 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function generateUniqueEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): string
     {
-        dump("=== GÉNÉRATION NUMÉRO UNIQUE ===");
-        dump("Type code: {$typeCode}");
-        dump("ID Client: {$idClient}");
-        dump("Entity class: {$entityClass}");
+      // dump("=== GÉNÉRATION NUMÉRO UNIQUE ===");
+      // dump("Type code: {$typeCode}");
+      // dump("ID Client: {$idClient}");
+      // dump("Entity class: {$entityClass}");
         
         $maxTries = 10;
         $attempt = 0;
         
         while ($attempt < $maxTries) {
             $attempt++;
-            dump("Tentative #{$attempt}");
+          // dump("Tentative #{$attempt}");
             
             // ✅ APPEL AVEC TOUS LES PARAMÈTRES
             $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
             $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
             
-            dump("Numéro formaté généré: " . $numeroFormate);
+          // dump("Numéro formaté généré: " . $numeroFormate);
             
             // Vérifier l'unicité
             $repository = $entityManager->getRepository($entityClass);
@@ -524,17 +524,17 @@ class SimplifiedMaintenanceController extends AbstractController
             ]);
             
             if (!$existant) {
-                dump("Numéro unique confirmé: " . $numeroFormate);
+              // dump("Numéro unique confirmé: " . $numeroFormate);
                 return $numeroFormate;
             } else {
-                dump("Collision détectée pour: " . $numeroFormate . ", nouvelle tentative...");
+              // dump("Collision détectée pour: " . $numeroFormate . ", nouvelle tentative...");
             }
         }
         
         // Fallback en cas d'échec
         $timestamp = substr(time(), -4);
         $numeroFallback = $typeCode . $timestamp;
-        dump("FALLBACK utilisé: " . $numeroFallback);
+      // dump("FALLBACK utilisé: " . $numeroFallback);
         
         return $numeroFallback;
     }
@@ -943,7 +943,7 @@ class SimplifiedMaintenanceController extends AbstractController
             // 2. Traiter chaque formulaire INDIVIDUELLEMENT pour économiser la mémoire
             foreach ($maintenanceForms as $formIndex => $form) {
                 try {
-                    dump("Traitement formulaire {$form['id']} ({$form['name']})");
+                  // dump("Traitement formulaire {$form['id']} ({$form['name']})");
                     
                     // Récupérer UNIQUEMENT les formulaires non lus pour commencer (plus léger)
                     $unreadResponse = $this->client->request(
@@ -961,7 +961,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     $unreadData = $unreadResponse->toArray();
                     
                     if (empty($unreadData['data'])) {
-                        dump("Aucune donnée non lue pour le formulaire {$form['id']}");
+                      // dump("Aucune donnée non lue pour le formulaire {$form['id']}");
                         continue;
                     }
 
@@ -990,7 +990,7 @@ class SimplifiedMaintenanceController extends AbstractController
                                 continue;
                             }
 
-                            dump("Trouvé entrée {$agencyCode}: {$entry['_id']}");
+                          // dump("Trouvé entrée {$agencyCode}: {$entry['_id']}");
                             
                             // 5. Traiter cette entrée S140
                             $entityClass = $this->getEntityClassByAgency($agencyCode);
@@ -1045,7 +1045,7 @@ class SimplifiedMaintenanceController extends AbstractController
                                 'entry_id' => $entry['_id'] ?? 'unknown',
                                 'error' => $e->getMessage()
                             ];
-                            dump("Erreur traitement entrée: " . $e->getMessage());
+                          // dump("Erreur traitement entrée: " . $e->getMessage());
                         }
                     }
 
@@ -1063,7 +1063,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         'form_id' => $form['id'],
                         'error' => $e->getMessage()
                     ];
-                    dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
+                  // dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
                 }
             }
 
@@ -1083,7 +1083,7 @@ class SimplifiedMaintenanceController extends AbstractController
             ]);
 
         } catch (\Exception $e) {
-            dump("Erreur générale: " . $e->getMessage());
+          // dump("Erreur générale: " . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'agency' => $agencyCode,
@@ -1173,7 +1173,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     }
 
                 } catch (\Exception $e) {
-                    dump("Erreur vérification formulaire {$form['id']}: " . $e->getMessage());
+                  // dump("Erreur vérification formulaire {$form['id']}: " . $e->getMessage());
                 }
             }
 
@@ -1574,7 +1574,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         ];
                         
                     } catch (\Exception $e) {
-                        dump("Erreur équipement contrat $index: " . $e->getMessage());
+                      // dump("Erreur équipement contrat $index: " . $e->getMessage());
                     }
                 }
             }
@@ -1602,7 +1602,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         ];
                         
                     } catch (\Exception $e) {
-                        dump("Erreur équipement hors contrat $index: " . $e->getMessage());
+                      // dump("Erreur équipement hors contrat $index: " . $e->getMessage());
                     }
                 }
             }
@@ -1763,10 +1763,10 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function getNextEquipmentNumberReal(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
     {
-        dump("=== RECHERCHE PROCHAIN NUMÉRO ===");
-        dump("Type code: {$typeCode}");
-        dump("ID Client: {$idClient}");
-        dump("Entity class: {$entityClass}"); // ✅ Maintenant $entityClass est défini
+      // dump("=== RECHERCHE PROCHAIN NUMÉRO ===");
+      // dump("Type code: {$typeCode}");
+      // dump("ID Client: {$idClient}");
+      // dump("Entity class: {$entityClass}"); // ✅ Maintenant $entityClass est défini
         
         $repository = $entityManager->getRepository($entityClass); // ✅ Utilisation correcte
         
@@ -1779,35 +1779,35 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // DÉBOGAGE : Afficher la requête SQL générée
         $query = $qb->getQuery();
-        dump("SQL généré: " . $query->getSQL());
-        dump("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
+      // dump("SQL généré: " . $query->getSQL());
+      // dump("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
         
         $equipements = $query->getResult();
         
-        dump("Nombre d'équipements trouvés: " . count($equipements));
+      // dump("Nombre d'équipements trouvés: " . count($equipements));
         
         $dernierNumero = 0;
         
         foreach ($equipements as $equipement) {
             $numeroEquipement = $equipement->getNumeroEquipement();
-            dump("Numéro équipement analysé: " . $numeroEquipement);
+          // dump("Numéro équipement analysé: " . $numeroEquipement);
             
             // Pattern pour extraire le numéro (ex: PPV01 -> 01, PPV02 -> 02)
             if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
                 $numero = (int)$matches[1];
-                dump("Numéro extrait: " . $numero);
+              // dump("Numéro extrait: " . $numero);
                 
                 if ($numero > $dernierNumero) {
                     $dernierNumero = $numero;
-                    dump("Nouveau dernier numéro: " . $dernierNumero);
+                  // dump("Nouveau dernier numéro: " . $dernierNumero);
                 }
             } else {
-                dump("Pattern non reconnu pour: " . $numeroEquipement);
+              // dump("Pattern non reconnu pour: " . $numeroEquipement);
             }
         }
         
         $prochainNumero = $dernierNumero + 1;
-        dump("Prochain numéro calculé: " . $prochainNumero);
+      // dump("Prochain numéro calculé: " . $prochainNumero);
         
         return $prochainNumero;
     }
@@ -2156,7 +2156,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         ];
                         
                     } catch (\Exception $e) {
-                        dump("Erreur équipement contrat $index: " . $e->getMessage());
+                      // dump("Erreur équipement contrat $index: " . $e->getMessage());
                     }
                 }
             }
@@ -2179,7 +2179,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         ];
                         
                     } catch (\Exception $e) {
-                        dump("Erreur équipement hors contrat $index: " . $e->getMessage());
+                      // dump("Erreur équipement hors contrat $index: " . $e->getMessage());
                     }
                 }
             }
@@ -2327,7 +2327,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     }
 
                 } catch (\Exception $e) {
-                    dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
+                  // dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
                 }
             }
 
@@ -2607,7 +2607,7 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function setRealCommonDataFixed($equipement, array $fields): void
     {
-        dump("=== setRealCommonDataFixed START ===");
+      // dump("=== setRealCommonDataFixed START ===");
 
         // CORRECTION : Utiliser les vrais noms de champs
         $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
@@ -2620,8 +2620,8 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setEtatDesLieuxFait(false);
         $equipement->setIsArchive(false);
         
-        dump("Données communes définies - en_maintenance NON défini volontairement");
-        dump("=== setRealCommonDataFixed END ===");
+      // dump("Données communes définies - en_maintenance NON défini volontairement");
+      // dump("=== setRealCommonDataFixed END ===");
     }
 
     /**
@@ -2856,7 +2856,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $entityManager->persist($form);
             
         } catch (\Exception $e) {
-            dump("Erreur sauvegarde photos Form: " . $e->getMessage());
+          // dump("Erreur sauvegarde photos Form: " . $e->getMessage());
         }
     }
 
@@ -2946,7 +2946,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     }
                     
                 } catch (\Exception $e) {
-                    dump("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
+                  // dump("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
                     continue;
                 }
             }
@@ -2954,7 +2954,7 @@ class SimplifiedMaintenanceController extends AbstractController
             return $validSubmissions;
             
         } catch (\Exception $e) {
-            dump("Erreur lors de la récupération des soumissions: " . $e->getMessage());
+          // dump("Erreur lors de la récupération des soumissions: " . $e->getMessage());
             return [];
         }
     }
@@ -3117,7 +3117,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
     //     // 4. Sauvegarder les photos SEULEMENT si pas de doublon
     //     $this->savePhotosToFormEntityWithDeduplication($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager);
-    //     dump("=== PHOTOS SAUVÉES AVEC SUCCÈS pour équipement au contrat ===");
+    //   // dump("=== PHOTOS SAUVÉES AVEC SUCCÈS pour équipement au contrat ===");
     //     // NOUVELLE PARTIE: Extraction et définition des anomalies
     //     $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
 
@@ -3149,7 +3149,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
         
         if ($this->equipmentExistsForSameVisit($numeroEquipement, $idClient, $dateVisite, $entityClass, $entityManager)) {
-            dump("Équipement doublon détecté - ignoré: " . $numeroEquipement);
+          // dump("Équipement doublon détecté - ignoré: " . $numeroEquipement);
             return false;
         }
 
@@ -3178,7 +3178,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // Définir les anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
 
-        dump("Équipement au contrat traité avec photos locales: " . $numeroEquipement);
+      // dump("Équipement au contrat traité avec photos locales: " . $numeroEquipement);
         return true;
     }
 
@@ -3225,24 +3225,24 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): void {
         
-        dump("=== DÉBUT DEBUG PHOTOS HORS CONTRAT ===");
-        dump("Equipment Code: " . $equipmentCode);
-        dump("Form ID: " . $formId);
-        dump("Entry ID: " . $entryId);
+      // dump("=== DÉBUT DEBUG PHOTOS HORS CONTRAT ===");
+      // dump("Equipment Code: " . $equipmentCode);
+      // dump("Form ID: " . $formId);
+      // dump("Entry ID: " . $entryId);
         
         // Log des données photo disponibles
-        dump("Photo3 présente: " . (isset($equipmentData['photo3']) ? 'OUI' : 'NON'));
+      // dump("Photo3 présente: " . (isset($equipmentData['photo3']) ? 'OUI' : 'NON'));
         if (isset($equipmentData['photo3'])) {
-            dump("Photo3 value: " . ($equipmentData['photo3']['value'] ?? 'VIDE'));
-            dump("Photo3 empty check: " . (empty($equipmentData['photo3']['value']) ? 'VIDE' : 'PAS VIDE'));
+          // dump("Photo3 value: " . ($equipmentData['photo3']['value'] ?? 'VIDE'));
+          // dump("Photo3 empty check: " . (empty($equipmentData['photo3']['value']) ? 'VIDE' : 'PAS VIDE'));
         }
 
         // Vérifier si l'entrée Form existe déjà
         $existsAlready = $this->formEntryExists($formId, $entryId, $equipmentCode, $entityManager);
-        dump("Entry existe déjà: " . ($existsAlready ? 'OUI - SKIP' : 'NON - PROCEED'));
+      // dump("Entry existe déjà: " . ($existsAlready ? 'OUI - SKIP' : 'NON - PROCEED'));
         
         if ($existsAlready) {
-            dump("ATTENTION: Entry ignorée car déjà existante!");
+          // dump("ATTENTION: Entry ignorée car déjà existante!");
             return; 
         }
         
@@ -3259,60 +3259,60 @@ class SimplifiedMaintenanceController extends AbstractController
             $form->setUpdateTime(date('Y-m-d H:i:s'));
             
             // DEBUG: Photos avant assignation
-            dump("=== ASSIGNATION PHOTOS ===");
+          // dump("=== ASSIGNATION PHOTOS ===");
             
             if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
                 $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
-                dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
+              // dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
             }
             
             if (!empty($equipmentData['photo2']['value'])) {
                 $form->setPhoto2($equipmentData['photo2']['value']);
-                dump("Photo2 assignée: " . $equipmentData['photo2']['value']);
+              // dump("Photo2 assignée: " . $equipmentData['photo2']['value']);
             }
             
             // POINT CRITIQUE: Photo compte rendu
             if (!empty($equipmentData['photo3']['value'])) {
                 $photoValue = $equipmentData['photo3']['value'];
                 $form->setPhotoCompteRendu($photoValue);
-                dump("PHOTO COMPTE RENDU assignée: " . $photoValue);
+              // dump("PHOTO COMPTE RENDU assignée: " . $photoValue);
                 
                 // Vérification immédiate
                 $verification = $form->getPhotoCompteRendu();
-                dump("Vérification getter après set: " . ($verification ?? 'NULL'));
+              // dump("Vérification getter après set: " . ($verification ?? 'NULL'));
             } else {
-                dump("ATTENTION: photo3 est vide ou n'existe pas!");
-                dump("Structure equipmentData: " . print_r(array_keys($equipmentData), true));
+              // dump("ATTENTION: photo3 est vide ou n'existe pas!");
+              // dump("Structure equipmentData: " . print_r(array_keys($equipmentData), true));
             }
             
             if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
                 $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
-                dump("Photo environnement assignée: " . $equipmentData['photo_complementaire_equipeme']['value']);
+              // dump("Photo environnement assignée: " . $equipmentData['photo_complementaire_equipeme']['value']);
             }
             
             // Autres photos...
             $this->setAllPhotosToForm($form, $equipmentData);
             
             // DEBUG: État de l'entité avant persist
-            dump("=== AVANT PERSIST ===");
-            dump("Form ID: " . $form->getFormId());
-            dump("Equipment ID: " . $form->getEquipmentId());
-            dump("Photo compte rendu final: " . ($form->getPhotoCompteRendu() ?? 'NULL'));
+          // dump("=== AVANT PERSIST ===");
+          // dump("Form ID: " . $form->getFormId());
+          // dump("Equipment ID: " . $form->getEquipmentId());
+          // dump("Photo compte rendu final: " . ($form->getPhotoCompteRendu() ?? 'NULL'));
             
             // Sauvegarder l'entité Form
             $entityManager->persist($form);
-            dump("Entity form persistée avec succès");
+          // dump("Entity form persistée avec succès");
             
             // IMPORTANT: Ajouter un flush immédiat pour tester
             $entityManager->flush();
-            dump("Entity form flushée avec succès");
+          // dump("Entity form flushée avec succès");
         } catch (\Exception $e) {
-            dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
-            dump("Stack trace: " . $e->getTraceAsString());
+          // dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
+          // dump("Stack trace: " . $e->getTraceAsString());
             throw $e;
         }
         
-        dump("=== FIN DEBUG PHOTOS HORS CONTRAT ===");
+      // dump("=== FIN DEBUG PHOTOS HORS CONTRAT ===");
     }
 
     /**
@@ -3524,7 +3524,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     ];
                     
                 } catch (\Exception $e) {
-                    dump("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
+                  // dump("Erreur lors du filtrage de l'entrée {$entry['_id']}: " . $e->getMessage());
                     continue;
                 }
             }
@@ -3532,7 +3532,7 @@ class SimplifiedMaintenanceController extends AbstractController
             return $validSubmissions;
             
         } catch (\Exception $e) {
-            dump("Erreur lors de la récupération des soumissions: " . $e->getMessage());
+          // dump("Erreur lors de la récupération des soumissions: " . $e->getMessage());
             return [];
         }
     }
@@ -3630,7 +3630,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         $entityManager->flush();
                         $entityManager->clear();
                         gc_collect_cycles();
-                        dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
+                      // dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {
                         $errors++;
                         // dump("Erreur flush/clear sous contrat: " . $e->getMessage());
@@ -3685,7 +3685,7 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $entityManager->flush();
                                 $equipmentsProcessed++;
                                 $photosSaved++;
-                                dump("Équipement hors contrat persisté et flushé avec succès");
+                              // dump("Équipement hors contrat persisté et flushé avec succès");
                             } else {
                                 $equipmentsSkipped++;
                                 // dump("Équipement hors contrat skippé (doublon)");
@@ -3744,9 +3744,9 @@ class SimplifiedMaintenanceController extends AbstractController
     //     string $dateDerniereVisite
     // ): bool {
         
-    //     dump("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
-    //     dump("Entry ID: " . $entryId);
-    //     dump("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
+    //   // dump("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
+    //   // dump("Entry ID: " . $entryId);
+    //   // dump("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
 
     //     // 1. Générer le numéro d'équipement
     //     $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
@@ -3757,7 +3757,7 @@ class SimplifiedMaintenanceController extends AbstractController
     //     // $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
     //     // ✅ APPEL AVEC TOUS LES PARAMÈTRES Y COMPRIS $entityClass
     //     $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-    //     dump("Numéro formaté final: '" . $numeroFormate . "'");
+    //   // dump("Numéro formaté final: '" . $numeroFormate . "'");
         
     //     // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
     //     if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
@@ -3789,7 +3789,7 @@ class SimplifiedMaintenanceController extends AbstractController
     //     // 4. Sauvegarder les photos SEULEMENT si pas de doublon
     //     $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value'][0]['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
     //     // NOUVELLE PARTIE: Extraction et définition des anomalies
-    //     dump("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
+    //   // dump("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
     //     $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
 
@@ -3874,7 +3874,7 @@ class SimplifiedMaintenanceController extends AbstractController
             ]);
             
             if ($existingForm) {
-                dump("Entité Form existante trouvée pour {$equipmentCode} - mise à jour");
+              // dump("Entité Form existante trouvée pour {$equipmentCode} - mise à jour");
                 $form = $existingForm;
             } else {
                 $form = new Form();
@@ -4495,7 +4495,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     $entityManager->clear();
                     gc_collect_cycles();
                 } catch (\Exception $e) {
-                    dump("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
+                  // dump("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
                 }
                 
                 // Pause entre chunks
@@ -5038,7 +5038,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 break;
                 
             default:
-                dump("Type d'équipement non géré pour le trigramme: " . $trigramme);
+                // dump("Type d'équipement non géré pour le trigramme: " . $trigramme);
                 return null;
         }
         
