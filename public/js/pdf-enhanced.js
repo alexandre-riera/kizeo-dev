@@ -1,4 +1,4 @@
-// ===== SCRIPT pdf_enhanced.js - Amélioration du bouton PDF =====
+// ===== SCRIPT pdf_enhanced.js - VERSION CORRIGÉE =====
 
 document.addEventListener('DOMContentLoaded', function() {
     // Transformer le bouton PDF en liste déroulante
@@ -108,7 +108,7 @@ function showEmailModal(pdfUrl) {
         document.body.appendChild(modal);
     }
     
-    // Préremplir l'URL du PDF
+    // Pré-remplir l'URL du PDF
     document.getElementById('pdfUrlHidden').value = pdfUrl;
     
     // Afficher le modal
@@ -159,7 +159,7 @@ function createEmailModal() {
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                        <button type="button" class="btn btn-success" onclick="sendEmailToPDF()">
+                        <button type="button" class="btn btn-success" id="sendEmailBtn">
                             <i class="fa-solid fa-paper-plane"></i> Envoyer
                         </button>
                     </div>
@@ -170,55 +170,160 @@ function createEmailModal() {
     
     const modalDiv = document.createElement('div');
     modalDiv.innerHTML = modalHtml;
-    return modalDiv.firstElementChild;
+    const modalElement = modalDiv.firstElementChild;
+    
+    // Ajouter l'événement d'envoi après création du modal
+    modalElement.addEventListener('shown.bs.modal', function() {
+        document.getElementById('sendEmailBtn').addEventListener('click', sendEmailToPDF);
+    });
+    
+    return modalElement;
 }
 
+// ✅ FONCTION CORRIGÉE POUR ENVOYER L'EMAIL
 function sendEmailToPDF() {
-    const form = document.getElementById('emailForm');
-    const formData = new FormData(form);
-    const submitButton = document.querySelector('#emailModal .btn-success');
+    // ✅ CORRECTION : Utiliser les bons IDs
+    const emailInput = document.getElementById('clientEmail');      // ← Corrigé
+    const nameInput = document.getElementById('clientName');        // ← Corrigé
+    const messageInput = document.getElementById('emailMessage');   // ← Corrigé
+    const submitButton = document.getElementById('sendEmailBtn');
+    
+    const clientEmail = emailInput.value.trim();
+    const clientName = nameInput.value.trim();
+    const customMessage = messageInput.value.trim();
+    
+    if (!clientEmail) {
+        alert('Veuillez saisir un email valide');
+        emailInput.focus();
+        return;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(clientEmail)) {
+        alert('Format d\'email invalide');
+        emailInput.focus();
+        return;
+    }
     
     // Désactiver le bouton et afficher un spinner
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Envoi en cours...';
     
-    // Extraire les données de l'URL pour construire l'endpoint
-    const pdfUrl = document.getElementById('pdfUrlHidden').value;
-    const urlParts = new URL(pdfUrl);
-    const pathParts = urlParts.pathname.split('/');
-    const agence = pathParts[pathParts.indexOf('pdf') + 1];
-    const clientId = pathParts[pathParts.indexOf('pdf') + 2];
-    
-    // Construire l'URL d'envoi
-    const sendUrl = `/client/equipements/send-email/${agence}/${clientId}`;
-    
-    // Envoyer la requête
-    fetch(sendUrl, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showSuccessAlert('Email envoyé avec succès !', data.message);
-            bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
-        } else {
-            showErrorAlert('Erreur lors de l\'envoi', data.error || 'Une erreur inconnue est survenue');
+    try {
+        // ✅ CORRECTION : Extraire les paramètres correctement
+        const pdfUrl = document.getElementById('pdfUrlHidden').value;
+        console.log('🔗 URL PDF:', pdfUrl);
+        
+        // ✅ NOUVELLE MÉTHODE : Extraction améliorée de l'agence et clientId
+        const { agence, clientId } = extractUrlParams(pdfUrl);
+        
+        if (!agence || !clientId) {
+            throw new Error('Impossible d\'extraire les paramètres de l\'URL');
         }
-    })
-    .catch(error => {
-        console.error('Erreur:', error);
-        showErrorAlert('Erreur de connexion', 'Impossible de joindre le serveur');
-    })
-    .finally(() => {
+        
+        console.log('📤 Paramètres extraits:', { agence, clientId, clientEmail });
+        
+        // ✅ CORRECTION : Récupérer les filtres depuis les selects
+        const anneeSelect = document.getElementById('clientAnneeFilter');
+        const visiteSelect = document.getElementById('clientVisiteFilter');
+        const anneeValue = anneeSelect ? anneeSelect.value || new Date().getFullYear().toString() : new Date().getFullYear().toString();
+        const visiteValue = visiteSelect ? visiteSelect.value || 'CEA' : 'CEA';
+        
+        console.log('📅 Filtres:', { anneeValue, visiteValue });
+        
+        // ✅ CONSTRUCTION CORRECTE DU FormData
+        const formData = new FormData();
+        formData.append('client_email', clientEmail);
+        formData.append('client_name', clientName);
+        formData.append('annee', anneeValue);
+        formData.append('visite', visiteValue);
+        formData.append('message', customMessage);
+        
+        // ✅ CONSTRUCTION CORRECTE DE L'URL D'ENVOI
+        const sendUrl = `/client/equipements/send-email/${agence}/${clientId}`;
+        console.log('🌐 URL d\'envoi:', sendUrl);
+        
+        // Envoyer la requête
+        fetch(sendUrl, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log('📡 Statut réponse:', response.status);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    throw new Error(`Erreur ${response.status}: ${text}`);
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('📊 Données reçues:', data);
+            if (data.success) {
+                showSuccessAlert('Email envoyé avec succès !', data.message || 'Le client va recevoir un lien sécurisé.');
+                bootstrap.Modal.getInstance(document.getElementById('emailModal')).hide();
+            } else {
+                showErrorAlert('Erreur lors de l\'envoi', data.error || 'Une erreur inconnue est survenue');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur:', error);
+            showErrorAlert('Erreur de connexion', error.message || 'Impossible de joindre le serveur');
+        })
+        .finally(() => {
+            // Réactiver le bouton
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
+        });
+        
+    } catch (error) {
+        console.error('❌ Erreur de préparation:', error);
+        showErrorAlert('Erreur', error.message);
+        
         // Réactiver le bouton
         submitButton.disabled = false;
         submitButton.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Envoyer';
-    });
+    }
+}
+
+// ✅ NOUVELLE FONCTION : Extraction améliorée des paramètres URL
+function extractUrlParams(pdfUrl) {
+    try {
+        const url = new URL(pdfUrl);
+        const pathParts = url.pathname.split('/').filter(part => part.length > 0);
+        
+        console.log('🔍 Analyse URL:', { pathname: url.pathname, pathParts });
+        
+        // Chercher l'index de 'pdf' dans le chemin
+        const pdfIndex = pathParts.findIndex(part => part === 'pdf');
+        
+        if (pdfIndex === -1) {
+            // Si pas de 'pdf' trouvé, essayer avec 'client'
+            const clientIndex = pathParts.findIndex(part => part === 'client');
+            if (clientIndex !== -1 && pathParts[clientIndex + 1] === 'equipements' && pathParts[clientIndex + 2] === 'pdf') {
+                const agence = pathParts[clientIndex + 3];
+                const clientId = pathParts[clientIndex + 4];
+                return { agence, clientId };
+            }
+            throw new Error('Structure d\'URL non reconnue');
+        }
+        
+        const agence = pathParts[pdfIndex + 1];
+        const clientId = pathParts[pdfIndex + 2];
+        
+        if (!agence || !clientId) {
+            throw new Error('Paramètres manquants dans l\'URL');
+        }
+        
+        return { agence, clientId };
+        
+    } catch (error) {
+        console.error('❌ Erreur extraction URL:', error);
+        return { agence: null, clientId: null };
+    }
 }
 
 function showEmailHistory() {
-    // Ici vous pouvez implémenter l'affichage de l'historique des envois
     alert('Fonctionnalité en cours de développement : Historique des envois d\'emails');
 }
 
