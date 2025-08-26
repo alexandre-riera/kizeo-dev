@@ -650,7 +650,7 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * NOUVELLE ROUTE pour envoyer un PDF existant par email
+     * NOUVELLE ROUTE pour envoyer un PDF existant par email - VERSION CORRIGÉE
      */
     #[Route('/client/equipements/send-email/{agence}/{id}', name: 'send_pdf_email', methods: ['POST'])]
     public function sendPdfByEmail(
@@ -668,61 +668,93 @@ class EquipementPdfController extends AbstractController
                 throw new \InvalidArgumentException('Email client requis');
             }
             
+            // Validation de l'email
+            if (!filter_var($clientEmail, FILTER_VALIDATE_EMAIL)) {
+                throw new \InvalidArgumentException('Format d\'email invalide');
+            }
+            
             // Vérifier que le PDF existe ou le générer
             $pdfPath = $this->pdfStorageService->getPdfPath($agence, $id, $annee, $visite);
             if (!$pdfPath) {
-                // Rediriger vers la génération avec stockage
-                $redirectUrl = $this->generateUrl('client_equipements_pdf', [
+                // Générer le PDF d'abord
+                $subRequest = Request::create($this->generateUrl('client_equipements_pdf', [
                     'agence' => $agence,
                     'id' => $id
-                ]) . "?clientAnneeFilter={$annee}&clientVisiteFilter={$visite}&action=email&client_email=" . urlencode($clientEmail) . "&json=true";
+                ]) . "?clientAnneeFilter={$annee}&clientVisiteFilter={$visite}");
                 
-                // Faire un appel interne pour générer le PDF
-                $subRequest = Request::create($redirectUrl);
-                $response = $this->generateClientEquipementsPdf($subRequest, $agence, $id, $entityManager);
+                $pdfResponse = $this->generateClientEquipementsPdf($subRequest, $agence, $id, $entityManager);
                 
-                return $response;
+                // Vérifier si la génération a réussi
+                if (!$pdfResponse instanceof Response || $pdfResponse->getStatusCode() !== 200) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'error' => 'Impossible de générer le PDF'
+                    ], 500);
+                }
+                
+                // Réessayer de récupérer le chemin du PDF après génération
+                $pdfPath = $this->pdfStorageService->getPdfPath($agence, $id, $annee, $visite);
+                if (!$pdfPath) {
+                    return new JsonResponse([
+                        'success' => false,
+                        'error' => 'PDF généré mais non stocké'
+                    ], 500);
+                }
             }
             
             // Créer ou récupérer le lien court
-            $downloadUrl = $this->generateUrl('pdf_download', [
+            $originalUrl = $this->generateUrl('pdf_secure_download', [
                 'agence' => $agence,
                 'clientId' => $id,
                 'annee' => $annee,
                 'visite' => $visite
             ], true);
             
+            $expiresAt = (new \DateTime())->modify('+30 days');
+            
             $shortLink = $this->shortLinkService->createShortLink(
-                $downloadUrl, $agence, $id, $annee, $visite,
-                (new \DateTime())->modify('+30 days')
+                $originalUrl,
+                $agence,
+                $id,
+                $annee,
+                $visite,
+                $expiresAt
             );
             
             $shortUrl = $this->shortLinkService->getShortUrl($shortLink->getShortCode());
             
-            // Envoyer l'email
+            // Récupérer les infos client (nom seulement, email vient de la requête)
             $clientInfo = $this->getClientInfo($agence, $id, $entityManager);
+            $clientName = $clientInfo['nom'] ?? "Client $id";
+            
+            // Générer le trigramme utilisateur
             $userTrigramme = $this->generateUserTrigramme();
+            
+            // ✅ CORRECTION : Utiliser $clientEmail au lieu de $clientInfo['email']
             $emailSent = $this->emailService->sendPdfLinkToClient(
                 $agence,
-                $clientInfo['email'],
-                $clientInfo['nom'] ?: "Client $id",
+                $clientEmail,  // ← Email de la requête, pas de la BDD
+                $clientName,
                 $shortUrl,
                 $annee,
                 $visite,
-                $userTrigramme // ✅ Passer le trigramme
+                $userTrigramme
             );
             
-            // Enregistrer l'envoi
-            $this->recordEmailSent($agence, $id, $shortUrl, $emailSent, $entityManager);
+            // Enregistrer l'envoi avec les bonnes informations
+            $this->recordEmailSent($agence, $id, $clientEmail, $shortUrl, $emailSent, $userTrigramme, $entityManager);
             
             return new JsonResponse([
                 'success' => $emailSent,
                 'message' => $emailSent ? 'Email envoyé avec succès' : 'Erreur lors de l\'envoi',
                 'short_url' => $shortUrl,
-                'short_code' => $shortLink->getShortCode()
+                'short_code' => $shortLink->getShortCode(),
+                'client_email' => $clientEmail,
+                'client_name' => $clientName
             ]);
             
         } catch (\Exception $e) {
+            error_log("Erreur sendPdfByEmail: " . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'error' => $e->getMessage()
@@ -731,43 +763,58 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * Méthode corrigée pour enregistrer l'envoi d'email avec le bon sender
+     * Méthode corrigée pour enregistrer l'envoi d'email avec toutes les infos nécessaires
      */
-    private function recordEmailSent(string $agence, string $clientId, string $shortUrl, bool $success, EntityManagerInterface $entityManager): void
-    {
+    private function recordEmailSent(
+        string $agence, 
+        string $clientId, 
+        string $clientEmail, 
+        string $shortUrl, 
+        bool $success, 
+        string $userTrigramme,
+        EntityManagerInterface $entityManager
+    ): void {
         try {
             $mailEntity = "App\\Entity\\Mail{$agence}";
             $contactEntity = "App\\Entity\\Contact{$agence}";
             
-            if (class_exists($mailEntity)) {
-                $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $clientId]);
-                
-                if ($contact) {
-                    $mail = new $mailEntity();
-                    $mail->setIdContact($contact);
-                    $mail->setPdfUrl($shortUrl);
-                    $mail->setIsPdfSent($success);
-                    $mail->setSentAt(new \DateTimeImmutable());
-                    
-                    // ✅ CORRECTION : Utiliser le trigramme de l'utilisateur connecté
-                    $userTrigramme = $this->generateUserTrigramme();
-                    $mail->setSender($userTrigramme);
-                    
-                    $mail->setPdfFilename("client_{$clientId}.pdf");
-                    
-                    $entityManager->persist($mail);
-                    $entityManager->flush();
-                }
+            if (!class_exists($mailEntity)) {
+                error_log("Classe Mail{$agence} n'existe pas");
+                return;
             }
+            
+            $contact = $entityManager->getRepository($contactEntity)->findOneBy(['id_contact' => $clientId]);
+            
+            if (!$contact) {
+                error_log("Contact {$clientId} non trouvé pour enregistrement email");
+                return;
+            }
+            
+            $mail = new $mailEntity();
+            $mail->setIdContact($contact);
+            $mail->setPdfUrl($shortUrl);
+            $mail->setIsPdfSent($success);
+            $mail->setSentAt(new \DateTimeImmutable());
+            $mail->setSender($userTrigramme);
+            $mail->setPdfFilename("client_{$clientId}.pdf");
+            
+            // Ajouter l'email de destination si la propriété existe
+            if (method_exists($mail, 'setRecipientEmail')) {
+                $mail->setRecipientEmail($clientEmail);
+            }
+            
+            $entityManager->persist($mail);
+            $entityManager->flush();
+            
+            error_log("Email enregistré avec succès pour client {$clientId}");
+            
         } catch (\Exception $e) {
-            // Log l'erreur mais ne pas faire échouer la requête principale
             error_log("Erreur enregistrement email: " . $e->getMessage());
         }
     }
 
     /**
-     * Génère le trigramme à partir des informations de l'utilisateur connecté
-     * Format: 1ère lettre du prénom + 2 premières lettres du nom (en majuscules)
+     * Génère le trigramme à partir des informations de l'utilisateur connecté - VERSION CORRIGÉE
      */
     private function generateUserTrigramme(): string
     {
@@ -776,38 +823,65 @@ class EquipementPdfController extends AbstractController
         if (!$user) {
             return 'SYS'; // Fallback si pas d'utilisateur connecté
         }
-        dump('DEBUG: Méthodes de l\'utilisateur: ' . implode(', ', get_class_methods($user)));
-        $firstName = $user->getFirstName() ?? '';
-        $lastName = $user->getLastName() ?? '';
         
-        // Nettoyer et normaliser les chaînes
-        $firstName = strtoupper(trim($firstName));
-        $lastName = strtoupper(trim($lastName));
-        
-        // Construire le trigramme
-        $trigramme = '';
-        
-        // 1ère lettre du prénom
-        if (!empty($firstName)) {
-            $trigramme .= substr($firstName, 0, 1);
-        } else {
-            $trigramme .= 'X'; // Fallback
-        }
-        
-        // 2 premières lettres du nom
-        if (!empty($lastName)) {
-            if (strlen($lastName) >= 2) {
-                $trigramme .= substr($lastName, 0, 2);
-            } else {
-                $trigramme .= $lastName . 'X'; // Compléter avec X si nom trop court
+        try {
+            // Essayer différentes méthodes selon votre entité User
+            $firstName = '';
+            $lastName = '';
+            
+            // Tester les getters possibles pour le prénom
+            if (method_exists($user, 'getFirstName')) {
+                $firstName = $user->getFirstName();
+            } elseif (method_exists($user, 'getPrenom')) {
+                $firstName = $user->getPrenom();
+            } elseif (method_exists($user, 'getName')) {
+                $firstName = explode(' ', $user->getName())[0] ?? '';
             }
-        } else {
-            $trigramme .= 'XX'; // Fallback
+            
+            // Tester les getters possibles pour le nom
+            if (method_exists($user, 'getLastName')) {
+                $lastName = $user->getLastName();
+            } elseif (method_exists($user, 'getNom')) {
+                $lastName = $user->getNom();
+            } elseif (method_exists($user, 'getName')) {
+                $parts = explode(' ', $user->getName());
+                $lastName = $parts[1] ?? $parts[0] ?? '';
+            }
+            
+            // Nettoyer et normaliser les chaînes
+            $firstName = strtoupper(trim($firstName));
+            $lastName = strtoupper(trim($lastName));
+            
+            // Construire le trigramme
+            $trigramme = '';
+            
+            // 1ère lettre du prénom
+            if (!empty($firstName)) {
+                $trigramme .= substr($firstName, 0, 1);
+            } else {
+                $trigramme .= 'U'; // U pour User
+            }
+            
+            // 2 premières lettres du nom
+            if (!empty($lastName)) {
+                if (strlen($lastName) >= 2) {
+                    $trigramme .= substr($lastName, 0, 2);
+                } else {
+                    $trigramme .= $lastName . 'X';
+                }
+            } else {
+                $trigramme .= 'SR'; // SR pour SeR (utilisateur)
+            }
+            
+            error_log("Trigramme généré: {$trigramme} (Prénom: {$firstName}, Nom: {$lastName})");
+            
+            return $trigramme;
+            
+        } catch (\Exception $e) {
+            error_log("Erreur génération trigramme: " . $e->getMessage());
+            return 'USR'; // Fallback générique
         }
-        
-        return $trigramme;
     }
-
     private function getClientInfo(string $agence, string $id, EntityManagerInterface $entityManager): array
     {
         try {
