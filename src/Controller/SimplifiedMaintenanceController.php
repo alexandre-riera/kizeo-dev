@@ -3148,8 +3148,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // Vérification doublon
         $idClient = $fields['id_client_']['value'] ?? '';
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
-        dump("Vérification doublon pour équipement: " . $numeroEquipement . " - Client: " . $idClient . " - Date visite: " . $dateVisite);
-        die;
+        // dump("Vérification doublon pour équipement: " . $numeroEquipement . " - Client: " . $idClient . " - Date visite: " . $dateVisite);
         if ($this->equipmentExistsForSameVisit($numeroEquipement, $idClient, $dateVisite, $entityClass, $entityManager)) {
           // dump("Équipement doublon détecté - ignoré: " . $numeroEquipement);
             return false;
