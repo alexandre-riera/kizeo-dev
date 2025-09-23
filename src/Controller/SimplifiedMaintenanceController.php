@@ -856,7 +856,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             // Sauvegarder périodiquement
                             if ($processed % 10 === 0) {
                                 $entityManager->flush();
-                                $entityManager->clear();
+                                // $entityManager->clear();
                                 gc_collect_cycles();
                             }
 
@@ -1082,7 +1082,7 @@ class SimplifiedMaintenanceController extends AbstractController
 
                             // Sauvegarder et nettoyer la mémoire après chaque entrée
                             $entityManager->flush();
-                            $entityManager->clear();
+                            // $entityManager->clear();
                             
                             // Forcer le garbage collector
                             gc_collect_cycles();
@@ -3235,7 +3235,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     // Sauvegarder après chaque chunk
                     try {
                         $entityManager->flush();
-                        $entityManager->clear();
+                        // $entityManager->clear();
                         gc_collect_cycles();
                       // dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {
@@ -3311,7 +3311,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     try {
                         // dump("Sauvegarde chunk hors contrat " . ($chunkIndex + 1));
                         $entityManager->flush();
-                        $entityManager->clear();
+                        // $entityManager->clear();
                         gc_collect_cycles();
                         // dump("Chunk hors contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {
@@ -4106,7 +4106,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         if ($processedCount % 3 == 0) {
                             try {
                                 $entityManager->flush();
-                                $entityManager->clear();
+                                // $entityManager->clear();
                                 gc_collect_cycles();
                             } catch (\Exception $e) {
                                 // Vérifier si c'est une erreur d'EntityManager fermé
@@ -4129,7 +4129,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Sauvegarde après chaque chunk
                 try {
                     $entityManager->flush();
-                    $entityManager->clear();
+                    // $entityManager->clear();
                     gc_collect_cycles();
                 } catch (\Exception $e) {
                     if (strpos($e->getMessage(), 'EntityManager is closed') !== false) {
