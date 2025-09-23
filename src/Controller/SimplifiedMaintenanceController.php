@@ -29,6 +29,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
+use Doctrine\Persistence\ManagerRegistry;
 
 class SimplifiedMaintenanceController extends AbstractController
 {
@@ -3949,7 +3950,8 @@ class SimplifiedMaintenanceController extends AbstractController
         string $agencyCode,
         EntityManagerInterface $entityManager,
         Request $request,
-        MaintenanceCacheService $cacheService // Utilisation du service dédié 
+        MaintenanceCacheService $cacheService, // Utilisation du service dédié
+        ManagerRegistry $doctrine  
     ): JsonResponse {
         
         // Configuration conservative
@@ -4102,9 +4104,17 @@ class SimplifiedMaintenanceController extends AbstractController
                         
                         // Flush périodique pour libérer la mémoire
                         if ($processedCount % 3 == 0) {
-                            $entityManager->flush();
-                            $entityManager->clear();
-                            gc_collect_cycles();
+                            try {
+                                $entityManager->flush();
+                                $entityManager->clear();
+                                gc_collect_cycles();
+                            } catch (\Exception $e) {
+                                // Vérifier si c'est une erreur d'EntityManager fermé
+                                if (strpos($e->getMessage(), 'EntityManager is closed') !== false) {
+                                    $entityManager = $doctrine->resetManager();
+                                }
+                                $errors[] = ['flush_error' => $e->getMessage()];
+                            }
                         }
                         
                     } catch (\Exception $e) {
@@ -4122,7 +4132,9 @@ class SimplifiedMaintenanceController extends AbstractController
                     $entityManager->clear();
                     gc_collect_cycles();
                 } catch (\Exception $e) {
-                  // dump("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
+                    if (strpos($e->getMessage(), 'EntityManager is closed') !== false) {
+                        $entityManager = $doctrine->resetManager();
+                    }
                 }
                 
                 // Pause entre chunks
@@ -4133,7 +4145,9 @@ class SimplifiedMaintenanceController extends AbstractController
             try {
                 $entityManager->flush();
             } catch (\Exception $e) {
-                // dump("Erreur sauvegarde finale: " . $e->getMessage());
+                if (strpos($e->getMessage(), 'EntityManager is closed') !== false) {
+                    $entityManager = $doctrine->resetManager();
+                }
             }
             
             $processingTime = time() - $startTime;
