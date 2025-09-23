@@ -25,43 +25,43 @@ class KizeoService
 
         switch ($agence) {
             case 'Group':
-                $listId = $_ENV['TEST_CLIENTS_GROUP'];
+                $listId = $_ENV['PROD_CLIENTS_GROUP'];
                 break;
             case 'St Etienne':
-                $listId = $_ENV['TEST_CLIENTS_ST_ETIENNE'];
+                $listId = $_ENV['PROD_CLIENTS_ST_ETIENNE'];
                 break;
             case 'Grenoble':
-                $listId = $_ENV['TEST_CLIENTS_GRENOBLE'];
+                $listId = $_ENV['PROD_CLIENTS_GRENOBLE'];
                 break;
             case 'Lyon':
-                $listId = $_ENV['TEST_CLIENTS_LYON'];
+                $listId = $_ENV['PROD_CLIENTS_LYON'];
                 break;
             case 'Bordeaux':
-                $listId = $_ENV['TEST_CLIENTS_BORDEAUX'];
+                $listId = $_ENV['PROD_CLIENTS_BORDEAUX'];
                 break;
             case 'Paris Nord':
-                $listId = $_ENV['TEST_CLIENTS_PARIS_NORD'];
+                $listId = $_ENV['PROD_CLIENTS_PARIS_NORD'];
                 break;
             case 'Montpellier':
-                $listId = $_ENV['TEST_CLIENTS_MONTPELLIER'];
+                $listId = $_ENV['PROD_CLIENTS_MONTPELLIER'];
                 break;
             case 'Hauts de France':
-                $listId = $_ENV['TEST_CLIENTS_HAUTS_DE_FRANCE'];
+                $listId = $_ENV['PROD_CLIENTS_HAUTS_DE_FRANCE'];
                 break;
             case 'Toulouse':
-                $listId = $_ENV['TEST_CLIENTS_TOULOUSE'];
+                $listId = $_ENV['PROD_CLIENTS_TOULOUSE'];
                 break;
             case 'Epinal':
-                $listId = $_ENV['TEST_CLIENTS_EPINAL'];
+                $listId = $_ENV['PROD_CLIENTS_EPINAL'];
                 break;
             case 'PACA':
-                $listId = $_ENV['TEST_CLIENTS_PACA'];
+                $listId = $_ENV['PROD_CLIENTS_PACA'];
                 break;
             case 'Rouen':
-                $listId = $_ENV['TEST_CLIENTS_ROUEN'];
+                $listId = $_ENV['PROD_CLIENTS_ROUEN'];
                 break;
             case 'Rennes':
-                $listId = $_ENV['TEST_CLIENTS_RENNES'];
+                $listId = $_ENV['PROD_CLIENTS_RENNES'];
                 break;
             
             default:
@@ -90,43 +90,43 @@ class KizeoService
 
         switch ($agence) {
             case 'S10':
-                $listId = $_ENV['TEST_CLIENTS_GROUP'];
+                $listId = $_ENV['PROD_CLIENTS_GROUP'];
                 break;
             case 'S40':
-                $listId = $_ENV['TEST_CLIENTS_ST_ETIENNE'];
+                $listId = $_ENV['PROD_CLIENTS_ST_ETIENNE'];
                 break;
             case 'S50':
-                $listId = $_ENV['TEST_CLIENTS_GRENOBLE'];
+                $listId = $_ENV['PROD_CLIENTS_GRENOBLE'];
                 break;
             case 'S60':
-                $listId = $_ENV['TEST_CLIENTS_LYON'];
+                $listId = $_ENV['PROD_CLIENTS_LYON'];
                 break;
             case 'S70':
-                $listId = $_ENV['TEST_CLIENTS_BORDEAUX'];
+                $listId = $_ENV['PROD_CLIENTS_BORDEAUX'];
                 break;
             case 'S80':
-                $listId = $_ENV['TEST_CLIENTS_PARIS_NORD'];
+                $listId = $_ENV['PROD_CLIENTS_PARIS_NORD'];
                 break;
             case 'S100':
-                $listId = $_ENV['TEST_CLIENTS_MONTPELLIER'];
+                $listId = $_ENV['PROD_CLIENTS_MONTPELLIER'];
                 break;
             case 'S120':
-                $listId = $_ENV['TEST_CLIENTS_HAUTS_DE_FRANCE'];
+                $listId = $_ENV['PROD_CLIENTS_HAUTS_DE_FRANCE'];
                 break;
             case 'S130':
-                $listId = $_ENV['TEST_CLIENTS_TOULOUSE'];
+                $listId = $_ENV['PROD_CLIENTS_TOULOUSE'];
                 break;
             case 'S140':
-                $listId = $_ENV['TEST_CLIENTS_EPINAL'];
+                $listId = $_ENV['PROD_CLIENTS_EPINAL'];
                 break;
             case 'S150':
-                $listId = $_ENV['TEST_CLIENTS_PACA'];
+                $listId = $_ENV['PROD_CLIENTS_PACA'];
                 break;
             case 'S160':
-                $listId = $_ENV['TEST_CLIENTS_ROUEN'];
+                $listId = $_ENV['PROD_CLIENTS_ROUEN'];
                 break;
             case 'S170':
-                $listId = $_ENV['TEST_CLIENTS_RENNES'];
+                $listId = $_ENV['PROD_CLIENTS_RENNES'];
                 break;
             
             default:

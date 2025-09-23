@@ -131,31 +131,6 @@ class FormController extends AbstractController
         return new JsonResponse("Formulaires parc client sur API KIZEO : " . count($formList) . " | Formulaires parc client en BDD : " . count($allFormsInDatabase) . "\n", Response::HTTP_OK, [], true);
     }
 
-    // ------------------------------------------------------------------------------------------------------------------------
-    // ------------------------------------------------------------------------------------------------------------------------
-    // ------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     * 
-     * Save maintenance equipments in local database then call save equipments to KIZEO  --  FIRST CALL IN CRON TASK
-     */
-    // #[Route('/api/forms/save/maintenance/equipments', name: 'app_api_form_save_maintenance_equipments', methods: ['GET'])]
-    // public function saveEquipementsInDatabase(FormRepository $formRepository, CacheInterface $cache) //: JsonResponse
-    // {
-    //     $formRepository->saveEquipmentsInDatabase($cache);
-        
-        
-    //     // return new JsonResponse("Les équipements de maintenance ont bien été sauvegardés ", Response::HTTP_OK, [], true);
-    //     // return $this->redirectToRoute('app_api_form_save_maintenance_equipments'); // Sauvegarder 5 formulaires à la fois en BDD en BOUCLE A utiliser pour ne mettre à jour que la base de données
-       
-    //     // Commenter pour éviter de mettre les listes Kizeo à jour à chaque fois que l'on sauvegarde les équipements de maintenance
-    //     return $this->redirectToRoute('app_api_form_update_lists_equipements_from_bdd'); 
-    // }
-    /**
-     * -------------------------------------------------------------------------- SECOND CALL IN CRON TASK
-     * This route is going to replace the route above to update equipments list on Kizeo Forms
-     * VERSION AVEC CACHE REDIS ET GESTION D'ERREURS AMÉLIORÉE
-     */
     #[Route('/api/forms/update/lists/kizeo', name: 'app_api_form_update_lists_equipements_from_bdd', methods: ['GET','PUT'])]
     public function updateKizeoFormsByEquipmentsListFromBdd(
         FormRepository $formRepository, 

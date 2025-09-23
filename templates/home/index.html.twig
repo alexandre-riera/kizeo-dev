@@ -377,86 +377,383 @@
 
                 <!-- Sélection du client (affiché seulement si agence sélectionnée mais pas de client sélectionné) -->
                 {% if agenceSelected is not null and clientSelected is null %}
-                    <div class="alert alert-info">                        
-                        <label class="selection-client-label" for="client-select">Clients sous contrat : <strong>{{ agenceSelected }} - 
-                        {% if agenceSelected == 'S10' %}Group
-                        {% elseif agenceSelected == 'S40' %}St Etienne
-                        {% elseif agenceSelected == 'S50' %}Grenoble
-                        {% elseif agenceSelected == 'S60' %}Lyon
-                        {% elseif agenceSelected == 'S70' %}Bordeaux
-                        {% elseif agenceSelected == 'S80' %}ParisNord
-                        {% elseif agenceSelected == 'S100' %}Montpellier
-                        {% elseif agenceSelected == 'S120' %}HautsDeFrance
-                        {% elseif agenceSelected == 'S130' %}Toulouse
-                        {% elseif agenceSelected == 'S140' %}SMP
-                        {% elseif agenceSelected == 'S150' %}PACA
-                        {% elseif agenceSelected == 'S160' %}Rouen
-                        {% elseif agenceSelected == 'S170' %}Rennes
-                        {% else %}{{ agenceSelected }}
-                        {% endif %}</strong></label>
-                        <form action="" method="post">
-                            <input type="text" class="form-control form-control-client" placeholder="Search.." id="myInput" onkeyup="filterFunction()">
-                            <select class="form-control" id="client-sous-contrat-select" name="clientName" onFocus="expand(this)" onBlur="unexpand(this)" onclick="unexpand(this)" required>
-                                <option value="" selected>Select client</option> 
-                                {% if agenceSelected == "S10" %}
-                                    {% for client in clientsGroup %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S40" %}
-                                    {% for client in clientsStEtienne %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S50" %}
-                                    {% for client in clientsGrenoble %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S60" %}
-                                    {% for client in clientsLyon %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S70" %}
-                                    {% for client in clientsBordeaux %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S80" %}
-                                    {% for client in clientsParisNord %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S100" %}
-                                    {% for client in clientsMontpellier %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S120" %}
-                                    {% for client in clientsHautsDeFrance %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S130" %}
-                                    {% for client in clientsToulouse %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S140" %}
-                                    {% for client in clientsEpinal %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S150" %}
-                                    {% for client in clientsPaca %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S160" %}
-                                    {% for client in clientsRouen %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% elseif agenceSelected == "S170" %}
-                                    {% for client in clientsRennes %}
-                                        <option value="{{ client }} {{ agenceSelected }}">{{ client }}</option>
-                                    {% endfor %}
-                                {% else %}
-                                    <option value="">Aucun client disponible pour cette agence</option>
-                                {% endif %}
-                            </select>
-                            <button type="submit" name="submitClient" class="btn btn-primary">Select Client</button>
-                        </form>
-                    </div>
+                    {% if agenceSelected == 'S10' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S10 - Group</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S10">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsGroup %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S40' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S40 - St Etienne</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S40">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsStEtienne %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S50' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S50 - Grenoble</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S50">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsGrenoble %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S60' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S60 - Lyon</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S60">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsLyon %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S70' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S70 - Bordeaux</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S70">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsBordeaux %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S80' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S80 - Paris Nord</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S80">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsParisNord %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S100' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S100 - Montpellier</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S100">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsMontpellier %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S120' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S120 - Hauts de France</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S120">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsHautsDeFrance %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S130' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S130 - Toulouse</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S130">
+                                    
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsToulouse %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S140' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S140 - Epinal</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S140">
+
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsEpinal %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S150' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S150 - Brignoles</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S150">
+
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsPaca %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S160' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S160 - Rouen</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S160">
+
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsRouen %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if agenceSelected == 'S170' %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Clients sous contrat : S170 - Rennes</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-group">
+                                    <input type="text" id="searchClients" class="form-control" placeholder="Rechercher un client..." onkeyup="filterFunction()">
+                                </div>
+                                <form method="post" action="{{ path('app_front') }}">
+                                    <!-- ✅ CHAMP CACHÉ POUR CONSERVER L'AGENCE -->
+                                    <input type="hidden" name="hiddenAgence" value="S170">
+
+                                    <div class="form-group">
+                                        <select class="form-control" id="clientsList" name="clientName">
+                                            <option value="">Sélectionnez un client</option>
+                                            {% for client in clientsRennes %}
+                                                <!-- ✅ SUPPRIME L'AGENCE DU NOM DU CLIENT -->
+                                                <option value="{{ client }}">
+                                                    {{ client }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Select Client</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -491,7 +788,7 @@
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">Filtres</h4>
-                            <form id="filterForm" method="get" action="">
+                            <form id="filterForm">
                                 <input type="hidden" class="form-control" id="clientSelected" name="clientSelected" value="{{ clientSelected }}">
                                 <input type="hidden" class="form-control" id="agenceSelected" name="agenceSelected" value="{{ agenceSelected }}">
                                 <input type="hidden" class="form-control" id="idClientSelected" name="idClientSelected" value="{{ idClientSelected }}">
@@ -558,13 +855,24 @@
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="margin_top_30 col-sm-3">
-                    <a id="pdf-button" href="{{ path('client_equipements_pdf', {
+                    {% set pdfParams = {
                         'agence': agenceSelected,
                         'id': clientSelectedInformations.getIdContact(),
-                        'clientAnneeFilter': clientAnneeFilter,
-                        'clientVisiteFilter': clientVisiteFilter
-                    }) }}" 
-                    class="btn btn-success btn-lg" target="_blank">
+                    } %}
+                    
+                    {% if clientAnneeFilter %}
+                        {% set pdfParams = pdfParams|merge({'clientAnneeFilter': clientAnneeFilter}) %}
+                    {% endif %}
+                    
+                    {% if clientVisiteFilter %}
+                        {% set pdfParams = pdfParams|merge({'clientVisiteFilter': clientVisiteFilter}) %}
+                    {% endif %}
+                    
+                    <a id="pdf-button" 
+                    href="{{ path('client_equipements_pdf', pdfParams) }}" 
+                    class="btn btn-success btn-lg" 
+                    target="_blank"
+                    onclick="return confirmPdfGeneration();">
                         <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
                         {% if clientAnneeFilter or clientVisiteFilter %}
                             <small class="d-block">
@@ -1146,4 +1454,21 @@
             });
         });
     </script>
+    <script>
+        function confirmPdfGeneration() {
+            // Tu peux ajouter une confirmation ici si tu veux
+            // return confirm('Générer le PDF pour ce client ?');
+            
+            // Vérifier que les paramètres sont valides avant d'envoyer
+            const button = document.getElementById('pdf-button');
+            const href = button.getAttribute('href');
+            
+            if (!href || href.includes('undefined') || href.includes('null')) {
+                alert('Erreur: paramètres manquants pour la génération du PDF');
+                return false;
+            }
+            
+            return true;
+        }
+        </script>
 {% endblock %}

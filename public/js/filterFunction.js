@@ -8,10 +8,10 @@ function unexpand(obj)
 }
   
 function filterFunction() {
-    const input = document.getElementById("myInput");
+    const input = document.getElementById("searchClients");
     const filter = input.value.toUpperCase();
     console.log("Filter text in input : " + filter);
-    const select = document.getElementById("client-sous-contrat-select");
+    const select = document.getElementById("clientsList");
     const option = select.getElementsByTagName("option");
 
     for (let i = 0; i < option.length; i++) {

@@ -1,0 +1,272 @@
+/* public/css/pdf-equipements.css */
+
+body {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    height: 100vh;
+    width: 100vw;
+}
+
+.page-break {
+    page-break-after: always;
+}
+
+.equipement {
+    margin-bottom: 150px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.equipement-header {
+    background-color: #f5f5f5;
+    padding: 5px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    border-left: 5px solid #007bff;
+}
+
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 150px;
+}
+
+.info-table th, 
+.info-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.info-table th {
+    background-color: #f9f9f9;
+    width: 30%;
+    font-weight: bold;
+}
+
+.equipment-image {
+    width: 30%;
+    text-align: center;
+    vertical-align: top;
+    padding: 10px;
+}
+
+.main-photo {
+    max-width: 250px;
+    max-height: 200px;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+}
+
+.no-image {
+    width: 250px;
+    height: 200px;
+    border: 2px dashed #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.photos-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.photo-container {
+    flex: 0 0 calc(33.333% - 10px);
+    text-align: center;
+}
+
+.photo {
+    max-width: 100%;
+    max-height: 150px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.photo-thumbnail {
+    width: 100%;
+    max-width: 150px;
+    height: 100px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.photo-caption {
+    font-size: 10px;
+    color: #666;
+    margin-top: 2px;
+}
+
+.statut-icon {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.statut-bon { 
+    background-color: #28a745; 
+}
+
+.statut-attention { 
+    background-color: #ffc107; 
+}
+
+.statut-urgent { 
+    background-color: #dc3545; 
+}
+
+.statut-arret { 
+    background-color: #6c757d; 
+}
+
+.anomalies {
+    color: #dc3545;
+    font-weight: bold;
+    background-color: #f8d7da;
+    padding: 5px;
+    border-radius: 3px;
+}
+
+.stats-section {
+    background-color: rgba(248, 249, 250, 0.95);
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 15px;
+    margin: 20px 0;
+}
+
+.stats-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #495057;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 12px;
+}
+
+.stats-table th,
+.stats-table td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    text-align: left;
+}
+
+.stats-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.equipment-main-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 100px;
+    border: 2px solid #333;
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
+.equipment-photo-cell {
+    width: 220px;
+    height: 220px;
+    vertical-align: top;
+    padding: 10px;
+    border-right: 2px solid #333;
+}
+
+.equipment-photo {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+.no-photo {
+    width: 200px;
+    height: 200px;
+    background-color: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #ccc;
+    color: #666;
+    text-align: center;
+    font-style: italic;
+}
+
+.equipment-info-cell {
+    vertical-align: top;
+    padding: 0;
+}
+
+.equipment-info-table {
+    width: 100%;
+    border-collapse: collapse;
+    height: 220px;
+}
+
+.equipment-info-table td {
+    border-bottom: 1px solid #333;
+    padding: 8px 10px;
+    vertical-align: middle;
+}
+
+.info-label {
+    font-weight: bold;
+    background-color: #f8f9fa;
+    width: 25%;
+}
+
+.info-value {
+    background-color: white;
+}
+
+.equipment-status {
+    font-weight: bold;
+}
+
+.status-urgent-text {
+    color: #e74c3c;
+}
+
+.status-attention-text {
+    color: #f39c12;
+}
+
+.status-bon-text {
+    color: #27ae60;
+}
+
+.anomalies-section {
+    background-color: #fff5f5;
+    border: 1px solid #feb2b2;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    color: #c53030;
+}
+
+.anomalies-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.additional-photos {
+    margin-top: 20px;
+}

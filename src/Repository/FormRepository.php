@@ -29,6 +29,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\RedirectController;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use stdClass;
 use App\Service\ImageStorageService;
+use App\Service\PhotoManagementService;
 
 /**
  * @extends ServiceEntityRepository<ApiForm>
@@ -37,15 +38,17 @@ class FormRepository extends ServiceEntityRepository
 {
     private ImageStorageService $imageStorageService;
     private HttpClientInterface $client;
+    private PhotoManagementService $photoManagementService;
 
     public function __construct(
         ManagerRegistry $registry,
         HttpClientInterface $client,
-        ImageStorageService $imageStorageService
+        ImageStorageService $imageStorageService,
+        PhotoManagementService $photoManagementService
     ) {
         parent::__construct($registry, Form::class);
         $this->client = $client;
-        $this->imageStorageService = $imageStorageService;
+        $this->photoManagementService = $photoManagementService;
     }
 
     /**
@@ -500,243 +503,6 @@ class FormRepository extends ServiceEntityRepository
             }
         }
         return $arrayPortailsInTheList;
-    }
-
-
-    //      ----------------------------------------------------------------------------------------------------------------------
-    //      ---------------------------------------- SAVE NEW EQUIPMENTS TO LOCAL BDD --------------------------------------
-    //      ----------------------------------------------------------------------------------------------------------------------
-    /**
-     * Function to create and save new equipments in local database by agency --- OK POUR TOUTES LES AGENCES DE S10 à S170 --- MAJ IMAGES OK
-     */
-    public function createAndSaveInDatabaseByAgency($equipements, $entityAgency){
-    
-        /**
-         * Première étape : Enregistrement des équipements AU CONTRAT
-         */
-        foreach ($equipements['contrat_de_maintenance']['value'] as $additionalEquipment){
-            $equipement = new $entityAgency;
-            $equipement->setIdContact($equipements['id_client_']['value']);
-            $equipement->setRaisonSociale($equipements['nom_client']['value']);
-            if (isset($equipements['test_']['value'])) {
-                $equipement->setTest($equipements['test_']['value']);
-            }
-            $equipement->setDateEnregistrement($equipements['date_et_heure1']['value']);
-
-            if (isset($equipements['id_societe']['value'])) {
-                $equipement->setCodeSociete($equipements['id_societe']['value']);
-            } else {
-                $equipement->setCodeSociete("");
-            }
-            if (isset($equipements['id_agence']['value'])) {
-                $equipement->setCodeAgence($equipements['id_agence']['value']);
-            } else {
-                $equipement->setCodeAgence("");
-            }
-            
-            $equipement->setDerniereVisite($equipements['date_et_heure1']['value']);
-            $equipement->setTrigrammeTech($equipements['trigramme']['value']);
-            $equipement->setSignatureTech($equipements['signature3']['value']);
-            
-            // Détermination du type de visite
-            if (str_contains($additionalEquipment['equipement']['path'], 'CE1')) {
-                $equipement->setVisite("CE1");
-            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE2')){
-                $equipement->setVisite("CE2");
-            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE3')){
-                $equipement->setVisite("CE3");
-            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CE4')){
-                $equipement->setVisite("CE4");
-            } elseif(str_contains($additionalEquipment['equipement']['path'], 'CEA')){
-                $equipement->setVisite("CEA");
-            }
-            
-            $equipement->setNumeroEquipement($additionalEquipment['equipement']['value']);
-            $equipement->setIfExistDB($additionalEquipment['equipement']['columns']);
-            $equipement->setLibelleEquipement(strtolower($additionalEquipment['reference7']['value']));
-            $equipement->setModeFonctionnement($additionalEquipment['mode_fonctionnement_2']['value']);
-            $equipement->setRepereSiteClient($additionalEquipment['localisation_site_client']['value']);
-            $equipement->setMiseEnService($additionalEquipment['reference2']['value']);
-            $equipement->setNumeroDeSerie($additionalEquipment['reference6']['value']);
-            $equipement->setMarque($additionalEquipment['reference5']['value']);
-            
-            if (isset($additionalEquipment['reference3']['value'])) {
-                $equipement->setLargeur($additionalEquipment['reference3']['value']);
-            } else {
-                $equipement->setLargeur("");
-            }
-            if (isset($additionalEquipment['reference1']['value'])) {
-                $equipement->setHauteur($additionalEquipment['reference1']['value']);
-            } else {
-                $equipement->setHauteur("");
-            }
-            if (isset($additionalEquipment['longueur']['value'])) {
-                $equipement->setLongueur($additionalEquipment['longueur']['value']);
-            } else {
-                $equipement->setLongueur("NC");
-            }
-            
-            $equipement->setPlaqueSignaletique($additionalEquipment['plaque_signaletique']['value']);
-            $equipement->setEtat($additionalEquipment['etat']['value']);
-            
-            if (isset($additionalEquipment['hauteur_de_nacelle_necessaire']['value'])) {
-                $equipement->setHauteurNacelle($additionalEquipment['hauteur_de_nacelle_necessaire']['value']);
-            } else {
-                $equipement->setHauteurNacelle("");
-            }
-            
-            if (isset($additionalEquipment['si_location_preciser_le_model']['value'])) {
-                $equipement->setModeleNacelle($additionalEquipment['si_location_preciser_le_model']['value']);
-            } else {
-                $equipement->setModeleNacelle("");
-            }
-            
-            if (isset($additionalEquipment['etat']['value'])) {
-                switch ($additionalEquipment['etat']['value']) {
-                    case "Rien à signaler le jour de la visite. Fonctionnement ok":
-                        $equipement->setStatutDeMaintenance("Vert");
-                        break;
-                    case "Travaux à prévoir":
-                        $equipement->setStatutDeMaintenance("Orange");
-                        break;
-                    case "Travaux obligatoires":
-                        $equipement->setStatutDeMaintenance("Rouge");
-                        break;
-                    case "Equipement inaccessible le jour de la visite":
-                        $equipement->setStatutDeMaintenance("Inaccessible");
-                        break;
-                    case "Equipement à l'arrêt le jour de la visite":
-                        $equipement->setStatutDeMaintenance("A l'arrêt");
-                        break;
-                    case "Equipement mis à l'arrêt lors de l'intervention":
-                        $equipement->setStatutDeMaintenance("Rouge");
-                        break;
-                    case "Equipement non présent sur site":
-                        $equipement->setStatutDeMaintenance("Non présent");
-                        break;
-                    default:
-                        $equipement->setStatutDeMaintenance("NC");
-                        break;
-                }
-            }
-
-            $equipement->setEnMaintenance(true);
-            $equipement->setIsArchive(false);
-            
-            $this->getEntityManager()->persist($equipement);
-        }
-
-        /**
-         * Deuxième étape : Traitement des équipements HORS CONTRAT
-         * avec attribution automatique des numéros
-         */
-        foreach ($equipements['tableau2']['value'] as $equipementsHorsContrat){
-            $equipement = new $entityAgency;
-            $equipement->setIdContact($equipements['id_client_']['value']);
-            $equipement->setRaisonSociale($equipements['nom_client']['value']);
-            if (isset($equipements['test_']['value'])) {
-                $equipement->setTest($equipements['test_']['value']);
-            }
-            $equipement->setDateEnregistrement($equipements['date_et_heure1']['value']);
-
-            if (isset($equipements['id_societe']['value'])) {
-                $equipement->setCodeSociete($equipements['id_societe']['value']);
-            } else {
-                $equipement->setCodeSociete("");
-            }
-            if (isset($equipements['id_agence']['value'])) {
-                $equipement->setCodeAgence($equipements['id_agence']['value']);
-            } else {
-                $equipement->setCodeAgence("");
-            }
-            
-            $equipement->setDerniereVisite($equipements['date_et_heure1']['value']);
-            $equipement->setTrigrammeTech($equipements['trigramme']['value']);
-            $equipement->setSignatureTech($equipements['signature3']['value']);
-            
-            // Détermination du type de visite (basée sur le premier équipement au contrat)
-            if (!empty($equipements['contrat_de_maintenance']['value'])) {
-                if (str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE1')) {
-                    $equipement->setVisite("CE1");
-                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE2')){
-                    $equipement->setVisite("CE2");
-                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE3')){
-                    $equipement->setVisite("CE3");
-                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CE4')){
-                    $equipement->setVisite("CE4");
-                } elseif(str_contains($equipements['contrat_de_maintenance']['value'][0]['equipement']['path'], 'CEA')){
-                    $equipement->setVisite("CEA");
-                } else {
-                    $equipement->setVisite("CE1"); // Valeur par défaut
-                }
-            } else {
-                $equipement->setVisite("CE1"); // Valeur par défaut si pas d'équipement au contrat
-            }
-            
-            // Attribution automatique du numéro d'équipement
-            $typeLibelle = strtolower($equipementsHorsContrat['nature']['value']);
-            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-            
-            // Interroger la base de données pour obtenir le prochain numéro
-            $idClient = $equipements['id_client_']['value'];
-            $nouveauNumero = $this->getNextEquipmentNumberFromDatabase($typeCode, $idClient, $entityAgency);
-            
-            // Formater le numéro d'équipement (ex: SEC01)
-            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-            $equipement->setNumeroEquipement($numeroFormate);
-            
-            $equipement->setLibelleEquipement($typeLibelle);
-            $equipement->setModeFonctionnement($equipementsHorsContrat['mode_fonctionnement_']['value']);
-            $equipement->setRepereSiteClient($equipementsHorsContrat['localisation_site_client1']['value']);
-            $equipement->setMiseEnService($equipementsHorsContrat['annee']['value']);
-            $equipement->setNumeroDeSerie($equipementsHorsContrat['n_de_serie']['value']);
-            $equipement->setMarque($equipementsHorsContrat['marque']['value']);
-            
-            if (isset($equipementsHorsContrat['largeur']['value'])) {
-                $equipement->setLargeur($equipementsHorsContrat['largeur']['value']);
-            } else {
-                $equipement->setLargeur("");
-            }
-            if (isset($equipementsHorsContrat['hauteur']['value'])) {
-                $equipement->setHauteur($equipementsHorsContrat['hauteur']['value']);
-            } else {
-                $equipement->setHauteur("");
-            }
-            
-            $equipement->setPlaqueSignaletique($equipementsHorsContrat['plaque_signaletique1']['value']);
-            $equipement->setEtat($equipementsHorsContrat['etat1']['value']);
-            
-            if (isset($equipementsHorsContrat['etat1']['value'])) {
-                switch ($equipementsHorsContrat['etat1']['value']) {
-                    case "A":
-                        $equipement->setStatutDeMaintenance("Bon état de fonctionnement le jour de la visite");
-                        break;
-                    case "B":
-                        $equipement->setStatutDeMaintenance("Travaux préventifs");
-                        break;
-                    case "C":
-                        $equipement->setStatutDeMaintenance("Travaux curatifs");
-                        break;
-                    case "D":
-                        $equipement->setStatutDeMaintenance("Equipement à l'arrêt le jour de la visite");
-                        break;
-                    case "E":
-                        $equipement->setStatutDeMaintenance("Equipement mis à l'arrêt lors de l'intervention");
-                        break;
-                    default:
-                        $equipement->setStatutDeMaintenance("NC");
-                        break;
-                }
-            }
-
-            $equipement->setEnMaintenance(false);
-            $equipement->setIsArchive(false);
-            
-            $this->getEntityManager()->persist($equipement);
-        }
-        
-        // FLUSH ici seulement des équipement AU CONTRAT et HORS CONTRAT persistés
-        $this->getEntityManager()->flush();
     }
 
     /**
@@ -1917,229 +1683,6 @@ class FormRepository extends ServiceEntityRepository
         }
     }
 
-
-    /**      --------------------------------------------------------------------------------------------------------------------
-    *      ---------------------------------------------  SAVE PDF STANDARD FROM KIZEO AND SAVE EQUIPMENTS IN BDD ---------------
-    *      ----------------------------------------------------------------------------------------------------------------------
-    *
-    * Function to save PDF with pictures for maintenance equipements in directories on O2switch  -------------- LOCAL FUNCTIONNAL -------
-    * Implementation du cache symfony pour améliorer la performance en remote
-    * -------------------------------------- CALL BY 1ST CRON TASK
-    */
-    public function saveEquipmentsInDatabase($cache){
-        // -----------------------------   Return all forms in an array | cached for 900 seconds 15 minutes
-        $allFormsArray = $cache->get('all-forms-on-kizeo', function(ItemInterface $item){
-            $item->expiresAfter(3600); // 1 hour
-            $result = FormRepository::getForms();
-            return $result['forms'];
-        });
-
-        $formMaintenanceUnread = [];
-        $dataOfFormMaintenanceUnread = [];
-        $allFormsKeyId = [];
-        
-        $entiteEquipementS10 = new EquipementS10;
-        $entiteEquipementS40 = new EquipementS40;
-        $entiteEquipementS50 = new EquipementS50;
-        $entiteEquipementS60 = new EquipementS60;
-        $entiteEquipementS70 = new EquipementS70;
-        $entiteEquipementS80 = new EquipementS80;
-        $entiteEquipementS100 = new EquipementS100;
-        $entiteEquipementS120 = new EquipementS120;
-        $entiteEquipementS130 = new EquipementS130;
-        $entiteEquipementS140 = new EquipementS140;
-        $entiteEquipementS150 = new EquipementS150;
-        $entiteEquipementS160 = new EquipementS160;
-        $entiteEquipementS170 = new EquipementS170;
-        
-        // ----------------------------- GET ALL ID from forms with class "MAINTENANCE"
-        foreach ($allFormsArray as $key => $value) {
-            if ($allFormsArray[$key]['class'] === 'MAINTENANCE') {
-                // Récuperation des forms ID
-                array_push($allFormsKeyId, $allFormsArray[$key]['id']);
-            }
-        }
-        // -----------------------------  FIN Return all forms with class "MAINTENANCE"
-
-        // ----------------------------------------------------------------------- Début d'appel KIZEO aux formulaires non lus par ID de leur liste
-        // ----------------------------------------------------------- Appel de 5 formulaires à la fois en mettant le paramètre LIMIT à 5 en fin d'url
-        // --------------- Remise à zéro du tableau $formMaintenanceUnread  ------------------
-        // --------------- Avant de le recharger avec les prochains 5 formulaires non lus  ------------------
-        $formMaintenanceUnread = [];
-        foreach ($allFormsKeyId as $key) {
-            $responseUnread = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' .  $key . '/data/unread/lu/5', [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $result = $responseUnread->getContent();
-            $result = $responseUnread->toArray();
-            array_push($formMaintenanceUnread, $result);
-            
-        }
-       
-        // ----------------------------------------------------------------------- Début d'appel des data des formulaires non lus
-        // --------------- Remise à zéro du tableau $dataOfFormMaintenanceUnread  ------------------
-        // --------------- Avant de le recharger avec la data des 5 formulaires non lus  ------------------
-        $dataOfFormMaintenanceUnread = [];
-        foreach ($formMaintenanceUnread as $formUnread) {
-            foreach ($formUnread['data'] as $form) {
-                $response = $this->client->request(
-                    'GET',
-                    'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/data/' . $form['_id'], [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]
-                );
-                $result= $response->getContent();
-                $result= $response->toArray();
-                // array_push($dataOfFormMaintenanceUnread, $result['data']['fields']);
-                array_push($dataOfFormMaintenanceUnread, $result);
-
-                // Mark them as READ
-                 // -------------------------------------------            MARK FORM AS READ !!!
-                // ------------------------------------------------------------------------------
-                $response = $this->client->request(
-                    'POST',
-                    'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/markasreadbyaction/lu', [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'json' => [
-                            "data_ids" => [intval($form['_id'])]
-                        ]
-                    ]
-                );
-                // -------------------------------------------            MARKED FORM AS READ !!!
-                // ------------------------------------------------------------------------------
-            }
-        }
-        
-        // ------------- Upload pictures equipements en BDD local
-        foreach ($dataOfFormMaintenanceUnread as $equipements){
-            $equipements = $equipements['data'];
-            FormRepository::uploadPicturesInDatabase($equipements);
-        }
-
-        // ------------- Selon le code agence, enregistrement des equipements AU CONTRAT et HORS CONTRAT en BDD local
-        foreach ($dataOfFormMaintenanceUnread as $equipements){
-            $equipements = $equipements['data']['fields'];
-            // ----------------------------------------------------------   
-            // IF code_agence d'$equipement = S50 ou S100 ou etc... on boucle sur ses équipements supplémentaires
-            // ----------------------------------------------------------
-            switch ($equipements['code_agence']['value']) {
-                // Passer à la fonction createAndSaveInDatabaseByAgency()
-                // les variables $equipements avec les nouveaux équipements des formulaires de maintenance, le tableau des résumés de l'agence et son entité ex: $entiteEquipementS10
-                case 'S10':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS10);
-                    break;
-                
-                case 'S40':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS40);
-                    break;
-                
-                case 'S50':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements,  $entiteEquipementS50);
-                    break;
-                
-                
-                case 'S60':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS60);
-                    break;
-                
-                
-                case 'S70':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS70);
-                    break;
-                
-                
-                case 'S80':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS80);
-                    break;
-                
-                
-                case 'S100':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements,  $entiteEquipementS100);
-                    break;
-                
-                
-                case 'S120':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS120);
-                    break;
-                
-                
-                case 'S130':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS130);
-                    break;
-                
-                
-                case 'S140':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS140);
-                    break;
-                
-                
-                case 'S150':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS150);
-                    break;
-                
-                
-                case 'S160':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS160);
-                    break;
-                
-                
-                case 'S170':
-                    FormRepository::createAndSaveInDatabaseByAgency($equipements, $entiteEquipementS170);
-                    break;
-                
-                default:
-                    break;
-            }
-        }
-        
-        return "L'enregistrement en base de données s'est bien déroulé";
-    }
-
-
-    /**
-     * Function to mark maintenance forms as UNREAD 
-     */
-    // public function markMaintenanceFormsAsUnread($cache){
-    //     // Récupérer les fichiers PDF dans un tableau
-    //     // Filtrer uniquement les formulaires de maintenance
-        
-    //     $allFormsArray = $cache->get('forms_maintenance', function(ItemInterface $item) use ($cache){ // $allFormsData = $content['data'] from getFormsMaintenance()
-    //         $item->expiresAfter(1800); // Cache pour 30 minutes
-    //         $results = FormRepository::getFormsMaintenance($cache);
-    //         return $results;
-    //     });
-    //     foreach ($allFormsArray as $data) {
-    //         // Effectuer une action de marquage de tous les formulaires en une seule requête
-    //         Request::enableHttpMethodParameterOverride(); // <-- add this line
-    //         $this->client->request('POST', 
-    //             'https://forms.kizeo.com/rest/v3/forms/' . $data->form_id . '/markasunreadbyaction/read', [
-    //                 'headers' => [
-    //                     'Accept' => 'application/json',
-    //                     'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-    //                 ],
-    //                 'json' => [
-    //                     "data_ids" => intval($data->data_id) // Convertir à int
-    //                 ]
-    //             ]
-    //         );
-    //     }
-
-        
-    // }
-
     /**
      * Function to save PDF with pictures for etat des lieux portails in directories on O2switch  -------------- FUNCTIONNAL -------
      * ----------------------------             LE MARK AS READ N'EST PAS IMPLEMENTE
@@ -2217,142 +1760,6 @@ class FormRepository extends ServiceEntityRepository
             }
         }
         return $allFormsPdf;
-    }
-    /**
-     * SAVE ALL PICTURES FROM FORMS MAINTENANCE IN FORM TABLE WITH THEIR ID_EQUIPMENT
-     */
-    public function savePicturesFromForms($cache){
-        // -----------------------------   Return all forms in an array
-        $allFormsArray = FormRepository::getForms();  // All forms on Kizeo
-        $allFormsArray = $allFormsArray['forms'];
-        $allFormsMaintenanceArray = []; // All forms with class "MAINTENANCE
-
-        // ----------------------------- DÉBUT Return all forms with class "MAINTENANCE"
-        foreach ($allFormsArray as $key => $value) {
-            if ($allFormsArray[$key]['class'] === 'MAINTENANCE') {
-                $response = $this->client->request(
-                    'POST',
-                    'https://forms.kizeo.com/rest/v3/forms/' . $allFormsArray[$key]['id'] . '/data/advanced', [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]
-                );
-                $content = $response->getContent();
-                $content = $response->toArray();
-                foreach ($content['data'] as $key => $value) {
-                    array_push($allFormsMaintenanceArray, $value);
-                }
-            }
-        }
-        // -----------------------------  FIN Return all forms with class "MAINTENANCE"
-        // dd($allFormsMaintenanceArray);
-        $dataOfFormMaintenance = [];
-        foreach ($allFormsMaintenanceArray as $form) {
-            $response = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' .  $form['_form_id'] . '/data/' . $form['_id'], [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-            $result= $response->getContent();
-            $result= $response->toArray();
-            array_push($dataOfFormMaintenance, $result);
-        }
-        // ------------- Upload pictures equipements en BDD local
-        foreach ($dataOfFormMaintenance as $equipements){
-            $equipements = $equipements['data'];
-            FormRepository::uploadPicturesInDatabase($equipements);
-        }
-        
-        return "Les images sont bien enregistrées dans la table form";
-    }
-
-    public function uploadPicturesInDatabase($equipements){
-        /**
-        * List all additional equipments stored in individual array
-        */
-
-        // On sauvegarde les photos d'équipements AU CONTRAT issus des formulaires non lus en BDD
-        foreach ($equipements['fields']['contrat_de_maintenance']['value']  as $additionalEquipment){
-            $equipement = new Form;
-
-            $equipement->setFormId($equipements['form_id']);
-            $equipement->setDataId($equipements['id']);
-            $equipement->setUpdateTime($equipements['update_time']);
-            
-            $equipement->setCodeEquipement($additionalEquipment['equipement']['value']);
-            $equipement->setRaisonSocialeVisite($additionalEquipment['equipement']['path']);
-            if (isset($additionalEquipment['photo_etiquette_somafi']['value'])) {
-                $equipement->setPhotoEtiquetteSomafi($additionalEquipment['photo_etiquette_somafi']['value']);
-            }
-            $equipement->setPhotoPlaque($additionalEquipment['photo_plaque']['value']);
-            $equipement->setPhotoChoc($additionalEquipment['photo_choc']['value']);
-            if (isset($additionalEquipment['photo_choc_tablier_porte']['value'])) {
-                $equipement->setPhotoChocTablierPorte($additionalEquipment['photo_choc_tablier_porte']['value']);
-            }
-            if (isset($additionalEquipment['photo_choc_tablier']['value'])) {
-                $equipement->setPhotoChocTablier($additionalEquipment['photo_choc_tablier']['value']);
-            }
-            if (isset($additionalEquipment['photo_axe']['value'])) {
-                $equipement->setPhotoAxe($additionalEquipment['photo_axe']['value']);
-            }
-            if (isset($additionalEquipment['photo_serrure']['value'])) {
-                $equipement->setPhotoSerrure($additionalEquipment['photo_serrure']['value']);
-            }
-            if (isset($additionalEquipment['photo_serrure1']['value'])) {
-                $equipement->setPhotoSerrure1($additionalEquipment['photo_serrure1']['value']);
-            }
-            if (isset($additionalEquipment['photo_feux']['value'])) {
-                $equipement->setPhotoSerrure1($additionalEquipment['photo_feux']['value']);
-            }
-            $equipement->setPhotoPanneauIntermediaireI($additionalEquipment['photo_panneau_intermediaire_i']['value']);
-            $equipement->setPhotoPanneauBasInterExt($additionalEquipment['photo_panneau_bas_inter_ext']['value']);
-            $equipement->setPhotoLameBasseIntExt($additionalEquipment['photo_lame_basse_int_ext']['value']);
-            $equipement->setPhotoLameIntermediaireInt($additionalEquipment['photo_lame_intermediaire_int_']['value']);
-            $equipement->setPhotoEnvironnementEquipement1($additionalEquipment['photo_environnement_equipemen1']['value']);
-            $equipement->setPhotoCoffretDeCommande($additionalEquipment['photo_coffret_de_commande']['value']);
-            $equipement->setPhotoCarte($additionalEquipment['photo_carte']['value']);
-            $equipement->setPhotoRail($additionalEquipment['photo_rail']['value']);
-            $equipement->setPhotoEquerreRail($additionalEquipment['photo_equerre_rail']['value']);
-            $equipement->setPhotoFixationCoulisse($additionalEquipment['photo_fixation_coulisse']['value']);
-            $equipement->setPhotoMoteur($additionalEquipment['photo_moteur']['value']);
-            $equipement->setPhotoDeformationPlateau($additionalEquipment['photo_deformation_plateau']['value']);
-            $equipement->setPhotoDeformationPlaque($additionalEquipment['photo_deformation_plaque']['value']);
-            $equipement->setPhotoDeformationStructure($additionalEquipment['photo_deformation_structure']['value']);
-            $equipement->setPhotoDeformationChassis($additionalEquipment['photo_deformation_chassis']['value']);
-            $equipement->setPhotoDeformationLevre($additionalEquipment['photo_deformation_levre']['value']);
-            $equipement->setPhotoFissureCordon($additionalEquipment['photo_fissure_cordon']['value']);
-            $equipement->setPhotoJoue($additionalEquipment['photo_joue']['value']);
-            $equipement->setPhotoButoir($additionalEquipment['photo_butoir']['value']);
-            $equipement->setPhotoVantail($additionalEquipment['photo_vantail']['value']);
-            $equipement->setPhotoLinteau($additionalEquipment['photo_linteau']['value']);
-            $equipement->setPhotoMarquageAuSol2($additionalEquipment['photo_marquage_au_sol_']['value']);
-            $equipement->setPhoto2($additionalEquipment['photo2']['value']);
-            
-            
-            // tell Doctrine you want to (eventually) save the Product (no queries yet)
-            $this->getEntityManager()->persist($equipement);
-        }
-        // On sauvegarde les équipements HORS CONTRAT issus des formulaires non lus en BDD
-        foreach ($equipements['fields']['tableau2']['value']  as $equipmentSupplementaire){
-            $equipement = new Form;
-
-            $equipement->setFormId($equipements['form_id']);
-            $equipement->setDataId($equipements['id']);
-            $equipement->setUpdateTime($equipements['update_time']);
-            $equipement->setRaisonSocialeVisite($equipements['fields']['contrat_de_maintenance']['value']['equipement']['path']);
-            $equipement->setPhotoCompteRendu($equipmentSupplementaire['photo3']['value']);
-            
-            
-            // tell Doctrine you want to (eventually) save the Product (no queries yet)
-            $this->getEntityManager()->persist($equipement);
-        }
-        $this->getEntityManager()->flush();
     }
 
     // public function getJpgPictureFromStringName($value, $entityManager){
@@ -2456,24 +1863,155 @@ class FormRepository extends ServiceEntityRepository
         }
     }
 
-    public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment){
+    public function getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment) {
         $picturesdata = [];
-        $photoJpg ="";
+        
         foreach ($picturesArray as $key => $value) {
-            // if ($equipment->getRaisonSociale() . "\\" . $equipment->getVisite() === $value->raison_sociale_visite) {
-                // On récupère la photo du compte rendu uniquement au lieu de toutes les photos
-                // Changer dans le tableau des photos à récupérer de function getJpgPictureFromStringName() pour toutes les avoir
-                $photoJpg = $entityManager->getRepository(Form::class)->getJpgPictureFromStringName($value, $entityManager); // It's an array now
-                foreach ($photoJpg as $photo) {
-                    $pictureEncoded = base64_encode($photo);
-                    $picturesdataObject = new stdClass;
-                    $picturesdataObject->picture = $pictureEncoded;
-                    $picturesdataObject->update_time = $value->update_time;
-                    array_push($picturesdata, $picturesdataObject);
-                }
-            // }
+            // MODIFICATION: Utiliser la nouvelle architecture pour récupérer les photos
+            $photoJpg = $this->getJpgPictureFromStringNameNewArchitecture(
+                $value, 
+                $entityManager, 
+                $equipment->getCodeAgence(),
+                $equipment->getIdContact(),  // AJOUT CRUCIAL: Utiliser id_contact
+                date('Y', strtotime($equipment->getDateEnregistrement())),
+                $equipment->getVisite()
+            );
+            
+            foreach ($photoJpg as $photo) {
+                $pictureEncoded = base64_encode($photo);
+                $picturesdataObject = new stdClass;
+                $picturesdataObject->picture = $pictureEncoded;
+                $picturesdataObject->update_time = $value->update_time;
+                array_push($picturesdata, $picturesdataObject);
+            }
         }
         return $picturesdata;
+    }
+
+    // NOUVELLE MÉTHODE: Récupération des photos avec nouvelle architecture
+    public function getJpgPictureFromStringNameNewArchitecture(
+        $formEntity, 
+        $entityManager, 
+        $codeAgence, 
+        $idContact, 
+        $anneeVisite, 
+        $typeVisite
+    ) {
+        $the_picture = [];
+        
+        try {
+            // Récupérer le service ImageStorageService
+            $imageStorageService = $this->container->get('App\Service\ImageStorageService');
+            
+            // Récupérer toutes les images locales pour cet équipement avec la nouvelle architecture
+            $localImages = $imageStorageService->getAllImagesForEquipment(
+                $codeAgence,
+                $idContact,   // MODIFICATION: Utiliser id_contact au lieu de raison_sociale
+                $anneeVisite,
+                $typeVisite,
+                $formEntity->getCodeEquipement()
+            );
+            
+            // Convertir en contenu binaire pour compatibilité
+            foreach ($localImages as $photoType => $imageInfo) {
+                if (file_exists($imageInfo['path'])) {
+                    $the_picture[] = file_get_contents($imageInfo['path']);
+                }
+            }
+            
+            // Si pas de photos locales, essayer l'ancienne méthode comme fallback
+            if (empty($the_picture)) {
+                $the_picture = $this->getJpgPictureFromStringName($formEntity, $entityManager);
+            }
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération photos avec nouvelle architecture: " . $e->getMessage());
+            // Fallback vers ancienne méthode
+            $the_picture = $this->getJpgPictureFromStringName($formEntity, $entityManager);
+        }
+        
+        return $the_picture;
+    }
+
+    /**
+     * MÉTHODE DE CORRECTION GLOBALE: Corriger tous les enregistrements Form existants
+     */
+    public function fixAllFormsWithMissingIdContact(EntityManager $entityManager): array
+    {
+        $results = ['fixed' => 0, 'errors' => 0, 'skipped' => 0];
+        
+        try {
+            // Récupérer toutes les entrées Form sans id_contact
+            $qb = $this->createQueryBuilder('f')
+                ->where('f.id_contact IS NULL OR f.id_contact = :empty')
+                ->andWhere('f.code_equipement IS NOT NULL')
+                ->andWhere('f.raison_sociale_visite IS NOT NULL')
+                ->setParameter('empty', '');
+            
+            $formsToFix = $qb->getQuery()->getResult();
+            
+            foreach ($formsToFix as $form) {
+                try {
+                    $codeEquipement = $form->getCodeEquipement();
+                    $raisonSocialeVisite = $form->getRaisonSocialeVisite();
+                    
+                    // Extraire le nom de la société et la visite
+                    $parts = explode('\\', $raisonSocialeVisite);
+                    $raisonSociale = $parts[0] ?? '';
+                    $visite = $parts[1] ?? '';
+                    
+                    if (empty($raisonSociale) || empty($visite)) {
+                        $results['skipped']++;
+                        continue;
+                    }
+                    
+                    // CHERCHER L'ÉQUIPEMENT CORRESPONDANT pour récupérer id_contact et id_societe
+                    $equipment = null;
+                    
+                    // Déterminer l'agence depuis le code équipement ou d'autres indices
+                    $agences = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
+                    
+                    foreach ($agences as $agence) {
+                        $entityClass = 'App\\Entity\\Equipement' . $agence;
+                        if (class_exists($entityClass)) {
+                            $repository = $entityManager->getRepository($entityClass);
+                            $equipment = $repository->findOneBy([
+                                'numero_equipement' => $codeEquipement,
+                                'raison_sociale' => $raisonSociale . '\\' . $visite
+                            ]);
+                            
+                            if ($equipment) {
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if ($equipment) {
+                        // CORRECTION: Mettre à jour les champs manquants
+                        $form->setIdContact($equipment->getIdContact());
+                        $form->setIdSociete($equipment->getCodeSociete());
+                        
+                        $this->getEntityManager()->persist($form);
+                        $results['fixed']++;
+                    } else {
+                        $results['skipped']++;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $results['errors']++;
+                    error_log("Erreur correction Form ID {$form->getId()}: " . $e->getMessage());
+                }
+            }
+            
+            // Sauvegarder toutes les modifications
+            $this->getEntityManager()->flush();
+            
+        } catch (\Exception $e) {
+            $results['errors']++;
+            error_log("Erreur correction globale Forms: " . $e->getMessage());
+        }
+        
+        return $results;
     }
 
     // Nouvelle fonction dans FormRepository.php pour récupérer spécifiquement les photos des équipements supplémentaires
@@ -2483,33 +2021,8 @@ class FormRepository extends ServiceEntityRepository
      * Les équipements supplémentaires utilisent le champ photo_compte_rendu
      */
     public function getPictureArrayByIdSupplementaryEquipment($entityManager, $equipment) {
-        $picturesdata = [];
-        
-        // Pour les équipements supplémentaires, on utilise la même logique de filtrage
-        // que les équipements au contrat pour garantir l'unicité et le respect du tri par visite
-        $picturesArray = $entityManager->getRepository(Form::class)->findBy([
-            'code_equipement' => $equipment->getNumeroEquipement(),
-            'raison_sociale_visite' => $equipment->getRaisonSociale() . "\\" . $equipment->getVisite()
-        ]);
-        
-        foreach ($picturesArray as $value) {
-            // Vérifier si c'est bien le bon équipement et qu'il y a une photo_compte_rendu
-            if ($value->getPhotoCompteRendu() && $value->getPhotoCompteRendu() !== '') {
-                $photoJpg = $this->getJpgPictureFromPhotoCompteRendu($value, $entityManager);
-                
-                if (!empty($photoJpg)) {
-                    foreach ($photoJpg as $photo) {
-                        $pictureEncoded = base64_encode($photo);
-                        $picturesdataObject = new stdClass;
-                        $picturesdataObject->picture = $pictureEncoded;
-                        $picturesdataObject->update_time = $value->getUpdateTime();
-                        $picturesdata[] = $picturesdataObject;
-                    }
-                }
-            }
-        }
-        
-        return $picturesdata;
+        $photoManagementService = $this->container->get(PhotoManagementService::class);
+        return $photoManagementService->getEquipmentPhotos($equipment);
     }
 
     
@@ -2964,7 +2477,7 @@ class FormRepository extends ServiceEntityRepository
                     }
                     
                     // Migrer les photos depuis Kizeo vers le stockage local
-                    $migrated = $this->migratePhotosForEquipment($equipment, $formData[0]);
+                    $migrated = $this->migratePhotosForEquipment($equipment, $formData[0], $agence);
                     
                     if ($migrated) {
                         $results['migrated']++;
@@ -2992,18 +2505,46 @@ class FormRepository extends ServiceEntityRepository
     /**
      * Migre les photos d'un équipement spécifique
      */
-    private function migratePhotosForEquipment($equipment, Form $formData): bool
+    public function migratePhotosForEquipment($equipment, $formData, $agence): bool
     {
         try {
-            if (!$formData->getFormId() || !$formData->getDataId()) {
-                return false;
-            }
-            
-            $agence = $equipment->getCodeAgence();
-            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            // Récupérer les informations nécessaires depuis l'équipement
+            $raisonSociale = $equipment ? $equipment->getRaisonSociale() : '';
             $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
             $typeVisite = $equipment->getVisite();
             $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // CORRECTION CRITIQUE: Récupérer id_contact et id_societe
+            $idContact = $equipment->getIdContact();
+            $idSociete = $equipment->getCodeSociete();
+            
+            // VALIDATION: Vérifier que les champs critiques sont présents
+            if (empty($idContact)) {
+                error_log("ERREUR: id_contact manquant pour équipement {$codeEquipement}");
+                return false;
+            }
+            
+            // Construction correcte du champ raison_sociale_visite
+            $raisonSocialeVisite = $equipment->getRaisonSociale() . "\\" . $equipment->getVisite();
+            
+            // Vérifier si une entrée Form existe déjà 
+            $existingForm = $this->findOneBy([
+                'code_equipement' => $codeEquipement,
+                'raison_sociale_visite' => $raisonSocialeVisite
+            ]);
+            
+            if (!$existingForm) {
+                // Créer une nouvelle entrée Form si elle n'existe pas
+                $existingForm = new Form();
+                $existingForm->setCodeEquipement($codeEquipement);
+                $existingForm->setFormId($formData->getFormId());
+                $existingForm->setDataId($formData->getDataId());
+            }
+            
+            // CORRECTION CRITIQUE: Assigner tous les champs requis
+            $existingForm->setRaisonSocialeVisite($raisonSocialeVisite);
+            $existingForm->setIdContact($idContact);    // AJOUT CRUCIAL
+            $existingForm->setIdSociete($idSociete);    // AJOUT CRUCIAL
             
             // Mapping des photos à migrer
             $photosToMigrate = [
@@ -3018,20 +2559,44 @@ class FormRepository extends ServiceEntityRepository
             
             foreach ($photosToMigrate as $photoType => $photoName) {
                 if (!empty($photoName)) {
-                    if ($this->downloadAndStorePhotoFromKizeo(
+                    // MODIFICATION : Utiliser la nouvelle architecture de stockage avec id_contact
+                    if ($this->downloadAndStorePhotoFromKizeoNewArchitecture(
                         $photoName,
                         $formData->getFormId(),
                         $formData->getDataId(),
                         $agence,
-                        $raisonSociale,
+                        $idContact,  // Utiliser id_contact au lieu de raison_sociale
                         $anneeVisite,
                         $typeVisite,
                         $codeEquipement . '_' . $photoType
                     )) {
                         $migratedCount++;
+                        
+                        // Mettre à jour le champ approprié de l'entité Form
+                        switch ($photoType) {
+                            case 'compte_rendu':
+                                $existingForm->setPhotoCompteRendu($photoName);
+                                break;
+                            case 'environnement':
+                                $existingForm->setPhotoEnvironnementEquipement1($photoName);
+                                break;
+                            case 'plaque':
+                                $existingForm->setPhotoPlaque($photoName);
+                                break;
+                            case 'etiquette_somafi':
+                                $existingForm->setPhotoEtiquetteSomafi($photoName);
+                                break;
+                            case 'generale':
+                                $existingForm->setPhoto2($photoName);
+                                break;
+                        }
                     }
                 }
             }
+            
+            // SAUVEGARDER l'entité Form avec tous les champs correctement renseignés
+            $this->getEntityManager()->persist($existingForm);
+            $this->getEntityManager()->flush();
             
             return $migratedCount > 0;
             
@@ -3039,6 +2604,132 @@ class FormRepository extends ServiceEntityRepository
             error_log("Erreur migration photos équipement: " . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * NOUVELLE MÉTHODE : Téléchargement avec la nouvelle architecture utilisant id_contact
+     */
+    private function downloadAndStorePhotoFromKizeoNewArchitecture(
+        string $photoName,
+        string $formId,
+        string $dataId,
+        string $codeAgence,
+        string $idContact,      // MODIFICATION: Utiliser id_contact au lieu de raisonSociale
+        string $anneeVisite,
+        string $typeVisite,
+        string $filename
+    ): bool {
+        try {
+            // Télécharger la photo depuis Kizeo
+            $response = $this->client->request(
+                'GET',
+                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $dataId . '/medias/' . $photoName,
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 30
+                ]
+            );
+
+            $photoContent = $response->getContent();
+            
+            // Utiliser ImageStorageService avec la nouvelle architecture
+            $imageStorageService = $this->container->get('App\Service\ImageStorageService');
+            
+            $filepath = $imageStorageService->storeImage(
+                $codeAgence,
+                $idContact,   // MODIFICATION: Utiliser id_contact au lieu de raison_sociale  
+                $anneeVisite,
+                $typeVisite,
+                $filename,
+                $photoContent
+            );
+            
+            return !empty($filepath);
+            
+        } catch (\Exception $e) {
+            error_log("Erreur téléchargement photo {$photoName}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 🔥 MÉTHODE SUPPLÉMENTAIRE : Pour corriger les données existantes
+     */
+    public function fixMissingRaisonSocialeVisite($agencyCode): array
+    {
+        $results = ['fixed' => 0, 'errors' => 0];
+        
+        try {
+            // Récupérer toutes les entrées Form avec raison_sociale_visite manquant ou vide
+            $qb = $this->createQueryBuilder('f')
+                ->where('f.raison_sociale_visite IS NULL OR f.raison_sociale_visite = :empty')
+                ->andWhere('f.code_equipement IS NOT NULL')
+                ->setParameter('empty', '');
+            
+            $formsToFix = $qb->getQuery()->getResult();
+            
+            foreach ($formsToFix as $form) {
+                try {
+                    $codeEquipement = $form->getCodeEquipement();
+                    
+                    // Trouver l'équipement correspondant pour récupérer raison_sociale et visite
+                    $repository = $this->getRepositoryForAgency($agencyCode, $this->getEntityManager());
+                    $equipment = $repository->findOneBy(['numeroEquipement' => $codeEquipement]);
+                    
+                    if ($equipment) {
+                        $raisonSocialeVisite = $equipment->getRaisonSociale() . "\\" . $equipment->getVisite();
+                        $form->setRaisonSocialeVisite($raisonSocialeVisite);
+                        
+                        $this->getEntityManager()->persist($form);
+                        $results['fixed']++;
+                    }
+                    
+                } catch (\Exception $e) {
+                    $results['errors']++;
+                    error_log("Erreur correction raison_sociale_visite pour {$form->getCodeEquipement()}: " . $e->getMessage());
+                }
+            }
+            
+            // Sauvegarder tous les changements
+            $this->getEntityManager()->flush();
+            
+        } catch (\Exception $e) {
+            $results['errors']++;
+            error_log("Erreur globale correction raison_sociale_visite: " . $e->getMessage());
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Méthode helper pour récupérer le bon repository selon l'agence
+     */
+    private function getRepositoryForAgency($agencyCode, EntityManagerInterface $entityManager)
+    {
+        $repositoryMap = [
+            'S10' => 'App\Entity\EquipementS10',
+            'S40' => 'App\Entity\EquipementS40',
+            'S50' => 'App\Entity\EquipementS50',
+            'S60' => 'App\Entity\EquipementS60',
+            'S70' => 'App\Entity\EquipementS70',
+            'S80' => 'App\Entity\EquipementS80',
+            'S100' => 'App\Entity\EquipementS100',
+            'S120' => 'App\Entity\EquipementS120',
+            'S130' => 'App\Entity\EquipementS130',
+            'S140' => 'App\Entity\EquipementS140',
+            'S150' => 'App\Entity\EquipementS150',
+            'S160' => 'App\Entity\EquipementS160',
+            'S170' => 'App\Entity\EquipementS170',
+        ];
+        
+        if (!isset($repositoryMap[$agencyCode])) {
+            throw new \InvalidArgumentException("Agence inconnue: {$agencyCode}");
+        }
+        
+        return $entityManager->getRepository($repositoryMap[$agencyCode]);
     }
 
     /**
@@ -3253,4 +2944,186 @@ class FormRepository extends ServiceEntityRepository
         return $this->imageStorageService->getBaseImagePath();
     }
 
+    /**
+     * Récupère spécifiquement la photo générale depuis le stockage local
+     * Architecture: backend-kizeo.somafi-group.fr/public/img/S60/GEODIS_CORBAS/2025/CE1/
+     * Photo format: {CODE_EQUIPEMENT}_generale.jpg
+     */
+    public function getGeneralPhotoFromLocalStorage($equipment, EntityManagerInterface $entityManager): array
+    {
+        try {
+            // Essayer d'abord la méthode traditionnelle
+            $photoPath = $this->findPhotoTraditionalWay($equipment);
+            
+            // Si échec, utiliser le scan dynamique
+            if (!$photoPath) {
+                $photoPath = $this->findPhotoWithDynamicScan($equipment, 'generale');
+            }
+            
+            if ($photoPath && file_exists($photoPath)) {
+                $photoContent = file_get_contents($photoPath);
+                $photoEncoded = base64_encode($photoContent);
+                
+                return [[
+                    'picture' => $photoEncoded,
+                    'update_time' => date('Y-m-d H:i:s', filemtime($photoPath)),
+                    'photo_type' => 'generale_locale'
+                ]];
+            }
+            
+            return [];
+            
+        } catch (\Exception $e) {
+            error_log("Erreur récupération photo: " . $e->getMessage()); // CORRIGÉ: error_log au lieu de customLog
+            return [];
+        }
+    }
+
+    
+    /**
+     * Trouve une photo avec la méthode traditionnelle (raison sociale)
+     */
+    private function findPhotoTraditionalWay($equipment): ?string
+    {
+        try {
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = '2025';
+            $typeVisite = 'CE1';
+            $numeroEquipement = $equipment->getNumeroEquipement();
+            
+            // Construction du chemin traditionnel
+            $photoPath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/{$raisonSociale}/{$anneeVisite}/{$typeVisite}/{$numeroEquipement}_generale.jpg";
+            
+            if (file_exists($photoPath)) {
+                return $photoPath;
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            error_log("Erreur findPhotoTraditionalWay: " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Scan dynamique pour trouver la photo
+     */
+    private function findPhotoWithDynamicScan($equipment, string $photoType = 'generale'): ?string
+    {
+        try {
+            $agence = $equipment->getCodeAgence();
+            $numeroEquipement = $equipment->getNumeroEquipement();
+            
+            // Scanner tous les dossiers clients pour trouver les photos
+            $baseAgencePath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/";
+            
+            if (!is_dir($baseAgencePath)) {
+                return null;
+            }
+            
+            $clientDirs = scandir($baseAgencePath);
+            foreach ($clientDirs as $clientDir) {
+                if ($clientDir === '.' || $clientDir === '..') continue;
+                
+                $clientPath = $baseAgencePath . $clientDir . "/2025/CE1/";
+                if (!is_dir($clientPath)) continue;
+                
+                // Chercher le fichier photo
+                $photoPath = $clientPath . $numeroEquipement . "_{$photoType}.jpg";
+                
+                if (file_exists($photoPath)) {
+                    return $photoPath;
+                }
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            error_log("Erreur findPhotoWithDynamicScan: " . $e->getMessage());
+            return null;
+        }
+    }
+    /**
+     * Méthode de scan alternatif pour trouver la photo générale
+     * Utile si la structure exacte varie légèrement
+     */
+    public function findGeneralPhotoByScanning($equipment): array
+    {
+        $picturesdata = [];
+        
+        try {
+            $agence = $equipment->getCodeAgence();
+            $raisonSociale = explode('\\', $equipment->getRaisonSociale())[0] ?? $equipment->getRaisonSociale();
+            $anneeVisite = date('Y', strtotime($equipment->getDateEnregistrement()));
+            $typeVisite = $equipment->getVisite();
+            $codeEquipement = $equipment->getNumeroEquipement();
+            
+            // Répertoire de base à scanner
+            $baseDir = sprintf(
+                '%s/public/img/%s/%s/%s/%s',
+                $_SERVER['DOCUMENT_ROOT'],
+                $agence,
+                $raisonSociale,
+                $anneeVisite,
+                $typeVisite
+            );
+            
+            if (is_dir($baseDir)) {
+                // Scanner le répertoire pour trouver les photos de cet équipement
+                $files = scandir($baseDir);
+                
+                foreach ($files as $file) {
+                    // Chercher spécifiquement la photo générale
+                    if (strpos($file, $codeEquipement . '_generale.jpg') !== false) {
+                        $fullPath = $baseDir . '/' . $file;
+                        
+                        if (is_file($fullPath) && is_readable($fullPath)) {
+                            $photoContent = file_get_contents($fullPath);
+                            $pictureEncoded = base64_encode($photoContent);
+                            
+                            $picturesdataObject = new \stdClass();
+                            $picturesdataObject->picture = $pictureEncoded;
+                            $picturesdataObject->update_time = date('Y-m-d H:i:s', filemtime($fullPath));
+                            $picturesdataObject->photo_type = 'generale_scan';
+                            $picturesdataObject->local_path = $fullPath;
+                            $picturesdataObject->equipment_number = $codeEquipement;
+                            
+                            $picturesdata[] = $picturesdataObject;
+                            
+                            error_log("✅ Photo générale trouvée par scan pour {$codeEquipement}: {$fullPath}");
+                            break; // Ne prendre que la première trouvée
+                        }
+                    }
+                }
+            }
+            
+        } catch (\Exception $e) {
+            error_log("❌ Erreur scan photo générale pour {$equipment->getNumeroEquipement()}: " . $e->getMessage());
+        }
+        
+        return $picturesdata;
+    }
+
+    /**
+     * Version améliorée de getPictureArrayByIdEquipment qui privilégie les photos locales
+     */
+    public function getPictureArrayByIdEquipmentWithLocalPhotos($picturesArray, EntityManagerInterface $entityManager, $equipment): array
+    {
+        // D'abord essayer de récupérer la photo générale locale
+        $localPhotos = $this->getGeneralPhotoFromLocalStorage($equipment, $entityManager);
+        
+        // Si aucune photo locale n'est trouvée, essayer le scan
+        if (empty($localPhotos)) {
+            $localPhotos = $this->findGeneralPhotoByScanning($equipment);
+        }
+        
+        // Si des photos locales sont trouvées, les retourner
+        if (!empty($localPhotos)) {
+            return $localPhotos;
+        }
+        
+        // Sinon, fallback vers l'ancienne méthode avec l'API
+        error_log("🔄 Fallback API pour {$equipment->getNumeroEquipement()}");
+        return $this->getPictureArrayByIdEquipment($picturesArray, $entityManager, $equipment);
+    }
 }
