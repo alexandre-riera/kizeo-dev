@@ -3015,7 +3015,7 @@ class SimplifiedMaintenanceController extends AbstractController
         );
         
         // Sauvegarder les photos dans la table Form (pour compatibilité avec l'existant)
-        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager, $savedPhotos, $raisonSociale, $idContact, $idSociete, $visite);
+        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager, $raisonSociale, $idContact, $idSociete, $visite, $savedPhotos);
         
         // Définir les anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
@@ -3392,7 +3392,7 @@ class SimplifiedMaintenanceController extends AbstractController
         );
         
         // Sauvegarder les photos dans la table Form (pour compatibilité avec l'existant)
-        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentHorsContrat, $formId, $entryId, $numeroEquipement, $entityManager, $savedPhotos, $raisonSociale, $idContact, $idSociete, $visite);
+        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentHorsContrat, $formId, $entryId, $numeroEquipement, $entityManager, $raisonSociale, $idContact, $idSociete, $visite, $savedPhotos);
         
         // dump("Équipement hors contrat traité avec photos locales: " . $numeroEquipement);
         return true;
@@ -3544,11 +3544,11 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entryId, 
         string $equipmentCode, 
         EntityManagerInterface $entityManager,
-        array $savedPhotos = [],
         string $raisonSociale,
         string $idContact,
         string $idSociete,
-        string $visite
+        string $visite,
+        array $savedPhotos = []
     ): void {
         
         try {
