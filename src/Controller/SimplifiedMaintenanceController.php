@@ -189,6 +189,7 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function setCommonEquipmentData($equipement, array $fields): void
     {
+        dd($fields);
         $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
         $equipement->setIdContact($fields['id_client_']['value'] ?? '');
         $equipement->setRaisonSociale($fields['nom_client']['value'] ?? '');
