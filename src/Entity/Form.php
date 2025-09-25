@@ -154,12 +154,6 @@ class Form
     #[ORM\Column(length: 255, nullable: true)]
     public ?string $photo_compte_rendu = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $id_contact = null;
-
-    #[ORM\Column(length: 255)]
-    private ?string $id_societe = null;
-
     public function getId(): ?int
     {
         return $this->id;
@@ -713,30 +707,6 @@ class Form
     public function setPhotoCompteRendu(?string $photo_compte_rendu): static
     {
         $this->photo_compte_rendu = $photo_compte_rendu;
-
-        return $this;
-    }
-
-    public function getIdContact(): ?string
-    {
-        return $this->id_contact;
-    }
-
-    public function setIdContact(string $id_contact): static
-    {
-        $this->id_contact = $id_contact;
-
-        return $this;
-    }
-
-    public function getIdSociete(): ?string
-    {
-        return $this->id_societe;
-    }
-
-    public function setIdSociete(string $id_societe): static
-    {
-        $this->id_societe = $id_societe;
 
         return $this;
     }

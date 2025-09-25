@@ -54,8 +54,6 @@ class UsersAuthenticator extends AbstractLoginFormAuthenticator
 
         if (count($user->getRoles()) > 1 && in_array("ROLE_ADMIN", $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('app_front'));
-        }else {
-            return new RedirectResponse($this->urlGenerator->generate('app_maintenance'));
         }
         if (in_array("ROLE_ADMIN_KUEHNE", $user->getRoles()) || in_array("ROLE_USER_KUEHNE", $user->getRoles())) {
             return new RedirectResponse($this->urlGenerator->generate('app_kuehne'));

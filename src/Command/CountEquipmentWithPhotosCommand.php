@@ -10,52 +10,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Form;
 
-#[AsCommand(
-    name: 'app:count-equipment-by-agency',
-    description: 'Compte les équipements par agence'
-)]
-class CountEquipmentByAgencyCommand extends Command
-{
-    private EntityManagerInterface $entityManager;
-
-    public function __construct(EntityManagerInterface $entityManager)
-    {
-        $this->entityManager = $entityManager;
-        parent::__construct();
-    }
-
-    protected function configure(): void
-    {
-        $this->addArgument('agency', InputArgument::REQUIRED, 'Code agence (ex: S10)');
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output): int
-    {
-        $agency = $input->getArgument('agency');
-        
-        try {
-            $entityClass = "App\\Entity\\Equipement{$agency}";
-            
-            if (!class_exists($entityClass)) {
-                $output->writeln("0");
-                return Command::SUCCESS;
-            }
-            
-            $repository = $this->entityManager->getRepository($entityClass);
-            $count = $repository->createQueryBuilder('e')
-                ->select('COUNT(e.id)')
-                ->getQuery()
-                ->getSingleScalarResult();
-            
-            $output->writeln((string)$count);
-            return Command::SUCCESS;
-            
-        } catch (\Exception $e) {
-            $output->writeln("0");
-            return Command::SUCCESS; // Ne pas faire échouer le script
-        }
-    }
-}
 
 #[AsCommand(
     name: 'app:count-equipment-with-photos',

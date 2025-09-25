@@ -855,24 +855,13 @@
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="margin_top_30 col-sm-3">
-                    {% set pdfParams = {
+                    <a id="pdf-button" href="{{ path('client_equipements_pdf', {
                         'agence': agenceSelected,
                         'id': clientSelectedInformations.getIdContact(),
-                    } %}
-                    
-                    {% if clientAnneeFilter %}
-                        {% set pdfParams = pdfParams|merge({'clientAnneeFilter': clientAnneeFilter}) %}
-                    {% endif %}
-                    
-                    {% if clientVisiteFilter %}
-                        {% set pdfParams = pdfParams|merge({'clientVisiteFilter': clientVisiteFilter}) %}
-                    {% endif %}
-                    
-                    <a id="pdf-button" 
-                    href="{{ path('client_equipements_pdf', pdfParams) }}" 
-                    class="btn btn-success btn-lg" 
-                    target="_blank"
-                    onclick="return confirmPdfGeneration();">
+                        'clientAnneeFilter': clientAnneeFilter,
+                        'clientVisiteFilter': clientVisiteFilter
+                    }) }}" 
+                    class="btn btn-success btn-lg" target="_blank">
                         <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
                         {% if clientAnneeFilter or clientVisiteFilter %}
                             <small class="d-block">
@@ -1454,21 +1443,4 @@
             });
         });
     </script>
-    <script>
-        function confirmPdfGeneration() {
-            // Tu peux ajouter une confirmation ici si tu veux
-            // return confirm('Générer le PDF pour ce client ?');
-            
-            // Vérifier que les paramètres sont valides avant d'envoyer
-            const button = document.getElementById('pdf-button');
-            const href = button.getAttribute('href');
-            
-            if (!href || href.includes('undefined') || href.includes('null')) {
-                alert('Erreur: paramètres manquants pour la génération du PDF');
-                return false;
-            }
-            
-            return true;
-        }
-        </script>
 {% endblock %}
