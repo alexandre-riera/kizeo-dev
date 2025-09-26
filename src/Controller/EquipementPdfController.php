@@ -653,6 +653,7 @@ class EquipementPdfController extends AbstractController
                 'photoSourceStats' => $photoSourceStats,
                 'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
                 'dateDeDerniererVisite' => $dateDeDerniererVisite,
+                'derniereVisite' => $derniereVisite,
                 'filtrage_success' => true,
                 'total_equipements_bruts' => count($equipments),
                 'total_equipements_filtres' => count($equipmentsFiltered),
