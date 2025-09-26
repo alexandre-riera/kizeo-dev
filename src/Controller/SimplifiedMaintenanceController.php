@@ -3906,7 +3906,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // Configuration conservative
         ini_set('memory_limit', '1G');
-        ini_set('max_execution_time', 300);
+        ini_set('max_execution_time', 600);
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
@@ -4055,7 +4055,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         // Flush périodique pour libérer la mémoire
                         if ($processedCount % 3 == 0) {
                             $entityManager->flush();
-                            $entityManager->clear();
+                            // $entityManager->clear(); 
                             gc_collect_cycles();
                         }
                         
@@ -4071,7 +4071,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Sauvegarde après chaque chunk
                 try {
                     $entityManager->flush();
-                    $entityManager->clear();
+                    // $entityManager->clear();
                     gc_collect_cycles();
                 } catch (\Exception $e) {
                   // dump("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
