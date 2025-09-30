@@ -3278,7 +3278,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     // Sauvegarder après chaque chunk
                     try {
                         $entityManager->flush();
-                        $entityManager->clear();
+                        // $entityManager->clear();
                         gc_collect_cycles();
                       // dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {

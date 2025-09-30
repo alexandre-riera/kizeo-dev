@@ -177,9 +177,9 @@ class EquipementPdfController extends AbstractController
     public function generateClientEquipementsPdf(Request $request, string $agence, string $id, EntityManagerInterface $entityManager): Response
     {
         // CONFIGURATION MÉMOIRE ET TEMPS D'EXÉCUTION OPTIMISÉE
-        ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 180);
-        set_time_limit(180);
+        ini_set('memory_limit', '1G'); // 1 Go
+        ini_set('max_execution_time', 600); // 10 minutes au lieu de 300 secondes avant
+        set_time_limit(600); // 10 minutes au lieu de 300 secondes avant
         
         // Activer le garbage collector agressif
         gc_enable();
