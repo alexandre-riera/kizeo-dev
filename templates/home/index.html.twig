@@ -861,7 +861,7 @@
                         'id': clientSelectedInformations.getIdContact(),
                         'clientAnneeFilter': clientAnneeFilter,
                         'clientVisiteFilter': clientVisiteFilter,
-                        'withPhotos': ''
+                        'withPhotos': 'oui'
                     }) }}"
                     data-base-url="{{ path('client_equipements_pdf', {
                         'agence': agenceSelected,
@@ -902,6 +902,7 @@
                         
                         pdfButton.addEventListener('click', function(e) {
                             const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
+                            console.log('Selected option:', selectedOption);
                             const url = new URL(baseUrl, window.location.origin);
                             url.searchParams.set('withPhotos', selectedOption);
                             pdfButton.href = url.pathname + url.search;
