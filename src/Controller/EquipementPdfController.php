@@ -397,7 +397,7 @@ class EquipementPdfController extends AbstractController
                         continue;
                     }
 
-                    // ✅ NOUVELLE RÉCUPÉRATION DES PHOTOS AVEC SCAN DYNAMIQUE
+                    // ✅ ============================================= NOUVELLE RÉCUPÉRATION DES PHOTOS AVEC SCAN DYNAMIQUE
                     $picturesData = [];
                     try {
                         $this->customLog("🔍 Tentative scan dynamique pour {$numeroEquipement}");
