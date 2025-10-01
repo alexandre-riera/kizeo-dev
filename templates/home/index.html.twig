@@ -900,8 +900,12 @@
                         const pdfButton = document.getElementById('pdf-button');
                         const baseUrl = pdfButton.dataset.baseUrl;
                         const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
-                        console.log('Selected option:', selectedOption);
-                        
+                        selectedOption.addEventListener('click', function(e) {
+                            selectedOption = e.target.value;
+                            console.log('Selected option changed to:', selectedOption);
+                        });
+                        console.log('Selected option avant passage au bouton PDF CLIENT:', selectedOption);
+
                         pdfButton.addEventListener('click', function(e) {
                             const url = new URL(baseUrl, window.location.origin);
                             url.searchParams.set('withPhotos', selectedOption);
