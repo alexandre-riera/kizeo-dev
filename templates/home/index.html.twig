@@ -21,27 +21,6 @@
     <script src="/public/js/filterFunction.js"></script>
     <script src="/public/js/editEquipmentInModal.js"></script>
     <script src="/public/js/pdf-enhanced.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const pdfButton = document.getElementById('pdf-button');
-            const radioButtons = document.querySelectorAll('input[name="photoOption"]');
-            
-            // URL de base sans le paramètre withPhotos
-            const baseUrl = "{{ path('client_equipements_pdf', {
-                'agence': agenceSelected,
-                'id': clientSelectedInformations.getIdContact(),
-                'clientAnneeFilter': clientAnneeFilter,
-                'clientVisiteFilter': clientVisiteFilter
-            }) }}";
-            
-            radioButtons.forEach(radio => {
-                radio.addEventListener('change', function() {
-                    // Mettre à jour l'URL avec la nouvelle valeur
-                    pdfButton.href = baseUrl + '&withPhotos=' + this.value;
-                });
-            });
-        });
-    </script>
 {% endblock %}
 {% block body %}
     <style>
@@ -908,6 +887,27 @@
                 </div>
             </div>
         {% endif %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const pdfButton = document.getElementById('pdf-button');
+                        const radioButtons = document.querySelectorAll('input[name="photoOption"]');
+                        
+                        // URL de base sans le paramètre withPhotos
+                        const baseUrl = "{{ path('client_equipements_pdf', {
+                            'agence': agenceSelected,
+                            'id': clientSelectedInformations.getIdContact(),
+                            'clientAnneeFilter': clientAnneeFilter,
+                            'clientVisiteFilter': clientVisiteFilter
+                        }) }}";
+                        
+                        radioButtons.forEach(radio => {
+                            radio.addEventListener('change', function() {
+                                // Mettre à jour l'URL avec la nouvelle valeur
+                                pdfButton.href = baseUrl + '&withPhotos=' + this.value;
+                            });
+                        });
+                    });
+                </script>
 
         
         {% block modal %}
