@@ -855,12 +855,20 @@
                 </div>
                 <!-- Bouton pour générer le PDF de tous les équipements du client -->
                 <div class="margin_top_30 col-sm-3">
-                    <a id="pdf-button" href="{{ path('client_equipements_pdf', {
+                    <a id="pdf-button" 
+                    href="{{ path('client_equipements_pdf', {
+                        'agence': agenceSelected,
+                        'id': clientSelectedInformations.getIdContact(),
+                        'clientAnneeFilter': clientAnneeFilter,
+                        'clientVisiteFilter': clientVisiteFilter,
+                        'withPhotos': 'oui'
+                    }) }}"
+                    data-base-url="{{ path('client_equipements_pdf', {
                         'agence': agenceSelected,
                         'id': clientSelectedInformations.getIdContact(),
                         'clientAnneeFilter': clientAnneeFilter,
                         'clientVisiteFilter': clientVisiteFilter
-                    }) }}" 
+                    }) }}"
                     class="btn btn-success btn-lg" target="_blank">
                         <i class="fa-solid fa-file-pdf"></i> Générer PDF complet du client
                         {% if clientAnneeFilter or clientVisiteFilter %}
@@ -870,44 +878,39 @@
                         {% endif %}
                     </a>
                 </div>
+
                 <div class="margin_top_30 col-sm-3">
                     <fieldset>
                         <legend>Option photo sur CR client:</legend>
 
                         <div>
                             <input type="radio" id="photoYes" name="photoOption" value="oui" checked />
-                            <label for="oui">✅ CR client avec photos</label>
+                            <label for="photoYes">✅ CR client avec photos</label>
                         </div>
 
                         <div>
                             <input type="radio" id="photoNo" name="photoOption" value="non" />
-                            <label for="non">❌ CR client sans photos</label>
+                            <label for="photoNo">❌ CR client sans photos</label>
                         </div>
                     </fieldset>
                 </div>
-            </div>
-        {% endif %}
+
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         const pdfButton = document.getElementById('pdf-button');
                         const radioButtons = document.querySelectorAll('input[name="photoOption"]');
-                        
-                        // URL de base sans le paramètre withPhotos
-                        const baseUrl = "{{ path('client_equipements_pdf', {
-                            'agence': agenceSelected,
-                            'id': clientSelectedInformations.getIdContact(),
-                            'clientAnneeFilter': clientAnneeFilter,
-                            'clientVisiteFilter': clientVisiteFilter
-                        }) }}";
+                        const baseUrl = pdfButton.dataset.baseUrl;
                         
                         radioButtons.forEach(radio => {
                             radio.addEventListener('change', function() {
-                                // Mettre à jour l'URL avec la nouvelle valeur
                                 pdfButton.href = baseUrl + '&withPhotos=' + this.value;
                             });
                         });
                     });
                 </script>
+            </div>
+        {% endif %}
+                
 
         
         {% block modal %}
