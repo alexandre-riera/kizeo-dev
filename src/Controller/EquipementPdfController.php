@@ -202,11 +202,12 @@ class EquipementPdfController extends AbstractController
             // Récupérer les filtres depuis les paramètres de la requête
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
             $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
+            $withPhotos = $request->query->get('withPhotos', '');
             
             $maxEquipments = (int) $request->query->get('maxEquipments', 500);
             
             $this->customLog("=== GÉNÉRATION PDF CLIENT ===");
-            $this->customLog("Avec ou sans photo: {$_GET['withPhotos']}");
+            $this->customLog("Avec ou sans photo: {$withPhotos}");
             $this->customLog("Agence: {$agence}, Client: {$id}");
             $this->customLog("Filtres - Année: '{$clientAnneeFilter}', Visite: '{$clientVisiteFilter}'");
             $this->customLog("Limite d'équipements: {$maxEquipments}");
