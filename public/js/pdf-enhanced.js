@@ -62,7 +62,6 @@ function enhancePdfButton(originalButton) {
     emailLink.className = 'dropdown-item';
     emailLink.href = '#';
     emailLink.innerHTML = '<i class="fa-solid fa-envelope"></i> Envoyer par email';
-    emailLink.display = 'none';
     emailLink.addEventListener('click', function(e) {
         e.preventDefault();
         showEmailModal(originalHref);
