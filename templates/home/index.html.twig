@@ -903,7 +903,10 @@
                         
                         radioButtons.forEach(radio => {
                             radio.addEventListener('change', function() {
-                                pdfButton.href = baseUrl + '&withPhotos=' + this.value;
+                                // Créer un objet URL pour manipuler proprement les paramètres
+                                const url = new URL(baseUrl, window.location.origin);
+                                url.searchParams.set('withPhotos', this.value);
+                                pdfButton.href = url.pathname + url.search;
                             });
                         });
                     });
