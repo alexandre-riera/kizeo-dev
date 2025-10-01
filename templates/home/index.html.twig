@@ -21,6 +21,27 @@
     <script src="/public/js/filterFunction.js"></script>
     <script src="/public/js/editEquipmentInModal.js"></script>
     <script src="/public/js/pdf-enhanced.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfButton = document.getElementById('pdf-button');
+            const radioButtons = document.querySelectorAll('input[name="photoOption"]');
+            
+            // URL de base sans le paramètre withPhotos
+            const baseUrl = "{{ path('client_equipements_pdf', {
+                'agence': agenceSelected,
+                'id': clientSelectedInformations.getIdContact(),
+                'clientAnneeFilter': clientAnneeFilter,
+                'clientVisiteFilter': clientVisiteFilter
+            }) }}";
+            
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    // Mettre à jour l'URL avec la nouvelle valeur
+                    pdfButton.href = baseUrl + '&withPhotos=' + this.value;
+                });
+            });
+        });
+    </script>
 {% endblock %}
 {% block body %}
     <style>
@@ -875,12 +896,12 @@
                         <legend>Option photo sur CR client:</legend>
 
                         <div>
-                            <input type="radio" id="photoYes" name="photoYes" value="oui" checked />
+                            <input type="radio" id="photoYes" name="photoOption" value="oui" checked />
                             <label for="oui">✅ CR client avec photos</label>
                         </div>
 
                         <div>
-                            <input type="radio" id="photoNo" name="photoNo" value="non" />
+                            <input type="radio" id="photoNo" name="photoOption" value="non" />
                             <label for="non">❌ CR client sans photos</label>
                         </div>
                     </fieldset>

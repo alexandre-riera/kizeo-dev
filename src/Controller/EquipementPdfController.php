@@ -206,6 +206,7 @@ class EquipementPdfController extends AbstractController
             $maxEquipments = (int) $request->query->get('maxEquipments', 500);
             
             $this->customLog("=== GÉNÉRATION PDF CLIENT ===");
+            $this->customLog("Avec ou sans photo: {$request->query->get('withPhotos', 'true')}");
             $this->customLog("Agence: {$agence}, Client: {$id}");
             $this->customLog("Filtres - Année: '{$clientAnneeFilter}', Visite: '{$clientVisiteFilter}'");
             $this->customLog("Limite d'équipements: {$maxEquipments}");
