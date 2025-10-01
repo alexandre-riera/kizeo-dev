@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
 function enhancePdfButton(originalButton) {
     // Récupérer les informations depuis le bouton
     const originalHref = originalButton.href;
+    const baseUrl = originalButton.dataset.baseUrl; // ✅ RÉCUPÉRER data-base-url
     const buttonText = originalButton.textContent.trim();
     
     // Créer le nouveau groupe avec dropdown
@@ -21,6 +22,8 @@ function enhancePdfButton(originalButton) {
     
     // Bouton principal (télécharger directement)
     const mainButton = document.createElement('a');
+    mainButton.id = 'pdf-button'; // ✅ CONSERVER L'ID
+    mainButton.dataset.baseUrl = baseUrl; // ✅ CONSERVER data-base-url
     mainButton.href = originalHref;
     mainButton.className = 'btn btn-success btn-lg';
     mainButton.target = '_blank';
