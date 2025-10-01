@@ -899,10 +899,10 @@
                     document.addEventListener('DOMContentLoaded', function() {
                         const pdfButton = document.getElementById('pdf-button');
                         const baseUrl = pdfButton.dataset.baseUrl;
+                        const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
+                        console.log('Selected option:', selectedOption);
                         
                         pdfButton.addEventListener('click', function(e) {
-                            const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
-                            console.log('Selected option:', selectedOption);
                             const url = new URL(baseUrl, window.location.origin);
                             url.searchParams.set('withPhotos', selectedOption);
                             pdfButton.href = url.pathname + url.search;
