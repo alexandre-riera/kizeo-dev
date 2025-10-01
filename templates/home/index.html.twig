@@ -898,16 +898,13 @@
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
                         const pdfButton = document.getElementById('pdf-button');
-                        const radioButtons = document.querySelectorAll('input[name="photoOption"]');
                         const baseUrl = pdfButton.dataset.baseUrl;
                         
-                        radioButtons.forEach(radio => {
-                            radio.addEventListener('change', function() {
-                                // Créer un objet URL pour manipuler proprement les paramètres
-                                const url = new URL(baseUrl, window.location.origin);
-                                url.searchParams.set('withPhotos', this.value);
-                                pdfButton.href = url.pathname + url.search;
-                            });
+                        pdfButton.addEventListener('click', function(e) {
+                            const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
+                            const url = new URL(baseUrl, window.location.origin);
+                            url.searchParams.set('withPhotos', selectedOption);
+                            pdfButton.href = url.pathname + url.search;
                         });
                     });
                 </script>
