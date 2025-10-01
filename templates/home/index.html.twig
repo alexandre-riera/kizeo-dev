@@ -21,6 +21,7 @@
     <script src="/public/js/filterFunction.js"></script>
     <script src="/public/js/editEquipmentInModal.js"></script>
     <script src="/public/js/pdf-enhanced.js"></script>
+    <script src="{{ asset('js/pdf-photo-option.js') }}"></script>
 {% endblock %}
 {% block body %}
     <style>
@@ -894,25 +895,6 @@
                         </div>
                     </fieldset>
                 </div>
-
-                <script>
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const pdfButton = document.getElementById('pdf-button');
-                        const baseUrl = pdfButton.dataset.baseUrl;
-                        const selectedOption = document.querySelector('input[name="photoOption"]:checked').value;
-                        selectedOption.addEventListener('click', function(e) {
-                            selectedOption = e.target.value;
-                            console.log('Selected option changed to:', selectedOption);
-                        });
-                        console.log('Selected option avant passage au bouton PDF CLIENT:', selectedOption);
-
-                        pdfButton.addEventListener('click', function(e) {
-                            const url = new URL(baseUrl, window.location.origin);
-                            url.searchParams.set('withPhotos', selectedOption);
-                            pdfButton.href = url.pathname + url.search;
-                        });
-                    });
-                </script>
             </div>
         {% endif %}
                 
