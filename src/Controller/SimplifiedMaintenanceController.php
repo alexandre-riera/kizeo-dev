@@ -4151,7 +4151,7 @@ class SimplifiedMaintenanceController extends AbstractController
                 // UTILISER L'ENDPOINT SIMPLE qui fonctionne
                 $response = $this->client->request(
                     'GET',
-                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/advanced",
+                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
                     [
                         'headers' => [
                             'Accept' => 'application/json',
