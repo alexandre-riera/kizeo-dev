@@ -4166,6 +4166,18 @@ class SimplifiedMaintenanceController extends AbstractController
                 );
 
                 $formData = $response->toArray();
+
+                dump("=== DEBUG KIZEO ===");
+                dump("Form ID: " . $formId);
+                dump("Offset: " . $currentOffset);
+                dump("Response status: " . $response->getStatusCode());
+                dump("Data keys: " . implode(', ', array_keys($formData)));
+                dump("Submissions count: " . count($formData['data'] ?? []));
+                if (!empty($formData['data'])) {
+                    dump("First submission: ", $formData['data'][0]);
+                }
+                dump("===================");
+                
                 $batchSubmissions = $formData['data'] ?? [];
                 
                 if (empty($batchSubmissions)) {
