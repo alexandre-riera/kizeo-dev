@@ -4139,75 +4139,43 @@ class SimplifiedMaintenanceController extends AbstractController
     private function getFormSubmissionsFixed(
         string $formId,
         string $agencyCode,
-        int $maxSubmissions = 20,
+        int $maxSubmissions = 1000,
         int $startOffset = 0
     ): array
     {
+        // Si offset > 0, on a déjà tout récupéré au 1er appel
+        if ($startOffset > 0) {
+            return [];
+        }
+        
         try {
+            $response = $this->client->request(
+                'GET',
+                "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
+                [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
+                    ],
+                    'timeout' => 90
+                ]
+            );
+
+            $formData = $response->toArray();
+            $allSubmissions = $formData['data'] ?? [];
+            
+            // Limiter si nécessaire
+            $submissions = array_slice($allSubmissions, 0, min($maxSubmissions, count($allSubmissions)));
+            
             $validSubmissions = [];
-            $currentOffset = $startOffset;
-            $batchSize = 20; // Taille raisonnable
-
-            // Avec 20 résultats par page × 75 pages = maximum 1500 formulaires traités
-            // Sur KIZEO le formulaire avec le plus de soumissions est PORTLAND avec 496, on est large
-            while (count($validSubmissions) < $maxSubmissions && $currentOffset < 5000) {
-                
-                // UTILISER L'ENDPOINT SIMPLE qui fonctionne
-                $response = $this->client->request(
-                    'GET',
-                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
-                    [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'query' => [
-                            'limit' => $batchSize,
-                            'offset' => $currentOffset
-                        ],
-                        'timeout' => 90
-                    ]
-                );
-
-                $formData = $response->toArray();
-
-                dump("=== DEBUG KIZEO ===");
-                dump("Form ID: " . $formId);
-                dump("Offset: " . $currentOffset);
-                dump("Response status: " . $response->getStatusCode());
-                dump("Data keys: " . implode(', ', array_keys($formData)));
-                dump("Submissions count: " . count($formData['data'] ?? []));
-                if (!empty($formData['data'])) {
-                    dump("First submission: ", $formData['data'][0]);
-                }
-                dump("===================");
-
-                $batchSubmissions = $formData['data'] ?? [];
-                
-                if (empty($batchSubmissions)) {
-                    break; // Plus de données
-                }
-                
-                // Traitement des soumissions SANS filtrage d'agence strict
-                foreach ($batchSubmissions as $entry) {
-                    if (count($validSubmissions) >= $maxSubmissions) {
-                        break 2;
-                    }
-                    
-                    // Conversion au format attendu par le traitement
-                    $validSubmissions[] = [
-                        'form_id' => $entry['form_id'] ?? $formId,
-                        'entry_id' => $entry['id'], // ATTENTION : 'id' pas '_id' dans l'endpoint simple
-                        'client_name' => 'À déterminer lors du traitement',
-                        'date' => $entry['answer_time'] ?? 'N/A',
-                        'technician' => 'À déterminer lors du traitement'
-                    ];
-                }
-
-                $startOffset += $batchSize;
-
-                // Petite pause pour éviter de surcharger l'API
-                usleep(50000); // 0.05 seconde
+            foreach ($submissions as $entry) {
+                $validSubmissions[] = [
+                    'form_id' => $entry['form_id'] ?? $formId,
+                    'entry_id' => $entry['id'],
+                    'client_name' => 'À déterminer lors du traitement',
+                    'date' => $entry['answer_time'] ?? 'N/A',
+                    'technician' => 'À déterminer lors du traitement'
+                ];
             }
             
             return $validSubmissions;
