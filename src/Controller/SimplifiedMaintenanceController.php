@@ -4001,10 +4001,10 @@ class SimplifiedMaintenanceController extends AbstractController
             $chunks = array_chunk($submissions, $chunkSize);
             
             foreach ($chunks as $chunkIndex => $chunk) {
-                // Vérification timeout
-                if (time() - $startTime > 250) { // 4 minutes max
-                    break;
-                }
+                // Vérification timeout commenté car il y a déjà les 600 secondes qui protègent dans le script
+                // if (time() - $startTime > 250) { // 4 minutes max
+                //     break;
+                // }
                 
                 foreach ($chunk as $submissionIndex => $submission) {
                     try {
