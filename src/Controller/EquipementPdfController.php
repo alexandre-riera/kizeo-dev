@@ -2358,7 +2358,7 @@ class EquipementPdfController extends AbstractController
     }
 
     /**
-     * Méthode simplifiée pour récupérer les équipements sans filtrage
+     * Méthode simplifiée pour récupérer les équipements EN BDD sans filtrage
      * CORRECTION: Ne plus appeler getEquipmentsByAgencyFixed avec des filtres
      */
     private function getEquipmentsByClientAndAgence(string $agence, string $clientId, EntityManagerInterface $entityManager): array

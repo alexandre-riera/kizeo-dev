@@ -3919,6 +3919,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $maxSubmissions = (int) $request->query->get('max_submissions', 10);
         $useCache = $request->query->get('use_cache', 'true') === 'true';
         $refreshCache = $request->query->get('refresh_cache', 'false') === 'true';
+        $offset = (int) $request->query->get('offset', 0);
         
         if (!$formId) {
             $agencyMapping = $this->getAgencyFormMapping();
@@ -3954,7 +3955,7 @@ class SimplifiedMaintenanceController extends AbstractController
             
             // Si pas en cache ou cache forcé à refresh, récupérer depuis la DB
             if (empty($submissions)) {
-                $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions);
+                $submissions = $this->getFormSubmissionsFixed($formId, $agencyCode, $maxSubmissions, $offset);
                 
                 // Sauvegarder en cache si service disponible
                 if ($useCache && $cacheService && !empty($submissions)) {
@@ -4131,24 +4132,26 @@ class SimplifiedMaintenanceController extends AbstractController
         }
     }
 
-    private function getFormSubmissionsFixed(string $formId, string $agencyCode, int $maxSubmissions = 20): array
+    private function getFormSubmissionsFixed(
+        string $formId,
+        string $agencyCode,
+        int $maxSubmissions = 20,
+        int $startOffset = 0
+    ): array
     {
         try {
             $validSubmissions = [];
-            $offset = 0;
+            $currentOffset = $startOffset;
             $batchSize = 20; // Taille raisonnable
-            
-            // Avec 20 résultats par page × 10 pages = maximum 200 formulaires traités, même si l'agence
-            // while (count($validSubmissions) < $maxSubmissions && $offset < 200) { 
 
             // Avec 20 résultats par page × 75 pages = maximum 1500 formulaires traités
-            // Sur KIZEO le formulaire avec le plus de soumissions est PORTLAND avec 399, on est large
-            while (count($validSubmissions) < $maxSubmissions && $offset < 5000) { 
+            // Sur KIZEO le formulaire avec le plus de soumissions est PORTLAND avec 496, on est large
+            while (count($validSubmissions) < $maxSubmissions && $currentOffset < 5000) {
                 
                 // UTILISER L'ENDPOINT SIMPLE qui fonctionne
                 $response = $this->client->request(
                     'GET',
-                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data",
+                    "https://forms.kizeo.com/rest/v3/forms/{$formId}/data/advanced",
                     [
                         'headers' => [
                             'Accept' => 'application/json',
@@ -4156,7 +4159,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         ],
                         'query' => [
                             'limit' => $batchSize,
-                            'offset' => $offset
+                            'offset' => $currentOffset
                         ],
                         'timeout' => 90
                     ]
@@ -4184,9 +4187,9 @@ class SimplifiedMaintenanceController extends AbstractController
                         'technician' => 'À déterminer lors du traitement'
                     ];
                 }
-                
-                $offset += $batchSize;
-                
+
+                $startOffset += $batchSize;
+
                 // Petite pause pour éviter de surcharger l'API
                 usleep(50000); // 0.05 seconde
             }
