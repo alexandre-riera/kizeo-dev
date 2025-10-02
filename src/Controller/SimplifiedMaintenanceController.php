@@ -3904,8 +3904,12 @@ class SimplifiedMaintenanceController extends AbstractController
         MaintenanceCacheService $cacheService // Utilisation du service dédié 
     ): JsonResponse {
         
+        // AJOUTER EN TOUT PREMIER avant même ini_set
+        if ($this->container->has('profiler')) {
+            $this->container->get('profiler')->disable();
+        }
         // Configuration conservative
-        ini_set('memory_limit', '1G');
+        ini_set('memory_limit', '3G');
         ini_set('max_execution_time', 600);
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
@@ -4177,7 +4181,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     dump("First submission: ", $formData['data'][0]);
                 }
                 dump("===================");
-                
+
                 $batchSubmissions = $formData['data'] ?? [];
                 
                 if (empty($batchSubmissions)) {
