@@ -3909,6 +3909,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $this->container->get('profiler')->disable();
         }
         // Configuration conservative
+        // ajustement du timeout a 30 minutes au lieu de 10 ici et dans le script migration_debug.sh
         ini_set('memory_limit', '3G');
         ini_set('max_execution_time', 1800);
         
