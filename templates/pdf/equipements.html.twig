@@ -503,7 +503,7 @@
                 {% endif %}
             {% endif %}
             
-            {# Afficher la section seulement s'il y a des équipements supplémentaires réels #}
+            {# Afficher la section des équipements supplémentaires #}
             <div class="equipment-cartouche-supplementaires">
                 <div class="section-title">Équipements supplémentaires</div>
                 
@@ -525,9 +525,11 @@
                                         <td>{{ count }}</td>
                                     </tr>
                                     {% else %}
+                                    <tr>
                                         <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
                                         <td>Équipements supplémentaires</td>
                                         <td>0</td>
+                                    </tr>
                                 {% endif %}
                             {% endfor %}
                         {% endif %}
