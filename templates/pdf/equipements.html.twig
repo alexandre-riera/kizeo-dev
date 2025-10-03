@@ -122,6 +122,17 @@
             margin-bottom: 10px;
             text-transform: uppercase;
         }
+
+        .section-title-supplementaire {
+            background-color: #ecf0f1;
+            padding: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            margin-top: 40px;
+        }
         
         .status-table {
             width: 100%;
@@ -498,7 +509,7 @@
                     {% for status, count in statistiquesSupplementaires.status_counts %}
                         {% if count > 0 %}
                             {% set hasRealSupplementaryEquipment = true %}
-                            <div class="section-title">Équipements supplémentaires</div>
+                            <div class="section-title-supplementaire">Équipements supplémentaires</div>
                             <table class="status-table">
                                 <thead>
                                     <tr>
@@ -509,7 +520,7 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                        <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
                                         <td>{{ statusMapping[status] ?? status }}</td>
                                         <td>{{ count }}</td>
                                         </tr>
@@ -524,8 +535,7 @@
             {# Afficher la section des équipements supplémentaires quand il n'y en a aucun#}
             {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is empty %}
                 <div class="equipment-cartouche-supplementaires">
-                    <div class="section-title">Équipements supplémentaires</div>
-                    
+                    <div class="section-title-supplementaire">Équipements supplémentaires</div>
                     <table class="status-table">
                         <thead>
                             <tr>
@@ -536,7 +546,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="status-icon noir"></span></td>
+                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
                                 <td>Équipements supplémentaires</td>
                                 <td>0</td>
                             </tr>
