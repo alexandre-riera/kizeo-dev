@@ -518,11 +518,15 @@
                         <tbody>
                             {% for status, count in statistiquesSupplementaires.status_counts %}
                                 {% if count > 0 %}
-                                <tr>
-                                    <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
-                                    <td>{{ statusMapping[status] ?? status }}</td>
-                                    <td>{{ count }}</td>
-                                </tr>
+                                    <tr>
+                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                        <td>{{ statusMapping[status] ?? status }}</td>
+                                        <td>{{ count }}</td>
+                                    </tr>
+                                    {% else %}
+                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                        <td>Équipements supplémentaires</td>
+                                        <td>0</td>
                                 {% endif %}
                             {% endfor %}
                         </tbody>
