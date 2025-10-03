@@ -509,8 +509,8 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td><span class="status-icon noir }}"></span></td>
-                                        <td>Équipements supplémentaires</td>
+                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                        <td>{{ statusMapping[status] ?? status }}</td>
                                         <td>{{ count }}</td>
                                         </tr>
                                     </tr>
@@ -536,7 +536,7 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                <td><span class="status-icon noir"></span></td>
                                 <td>Équipements supplémentaires</td>
                                 <td>0</td>
                             </tr>
