@@ -498,44 +498,52 @@
                     {% for status, count in statistiquesSupplementaires.status_counts %}
                         {% if count > 0 %}
                             {% set hasRealSupplementaryEquipment = true %}
+                            <div class="section-title">Équipements supplémentaires</div>
+                            <table class="status-table">
+                                <thead>
+                                    <tr>
+                                        <th>Statut</th>
+                                        <th>État</th>
+                                        <th>Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                        <td>{{ statusMapping[status] ?? status }}</td>
+                                        <td>{{ count }}</td>
+                                        </tr>
+                                    </tr>
+                                </tbody>
+                            </table>
                         {% endif %}
                     {% endfor %}
                 {% endif %}
             {% endif %}
             
-            {# Afficher la section des équipements supplémentaires #}
-            <div class="equipment-cartouche-supplementaires">
-                <div class="section-title">Équipements supplémentaires</div>
-                
-                <table class="status-table">
-                    <thead>
-                        <tr>
-                            <th>Statut</th>
-                            <th>État</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {# {% if hasRealSupplementaryEquipment %} #}
-                            {% for status, count in statistiquesSupplementaires.status_counts %}
-                                {% if count > 0 %}
-                                    <tr>
-                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
-                                        <td>{{ statusMapping[status] ?? status }}</td>
-                                        <td>{{ count }}</td>
-                                    </tr>
-                                    {% else %}
-                                    <tr>
-                                        <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
-                                        <td>Équipements supplémentaires</td>
-                                        <td>0</td>
-                                    </tr>
-                                {% endif %}
-                            {% endfor %}
-                        {# {% endif %} #}
-                    </tbody>
-                </table>
-            </div>
+            {# Afficher la section des équipements supplémentaires quand il n'y en a aucun#}
+            {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is empty %}
+                <div class="equipment-cartouche-supplementaires">
+                    <div class="section-title">Équipements supplémentaires</div>
+                    
+                    <table class="status-table">
+                        <thead>
+                            <tr>
+                                <th>Statut</th>
+                                <th>État</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="status-icon {{ statusColors[status] ?? 'noir' }}"></span></td>
+                                <td>Équipements supplémentaires</td>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
         </div>
     </div>
     
