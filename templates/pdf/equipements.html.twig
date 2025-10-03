@@ -551,17 +551,18 @@
             {# Table principale avec photo à gauche et infos à droite #}
             <table class="equipment-main-table">
                 <tr>
-                    {# Photo #}
-                    <td class="equipment-photo-cell">
-                        {% if pictures|length > 0 %}
-                            <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="equipment-photo" alt="Photo équipement">
-                        {% else %}
-                            <div class="no-photo">
-                                <em>Aucune photo<br>disponible</em>
-                            </div>
-                        {% endif %}
-                    </td>
-                    
+                    {# Photo SI withPhotos = 'oui',  on les charge sur le PDF Client. Si withPhotos = 'non', on ne charge pas les photos #}
+                    {% if withPhotos == 'oui' %}
+                        <td class="equipment-photo-cell">
+                            {% if pictures|length > 0 %}
+                                <img src="data:image/jpeg;base64,{{ pictures[0].picture }}" class="equipment-photo" alt="Photo équipement">
+                            {% else %}
+                                <div class="no-photo">
+                                    <em>Aucune photo<br>disponible</em>
+                                </div>
+                            {% endif %}
+                        </td>
+                    {% endif %}
                     {# Table imbriquée des informations #}
                     <td class="equipment-info-cell">
                         <table class="equipment-info-table">

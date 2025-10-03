@@ -645,6 +645,7 @@ class EquipementPdfController extends AbstractController
                 'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures),
                 'equipementsSupplementaires' => $this->convertStdClassToArray($equipementsSupplementaires ?? []),
                 'equipementsNonPresents' => $this->convertStdClassToArray($equipementsNonPresents ?? []),
+                'withPhotos' => $withPhotos,
                 'clientId' => $id,
                 'agence' => $agence,
                 'imageUrl' => $imageUrl,
