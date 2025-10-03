@@ -503,19 +503,19 @@
             {% endif %}
             
             {# Afficher la section seulement s'il y a des équipements supplémentaires réels #}
-            {% if hasRealSupplementaryEquipment %}
-                <div class="equipment-summary">
-                    <div class="section-title">Équipements supplémentaires</div>
-                    
-                    <table class="status-table">
-                        <thead>
-                            <tr>
-                                <th>Statut</th>
-                                <th>État</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div class="equipment-summary">
+                <div class="section-title">Équipements supplémentaires</div>
+                
+                <table class="status-table">
+                    <thead>
+                        <tr>
+                            <th>Statut</th>
+                            <th>État</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if hasRealSupplementaryEquipment %}
                             {% for status, count in statistiquesSupplementaires.status_counts %}
                                 {% if count > 0 %}
                                     <tr>
@@ -529,10 +529,10 @@
                                         <td>0</td>
                                 {% endif %}
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
     
