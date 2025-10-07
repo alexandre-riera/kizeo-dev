@@ -187,11 +187,20 @@ class HomeController extends AbstractController
                 $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
             }
 
-            dump(
-                $clientSelectedEquipmentsFilteredAuContrat,
-                array_unique(array_map(fn($eq) => $eq->getId(), $clientSelectedEquipmentsFilteredAuContrat)),
-                $clientSelectedEquipmentsFilteredAuContrat
-            );
+            dump($clientSelectedEquipmentsFilteredAuContrat);
+            
+            $arrayEquipmentsAuContrat = [];
+            $numerosVus = [];
+
+            foreach ($clientSelectedEquipmentsFilteredAuContrat as $equipmentAuContrat) {
+                $numeroEquipement = $equipmentAuContrat->getNumeroEquipement();
+                
+                if (!in_array($numeroEquipement, $numerosVus)) {
+                    $numerosVus[] = $numeroEquipement;
+                    $arrayEquipmentsAuContrat[] = $equipmentAuContrat;
+                }
+            }
+            dump($clientSelectedEquipmentsFilteredAuContrat);
 
             // Générer la liste des PDF
             if (!empty($clientSelectedEquipmentsFiltered)) {
