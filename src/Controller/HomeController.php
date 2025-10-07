@@ -200,6 +200,7 @@ class HomeController extends AbstractController
                     $arrayEquipmentsAuContrat[] = $equipmentAuContrat;
                 }
             }
+            $clientSelectedEquipmentsFilteredAuContrat = $arrayEquipmentsAuContrat;
             dump($clientSelectedEquipmentsFilteredAuContrat);
 
             // Générer la liste des PDF
