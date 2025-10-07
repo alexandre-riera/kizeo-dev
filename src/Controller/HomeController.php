@@ -187,6 +187,11 @@ class HomeController extends AbstractController
                 $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
             }
 
+            dump(
+                $clientSelectedEquipmentsFilteredAuContrat,
+                $clientSelectedEquipmentsFilteredHorsContrat
+            );
+
             // Générer la liste des PDF
             if (!empty($clientSelectedEquipmentsFiltered)) {
                 $dateArray = $this->generateDateArray($clientSelectedEquipmentsFiltered);
