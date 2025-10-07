@@ -187,7 +187,7 @@ class HomeController extends AbstractController
                 $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
             }
 
-            dump($clientSelectedEquipmentsFilteredAuContrat);
+            // dump($clientSelectedEquipmentsFilteredAuContrat);
             
             $arrayEquipmentsAuContrat = [];
             $numerosVus = [];
@@ -201,7 +201,7 @@ class HomeController extends AbstractController
                 }
             }
             $clientSelectedEquipmentsFilteredAuContrat = $arrayEquipmentsAuContrat;
-            dump($clientSelectedEquipmentsFilteredAuContrat);
+            // dump($clientSelectedEquipmentsFilteredAuContrat);
 
             // Générer la liste des PDF
             if (!empty($clientSelectedEquipmentsFiltered)) {
