@@ -189,7 +189,8 @@ class HomeController extends AbstractController
 
             dump(
                 $clientSelectedEquipmentsFilteredAuContrat,
-                $clientSelectedEquipmentsFilteredHorsContrat
+                array_unique($clientSelectedEquipmentsFilteredAuContrat),
+                $clientSelectedEquipmentsFilteredAuContrat
             );
 
             // Générer la liste des PDF
