@@ -189,7 +189,7 @@ class HomeController extends AbstractController
 
             dump(
                 $clientSelectedEquipmentsFilteredAuContrat,
-                array_unique($clientSelectedEquipmentsFilteredAuContrat),
+                array_unique(array_map(fn($eq) => $eq->getId(), $clientSelectedEquipmentsFilteredAuContrat)),
                 $clientSelectedEquipmentsFilteredAuContrat
             );
 
