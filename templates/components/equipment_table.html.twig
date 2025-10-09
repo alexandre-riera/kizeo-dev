@@ -75,7 +75,7 @@
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>Noir</figcaption></figure></td>
-                                    {% elseif equipment.etat == "E" %}
+                                    {% elseif equipment.etat == "E" or equipment.etat == "à l'arrêt" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>Rouge</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}
@@ -216,7 +216,7 @@
                                     {% elseif equipment.etat == "D" %}
                                         <td>Equipement inaccessible le jour de la visite</td>
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png') }} " alt="etat-equipement" /><figcaption>Noir</figcaption></figure></td>
-                                    {% elseif equipment.etat == "E" %}
+                                    {% elseif equipment.etat == "E" or equipment.etat == "à l'arrêt" %}
                                         <td>Equipement à l'arrêt le jour de la visite</td>
                                         <td><figure><img src=" {{ asset('https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png') }} " alt="etat-equipement" /><figcaption>Rouge</figcaption></figure></td>
                                     {% elseif equipment.etat == "F" %}

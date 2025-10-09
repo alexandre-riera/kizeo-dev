@@ -785,7 +785,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-2">
+                {# <div class="col-sm-2">
                     <div class="card">
                         <div class="card-body">
                             <h4 class="card-title">Filtres</h4>
@@ -813,7 +813,7 @@
                             </form>
                         </div>
                     </div>
-                </div>
+                </div> #}
                 <div class="col-sm-3">
                     <div class="card">
                         <div class="card-body">
@@ -836,7 +836,8 @@
                         </div>
                     </div>
                 {% endif %}
-                <div class="margin_top_30 col-sm-3">
+                <!-- Remettre margin-top:30px si les filtres sont remis -->
+                <div class=" col-sm-3">
                     <div class="card downloadPdf">
                         <div class="card-body">
                             <h4 class="card-title">CR tech KIZEO</h4>
@@ -1303,11 +1304,11 @@
             buttonSmall.textContent = '';
         }
 
-        {# addEmailButtonIfNeeded(); #}
+        // addEmailButtonIfNeeded();
     }
 
     // ===== AJOUTER LE BOUTON EMAIL =====
-    {# function addEmailButtonIfNeeded() {
+    /* function addEmailButtonIfNeeded() {
         const pdfButton = document.getElementById('pdf-button');
         const pdfContainer = pdfButton ? pdfButton.parentElement : null;
         if (!pdfContainer || pdfContainer.querySelector('#email-button')) return;
@@ -1320,7 +1321,7 @@
         emailButton.addEventListener('click', showEmailModal);
         
         pdfButton.parentNode.insertBefore(emailButton, pdfButton.nextSibling);
-    } #}
+    } */
 
     // ===== INITIALISATION =====
     $(document).ready(function() {
