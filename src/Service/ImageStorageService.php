@@ -378,6 +378,7 @@ class ImageStorageService
 
     /**
      * Supprime récursivement les répertoires vides
+     * @return int Nombre de répertoires supprimés
      */
     private function removeEmptyDirectories(string $path): int
     {
