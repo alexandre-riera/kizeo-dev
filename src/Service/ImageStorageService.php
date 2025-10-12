@@ -51,14 +51,14 @@ class ImageStorageService
 
     public function storeImage(
         string $agence, 
-        string $raisonSociale, 
+        string $idContact, 
         string $annee, 
         string $typeVisite, 
         string $filename, 
         string $imageContent
     ): string {
-        $cleanRaisonSociale = $this->cleanFileName($raisonSociale);
-        $directory = $this->buildDirectoryPath($agence, $cleanRaisonSociale, $annee, $typeVisite);
+        $cleanIdContact = $this->cleanFileName($idContact);
+        $directory = $this->buildDirectoryPath($agence, $cleanIdContact, $annee, $typeVisite);
         
         // Création du répertoire si inexistant
         if (!is_dir($directory)) {
@@ -94,12 +94,12 @@ class ImageStorageService
      */
     public function getImagePath(
         string $agence, 
-        string $raisonSociale, 
+        string $idContact, 
         string $annee, 
         string $typeVisite, 
         string $filename
     ): ?string {
-        $cleanRaisonSociale = $this->cleanFileName($raisonSociale);
+        $cleanIdContact = $this->cleanFileName($idContact);
         $cleanFilename = $this->cleanFileName($filename);
         
         // Ajouter l'extension .jpg si elle n'est pas présente
@@ -107,7 +107,7 @@ class ImageStorageService
             $cleanFilename .= '.jpg';
         }
         
-        $filepath = $this->buildDirectoryPath($agence, $cleanRaisonSociale, $annee, $typeVisite) 
+        $filepath = $this->buildDirectoryPath($agence, $cleanIdContact, $annee, $typeVisite) 
                    . '/' . $cleanFilename;
         
         return file_exists($filepath) ? $filepath : null;
@@ -118,12 +118,12 @@ class ImageStorageService
      */
     public function getImageUrl(
         string $agence, 
-        string $raisonSociale, 
+        string $idContact, 
         string $annee, 
         string $typeVisite, 
         string $filename
     ): ?string {
-        $imagePath = $this->getImagePath($agence, $raisonSociale, $annee, $typeVisite, $filename);
+        $imagePath = $this->getImagePath($agence, $idContact, $annee, $typeVisite, $filename);
         
         if (!$imagePath) {
             return null;
@@ -139,12 +139,12 @@ class ImageStorageService
      */
     public function imageExists(
         string $agence, 
-        string $raisonSociale, 
+        string $idContact, 
         string $annee, 
         string $typeVisite, 
         string $filename
     ): bool {
-        return $this->getImagePath($agence, $raisonSociale, $annee, $typeVisite, $filename) !== null;
+        return $this->getImagePath($agence, $idContact, $annee, $typeVisite, $filename) !== null;
     }
 
     /**
@@ -152,12 +152,12 @@ class ImageStorageService
      */
     public function deleteImage(
         string $agence, 
-        string $raisonSociale, 
+        string $idContact, 
         string $annee, 
         string $typeVisite, 
         string $filename
     ): bool {
-        $imagePath = $this->getImagePath($agence, $raisonSociale, $annee, $typeVisite, $filename);
+        $imagePath = $this->getImagePath($agence, $idContact, $annee, $typeVisite, $filename);
         
         if ($imagePath && file_exists($imagePath)) {
             $deleted = unlink($imagePath);
@@ -175,13 +175,13 @@ class ImageStorageService
      */
     public function getAllImagesForEquipment(
         string $agence,
-        string $raisonSociale,
+        string $idContact,
         string $annee,
         string $typeVisite,
         string $codeEquipement
     ): array {
         $images = [];
-        $directory = $this->buildDirectoryPath($agence, $this->cleanFileName($raisonSociale), $annee, $typeVisite);
+        $directory = $this->buildDirectoryPath($agence, $this->cleanFileName($idContact), $annee, $typeVisite);
         
         if (!is_dir($directory)) {
             return $images;
@@ -198,7 +198,7 @@ class ImageStorageService
                 $images[$photoType] = [
                     'filename' => $file,
                     'path' => $fullPath,
-                    'url' => $this->getImageUrl($agence, $raisonSociale, $annee, $typeVisite, pathinfo($file, PATHINFO_FILENAME)),
+                    'url' => $this->getImageUrl($agence, $idContact, $annee, $typeVisite, pathinfo($file, PATHINFO_FILENAME)),
                     'size' => filesize($fullPath),
                     'modified' => filemtime($fullPath)
                 ];
