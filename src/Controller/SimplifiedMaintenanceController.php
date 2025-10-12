@@ -2910,7 +2910,7 @@ class SimplifiedMaintenanceController extends AbstractController
         }
     }
     /**
-     * Modifiée: Sauvegarde des photos avec téléchargement local pour équipements au contrat
+     * ✅ CORRECTION 2 : Version corrigée pour équipements au contrat
      */
     private function setRealContractDataWithFormPhotosAndDeduplication(
         $equipement, 
@@ -2922,9 +2922,8 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        // Données de base de l'équipement
-        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
-        $visite = $this->extractVisitTypeFromPath($equipementPath);
+        // ✅ Utiliser la nouvelle fonction pour récupérer la visite
+        $visite = $this->getVisiteFromFields($fields, $equipmentContrat);
         $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
         
         $equipement->setVisite($visite);
@@ -2934,21 +2933,21 @@ class SimplifiedMaintenanceController extends AbstractController
         // Vérification doublon
         $idClient = $fields['id_client_']['value'] ?? '';
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
-        // dump("Vérification doublon pour équipement: " . $numeroEquipement . " - Client: " . $idClient . " - Date visite: " . $dateVisite);
+        
         if ($this->equipmentExistsForSameVisit($numeroEquipement, $idClient, $dateVisite, $entityClass, $entityManager)) {
-          // dump("Équipement doublon détecté - ignoré: " . $numeroEquipement);
             return false;
         }
 
         // Remplir les autres données de l'équipement
         $this->fillContractEquipmentData($equipement, $equipmentContrat);
         
-        // NOUVELLE PARTIE: Téléchargement et sauvegarde des photos en local
+        // Téléchargement et sauvegarde des photos en local
         $agence = $fields['code_agence']['value'] ?? '';
         $raisonSociale = $fields['nom_client']['value'] ?? '';
         $anneeVisite = date('Y', strtotime($dateVisite));
         $idContact = $fields['id_client_']['value'] ?? '';
         
+        // ✅ Passer la bonne visite pour le stockage local
         $savedPhotos = $this->downloadAndSavePhotosLocally(
             $equipmentContrat,
             $formId,
@@ -2956,17 +2955,26 @@ class SimplifiedMaintenanceController extends AbstractController
             $agence,
             $idContact,
             $anneeVisite,
-            $visite,
+            $visite,  // ✅ Utiliser la visite extraite correctement
             $numeroEquipement
         );
         
-        // Sauvegarder les photos dans la table Form (pour compatibilité avec l'existant)
-        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentContrat, $formId, $entryId, $numeroEquipement, $entityManager, $savedPhotos, $fields);
+        // ✅ Sauvegarder dans Form avec la bonne raison_sociale_visite
+        $this->savePhotosToFormEntityWithLocalPathsFixed(
+            $raisonSociale,
+            $visite,  // ✅ Passer la visite séparément
+            $equipmentContrat,
+            $formId,
+            $entryId,
+            $numeroEquipement,
+            $entityManager,
+            $savedPhotos,
+            $fields
+        );
         
         // Définir les anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentContrat);
 
-      // dump("Équipement au contrat traité avec photos locales: " . $numeroEquipement);
         return true;
     }
 
@@ -3296,74 +3304,10 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Version mise à jour de setOffContractDataWithFormPhotosAndDeduplication avec numérotation sécurisée
-     */
-    // private function setOffContractDataWithFormPhotosAndDeduplication(
-    //     $equipement, 
-    //     array $equipmentHorsContrat, 
-    //     array $fields, 
-    //     string $formId, 
-    //     string $entryId, 
-    //     string $entityClass,
-    //     EntityManagerInterface $entityManager,
-    //     string $idSociete,
-    //     string $dateDerniereVisite
-    // ): bool {
-        
-    //   // dump("=== DÉBUT TRAITEMENT HORS CONTRAT (DÉBOGAGE PPV) dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
-    //   // dump("Entry ID: " . $entryId);
-    //   // dump("Entity class passée: " . $entityClass); // ✅ Log pour vérifier
-
-    //     // 1. Générer le numéro d'équipement
-    //     $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
-    //     $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-    //     $idClient = $fields['id_client_']['value'] ?? '';
-        
-    //     // $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-    //     // $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-    //     // ✅ APPEL AVEC TOUS LES PARAMÈTRES Y COMPRIS $entityClass
-    //     $numeroFormate = $this->generateUniqueEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-    //   // dump("Numéro formaté final: '" . $numeroFormate . "'");
-        
-    //     // 2. Vérifier si l'équipement existe déjà (même si c'est un nouveau numéro, vérifier par autres critères)
-    //     if ($this->offContractEquipmentExists($equipmentHorsContrat, $idClient, $entityClass, $entityManager)) {
-    //         return false; // Skip car déjà existe
-    //     }
-        
-    //     // 3. Définir les données de l'équipement hors contrat
-    //     $equipement->setNumeroEquipement($numeroFormate);
-    //     $equipement->setCodeSociete($idSociete);
-    //     $equipement->setDerniereVisite($dateDerniereVisite);
-    //     $equipement->setLibelleEquipement($typeLibelle);
-    //     $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
-    //     $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
-    //     $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
-    //     $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
-    //     $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
-    //     $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
-    //     $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
-    //     $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
-    //     $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
-        
-    //     $equipement->setVisite($this->getDefaultVisitType($fields));
-    //     $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? ''));
-        
-    //     // IMPORTANT: Équipements hors contrat ne sont PAS en maintenance
-    //     $equipement->setEnMaintenance(false);
-    //     $equipement->setIsArchive(false);
-        
-    //     // 4. Sauvegarder les photos SEULEMENT si pas de doublon
-    //     $this->savePhotosToFormEntityWithDeduplication($fields['contrat_de_maintenance']['value'][0]['equipement']['path'], $equipmentHorsContrat, $formId, $entryId, $numeroFormate, $entityManager);
-    //     // NOUVELLE PARTIE: Extraction et définition des anomalies
-    //   // dump("=== DÉBOGAGE PPV: Avant d'appeler setSimpleEquipmentAnomalies dans la fonction setOffContractDataWithFormPhotosAndDeduplication ===");
-    //     $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
-
-
-
-    //     return true; // Équipement traité avec succès
-    // }
-    /**
      * Modifiée: Sauvegarde des photos avec téléchargement local pour équipements hors contrat
+     */
+    /**
+     * ✅ CORRECTION 3 : Version corrigée pour équipements hors contrat
      */
     private function setOffContractDataWithFormPhotosAndDeduplication(
         $equipement, 
@@ -3375,32 +3319,38 @@ class SimplifiedMaintenanceController extends AbstractController
         EntityManagerInterface $entityManager
     ): bool {
         
-        // Données de base de l'équipement
-        $equipementPath = $equipmentHorsContrat['equipement_supplementaire']['path'] ?? '';
-        $visite = $this->extractVisitTypeFromPath($equipementPath);
-        $numeroEquipement = $equipmentHorsContrat['equipement_supplementaire']['value'] ?? '';
+        // ✅ Utiliser la nouvelle fonction pour récupérer la visite
+        $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
+        
+        // ✅ Récupérer le numéro d'équipement (généré ou depuis le formulaire)
+        $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
+        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+        $idClient = $fields['id_client_']['value'] ?? '';
+        
+        // Générer un numéro unique
+        $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
+        $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
         
         $equipement->setVisite($visite);
         $equipement->setNumeroEquipement($numeroEquipement);
         
         // Vérification doublon
-        $idClient = $fields['id_client_']['value'] ?? '';
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
         
-        if ($this->equipmentExistsForSameVisit($numeroEquipement, $idClient, $dateVisite, $entityClass, $entityManager)) {
-            // dump("Équipement hors contrat doublon détecté - ignoré: " . $numeroEquipement);
+        if ($this->offContractEquipmentExistsForSameVisit($typeLibelle, $idClient, $dateVisite, $entityClass, $entityManager)) {
             return false;
         }
 
-        // Remplir les autres données de l'équipement
-        $this->fillOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields);
+        // ✅ Remplir les données depuis $equipmentHorsContrat (comme l'ancienne fonction)
+        $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
         
-        // NOUVELLE PARTIE: Téléchargement et sauvegarde des photos en local
+        // Téléchargement et sauvegarde des photos en local
         $agence = $fields['code_agence']['value'] ?? '';
         $raisonSociale = $fields['nom_client']['value'] ?? '';
         $anneeVisite = date('Y', strtotime($dateVisite));
         $idContact = $fields['id_client_']['value'] ?? '';
         
+        // ✅ Passer la bonne visite
         $savedPhotos = $this->downloadAndSavePhotosLocally(
             $equipmentHorsContrat,
             $formId,
@@ -3408,17 +3358,216 @@ class SimplifiedMaintenanceController extends AbstractController
             $agence,
             $idContact,
             $anneeVisite,
-            $visite,
+            $visite,  // ✅ Bonne visite
             $numeroEquipement
         );
         
-        // Sauvegarder les photos dans la table Form (pour compatibilité avec l'existant)
-        $this->savePhotosToFormEntityWithLocalPaths($equipementPath, $equipmentHorsContrat, $formId, $entryId, $numeroEquipement, $entityManager, $savedPhotos, $fields);
+        // ✅ Sauvegarder dans Form avec la bonne raison_sociale_visite
+        $this->savePhotosToFormEntityWithLocalPathsFixed(
+            $raisonSociale,
+            $visite,  // ✅ Passer la visite séparément
+            $equipmentHorsContrat,
+            $formId,
+            $entryId,
+            $numeroEquipement,
+            $entityManager,
+            $savedPhotos,
+            $fields
+        );
         
-        // dump("Équipement hors contrat traité avec photos locales: " . $numeroEquipement);
+        // Définir les anomalies
+        $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
+
         return true;
     }
 
+    /**
+     * ✅ CORRECTION 7 : Vérification doublon pour équipements hors contrat
+     */
+    private function offContractEquipmentExistsForSameVisit(
+        string $typeLibelle,
+        string $idClient,
+        string $dateVisite,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): bool {
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            
+            $existing = $repository->createQueryBuilder('e')
+                ->where('e.libelle_equipement = :libelle')
+                ->andWhere('e.id_contact = :idClient')
+                ->andWhere('e.date_enregistrement = :dateVisite')
+                ->andWhere('e.en_maintenance = false')  // Spécifique hors contrat
+                ->setParameter('libelle', $typeLibelle)
+                ->setParameter('idClient', $idClient)
+                ->setParameter('dateVisite', $dateVisite)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            return $existing !== null;
+            
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * ✅ CORRECTION 5 : Nouvelle version de savePhotosToFormEntityWithLocalPaths
+     */
+    private function savePhotosToFormEntityWithLocalPathsFixed(
+        string $raisonSociale,
+        string $visite,  // ✅ Recevoir directement la visite
+        array $equipmentData,
+        string $formId, 
+        string $entryId, 
+        string $equipmentCode, 
+        EntityManagerInterface $entityManager,
+        array $savedPhotos = [],
+        array $fields = []
+    ): void {
+        try {
+            $existingForm = $entityManager->getRepository(Form::class)->findOneBy([
+                'form_id' => $formId,
+                'data_id' => $entryId,
+                'equipment_id' => $equipmentCode
+            ]);
+            
+            if ($existingForm) {
+                $form = $existingForm;
+            } else {
+                $form = new Form();
+                $form->setFormId($formId);
+                $form->setDataId($entryId);
+                $form->setEquipmentId($equipmentCode);
+            }
+            
+            // ✅ Utiliser directement les valeurs passées en paramètre
+            $form->setCodeEquipement($equipmentCode);
+            $form->setUpdateTime(date('Y-m-d H:i:s'));
+            
+            // ✅ Construction correcte de raison_sociale_visite
+            $raisonSocialeVisite = $raisonSociale . '\\' . $visite;
+            
+            $form->setRaisonSocialeVisite($raisonSocialeVisite);
+            $form->setIdContact($fields['id_client_']['value'] ?? '');
+            $form->setIdSociete($fields['id_societe']['value'] ?? '');
+            
+            // ✅ Mapper les photos avec gestion de photo2 et photo3
+            $this->mapPhotosToFormEntityFixed($form, $equipmentData, $savedPhotos);
+            
+            $entityManager->persist($form);
+            
+        } catch (\Exception $e) {
+            $this->logger->error("Erreur sauvegarde Form: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * ✅ CORRECTION 6 : Version corrigée du mapping des photos
+     */
+    private function mapPhotosToFormEntityFixed(Form $form, array $equipmentData, array $savedPhotos): void
+    {
+        // ✅ Mapping avec gestion des variantes de noms
+        $photoMapping = [
+            // Photos principales - GERER LES 2 VARIANTES
+            'photo3' => 'setPhotoCompteRendu',
+            'photo_3' => 'setPhotoCompteRendu',  // ✅ Variante avec underscore
+            'photo_compte_rendu' => 'setPhotoCompteRendu',  // ✅ Autre variante possible
+            
+            'photo2' => 'setPhoto2',
+            'photo_2' => 'setPhoto2',  // ✅ Variante avec underscore
+            'photo_generale' => 'setPhoto2',  // ✅ Autre variante possible
+            
+            'photo_complementaire_equipeme' => 'setPhotoEnvironnementEquipement1',
+            'photo_plaque' => 'setPhotoPlaque',
+            'photo_etiquette_somafi' => 'setPhotoEtiquetteSomafi',
+            
+            // Photos techniques
+            'photo_choc' => 'setPhotoChoc',
+            'photo_choc_montant' => 'setPhotoChocMontant',
+            'photo_choc_tablier' => 'setPhotoChocTablier',
+            'photo_choc_tablier_porte' => 'setPhotoChocTablierPorte',
+            'photo_moteur' => 'setPhotoMoteur',
+            'photo_carte' => 'setPhotoCarte',
+            'photo_coffret_de_commande' => 'setPhotoCoffretDeCommande',
+            'photo_rail' => 'setPhotoRail',
+            'photo_equerre_rail' => 'setPhotoEquerreRail',
+            'photo_fixation_coulisse' => 'setPhotoFixationCoulisse',
+            'photo_axe' => 'setPhotoAxe',
+            'photo_serrure' => 'setPhotoSerrure',
+            'photo_serrure1' => 'setPhotoSerrure1',
+            'photo_feux' => 'setPhotoFeux',
+            
+            // Photos structure
+            'photo_panneau_intermediaire_i' => 'setPhotosPanneauIntermediaireI',
+            'photo_panneau_bas_inter_ext' => 'setPhotosPanneauBasInterExt',
+            'photo_lame_basse__int_ext' => 'setPhotoLameBasseIntExt',
+            'photo_lame_intermediaire_int_' => 'setPhotoLameIntermediaireInt',
+            'photo_deformation_plateau' => 'setPhotoDeformationPlateau',
+            'photo_deformation_plaque' => 'setPhotoDeformationPlaque',
+            'photo_deformation_structure' => 'setPhotoDeformationStructure',
+            'photo_deformation_chassis' => 'setPhotoDeformationChassis',
+            'photo_deformation_levre' => 'setPhotoDeformationLevre',
+            'photo_fissure_cordon' => 'setPhotoFissureCordon',
+            
+            // Photos environnement
+            'photo_envirronement_eclairage' => 'setPhotoEnvirronementEclairage',
+            'photo_bache' => 'setPhotoBache',
+            'photo_marquage_au_sol' => 'setPhotoMarquageAuSol',
+            'photo_marquage_au_sol_' => 'setPhotoMarquageAuSol',
+            'photo_marquage_au_sol_2' => 'setPhotoMarquageAuSol2',
+            'photo_environnement_equipement1' => 'setPhotoEnvironnementEquipement1',
+            
+            // Photos éléments
+            'photo_joue' => 'setPhotoJoue',
+            'photo_butoir' => 'setPhotoButoir',
+            'photo_vantail' => 'setPhotoVantail',
+            'photo_linteau' => 'setPhotoLinteau',
+            'photo_barriere' => 'setPhotoBarriere',
+            'photo_tourniquet' => 'setPhotoTourniquet',
+            'photo_sas' => 'setPhotoSas'
+        ];
+        
+        foreach ($photoMapping as $fieldKey => $formMethod) {
+            if (isset($equipmentData[$fieldKey]['value']) && !empty($equipmentData[$fieldKey]['value'])) {
+                $photoValue = $equipmentData[$fieldKey]['value'];
+                
+                // Stocker le nom original de la photo Kizeo
+                if (method_exists($form, $formMethod)) {
+                    $form->$formMethod($photoValue);
+                }
+            }
+        }
+    }
+
+    /**
+     * ✅ CORRECTION 4 : Version corrigée de fillOffContractEquipmentData
+     */
+    private function fillOffContractEquipmentDataFixed($equipement, array $equipmentHorsContrat, array $fields): void
+    {
+        // ✅ Récupérer les données depuis les bons champs
+        $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
+        $equipement->setLibelleEquipement($typeLibelle);
+        
+        $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
+        $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
+        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+        $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
+        $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
+        $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
+        $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
+        $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
+        $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
+        
+        $statut = $this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? '');
+        $equipement->setStatutDeMaintenance($statut);
+        
+        // Marquer comme hors contrat
+        $equipement->setEnMaintenance(false);
+    }
     /**
      * Sauvegarde les photos dans la table Form avec les chemins locaux comme métadonnées
      */
@@ -5819,5 +5968,46 @@ private function extractLibelleFromPath(string $equipementPath): string
     
     return 'Équipement supplémentaire';
 }
+
+    /**
+     * ✅ CORRECTION 1 : Récupérer la visite depuis les fields au lieu du path
+     */
+    private function getVisiteFromFields(array $fields, array $equipmentData = []): string
+    {
+        // Essayer plusieurs sources pour trouver la visite
+        
+        // 1. Depuis le tableau contrat_de_maintenance (équipements au contrat)
+        if (isset($fields['contrat_de_maintenance']['value']) && 
+            !empty($fields['contrat_de_maintenance']['value']) &&
+            isset($fields['contrat_de_maintenance']['value'][0]['equipement']['path'])) {
+            
+            $path = $fields['contrat_de_maintenance']['value'][0]['equipement']['path'];
+            $parts = explode('\\', $path);
+            if (!empty($parts[0]) && preg_match('/^CE\d+$/', $parts[0])) {
+                return $parts[0];
+            }
+        }
+        
+        // 2. Depuis un champ dédié type_visite ou visite
+        if (isset($fields['type_visite']['value']) && !empty($fields['type_visite']['value'])) {
+            return $fields['type_visite']['value'];
+        }
+        
+        if (isset($fields['visite']['value']) && !empty($fields['visite']['value'])) {
+            return $fields['visite']['value'];
+        }
+        
+        // 3. Depuis le path de l'équipement spécifique
+        if (isset($equipmentData['equipement']['path'])) {
+            $path = $equipmentData['equipement']['path'];
+            $parts = explode('\\', $path);
+            if (!empty($parts[0]) && preg_match('/^CE\d+$/', $parts[0])) {
+                return $parts[0];
+            }
+        }
+        
+        // 4. Par défaut CE1
+        return 'CE1';
+    }
 
 }
