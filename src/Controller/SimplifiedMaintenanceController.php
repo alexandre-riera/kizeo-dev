@@ -2609,7 +2609,7 @@ class SimplifiedMaintenanceController extends AbstractController
       // dump("=== setRealCommonDataFixed START ===");
 
         // CORRECTION : Utiliser les vrais noms de champs
-        $equipement->setCodeAgence($fields['code_agence']['value'] ?? '');
+        $equipement->setCodeSociete($fields['id_societe']['value'] ?? '');
         $equipement->setIdContact($fields['id_client_']['value'] ?? '');
         $equipement->setRaisonSociale($fields['nom_client']['value'] ?? ''); // CORRIGÉ
         $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? ''); // CORRIGÉ
