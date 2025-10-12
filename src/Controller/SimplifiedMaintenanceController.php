@@ -3987,7 +3987,7 @@ class SimplifiedMaintenanceController extends AbstractController
         // Configuration conservative
         // ajustement du timeout a 30 minutes au lieu de 10 ici et dans le script migration_debug.sh
         ini_set('memory_limit', '3G');
-        ini_set('max_execution_time', 600);
+        ini_set('max_execution_time', 1800);
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
