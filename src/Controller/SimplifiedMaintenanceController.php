@@ -5117,9 +5117,9 @@ class SimplifiedMaintenanceController extends AbstractController
         return [
             // Photos principales
             'photo3' => 'compte_rendu',
-            'photo_3' => 'setPhotoCompteRendu',  // ✅ Variante avec underscore
-            'photo_compte_rendu' => 'setPhotoCompteRendu',  // ✅ Autre variante possible
-            
+            'photo_3' => 'compte_rendu',  // ✅ Variante avec underscore
+            'photo_compte_rendu' => 'compte_rendu',  // ✅ Autre variante possible
+
             'photo_complementaire_equipeme' => 'environnement',
             'photo_plaque' => 'plaque',
             'photo_etiquette_somafi' => 'etiquette_somafi',
@@ -5170,9 +5170,9 @@ class SimplifiedMaintenanceController extends AbstractController
             'photo_sas' => 'sas',
             
             // Photo générale
-            'photo2' => 'setPhoto2',
-            'photo_2' => 'setPhoto2',  // ✅ Variante avec underscore
-            'photo_generale' => 'setPhoto2',  // ✅ Autre variante possible
+            'photo2' => 'generale',
+            'photo_2' => 'generale',  // ✅ Variante avec underscore
+            'photo_generale' => 'generale',  // ✅ Autre variante possible
         ];
     }
 
