@@ -2479,6 +2479,7 @@ class EquipementPdfController extends AbstractController
             'orange' => 0, 
             'red' => 0,
             'black' => 0,
+            'white' => 0,
             'unknown' => 0
         ];
         
@@ -2511,10 +2512,12 @@ class EquipementPdfController extends AbstractController
                 case 'Equipement à l\'arrêt':
                 case 'Equipement à l\'arrêt le jour de la visite':
                 case 'Equipement non présent sur site':
-                case 'Equipement inaccessible':
                 case 'G':
-                case 'D':
                     $statusCounts['black']++;
+                    break;
+                case 'D':
+                case 'Equipement inaccessible':
+                    $statusCounts['white']++;
                     break;
                 default:
                     $statusCounts['unknown']++;

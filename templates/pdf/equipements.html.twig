@@ -489,11 +489,18 @@
                                     <td>{{ statistiques.status_counts.orange }}</td>
                                 </tr>
                             {% endif %}
-                            {% if statistiques.status_counts.black %}
+                            {% if statistiques.status_counts.black and statistiques.status_counts.black > 0 %}
+                                <tr>
+                                    <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
+                                    <td>Équipement non présent ou à l'arrêt lors de la visite</td>
+                                    <td>{{ statistiques.status_counts.black }}</td>
+                                </tr>
+                            {% endif %}
+                            {% if statistiques.status_counts.white and statistiques.status_counts.white > 0 %}
                                 <tr>
                                     <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
                                     <td>Inaccessible le jour de la visite</td>
-                                    <td>{{ statistiques.status_counts.black }}</td>
+                                    <td>{{ statistiques.status_counts.white }}</td>
                                 </tr>
                             {% endif %}
                         </tbody>
