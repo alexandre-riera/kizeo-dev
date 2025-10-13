@@ -430,7 +430,7 @@
             
             <div class="summary-section">
                 <h2 class="summary-title">Résumé</h2>
-                
+                <!-- SOUS RESUME -->
                 <div class="summary-stats">
                     <div class="stat-item">
                         <div class="stat-label">Nombre d'équipements au contrat</div>
@@ -455,6 +455,7 @@
             
             {# ÉQUIPEMENTS AU CONTRAT #}
             {% if statistiques and statistiques|length > 0 %}
+                <!-- //////////////////////////////////////////  CARTOUCHE DES EQUIPEMENTS AU CONTRAT /////////////////// -->
                 <div class="equipment-summary">
                     <div class="section-title">Équipements visités</div>
                     
@@ -488,7 +489,7 @@
                                     <td>{{ statistiques.status_counts.orange }}</td>
                                 </tr>
                             {% endif %}
-                            {% if statistiques.status_counts.black and statistiques.status_counts.black > 0 %}
+                            {% if statistiques.status_counts.black %}
                                 <tr>
                                     <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
                                     <td>Inaccessible le jour de la visite</td>

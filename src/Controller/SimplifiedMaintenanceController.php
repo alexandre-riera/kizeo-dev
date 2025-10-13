@@ -3321,39 +3321,44 @@ class SimplifiedMaintenanceController extends AbstractController
         $dateDerniereVisite
     ): bool {
         
-        // ✅ Utiliser la nouvelle fonction pour récupérer la visite
         $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
         
-        // ✅ Récupérer le numéro d'équipement (généré ou depuis le formulaire)
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
         
-        // Générer un numéro unique
+        // ✅ Générer le numéro AVANT de vérifier le doublon
         $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
         $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
         
+        // ✅ Vérification doublon avec le numéro généré
+        if ($this->offContractEquipmentExistsForSameVisit(
+            $numeroEquipement,  // ✅ Passer le numéro
+            $idClient, 
+            $entityClass, 
+            $entityManager
+        )) {
+            // dump("⏭️ Équipement hors contrat ignoré (doublon): " . $numeroEquipement);
+            return false;
+        }
+        
+        // Définir les propriétés de base
         $equipement->setVisite($visite);
         $equipement->setNumeroEquipement($numeroEquipement);
         $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
+        $equipement->setCodeSociete($idSociete);
+        $equipement->setDateEnregistrement($dateDerniereVisite);
         
-        // Vérification doublon
-        $dateVisite = $fields['date_et_heure1']['value'] ?? '';
-        
-        if ($this->offContractEquipmentExistsForSameVisit($typeLibelle, $idClient, $dateVisite, $entityClass, $entityManager)) {
-            return false;
-        }
-
-        // ✅ Remplir les données depuis $equipmentHorsContrat (comme l'ancienne fonction)
+        // Remplir les données
         $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
         
-        // Téléchargement et sauvegarde des photos en local
+        // Téléchargement et sauvegarde des photos
         $agence = $fields['code_agence']['value'] ?? '';
         $raisonSociale = $fields['nom_client']['value'] ?? '';
+        $dateVisite = $fields['date_et_heure1']['value'] ?? '';
         $anneeVisite = date('Y', strtotime($dateVisite));
         $idContact = $fields['id_client_']['value'] ?? '';
         
-        // ✅ Passer la bonne visite
         $savedPhotos = $this->downloadAndSavePhotosLocally(
             $equipmentHorsContrat,
             $formId,
@@ -3361,14 +3366,13 @@ class SimplifiedMaintenanceController extends AbstractController
             $agence,
             $idContact,
             $anneeVisite,
-            $visite,  // ✅ Bonne visite
+            $visite,
             $numeroEquipement
         );
         
-        // ✅ Sauvegarder dans Form avec la bonne raison_sociale_visite
         $this->savePhotosToFormEntityWithLocalPathsFixed(
             $raisonSociale,
-            $visite,  // ✅ Passer la visite séparément
+            $visite,
             $equipmentHorsContrat,
             $formId,
             $entryId,
@@ -3378,7 +3382,6 @@ class SimplifiedMaintenanceController extends AbstractController
             $fields
         );
         
-        // Définir les anomalies
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
         return true;
@@ -3388,30 +3391,34 @@ class SimplifiedMaintenanceController extends AbstractController
      * ✅ CORRECTION 7 : Vérification doublon pour équipements hors contrat
      */
     private function offContractEquipmentExistsForSameVisit(
-        string $typeLibelle,
+        string $numeroEquipement,  // ✅ Changer le paramètre
         string $idClient,
-        string $dateVisite,
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
         try {
             $repository = $entityManager->getRepository($entityClass);
             
+            // ✅ Vérification simple : numéro + client + hors contrat
             $existing = $repository->createQueryBuilder('e')
-                ->where('e.libelle_equipement = :libelle')
+                ->where('e.numero_equipement = :numero')
                 ->andWhere('e.id_contact = :idClient')
-                ->andWhere('e.date_enregistrement = :dateVisite')
-                ->andWhere('e.en_maintenance = false')  // Spécifique hors contrat
-                ->setParameter('libelle', $typeLibelle)
+                ->andWhere('e.en_maintenance = false')
+                ->setParameter('numero', $numeroEquipement)
                 ->setParameter('idClient', $idClient)
-                ->setParameter('dateVisite', $dateVisite)
                 ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
             
-            return $existing !== null;
+            if ($existing !== null) {
+                // dump("✅ Doublon détecté : " . $numeroEquipement . " pour client " . $idClient);
+                return true;
+            }
+            
+            return false;
             
         } catch (\Exception $e) {
+            // dump("❌ Erreur vérification doublon: " . $e->getMessage());
             return false;
         }
     }
