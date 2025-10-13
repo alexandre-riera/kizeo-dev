@@ -3316,7 +3316,9 @@ class SimplifiedMaintenanceController extends AbstractController
         string $formId, 
         string $entryId, 
         string $entityClass,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        $idSociete,
+        $dateDerniereVisite
     ): bool {
         
         // ✅ Utiliser la nouvelle fonction pour récupérer la visite
@@ -3333,6 +3335,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         $equipement->setVisite($visite);
         $equipement->setNumeroEquipement($numeroEquipement);
+        $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
         
         // Vérification doublon
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
@@ -3561,6 +3564,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
         $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
         $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
+        $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
         
         $statut = $this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? '');
         $equipement->setStatutDeMaintenance($statut);

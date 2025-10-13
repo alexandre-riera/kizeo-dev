@@ -719,47 +719,69 @@ class EquipementPdfController extends AbstractController
         $numeroEquipement = $equipment->getNumeroEquipement();
         $agence = $equipment->getCodeAgence() ?? 'S40';
         
-        // Scanner tous les dossiers clients pour trouver les photos
-        $baseAgencePath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/";
-        
-        if (!is_dir($baseAgencePath)) {
-            $this->customLog("❌ Répertoire agence n'existe pas: {$baseAgencePath}");
-            return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_agency_dir', 'count' => 0];
+        // 🔧 CORRECTION 1 : Récupérer l'id_contact de l'équipement
+        $idContact = $equipment->getIdContact();
+        if (!$idContact) {
+            $this->customLog("❌ Pas d'id_contact pour l'équipement {$numeroEquipement}");
+            return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_id_contact', 'count' => 0];
         }
         
-        $this->customLog("🔍 Scanning agence directory: {$baseAgencePath}");
+        // 🔧 CORRECTION 2 : Déterminer si l'équipement est au contrat ou hors contrat
+        $isEnMaintenance = method_exists($equipment, 'isEnMaintenance') ? $equipment->isEnMaintenance() : true;
         
-        $clientDirs = scandir($baseAgencePath);
-        foreach ($clientDirs as $clientDir) {
-            if ($clientDir === '.' || $clientDir === '..') continue;
-            
-            $clientPath = $baseAgencePath . $clientDir . "/2025/CE1/";
-            if (!is_dir($clientPath)) continue;
-            
-            $photoPath = $clientPath . $numeroEquipement . '_generale.jpg';
+        // 🔧 CORRECTION 3 : Construire le chemin SPÉCIFIQUE pour ce client
+        $clientPath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/{$idContact}/2025/CE1/";
+        
+        if (!is_dir($clientPath)) {
+            $this->customLog("❌ Répertoire client n'existe pas: {$clientPath}");
+            return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_client_dir', 'count' => 0];
+        }
+        
+        $this->customLog("🔍 Recherche photo pour équipement {$numeroEquipement} (id_contact: {$idContact}) dans {$clientPath}");
+        
+        // 🔧 CORRECTION 4 : Chercher selon le type d'équipement avec fallback
+        // Pour équipements AU CONTRAT : d'abord _generale.jpg, puis _compte_rendu.jpg
+        // Pour équipements HORS CONTRAT : d'abord _compte_rendu.jpg, puis _generale.jpg
+        $photoTypes = $isEnMaintenance 
+            ? ['_generale.jpg', '_compte_rendu.jpg'] 
+            : ['_compte_rendu.jpg', '_generale.jpg'];
+        
+        foreach ($photoTypes as $photoType) {
+            $photoPath = $clientPath . $numeroEquipement . $photoType;
             
             if (file_exists($photoPath) && is_readable($photoPath)) {
-                $this->customLog("✅ Photo trouvée: {$photoPath} (dossier: {$clientDir})");
+                $this->customLog("✅ Photo trouvée: {$photoPath}");
                 
                 $photoContent = file_get_contents($photoPath);
                 $photoEncoded = base64_encode($photoContent);
+                
+                $photoTypeName = str_replace(['_', '.jpg'], '', $photoType);
                 
                 return [
                     'photos' => [[
                         'picture' => $photoEncoded,
                         'update_time' => date('Y-m-d H:i:s', filemtime($photoPath)),
-                        'photo_type' => 'generale_locale'
+                        'photo_type' => $photoTypeName . '_locale'
                     ]],
                     'photos_indexed' => [$photoEncoded],
-                    'source' => 'local_scan_found',
+                    'source' => 'local_client_dir',
                     'count' => 1,
-                    'client_folder_found' => $clientDir
+                    'client_folder_found' => $idContact,
+                    'photo_type_found' => $photoTypeName
                 ];
+            } else {
+                $this->customLog("⚠️ Photo non trouvée: {$photoPath}");
             }
         }
         
-        $this->customLog("❌ Aucune photo trouvée pour {$numeroEquipement} dans {$agence}");
-        return ['photos' => [], 'photos_indexed' => [], 'source' => 'not_found_after_scan', 'count' => 0];
+        $this->customLog("❌ Aucune photo trouvée pour {$numeroEquipement} dans le dossier client {$idContact}");
+        return [
+            'photos' => [], 
+            'photos_indexed' => [], 
+            'source' => 'not_found_in_client_dir', 
+            'count' => 0, 
+            'searched_path' => $clientPath
+        ];
     }
     // 🔧 SOLUTION 1: Convertir tous les objets stdClass en tableaux
     private function convertStdClassToArray($data)
