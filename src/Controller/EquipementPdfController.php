@@ -2504,7 +2504,6 @@ class EquipementPdfController extends AbstractController
                 case 'Travaux curatifs urgents':
                 case 'Travaux urgent ou à l\'arrêt':
                 case 'C':
-                case 'D':
                 case 'E':
                 case 'F':
                     $statusCounts['red']++;
