@@ -1758,58 +1758,94 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Récupération du prochain numéro - VERSION FINALE
+     * ✅ MISE À JOUR : Génération de numéro avec vérification UnitOfWork
+     * 
+     * Génère le prochain numéro d'équipement disponible en vérifiant :
+     * - Les équipements déjà en base de données
+     * - Les équipements en attente de flush (UnitOfWork)
+     * 
+     * Cela évite les collisions de numéros dans le même batch de traitement.
+     * 
+     * @param string $typeCode Le code type (ex: RID, SEC, NIV)
+     * @param string $idClient L'identifiant du client
+     * @param string $entityClass La classe de l'entité (ex: EquipementS40::class)
+     * @param EntityManagerInterface $entityManager Le gestionnaire d'entités Doctrine
+     * @return int Le prochain numéro disponible (ex: si RID05 existe, retourne 6)
      */
-    private function getNextEquipmentNumberReal(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): int
-    {
-      // dump("=== RECHERCHE PROCHAIN NUMÉRO ===");
-      // dump("Type code: {$typeCode}");
-      // dump("ID Client: {$idClient}");
-      // dump("Entity class: {$entityClass}"); // ✅ Maintenant $entityClass est défini
+    private function getNextEquipmentNumberReal(
+        string $typeCode,
+        string $idClient,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): int {
+        $repository = $entityManager->getRepository($entityClass);
         
-        $repository = $entityManager->getRepository($entityClass); // ✅ Utilisation correcte
-        
-        // Requête pour trouver tous les équipements du même type et client
+        // ============================================
+        // 1. TROUVER LE PLUS GRAND NUMÉRO EN BASE
+        // ============================================
         $qb = $repository->createQueryBuilder('e')
             ->where('e.id_contact = :idClient')
             ->andWhere('e.numero_equipement LIKE :typePattern')
             ->setParameter('idClient', $idClient)
             ->setParameter('typePattern', $typeCode . '%');
         
-        // DÉBOGAGE : Afficher la requête SQL générée
-        $query = $qb->getQuery();
-      // dump("SQL généré: " . $query->getSQL());
-      // dump("Paramètres: idClient=" . $idClient . ", typePattern=" . $typeCode . '%');
-        
-        $equipements = $query->getResult();
-        
-      // dump("Nombre d'équipements trouvés: " . count($equipements));
+        $equipements = $qb->getQuery()->getResult();
         
         $dernierNumero = 0;
         
+        // Parser tous les numéros d'équipements pour trouver le plus grand
         foreach ($equipements as $equipement) {
             $numeroEquipement = $equipement->getNumeroEquipement();
-          // dump("Numéro équipement analysé: " . $numeroEquipement);
             
-            // Pattern pour extraire le numéro (ex: PPV01 -> 01, PPV02 -> 02)
+            // Extraire le numéro depuis le format "XXX##" (ex: RID05 -> 5)
             if (preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
                 $numero = (int)$matches[1];
-              // dump("Numéro extrait: " . $numero);
-                
                 if ($numero > $dernierNumero) {
                     $dernierNumero = $numero;
-                  // dump("Nouveau dernier numéro: " . $dernierNumero);
                 }
-            } else {
-              // dump("Pattern non reconnu pour: " . $numeroEquipement);
             }
         }
         
-        $prochainNumero = $dernierNumero + 1;
-      // dump("Prochain numéro calculé: " . $prochainNumero);
+        // ============================================
+        // 2. ✅ VÉRIFIER AUSSI DANS L'UNITOFWORK
+        //    (objets en attente de flush)
+        // ============================================
+        $uow = $entityManager->getUnitOfWork();
+        $scheduledInserts = $uow->getScheduledEntityInsertions();
         
-        return $prochainNumero;
+        foreach ($scheduledInserts as $entity) {
+            // Vérifier que c'est la bonne classe et le bon client
+            if (get_class($entity) === $entityClass && $entity->getIdContact() === $idClient) {
+                $numeroEquipement = $entity->getNumeroEquipement();
+                
+                // Extraire et comparer le numéro
+                if ($numeroEquipement && preg_match('/^' . preg_quote($typeCode) . '(\d+)$/', $numeroEquipement, $matches)) {
+                    $numero = (int)$matches[1];
+                    if ($numero > $dernierNumero) {
+                        $dernierNumero = $numero;
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // 3. RETOURNER LE PROCHAIN NUMÉRO DISPONIBLE
+        // ============================================
+        return $dernierNumero + 1;
     }
+
+    /**
+     * EXEMPLE D'UTILISATION :
+     * 
+     * // Contexte : Client 126 a déjà RID01, RID02, RID03 en base
+     * //           RID04 est en attente de flush dans l'UnitOfWork
+     * 
+     * $nextNumber = $this->getNextEquipmentNumberReal('RID', '126', EquipementS40::class, $em);
+     * // Retourne : 5
+     * 
+     * $numeroEquipement = 'RID' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
+     * // Résultat : "RID05" ✅
+     */
 
     /**
      * Route pour traiter TOUS les formulaires S140 trouvés
@@ -3305,9 +3341,8 @@ class SimplifiedMaintenanceController extends AbstractController
 
     /**
      * Modifiée: Sauvegarde des photos avec téléchargement local pour équipements hors contrat
-     */
-    /**
-     * ✅ CORRECTION 3 : Version corrigée pour équipements hors contrat
+     * 
+     * ✅ CORRECTION FINALE : Version corrigée basée sur numero_equipement + id_contact
      */
     private function setOffContractDataWithFormPhotosAndDeduplication(
         $equipement, 
@@ -3327,18 +3362,19 @@ class SimplifiedMaintenanceController extends AbstractController
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
         
-        // ✅ Générer le numéro AVANT de vérifier le doublon
+        // ✅ Générer le numéro avec vérification dans UnitOfWork
         $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
         $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
         
-        // ✅ Vérification doublon avec le numéro généré
+        // ✅ VÉRIFICATION UNIQUE : Par numero_equipement + id_contact
+        // C'est la seule combinaison fiable car toujours présente
         if ($this->offContractEquipmentExistsForSameVisit(
-            $numeroEquipement,  // ✅ Passer le numéro
+            $numeroEquipement,
             $idClient, 
             $entityClass, 
             $entityManager
         )) {
-            // dump("⏭️ Équipement hors contrat ignoré (doublon): " . $numeroEquipement);
+            // dump("⭕️ Équipement hors contrat ignoré (doublon): " . $numeroEquipement . " pour client " . $idClient);
             return false;
         }
         
@@ -3357,7 +3393,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $raisonSociale = $fields['nom_client']['value'] ?? '';
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
         $anneeVisite = date('Y', strtotime($dateVisite));
-        $idContact = $fields['id_client_']['value'] ?? '';
+        $idContact = $fields['id_contact']['value'] ?? '';
         
         $savedPhotos = $this->downloadAndSavePhotosLocally(
             $equipmentHorsContrat,
@@ -3388,10 +3424,20 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * ✅ CORRECTION 7 : Vérification doublon pour équipements hors contrat
+     * ✅ MISE À JOUR : Vérification doublon avec UnitOfWork
+     * 
+     * Vérifie si un équipement hors contrat existe déjà en se basant sur :
+     * - numero_equipement + id_contact (combinaison unique et toujours présente)
+     * - Recherche en base de données ET dans l'UnitOfWork (objets en attente de flush)
+     * 
+     * @param string $numeroEquipement Le numéro d'équipement généré (ex: RID01)
+     * @param string $idClient L'identifiant du client
+     * @param string $entityClass La classe de l'entité (ex: EquipementS40::class)
+     * @param EntityManagerInterface $entityManager Le gestionnaire d'entités Doctrine
+     * @return bool true si l'équipement existe déjà, false sinon
      */
     private function offContractEquipmentExistsForSameVisit(
-        string $numeroEquipement,  // ✅ Changer le paramètre
+        string $numeroEquipement,
         string $idClient,
         string $entityClass,
         EntityManagerInterface $entityManager
@@ -3399,26 +3445,54 @@ class SimplifiedMaintenanceController extends AbstractController
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // ✅ Vérification simple : numéro + client + hors contrat
-            $existing = $repository->createQueryBuilder('e')
+            // ============================================
+            // 1. VÉRIFICATION EN BASE DE DONNÉES
+            // ============================================
+            $qb = $repository->createQueryBuilder('e')
                 ->where('e.numero_equipement = :numero')
                 ->andWhere('e.id_contact = :idClient')
-                ->andWhere('e.en_maintenance = false')
+                ->andWhere('e.en_maintenance = false')  // Uniquement les équipements hors contrat
                 ->setParameter('numero', $numeroEquipement)
                 ->setParameter('idClient', $idClient)
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
+                ->setMaxResults(1);
             
-            if ($existing !== null) {
-                // dump("✅ Doublon détecté : " . $numeroEquipement . " pour client " . $idClient);
+            $existingInDb = $qb->getQuery()->getOneOrNullResult();
+            
+            if ($existingInDb !== null) {
+                // dump("✅ Doublon détecté en base : " . $numeroEquipement . " pour client " . $idClient);
                 return true;
             }
             
+            // ============================================
+            // 2. ✅ VÉRIFICATION DANS L'UNITOFWORK
+            //    (objets en attente de flush)
+            // ============================================
+            $uow = $entityManager->getUnitOfWork();
+            $scheduledInserts = $uow->getScheduledEntityInsertions();
+            
+            foreach ($scheduledInserts as $entity) {
+                // Vérifier que c'est bien la même classe d'entité
+                if (get_class($entity) === $entityClass) {
+                    // Vérifier les critères d'unicité
+                    if ($entity->getNumeroEquipement() === $numeroEquipement && 
+                        $entity->getIdContact() === $idClient &&
+                        !$entity->isEnMaintenance()) {  // Uniquement hors contrat
+                        
+                        // dump("✅ Doublon détecté dans UnitOfWork : " . $numeroEquipement . " pour client " . $idClient);
+                        return true;
+                    }
+                }
+            }
+            
+            // Aucun doublon trouvé
             return false;
             
         } catch (\Exception $e) {
+            // En cas d'erreur, logger mais ne pas bloquer le traitement
             // dump("❌ Erreur vérification doublon: " . $e->getMessage());
+            
+            // Par sécurité, retourner false pour ne pas bloquer la création
+            // (mieux vaut un doublon qu'un équipement manquant)
             return false;
         }
     }
