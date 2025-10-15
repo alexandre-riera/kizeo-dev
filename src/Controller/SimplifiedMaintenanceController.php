@@ -3357,27 +3357,29 @@ class SimplifiedMaintenanceController extends AbstractController
     ): bool {
         
         $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
-        
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
         $idClient = $fields['id_client_']['value'] ?? '';
+        $repereSiteClient = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
+        
+        // ✅ 1. VÉRIFIER D'ABORD avec les critères métiers (SANS le numéro)
+        if ($this->offContractEquipmentExistsByBusinessCriteria(
+            $typeCode,
+            $idClient,
+            $repereSiteClient,
+            $visite,
+            $entityClass,
+            $entityManager
+        )) {
+            // Équipement déjà traité, on skip
+            return false;
+        }
         
         // ✅ Générer le numéro avec vérification dans UnitOfWork
         $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
         $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-        
-        // ✅ VÉRIFICATION UNIQUE : Par numero_equipement + id_contact
-        // C'est la seule combinaison fiable car toujours présente
-        if ($this->offContractEquipmentExistsForSameVisit(
-            $numeroEquipement,
-            $idClient, 
-            $entityClass, 
-            $entityManager
-        )) {
-            // dump("⭕️ Équipement hors contrat ignoré (doublon): " . $numeroEquipement . " pour client " . $idClient);
-            return false;
-        }
-        
+
+
         // Définir les propriétés de base
         $equipement->setVisite($visite);
         $equipement->setNumeroEquipement($numeroEquipement);
@@ -3421,6 +3423,109 @@ class SimplifiedMaintenanceController extends AbstractController
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
         return true;
+    }
+
+    /**
+     * Vérifie si un équipement hors contrat existe déjà selon les critères métier :
+     * - Type d'équipement (RID, SEC, etc.)
+     * - Client (id_contact)
+     * - Localisation (repere_site_client)
+     * - Visite
+     * 
+     * Vérifie à la fois en base ET dans l'UnitOfWork (équipements en attente de flush)
+     */
+    private function offContractEquipmentExistsByBusinessCriteria(
+        string $typeCode,
+        string $idClient,
+        string $repereSiteClient,
+        string $visite,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): bool {
+        $repository = $entityManager->getRepository($entityClass);
+        
+        // ============================================
+        // 1. VÉRIFICATION EN BASE DE DONNÉES
+        // ============================================
+        $qb = $repository->createQueryBuilder('e')
+            ->where('e.numero_equipement LIKE :typePattern')
+            ->andWhere('e.id_contact = :idClient')
+            ->andWhere('e.repere_site_client = :repere')
+            ->andWhere('e.visite = :visite')
+            ->andWhere('e.en_maintenance = false')
+            ->setParameter('typePattern', $typeCode . '%')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('repere', $repereSiteClient)
+            ->setParameter('visite', $visite)
+            ->setMaxResults(1);
+        
+        $existingInDb = $qb->getQuery()->getOneOrNullResult();
+        
+        if ($existingInDb !== null) {
+            return true;
+        }
+        
+        // ============================================
+        // 2. VÉRIFICATION DANS L'UNITOFWORK
+        // ============================================
+        $uow = $entityManager->getUnitOfWork();
+        $scheduledInserts = $uow->getScheduledEntityInsertions();
+        
+        foreach ($scheduledInserts as $entity) {
+            if (get_class($entity) === $entityClass) {
+                $numeroEquipement = $entity->getNumeroEquipement() ?? '';
+                
+                // Vérifier si c'est le même type + client + localisation + visite
+                if (str_starts_with($numeroEquipement, $typeCode) &&
+                    $entity->getIdContact() === $idClient &&
+                    $entity->getRepereSiteClient() === $repereSiteClient &&
+                    $entity->getVisite() === $visite &&
+                    !$entity->isEnMaintenance()) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+
+    private function offContractEquipmentTypeExistsForClientVisit(
+        string $typeCode,      // "RID", "SEC", etc.
+        string $idClient,
+        string $visite,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): bool {
+        $repository = $entityManager->getRepository($entityClass);
+        
+        // Cherche en base
+        $qb = $repository->createQueryBuilder('e')
+            ->where('e.numero_equipement LIKE :typePattern')
+            ->andWhere('e.id_contact = :idClient')
+            ->andWhere('e.visite = :visite')
+            ->andWhere('e.en_maintenance = false')
+            ->setParameter('typePattern', $typeCode . '%') // RID%
+            ->setParameter('idClient', $idClient)
+            ->setParameter('visite', $visite)
+            ->setMaxResults(1);
+        
+        if ($qb->getQuery()->getOneOrNullResult() !== null) {
+            return true;
+        }
+        
+        // Cherche aussi dans l'UnitOfWork
+        $uow = $entityManager->getUnitOfWork();
+        foreach ($uow->getScheduledEntityInsertions() as $entity) {
+            if (get_class($entity) === $entityClass 
+                && str_starts_with($entity->getNumeroEquipement() ?? '', $typeCode)
+                && $entity->getIdContact() === $idClient
+                && $entity->getVisite() === $visite
+                && !$entity->isEnMaintenance()) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     /**
