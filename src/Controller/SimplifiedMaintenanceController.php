@@ -3355,7 +3355,8 @@ class SimplifiedMaintenanceController extends AbstractController
         $idSociete,
         $dateDerniereVisite
     ): bool {
-        
+        error_log("=== DÉBUT setOffContractDataWithFormPhotosAndDeduplication ===");
+        error_log($equipmentHorsContrat['nature']['value'] ?? 'Champ nature vide');
         $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
