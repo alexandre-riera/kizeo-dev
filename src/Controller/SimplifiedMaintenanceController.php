@@ -3364,11 +3364,41 @@ class SimplifiedMaintenanceController extends AbstractController
             }
         }
         dump("=== FIN STRUCTURE ===");
-        $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
+        
+        // ✅ NOUVEAUX DUMPS ICI
+        dump("=== EXTRACTION DES DONNÉES ===");
+        
+        try {
+            $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
+            dump("✅ Visite extraite: " . ($visite ?? 'NULL'));
+        } catch (\Exception $e) {
+            dump("❌ ERREUR getVisiteFromFields: " . $e->getMessage());
+            return false;
+        }
+        
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
-        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+        dump("Type libellé brut: '$typeLibelle'");
+        
+        try {
+            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+            dump("✅ Type code: '$typeCode'");
+        } catch (\Exception $e) {
+            dump("❌ ERREUR getTypeCodeFromLibelle: " . $e->getMessage());
+            return false;
+        }
+        
+        if (empty($typeCode)) {
+            dump("❌ ERREUR: typeCode est vide pour libellé '$typeLibelle'");
+            return false;
+        }
+        
         $idClient = $fields['id_client_']['value'] ?? '';
+        dump("ID Client: '$idClient'");
+        
         $repereSiteClient = $equipmentHorsContrat['localisation_site_client1']['value'] ?? '';
+        dump("Repère site: '$repereSiteClient'");
+        
+        dump("=== APPEL VÉRIFICATION DOUBLON ===");
         
         // ✅ 1. VÉRIFIER D'ABORD avec les critères métiers (SANS le numéro)
         if ($this->offContractEquipmentExistsByBusinessCriteria(
@@ -3379,14 +3409,18 @@ class SimplifiedMaintenanceController extends AbstractController
             $entityClass,
             $entityManager
         )) {
-            // Équipement déjà traité, on skip
+            dump("❌ SKIP: Équipement déjà traité");
             return false;
         }
         
+        dump("✅ Pas de doublon, génération du numéro...");
+        
         // ✅ Générer le numéro avec vérification dans UnitOfWork
         $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
+        dump("Nouveau numéro: $nouveauNumero");
+        
         $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-
+        dump("Numéro formaté: $numeroEquipement");
 
         // Définir les propriétés de base
         $equipement->setVisite($visite);
@@ -3395,8 +3429,12 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setCodeSociete($idSociete);
         $equipement->setDateEnregistrement($dateDerniereVisite);
         
+        dump("✅ Propriétés de base définies");
+        
         // Remplir les données
         $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
+        
+        dump("✅ Données remplies, prêt à sauvegarder");
         
         // Téléchargement et sauvegarde des photos
         $agence = $fields['code_agence']['value'] ?? '';
@@ -3430,6 +3468,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
+        dump("=== RETURN TRUE ===");
         return true;
     }
 
