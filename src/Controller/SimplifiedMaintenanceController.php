@@ -3489,56 +3489,65 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-
-        // ✅ DEBUG
         dump("=== VÉRIFICATION DOUBLON ===");
         dump("Type: $typeCode, Client: $idClient, Repere: $repereSiteClient, Visite: $visite");
         
-        $repository = $entityManager->getRepository($entityClass);
-        
-        // ============================================
-        // 1. VÉRIFICATION EN BASE DE DONNÉES
-        // ============================================
-        $qb = $repository->createQueryBuilder('e')
-            ->where('e.numero_equipement LIKE :typePattern')
-            ->andWhere('e.id_contact = :idClient')
-            ->andWhere('e.repere_site_client = :repere')
-            ->andWhere('e.visite = :visite')
-            ->andWhere('e.en_maintenance = false')
-            ->setParameter('typePattern', $typeCode . '%')
-            ->setParameter('idClient', $idClient)
-            ->setParameter('repere', $repereSiteClient)
-            ->setParameter('visite', $visite)
-            ->setMaxResults(1);
-        
-        $existingInDb = $qb->getQuery()->getOneOrNullResult();
-        
-        if ($existingInDb !== null) {
-            return true;
-        }
-        
-        // ============================================
-        // 2. VÉRIFICATION DANS L'UNITOFWORK
-        // ============================================
-        $uow = $entityManager->getUnitOfWork();
-        $scheduledInserts = $uow->getScheduledEntityInsertions();
-        
-        foreach ($scheduledInserts as $entity) {
-            if (get_class($entity) === $entityClass) {
-                $numeroEquipement = $entity->getNumeroEquipement() ?? '';
-                
-                // Vérifier si c'est le même type + client + localisation + visite
-                if (str_starts_with($numeroEquipement, $typeCode) &&
-                    $entity->getIdContact() === $idClient &&
-                    $entity->getRepereSiteClient() === $repereSiteClient &&
-                    $entity->getVisite() === $visite &&
-                    !$entity->isEnMaintenance()) {
-                    return true;
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            dump("✅ Repository OK");
+            
+            $qb = $repository->createQueryBuilder('e')
+                ->where('e.numero_equipement LIKE :typePattern')
+                ->andWhere('e.id_contact = :idClient')
+                ->andWhere('e.repere_site_client = :repere')
+                ->andWhere('e.visite = :visite')
+                ->andWhere('e.en_maintenance = false')
+                ->setParameter('typePattern', $typeCode . '%')
+                ->setParameter('idClient', $idClient)
+                ->setParameter('repere', $repereSiteClient)
+                ->setParameter('visite', $visite)
+                ->setMaxResults(1);
+            
+            dump("✅ QueryBuilder OK");
+            
+            $existingInDb = $qb->getQuery()->getOneOrNullResult();
+            dump("✅ Query exécutée");
+            
+            if ($existingInDb !== null) {
+                dump("✅ Trouvé en base: " . $existingInDb->getNumeroEquipement());
+                return true;
+            }
+            
+            dump("❌ Pas trouvé en base, vérification UnitOfWork...");
+            
+            $uow = $entityManager->getUnitOfWork();
+            $scheduledInserts = $uow->getScheduledEntityInsertions();
+            
+            dump("Objets en attente: " . count($scheduledInserts));
+            
+            foreach ($scheduledInserts as $entity) {
+                if (get_class($entity) === $entityClass) {
+                    $numeroEquipement = $entity->getNumeroEquipement() ?? '';
+                    
+                    if (str_starts_with($numeroEquipement, $typeCode) &&
+                        $entity->getIdContact() === $idClient &&
+                        $entity->getRepereSiteClient() === $repereSiteClient &&
+                        $entity->getVisite() === $visite &&
+                        !$entity->isEnMaintenance()) {
+                        dump("✅ Trouvé dans UnitOfWork: $numeroEquipement");
+                        return true;
+                    }
                 }
             }
+            
+            dump("❌ Aucun doublon trouvé");
+            return false;
+            
+        } catch (\Exception $e) {
+            dump("❌ ERREUR DANS offContractEquipmentExistsByBusinessCriteria: " . $e->getMessage());
+            dump("Trace: " . $e->getTraceAsString());
+            return false; // En cas d'erreur, on laisse passer pour ne pas bloquer
         }
-        
-        return false;
     }
 
     private function offContractEquipmentTypeExistsForClientVisit(
