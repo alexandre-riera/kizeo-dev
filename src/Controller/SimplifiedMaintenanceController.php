@@ -3355,8 +3355,15 @@ class SimplifiedMaintenanceController extends AbstractController
         $idSociete,
         $dateDerniereVisite
     ): bool {
-        error_log("=== DÉBUT setOffContractDataWithFormPhotosAndDeduplication ===");
-        error_log($equipmentHorsContrat['nature']['value'] ?? 'Champ nature vide');
+        // DEBUG: Afficher la structure complète de l'équipement
+        dump("=== STRUCTURE EQUIPEMENT HORS CONTRAT ===");
+        dump(array_keys($equipmentHorsContrat));
+        foreach ($equipmentHorsContrat as $key => $data) {
+            if (isset($data['value']) && !empty($data['value'])) {
+                dump("$key => " . $data['value']);
+            }
+        }
+        dump("=== FIN STRUCTURE ===");
         $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
@@ -3770,7 +3777,7 @@ class SimplifiedMaintenanceController extends AbstractController
         string $equipmentCode, 
         EntityManagerInterface $entityManager,
         array $savedPhotos = [],
-        array $fields = []  // ← AJOUTER ce paramètre
+        array $fields = []
     ): void {
         try {
             $existingForm = $entityManager->getRepository(Form::class)->findOneBy([
