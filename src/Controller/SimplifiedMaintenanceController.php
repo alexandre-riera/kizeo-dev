@@ -3450,6 +3450,11 @@ class SimplifiedMaintenanceController extends AbstractController
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
+
+        // ✅ DEBUG
+        dump("=== VÉRIFICATION DOUBLON ===");
+        dump("Type: $typeCode, Client: $idClient, Repere: $repereSiteClient, Visite: $visite");
+        
         $repository = $entityManager->getRepository($entityClass);
         
         // ============================================
@@ -3745,26 +3750,26 @@ class SimplifiedMaintenanceController extends AbstractController
      */
     private function fillOffContractEquipmentDataFixed($equipement, array $equipmentHorsContrat, array $fields): void
     {
-        // ✅ Récupérer les données depuis les bons champs
+        // ✅ CORRECTION : Utiliser les bonnes clés du formulaire
         $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
         $equipement->setLibelleEquipement($typeLibelle);
         
         $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
         $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
-        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? 'nc');
         $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
         $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
         $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
         $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
         $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
         $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
-        $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
+        $equipement->setLongueur(''); // Pas de champ longueur dans tableau2
         
         $statut = $this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? '');
         $equipement->setStatutDeMaintenance($statut);
         
-        // Marquer comme hors contrat
         $equipement->setEnMaintenance(false);
+        $equipement->setIsArchive(false);
     }
     /**
      * Sauvegarde les photos dans la table Form avec les chemins locaux comme métadonnées
