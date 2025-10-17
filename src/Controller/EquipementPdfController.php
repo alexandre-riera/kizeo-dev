@@ -2491,7 +2491,7 @@ class EquipementPdfController extends AbstractController
             if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
                 $visitedCount++;
             }
-            if ($equipment->isEnMaintenance() === false) {
+            if ($equipment->isEnMaintenance() == false) {
                 $visitedCount++;
                 $statusCounts['offContract']++;
             }
