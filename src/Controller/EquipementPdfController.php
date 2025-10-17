@@ -2480,7 +2480,8 @@ class EquipementPdfController extends AbstractController
             'red' => 0,
             'black' => 0,
             'white' => 0,
-            'unknown' => 0
+            'unknown' => 0,
+            'offContract' => 0
         ];
         
         $visitedCount = 0;
@@ -2490,7 +2491,10 @@ class EquipementPdfController extends AbstractController
             if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
                 $visitedCount++;
             }
-            
+            if ($equipment->isEnMaintenance() === false) {
+                $visitedCount++;
+                $statusCounts['offContract']++;
+            }
             // Compter par état
             $etat = $equipment->getEtat();
             switch ($etat) {

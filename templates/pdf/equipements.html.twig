@@ -512,54 +512,31 @@
             {% set hasRealSupplementaryEquipment = false %}
             {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is not empty %}
                 {% if statistiquesSupplementaires.status_counts is defined %}
-                    {% for status, count in statistiquesSupplementaires.status_counts %}
-                        {% if count > 0 %}
-                            {% set hasRealSupplementaryEquipment = true %}
-                            <div class="section-title-supplementaire">Équipements supplémentaires</div>
-                            <table class="status-table">
-                                <thead>
-                                    <tr>
-                                        <th>Statut</th>
-                                        <th>État</th>
-                                        <th>Total</th>
+                    {% if count > 0 %}
+                        {% set hasRealSupplementaryEquipment = true %}
+                        <div class="section-title-supplementaire">Équipements supplémentaires</div>
+                        <table class="status-table">
+                            <thead>
+                                <tr>
+                                    <th>Statut</th>
+                                    <th>État</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status, count in statistiquesSupplementaires.status_counts %}
+                                <tr>
+                                    <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
+                                    <td>Équipement supplémentaire</td>
+                                    <td>{{ count }}</td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
-                                        <td>Équipement supplémentaire</td>
-                                        <td>{{ count }}</td>
-                                        </tr>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        {% endif %}
-                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
                 {% endif %}
             {% endif %}
-            
-            {# Afficher la section des équipements supplémentaires quand il n'y en a aucun
-            {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is empty %}
-                <div class="equipment-cartouche-supplementaires">
-                    <div class="section-title-supplementaire">Équipements supplémentaires</div>
-                    <table class="status-table">
-                        <thead>
-                            <tr>
-                                <th>Statut</th>
-                                <th>État</th>
-                                <th>Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
-                                <td>Équipements supplémentaires</td>
-                                <td>0</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            {% endif %} #}
         </div>
     </div>
     
