@@ -622,7 +622,7 @@ class EquipementPdfController extends AbstractController
                 $equipmentsSupplementairesOnly = array_map(function($item) {
                     return $item['equipment'];
                 }, $equipementsSupplementaires);
-                $statistiquesSupplementaires = $this->calculateEquipmentStatisticsImproved($equipmentsSupplementairesOnly);
+                $statistiquesSupplementaires = $this->calculateEquipmentOffContractStatisticsImproved($equipmentsSupplementairesOnly);
             }
             
             // 10. GÉNÉRATION DU PDF AVEC MESSAGE D'AVERTISSEMENT
@@ -2479,54 +2479,104 @@ class EquipementPdfController extends AbstractController
             'orange' => 0, 
             'red' => 0,
             'black' => 0,
-            'white' => 0,
-            'unknown' => 0,
-            'offContract' => 0
+            'unknown' => 0
         ];
         
         $visitedCount = 0;
         
         foreach ($equipments as $equipment) {
-            // Compter les équipements visités (avec photos ou état)
-            if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
-                $visitedCount++;
-            }
+            if ($equipment->isEnMaintenance() == true) {
+                // Compter les équipements visités (avec photos ou état)
+                if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
+                    $visitedCount++;
+                }
+                // Compter par état
+                $etat = $equipment->getEtat();
+                switch ($etat) {
+                    case 'Bon état':
+                    case 'A':
+                        $statusCounts['green']++;
+                        break;
+                    case 'Travaux à prévoir':
+                    case 'B':
+                        $statusCounts['orange']++;
+                        break;
+                    case 'Travaux curatifs urgents':
+                    case 'Travaux urgent ou à l\'arrêt':
+                    case 'C':
+                    case 'E':
+                    case 'F':
+                        $statusCounts['red']++;
+                        break;
+                    case 'Equipement à l\'arrêt':
+                    case 'Equipement à l\'arrêt le jour de la visite':
+                    case 'Equipement non présent sur site':
+                    case 'G':
+                    case 'D':
+                    case 'Equipement inaccessible':
+                        $statusCounts['black']++;
+                        break;
+                    default:
+                        $statusCounts['unknown']++;
+                        break;
+                }
+            }    
+        }
+        
+        return [
+            'total' => $total,
+            'visitedCount' => $visitedCount,
+            'status_counts' => $statusCounts
+        ];
+    }
+    /**
+     * Méthode améliorée pour calculer les statistiques avec gestion d'erreurs
+     */
+    private function calculateEquipmentOffContractStatisticsImproved(array $equipments): array
+    {
+        $total = count($equipments);
+        $statusCounts = [
+            'green' => 0,
+            'orange' => 0, 
+            'red' => 0,
+            'black' => 0,
+            'unknown' => 0
+        ];
+        
+        $visitedCount = 0;
+        
+        foreach ($equipments as $equipment) {
             if ($equipment->isEnMaintenance() == false) {
-                $visitedCount++;
-                $statusCounts['offContract']++;
-            }
-            // Compter par état
-            $etat = $equipment->getEtat();
-            switch ($etat) {
-                case 'Bon état':
-                case 'A':
-                    $statusCounts['green']++;
-                    break;
-                case 'Travaux à prévoir':
-                case 'B':
-                    $statusCounts['orange']++;
-                    break;
-                case 'Travaux curatifs urgents':
-                case 'Travaux urgent ou à l\'arrêt':
-                case 'C':
-                case 'E':
-                case 'F':
-                    $statusCounts['red']++;
-                    break;
-                case 'Equipement à l\'arrêt':
-                case 'Equipement à l\'arrêt le jour de la visite':
-                case 'Equipement non présent sur site':
-                case 'G':
-                    $statusCounts['black']++;
-                    break;
-                case 'D':
-                case 'Equipement inaccessible':
-                    $statusCounts['white']++;
-                    break;
-                default:
-                    $statusCounts['unknown']++;
-                    break;
-            }
+                // Compter les équipements visités (avec photos ou état)
+                if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
+                    $visitedCount++;
+                }
+                // Compter par état
+                $etat = $equipment->getEtat();
+                switch ($etat) {
+                    case 'Bon état':
+                    case 'A':
+                        $statusCounts['green']++;
+                        break;
+                    case 'Travaux à prévoir':
+                    case 'B':
+                        $statusCounts['orange']++;
+                        break;
+                    case 'Travaux curatifs urgents':
+                    case 'Travaux urgent ou à l\'arrêt':
+                    case 'C':
+                    case 'D':
+                    case 'E':
+                        $statusCounts['rouge']++;
+                        break;
+                    case 'Equipement inaccessible':
+                        $statusCounts['noir']++;
+                        break;
+                    default:
+                        $statusCounts['unknown']++;
+                        break;
+                }
+            }    
         }
         
         return [

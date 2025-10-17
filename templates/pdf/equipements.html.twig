@@ -492,15 +492,8 @@
                             {% if statistiques.status_counts.black and statistiques.status_counts.black > 0 %}
                                 <tr>
                                     <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
-                                    <td>Équipement non présent ou à l'arrêt lors de la visite</td>
+                                    <td>Équipement non présent / l'arrêt lors de la visite / Innaccessible</td>
                                     <td>{{ statistiques.status_counts.black }}</td>
-                                </tr>
-                            {% endif %}
-                            {% if statistiques.status_counts.white and statistiques.status_counts.white > 0 %}
-                                <tr>
-                                    <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
-                                    <td>Inaccessible le jour de la visite</td>
-                                    <td>{{ statistiques.status_counts.white }}</td>
                                 </tr>
                             {% endif %}
                         </tbody>
@@ -511,31 +504,47 @@
             {# ÉQUIPEMENTS SUPPLÉMENTAIRES #}
             {% set hasRealSupplementaryEquipment = false %}
             {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is not empty %}
-                {% if statistiquesSupplementaires.status_counts.offContract is defined %}
-                    {% if count > 0 %}
-                        {% set hasRealSupplementaryEquipment = true %}
-                        <div class="section-title-supplementaire">Équipements supplémentaires</div>
-                        <table class="status-table">
-                            <thead>
-                                <tr>
-                                    <th>Statut</th>
-                                    <th>État</th>
-                                    <th>Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for status, count in statistiquesSupplementaires.status_counts.offContract %}
-                                    <tr>
-                                        <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
-                                        <td>{{status}}</td>
-                                        <td>{{ count }}</td>
-                                        </tr>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    {% endif %}
-                {% endif %}
+                {% set hasRealSupplementaryEquipment = true %}
+                <div class="section-title-supplementaire">Équipements supplémentaires</div>
+                <table class="status-table">
+                    <thead>
+                        <tr>
+                            <th>Statut</th>
+                            <th>État</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if statistiquesSupplementaires.status_counts.green and statistiquesSupplementaires.status_counts.green > 0 %}
+                            <tr>
+                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/vert.png" alt="logo vert" /></td>
+                                <td>Bon état</td>
+                                <td>{{ statistiquesSupplementaires.status_counts.green }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if statistiquesSupplementaires.status_counts.red and statistiquesSupplementaires.status_counts.red > 0 %}
+                            <tr>
+                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/rouge.png" alt="logo rouge" /></td>
+                                <td>Travaux curatifs urgents</td>
+                                <td>{{ statistiquesSupplementaires.status_counts.red }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if statistiquesSupplementaires.status_counts.orange and statistiquesSupplementaires.status_counts.orange > 0 %}
+                            <tr>
+                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/orange.png" alt="logo orange" /></td>
+                                <td>Travaux à prévoir</td>
+                                <td>{{ statistiquesSupplementaires.status_counts.orange }}</td>
+                            </tr>
+                        {% endif %}
+                        {% if statistiquesSupplementaires.status_counts.black and statistiquesSupplementaires.status_counts.black > 0 %}
+                            <tr>
+                                <td><img src="https://www.backend-kizeo.somafi-group.fr/public/img/logos/noir.png" alt="logo noir" /></td>
+                                <td>Équipement non présent / l'arrêt lors de la visite / Innaccessible</td>
+                                <td>{{ statistiquesSupplementaires.status_counts.black }}</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
             {% endif %}
         </div>
     </div>
