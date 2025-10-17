@@ -434,22 +434,8 @@
                 <div class="summary-stats">
                     <div class="stat-item">
                         <div class="stat-label">Nombre d'équipements au contrat</div>
-                        <div class="stat-value">{{ statistiques.total}}</div>
+                        <div class="stat-value">{{ NombreEquipementsAuContrat}}</div>
                     </div>
-                    <div class="stat-item">
-                        <div class="stat-label">Nombre d'équipements inexistants</div>
-                        <div class="stat-value">0</div>
-                    </div>
-                    {# <div class="stat-item">
-                        <div class="stat-label">Nombre d'équipements supplémentaires</div>
-                        {% set totalSupplementaires = 0 %}
-                        {% if statistiquesSupplementaires is defined and statistiquesSupplementaires is not empty %}
-                            {% if statistiquesSupplementaires.total is defined %}
-                                {% set totalSupplementaires = statistiquesSupplementaires.total %}
-                            {% endif %}
-                        {% endif %}
-                        <div class="stat-value">{{ totalSupplementaires }}</div>
-                    </div> #}
                 </div>
             </div>
             

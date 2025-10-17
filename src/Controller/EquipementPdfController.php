@@ -641,6 +641,8 @@ class EquipementPdfController extends AbstractController
             $villep = trim($clientSelectedInformations->getVillep());
             $this->customLog("DEBUG - Client Address: {$nomClient}, {$adressep1} {$adressep2} {$cpostalp} {$villep}");
 
+            $nombreEquipementsAuContrat = $statistiques['total'] - $statistiquesSupplementaires['total'];
+
             $templateVars = [
                 'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures),
                 'equipementsSupplementaires' => $this->convertStdClassToArray($equipementsSupplementaires ?? []),
@@ -653,6 +655,7 @@ class EquipementPdfController extends AbstractController
                 'clientVisiteFilter' => $clientVisiteFilter ?: '',
                 'statistiques' => $statistiques,
                 'statistiquesSupplementaires' => $statistiquesSupplementaires,
+                'nombreEquipementsAuContrat' => $nombreEquipementsAuContrat,
                 'photoSourceStats' => $photoSourceStats,
                 'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
                 'dateDeDerniererVisite' => $dateDeDerniererVisite,
