@@ -2570,10 +2570,10 @@ class EquipementPdfController extends AbstractController
                     case 'C':
                     case 'D':
                     case 'E':
-                        $statusCounts['rouge']++;
+                        $statusCounts['red']++;
                         break;
                     case 'Equipement inaccessible':
-                        $statusCounts['noir']++;
+                        $statusCounts['black']++;
                         break;
                     default:
                         $statusCounts['unknown']++;
