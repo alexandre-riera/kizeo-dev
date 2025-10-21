@@ -434,6 +434,7 @@
                 <div class="summary-stats">
                     <div class="stat-item">
                         <div class="stat-label">Nombre d'équipements au contrat</div>
+                        {% if nombreEquipementsAuContrat is defined and nombreEquipementsAuContrat > 0 %}
                         <div class="stat-value">{{ nombreEquipementsAuContrat}}</div>
                     </div>
                 </div>
