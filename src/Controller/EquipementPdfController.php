@@ -344,7 +344,7 @@ class EquipementPdfController extends AbstractController
                     [
                         'filtre_annee' => $clientAnneeFilter,
                         'filtre_visite' => $clientVisiteFilter,
-                        'total_equipements_bruts' => count($equipments)
+                        'total' => count($equipments)
                     ]
                 );
             }
