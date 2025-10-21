@@ -3273,15 +3273,10 @@ class SimplifiedMaintenanceController extends AbstractController
                             
                             // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
-                                $equipement, 
-                                $equipmentHorsContrat, 
-                                $fields, 
-                                $submission['form_id'], 
-                                $submission['entry_id'], 
-                                $entityClass,
-                                $entityManager,
-                                $idSociete,
-                                $dateDerniereVisite
+                                $equipement, $equipmentHorsContrat, $fields, 
+                                $submission['form_id'], $submission['entry_id'], 
+                                $equipmentIndex,  // ← AJOUTER L'INDEX
+                                $entityClass, $entityManager, $idSociete, $dateDerniereVisite
                             );
                             
                             if ($wasProcessed) {
@@ -3342,21 +3337,21 @@ class SimplifiedMaintenanceController extends AbstractController
     /**
      * Méthode modifiée : setOffContractDataWithFormPhotosAndDeduplication
      * 
-     * MODIFICATION : Passer toutes les données de l'équipement pour la vérification
+     * MODIFICATION : Passer l'index de l'équipement pour une identification unique
      */
     private function setOffContractDataWithFormPhotosAndDeduplication(
         $equipement, 
         array $equipmentHorsContrat, 
         array $fields, 
         string $formId, 
-        string $entryId, 
+        string $entryId,
+        int $equipmentIndex,
         string $entityClass,
         EntityManagerInterface $entityManager,
         $idSociete,
         $dateDerniereVisite
     ): bool {
-        dump("=== STRUCTURE EQUIPEMENT HORS CONTRAT ===");
-        dump(array_keys($equipmentHorsContrat));
+        dump("=== TRAITEMENT ÉQUIPEMENT HORS CONTRAT #$equipmentIndex ===");
         
         try {
             $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
@@ -3369,16 +3364,19 @@ class SimplifiedMaintenanceController extends AbstractController
         $idClient = $fields['id_client_']['value'] ?? '';
         dump("ID Client: '$idClient'");
         
-        dump("=== APPEL VÉRIFICATION DOUBLON (NOUVELLE VERSION) ===");
+        dump("=== VÉRIFICATION DOUBLON ===");
         
-        // ✅ NOUVELLE VÉRIFICATION : Passer toutes les données de l'équipement
+        // ✅ VÉRIFICATION avec FormId + EntryId + Index
         if ($this->offContractEquipmentExistsByBusinessCriteria(
-            $equipmentHorsContrat,  // Passer toutes les données
+            $equipmentHorsContrat,
             $idClient,
+            $formId,
+            $entryId,
+            $equipmentIndex,
             $entityClass,
             $entityManager
         )) {
-            dump("❌ SKIP: Équipement déjà traité");
+            dump("❌ SKIP: Équipement déjà traité (doublon détecté)");
             return false;
         }
         
@@ -3395,7 +3393,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
         $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-        dump("Nouveau numéro: $numeroEquipement");
+        dump("✅ Numéro généré: $numeroEquipement");
 
         // Définir les propriétés de base
         $equipement->setVisite($visite);
@@ -3403,9 +3401,14 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
         $equipement->setCodeSociete($idSociete);
         $equipement->setDateEnregistrement($dateDerniereVisite);
+        $equipement->setEnMaintenance(false); // IMPORTANT : équipement hors contrat
+        
+        dump("✅ Propriétés de base définies");
         
         // Remplir les données
         $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
+        
+        dump("✅ Données remplies");
         
         // Téléchargement et sauvegarde des photos
         $agence = $fields['code_agence']['value'] ?? '';
@@ -3413,8 +3416,6 @@ class SimplifiedMaintenanceController extends AbstractController
         $dateVisite = $fields['date_et_heure1']['value'] ?? '';
         $anneeVisite = date('Y', strtotime($dateVisite));
         $idContact = $fields['id_contact']['value'] ?? '';
-        
-        $numeroInterne = 1; // À adapter selon ta logique
         
         $savedPhotos = $this->downloadAndSavePhotosLocally(
             $equipmentHorsContrat,
@@ -3424,7 +3425,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $idContact,
             $anneeVisite,
             $visite,
-            $numeroInterne
+            $equipmentIndex
         );
         
         $this->savePhotosToFormEntityWithLocalPathsFixed(
@@ -3433,7 +3434,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipmentHorsContrat,
             $formId,
             $entryId,
-            $numeroInterne,
+            $equipmentIndex,
             $entityManager,
             $savedPhotos,
             $fields
@@ -3441,18 +3442,21 @@ class SimplifiedMaintenanceController extends AbstractController
         
         $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
 
-        dump("=== RETURN TRUE ===");
+        dump("✅ ÉQUIPEMENT PRÊT À ÊTRE PERSISTÉ");
         return true;
     }
 
     /**
      * Vérifie si un équipement hors contrat existe déjà en base
      * 
-     * CORRECTION COMPLÈTE : Vérifie TOUTES les colonnes métier significatives
-     * pour détecter les vrais doublons
+     * NOUVELLE APPROCHE : Utilise l'ID de la soumission Kizeo comme identifiant unique
+     * et les données métier comme critères de backup
      * 
      * @param array $equipmentData Données de l'équipement hors contrat
      * @param string $idClient ID du client
+     * @param string $formId ID du formulaire Kizeo
+     * @param string $entryId ID de la soumission Kizeo
+     * @param int $equipmentIndex Index de l'équipement dans la soumission
      * @param string $entityClass Classe de l'entité (EquipementS160, etc.)
      * @param EntityManagerInterface $entityManager
      * @return bool True si l'équipement existe déjà
@@ -3460,78 +3464,154 @@ class SimplifiedMaintenanceController extends AbstractController
     private function offContractEquipmentExistsByBusinessCriteria(
         array $equipmentData,
         string $idClient,
+        string $formId,
+        string $entryId,
+        int $equipmentIndex,
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-        dump("=== VÉRIFICATION DOUBLON COMPLÈTE ===");
+        dump("=== VÉRIFICATION DOUBLON ÉQUIPEMENT HORS CONTRAT ===");
+        dump("FormId: $formId | EntryId: $entryId | Index: $equipmentIndex | Client: $idClient");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // Extraire toutes les données significatives
+            // STRATÉGIE 1 : Vérifier par l'ID de soumission Kizeo (le plus fiable)
+            // On cherche dans la table Form pour voir si cet équipement a déjà été traité
+            $formRepository = $entityManager->getRepository(Form::class);
+            
+            // Construire une clé unique pour cet équipement
+            $uniqueKey = sprintf('%s_%s_HC_%d', $formId, $entryId, $equipmentIndex);
+            
+            $existingForm = $formRepository->createQueryBuilder('f')
+                ->where('f.form_id = :formId')
+                ->andWhere('f.entry_id = :entryId')
+                ->andWhere('f.id_contact = :idClient')
+                ->andWhere('f.numero_equipement_interne = :equipIndex')
+                ->setParameter('formId', $formId)
+                ->setParameter('entryId', $entryId)
+                ->setParameter('idClient', $idClient)
+                ->setParameter('equipIndex', $equipmentIndex)
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            if ($existingForm) {
+                dump("⚠️ DOUBLON détecté via Form (submission déjà traitée)");
+                return true;
+            }
+            
+            // STRATÉGIE 2 : Vérifier par critères métier robustes
+            // Extraire les données significatives
             $numeroSerie = $equipmentData['n_de_serie']['value'] ?? '';
             $marque = $equipmentData['marque']['value'] ?? '';
             $modeleNacelle = $equipmentData['modele_nacelle']['value'] ?? '';
-            $raisonSociale = $equipmentData['raison_sociale']['value'] ?? '';
-            $test = $equipmentData['test']['value'] ?? '';
-            $etat = $equipmentData['etat']['value'] ?? '';
-            $derniereVisite = $equipmentData['derniere_visite']['value'] ?? '';
-            $trigrammeTech = $equipmentData['trigramme_tech']['value'] ?? '';
-            $plaqueSigaletique = $equipmentData['plaque_signaletique']['value'] ?? '';
-            $anomalies = $equipmentData['anomalies']['value'] ?? '';
-            $statutDeMaintenance = $equipmentData['statut_de_maintenance']['value'] ?? '';
-            $dateEnregistrement = $equipmentData['date_enregistrement']['value'] ?? '';
             $localisationSiteClient = $equipmentData['localisation_site_client1']['value'] ?? '';
             $nature = $equipmentData['nature']['value'] ?? '';
             $hauteurNacelle = $equipmentData['hauteur_nacelle']['value'] ?? '';
             $largeur = $equipmentData['largeur']['value'] ?? '';
+            $derniereVisite = $equipmentData['derniere_visite']['value'] ?? '';
             
-            // Construction de la requête avec TOUS les critères significatifs
+            // Construction de la requête avec critères significatifs
             $qb = $repository->createQueryBuilder('e')
                 ->where('e.id_contact = :idClient')
                 ->andWhere('e.en_maintenance = false')
                 ->setParameter('idClient', $idClient);
             
-            // Critères OBLIGATOIRES : au moins un de ces critères doit matcher
+            // 1. Critère FORT : Numéro de série valide
             $hasStrongCriteria = false;
-            
-            // 1. Numéro de série (critère le plus fort si renseigné et différent de NC)
-            if (!empty($numeroSerie) && $numeroSerie !== 'Non renseigné' && $numeroSerie !== 'NC') {
+            if (!empty($numeroSerie) && 
+                $numeroSerie !== 'Non renseigné' && 
+                $numeroSerie !== 'NC' && 
+                $numeroSerie !== 'nc') {
                 $qb->andWhere('e.numero_de_serie = :numeroSerie')
                 ->setParameter('numeroSerie', $numeroSerie);
                 $hasStrongCriteria = true;
-                dump("Critère fort : numero_serie = $numeroSerie");
+                dump("✓ Critère FORT : numero_serie = '$numeroSerie'");
             }
             
-            // 2. Si pas de numéro de série, vérifier avec localisation + nature + marque
+            // 2. Si pas de numéro de série, utiliser une combinaison de critères
             if (!$hasStrongCriteria) {
-                if (!empty($localisationSiteClient)) {
+                $criteriaCount = 0;
+                
+                // Localisation (quasi obligatoire)
+                if (!empty($localisationSiteClient) && $localisationSiteClient !== 'nc') {
                     $qb->andWhere('e.repere_site_client = :localisation')
                     ->setParameter('localisation', $localisationSiteClient);
-                    dump("Critère : localisation = $localisationSiteClient");
+                    $criteriaCount++;
+                    dump("✓ Critère : localisation = '$localisationSiteClient'");
                 }
                 
+                // Nature de l'équipement (obligatoire)
                 if (!empty($nature)) {
                     $qb->andWhere('e.libelle_equipement = :nature')
                     ->setParameter('nature', $nature);
-                    dump("Critère : nature = $nature");
+                    $criteriaCount++;
+                    dump("✓ Critère : nature = '$nature'");
                 }
                 
-                if (!empty($marque)) {
+                // Marque
+                if (!empty($marque) && $marque !== 'nc') {
                     $qb->andWhere('e.marque = :marque')
                     ->setParameter('marque', $marque);
-                    dump("Critère : marque = $marque");
+                    $criteriaCount++;
+                    dump("✓ Critère : marque = '$marque'");
                 }
                 
-                // Ajouter le modèle si disponible
-                if (!empty($modeleNacelle)) {
+                // Modèle
+                if (!empty($modeleNacelle) && $modeleNacelle !== 'nc') {
                     $qb->andWhere('e.modele_nacelle = :modele')
                     ->setParameter('modele', $modeleNacelle);
-                    dump("Critère : modele = $modeleNacelle");
+                    $criteriaCount++;
+                    dump("✓ Critère : modele = '$modeleNacelle'");
                 }
+                
+                // Hauteur
+                if (!empty($hauteurNacelle) && $hauteurNacelle !== 'nc') {
+                    $qb->andWhere('e.hauteur_nacelle = :hauteur')
+                    ->setParameter('hauteur', $hauteurNacelle);
+                    $criteriaCount++;
+                    dump("✓ Critère : hauteur = '$hauteurNacelle'");
+                }
+                
+                // Largeur
+                if (!empty($largeur) && $largeur !== 'nc') {
+                    $qb->andWhere('e.largeur = :largeur')
+                    ->setParameter('largeur', $largeur);
+                    $criteriaCount++;
+                    dump("✓ Critère : largeur = '$largeur'");
+                }
+                
+                // Dernière visite (pour éviter les doublons sur même visite)
+                if (!empty($derniereVisite)) {
+                    $qb->andWhere('e.derniere_visite = :derniereVisite')
+                    ->setParameter('derniereVisite', $derniereVisite);
+                    $criteriaCount++;
+                    dump("✓ Critère : derniere_visite = '$derniereVisite'");
+                }
+                
+                // Si on a moins de 3 critères, c'est trop peu fiable
+                if ($criteriaCount < 3) {
+                    dump("⚠️ Seulement $criteriaCount critères, vérification non fiable - on considère comme nouveau");
+                    return false;
+                }
+                
+                dump("✓ Total critères métier : $criteriaCount");
             }
             
-            // 3. Vérifier également dans l'UnitOfWork (équipements en attente de flush)
+            // Exécuter la requête en base
+            $existing = $qb->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+            if ($existing) {
+                dump("⚠️ DOUBLON trouvé en BASE (critères métier)");
+                dump("   → ID équipement existant : " . $existing->getId());
+                dump("   → Numéro existant : " . $existing->getNumeroEquipement());
+                return true;
+            }
+            
+            // STRATÉGIE 3 : Vérifier dans l'UnitOfWork (équipements en attente de flush)
             $uow = $entityManager->getUnitOfWork();
             $scheduledInserts = $uow->getScheduledEntityInsertions();
             
@@ -3559,66 +3639,64 @@ class SimplifiedMaintenanceController extends AbstractController
                         return true;
                     }
                 } else {
-                    // Vérification avec combinaison localisation + nature + marque
-                    $isMatch = true;
+                    // Vérification avec critères combinés
+                    $matchCount = 0;
                     
                     if (!empty($localisationSiteClient)) {
                         $entityLocalisation = $entity->getRepereSiteClient();
-                        if (!$entityLocalisation || $entityLocalisation !== $localisationSiteClient) {
-                            $isMatch = false;
+                        if ($entityLocalisation && $entityLocalisation === $localisationSiteClient) {
+                            $matchCount++;
                         }
                     }
                     
-                    if ($isMatch && !empty($nature)) {
+                    if (!empty($nature)) {
                         $entityNature = $entity->getLibelleEquipement();
-                        if (!$entityNature || $entityNature !== $nature) {
-                            $isMatch = false;
+                        if ($entityNature && $entityNature === $nature) {
+                            $matchCount++;
                         }
                     }
                     
-                    if ($isMatch && !empty($marque)) {
+                    if (!empty($marque) && $marque !== 'nc') {
                         $entityMarque = $entity->getMarque();
-                        if (!$entityMarque || $entityMarque !== $marque) {
-                            $isMatch = false;
+                        if ($entityMarque && $entityMarque === $marque) {
+                            $matchCount++;
                         }
                     }
                     
-                    if ($isMatch && !empty($modeleNacelle)) {
+                    if (!empty($modeleNacelle) && $modeleNacelle !== 'nc') {
                         $entityModele = $entity->getModeleNacelle();
-                        if (!$entityModele || $entityModele !== $modeleNacelle) {
-                            $isMatch = false;
+                        if ($entityModele && $entityModele === $modeleNacelle) {
+                            $matchCount++;
                         }
                     }
                     
-                    if ($isMatch) {
-                        dump("⚠️ DOUBLON trouvé dans UnitOfWork (critères combinés)");
+                    if (!empty($derniereVisite)) {
+                        $entityDerniereVisite = $entity->getDerniereVisite();
+                        if ($entityDerniereVisite && $entityDerniereVisite === $derniereVisite) {
+                            $matchCount++;
+                        }
+                    }
+                    
+                    // Si au moins 3 critères matchent, c'est probablement le même équipement
+                    if ($matchCount >= 3) {
+                        dump("⚠️ DOUBLON trouvé dans UnitOfWork ($matchCount critères matchés)");
                         return true;
                     }
                 }
             }
             
-            // Exécuter la requête en base
-            $existing = $qb->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
-            
-            $result = $existing !== null;
-            
-            if ($result) {
-                dump("⚠️ DOUBLON trouvé en BASE");
-                dump("ID équipement existant : " . $existing->getId());
-            } else {
-                dump("✅ Pas de doublon détecté");
-            }
-            
-            return $result;
+            dump("✅ Pas de doublon détecté - équipement nouveau");
+            return false;
             
         } catch (\Exception $e) {
             dump("❌ Erreur vérification : " . $e->getMessage());
             $this->logger->error("Erreur vérification doublon équipement", [
                 'error' => $e->getMessage(),
+                'form_id' => $formId,
+                'entry_id' => $entryId,
                 'id_client' => $idClient
             ]);
+            // En cas d'erreur, on considère comme nouveau pour ne pas bloquer
             return false;
         }
     }
