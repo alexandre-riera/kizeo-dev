@@ -405,7 +405,7 @@ class EquipementPdfController extends AbstractController
                         $this->customLog("🔍 Tentative scan dynamique pour {$numeroEquipement}");
                         
                         // Utiliser la nouvelle fonction de scan dynamique
-                        $scanResult = $this->getPhotosForEquipmentOptimized($equipment);
+                        $scanResult = $this->getPhotosForEquipmentOptimized($equipment, $agence);
                         
                         if (!empty($scanResult['photos'])) {
                             // Adapter le format pour compatibilité avec le template
@@ -721,12 +721,15 @@ class EquipementPdfController extends AbstractController
         }
     }
 
-    private function getPhotosForEquipmentOptimized($equipment): array
+    private function getPhotosForEquipmentOptimized($equipment, string $agence): array // ← Ajoute le paramètre $agence
     {
         $numeroEquipement = $equipment->getNumeroEquipement();
-        $agence = $equipment->getCodeAgence() ?? 'S40';
+        // ❌ NE PLUS UTILISER : $agence = $equipment->getCodeAgence() ?? 'S40';
+        // ✅ Utiliser l'agence passée en paramètre
         
-        // 🔧 CORRECTION : Récupérer l'ID du contact (pas l'objet)
+        $this->customLog("🏢 Agence utilisée: {$agence}");
+        
+        // Récupérer l'ID du contact (pas l'objet)
         $contactObject = $equipment->getIdContact();
         
         if (!$contactObject) {
@@ -736,7 +739,6 @@ class EquipementPdfController extends AbstractController
         
         // Si getIdContact() retourne un objet Contact, récupérer son ID
         if (is_object($contactObject)) {
-            // Tester différentes méthodes possibles pour récupérer l'ID
             if (method_exists($contactObject, 'getIdContact')) {
                 $idContact = $contactObject->getIdContact();
             } elseif (method_exists($contactObject, 'getId')) {
@@ -746,7 +748,6 @@ class EquipementPdfController extends AbstractController
                 return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_id_method', 'count' => 0];
             }
         } else {
-            // Si c'est déjà un ID (string/int)
             $idContact = $contactObject;
         }
         
@@ -755,7 +756,7 @@ class EquipementPdfController extends AbstractController
         // Déterminer si l'équipement est au contrat ou hors contrat
         $isEnMaintenance = method_exists($equipment, 'isEnMaintenance') ? $equipment->isEnMaintenance() : true;
         
-        // Construire le chemin SPÉCIFIQUE pour ce client
+        // ✅ Utiliser l'agence passée en paramètre
         $clientPath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/{$idContact}/2025/CE1/";
         
         if (!is_dir($clientPath)) {
@@ -765,9 +766,6 @@ class EquipementPdfController extends AbstractController
         
         $this->customLog("🔍 Recherche photo pour équipement {$numeroEquipement} (id_contact: {$idContact}) dans {$clientPath}");
         
-        // Chercher selon le type d'équipement avec fallback
-        // Pour équipements AU CONTRAT : d'abord _generale.jpg, puis _compte_rendu.jpg
-        // Pour équipements HORS CONTRAT : d'abord _compte_rendu.jpg, puis _generale.jpg
         $photoTypes = $isEnMaintenance 
             ? ['_generale.jpg', '_compte_rendu.jpg'] 
             : ['_compte_rendu.jpg', '_generale.jpg'];
