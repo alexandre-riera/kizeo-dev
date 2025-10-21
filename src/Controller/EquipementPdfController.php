@@ -726,17 +726,36 @@ class EquipementPdfController extends AbstractController
         $numeroEquipement = $equipment->getNumeroEquipement();
         $agence = $equipment->getCodeAgence() ?? 'S40';
         
-        // 🔧 CORRECTION 1 : Récupérer l'id_contact de l'équipement
-        $idContact = $equipment->getIdContact();
-        if (!$idContact) {
-            $this->customLog("❌ Pas d'id_contact pour l'équipement {$numeroEquipement}");
+        // 🔧 CORRECTION : Récupérer l'ID du contact (pas l'objet)
+        $contactObject = $equipment->getIdContact();
+        
+        if (!$contactObject) {
+            $this->customLog("❌ Pas d'objet contact pour l'équipement {$numeroEquipement}");
             return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_id_contact', 'count' => 0];
         }
         
-        // 🔧 CORRECTION 2 : Déterminer si l'équipement est au contrat ou hors contrat
+        // Si getIdContact() retourne un objet Contact, récupérer son ID
+        if (is_object($contactObject)) {
+            // Tester différentes méthodes possibles pour récupérer l'ID
+            if (method_exists($contactObject, 'getIdContact')) {
+                $idContact = $contactObject->getIdContact();
+            } elseif (method_exists($contactObject, 'getId')) {
+                $idContact = $contactObject->getId();
+            } else {
+                $this->customLog("❌ Impossible de récupérer l'ID depuis l'objet Contact");
+                return ['photos' => [], 'photos_indexed' => [], 'source' => 'no_id_method', 'count' => 0];
+            }
+        } else {
+            // Si c'est déjà un ID (string/int)
+            $idContact = $contactObject;
+        }
+        
+        $this->customLog("📋 ID Contact récupéré: {$idContact}");
+        
+        // Déterminer si l'équipement est au contrat ou hors contrat
         $isEnMaintenance = method_exists($equipment, 'isEnMaintenance') ? $equipment->isEnMaintenance() : true;
         
-        // 🔧 CORRECTION 3 : Construire le chemin SPÉCIFIQUE pour ce client
+        // Construire le chemin SPÉCIFIQUE pour ce client
         $clientPath = $_SERVER['DOCUMENT_ROOT'] . "/public/img/{$agence}/{$idContact}/2025/CE1/";
         
         if (!is_dir($clientPath)) {
@@ -746,7 +765,7 @@ class EquipementPdfController extends AbstractController
         
         $this->customLog("🔍 Recherche photo pour équipement {$numeroEquipement} (id_contact: {$idContact}) dans {$clientPath}");
         
-        // 🔧 CORRECTION 4 : Chercher selon le type d'équipement avec fallback
+        // Chercher selon le type d'équipement avec fallback
         // Pour équipements AU CONTRAT : d'abord _generale.jpg, puis _compte_rendu.jpg
         // Pour équipements HORS CONTRAT : d'abord _compte_rendu.jpg, puis _generale.jpg
         $photoTypes = $isEnMaintenance 
@@ -790,6 +809,7 @@ class EquipementPdfController extends AbstractController
             'searched_path' => $clientPath
         ];
     }
+
     // 🔧 SOLUTION 1: Convertir tous les objets stdClass en tableaux
     private function convertStdClassToArray($data)
     {
