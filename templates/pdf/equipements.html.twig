@@ -540,7 +540,7 @@
         {% set equipmentCount = 0 %}
         
         {% for equipmentData in equipmentsWithPictures %}
-            {% set equipment = equipmentData.equipment %}
+            {% set equipmentObj = equipmentData.equipment %}
             {% set pictures = equipmentData.pictures %}
             {% set equipmentCount = equipmentCount + 1 %}
             
@@ -566,19 +566,20 @@
                             {% endif %}
                         </td>
                     {% endif %}
+                    
                     {# Table imbriquée des informations #}
                     <td class="equipment-info-cell">
                         <table class="equipment-info-table">
                             {# En-tête avec titre et logo d'état #}
                             <tr class="equipment-header-row">
                                 <td colspan="2" class="equipment-title">
-                                    Équipement {{ equipment.numeroEquipement }} - {{ equipment.libelleEquipement ?? 'Type non renseigné' }}
-                                    <div class="status-logo {% if equipment.etat %}
-                                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                    Équipement {{ equipmentObj.numeroEquipement }} - {{ equipmentObj.libelleEquipement ?? 'Type non renseigné' }}
+                                    <div class="status-logo {% if equipmentObj.etat %}
+                                        {% if equipmentObj.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipmentObj.etat == "A" %}
                                             status-green
-                                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                        {% elseif equipmentObj.etat == "Travaux à prévoir" or equipmentObj.etat == "B" %}
                                             status-orange
-                                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                        {% elseif equipmentObj.etat == "Travaux curatifs" or equipmentObj.etat == "Equipement à l'arrêt le jour de la visite" or equipmentObj.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipmentObj.etat == "C" or equipmentObj.etat == "E" or equipmentObj.etat == "F" %}
                                             status-red
                                         {% else %}
                                             status-grey
@@ -590,44 +591,44 @@
                             {# Numéro #}
                             <tr class="info-row">
                                 <td class="info-key">Numéro</td>
-                                <td class="info-value">{{ equipment.numeroEquipement }}</td>
+                                <td class="info-value">{{ equipmentObj.numeroEquipement }}</td>
                             </tr>
                             
                             {# Type #}
                             <tr class="info-row">
                                 <td class="info-key">Type</td>
-                                <td class="info-value">{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentObj.libelleEquipement ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             {# Marque #}
                             <tr class="info-row">
                                 <td class="info-key">Marque</td>
-                                <td class="info-value">{{ equipment.marque ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentObj.marque ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             {# Modèle #}
                             <tr class="info-row">
                                 <td class="info-key">Modèle</td>
-                                <td class="info-value">{{ equipment.modele ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentObj.modele ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             {# État #}
                             <tr class="info-row">
                                 <td class="info-key">État</td>
                                 <td class="info-value">
-                                    {% if equipment.etat %}
-                                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                    {% if equipmentObj.etat %}
+                                        {% if equipmentObj.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipmentObj.etat == "A" %}
                                             Bon état
-                                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                        {% elseif equipmentObj.etat == "Travaux à prévoir" or equipmentObj.etat == "B" %}
                                             Travaux à prévoir
-                                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                        {% elseif equipmentObj.etat == "Travaux curatifs" or equipmentObj.etat == "Equipement à l'arrêt le jour de la visite" or equipmentObj.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipmentObj.etat == "C" or equipmentObj.etat == "E" or equipmentObj.etat == "F" %}
                                             Travaux urgent ou à l'arrêt
-                                        {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                                        {% elseif equipmentObj.etat == "Equipement non présent sur site" or equipmentObj.etat == "G" %}
                                             Équipement non présent
-                                        {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                                        {% elseif equipmentObj.etat == "Equipement inaccessible le jour de la visite" or equipmentObj.etat == "D" %}
                                             Équipement inaccessible
                                         {% else %}
-                                            {{ equipment.etat }}
+                                            {{ equipmentObj.etat }}
                                         {% endif %}
                                     {% endif %}
                                 </td>
@@ -636,20 +637,20 @@
                             {# Mise en service #}
                             <tr class="info-row">
                                 <td class="info-key">Mise en service</td>
-                                <td class="info-value">{{ equipment.miseEnService }}</td>
+                                <td class="info-value">{{ equipmentObj.miseEnService }}</td>
                             </tr>
                             
                             {# Repère site client #}
                             <tr class="info-row">
                                 <td class="info-key">Repère site client</td>
-                                <td class="info-value">{{ equipment.repereSiteClient }}</td>
+                                <td class="info-value">{{ equipmentObj.repereSiteClient }}</td>
                             </tr>
                             
                             {# Anomalies (seulement si présentes) #}
-                            {% if equipment.anomalies is defined and equipment.anomalies|trim is not empty %}
+                            {% if equipmentObj.anomalies is defined and equipmentObj.anomalies|trim is not empty %}
                             <tr class="info-row anomalies-row">
                                 <td class="info-key">Anomalies</td>
-                                <td class="info-value">{{ equipment.anomalies }}</td>
+                                <td class="info-value">{{ equipmentObj.anomalies }}</td>
                             </tr>
                             {% endif %}
                         </table>
@@ -672,7 +673,7 @@
         {% set suppCount = 0 %}
         
         {% for equipmentData in equipementsSupplementaires %}
-            {% set equipment = equipmentData.equipment %}
+            {% set equipmentSuppObj = equipmentData.equipment %}
             {% set pictures = equipmentData.pictures %}
             {% set suppCount = suppCount + 1 %}
             
@@ -700,13 +701,13 @@
                         <table class="equipment-info-table">
                             <tr class="equipment-header-row">
                                 <td colspan="2" class="equipment-title">
-                                    Équipement {{ equipment.numeroEquipement }} - {{ equipment.libelleEquipement ?? 'Type non renseigné' }}
-                                    <div class="status-logo {% if equipment.etat %}
-                                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                    Équipement {{ equipmentSuppObj.numeroEquipement }} - {{ equipmentSuppObj.libelleEquipement ?? 'Type non renseigné' }}
+                                    <div class="status-logo {% if equipmentSuppObj.etat %}
+                                        {% if equipmentSuppObj.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipmentSuppObj.etat == "A" %}
                                             status-green
-                                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                        {% elseif equipmentSuppObj.etat == "Travaux à prévoir" or equipmentSuppObj.etat == "B" %}
                                             status-orange
-                                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                        {% elseif equipmentSuppObj.etat == "Travaux curatifs" or equipmentSuppObj.etat == "Equipement à l'arrêt le jour de la visite" or equipmentSuppObj.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipmentSuppObj.etat == "C" or equipmentSuppObj.etat == "E" or equipmentSuppObj.etat == "F" %}
                                             status-red
                                         {% else %}
                                             status-grey
@@ -717,40 +718,40 @@
                             
                             <tr class="info-row">
                                 <td class="info-key">Numéro</td>
-                                <td class="info-value">{{ equipment.numeroEquipement }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.numeroEquipement }}</td>
                             </tr>
                             
                             <tr class="info-row">
                                 <td class="info-key">Type</td>
-                                <td class="info-value">{{ equipment.libelleEquipement ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.libelleEquipement ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             <tr class="info-row">
                                 <td class="info-key">Marque</td>
-                                <td class="info-value">{{ equipment.marque ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.marque ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             <tr class="info-row">
                                 <td class="info-key">Modèle</td>
-                                <td class="info-value">{{ equipment.modele ?? 'Non renseigné' }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.modele ?? 'Non renseigné' }}</td>
                             </tr>
                             
                             <tr class="info-row">
                                 <td class="info-key">État</td>
                                 <td class="info-value">
-                                    {% if equipment.etat %}
-                                        {% if equipment.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipment.etat == "A" %}
+                                    {% if equipmentSuppObj.etat %}
+                                        {% if equipmentSuppObj.etat == "Rien à signaler le jour de la visite. Fonctionnement ok" or equipmentSuppObj.etat == "A" %}
                                             Bon état
-                                        {% elseif equipment.etat == "Travaux à prévoir" or equipment.etat == "B" %}
+                                        {% elseif equipmentSuppObj.etat == "Travaux à prévoir" or equipmentSuppObj.etat == "B" %}
                                             Travaux à prévoir
-                                        {% elseif equipment.etat == "Travaux curatifs" or equipment.etat == "Equipement à l'arrêt le jour de la visite" or equipment.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipment.etat == "C" or equipment.etat == "E" or equipment.etat == "F" %}
+                                        {% elseif equipmentSuppObj.etat == "Travaux curatifs" or equipmentSuppObj.etat == "Equipement à l'arrêt le jour de la visite" or equipmentSuppObj.etat == "Equipement mis à l'arrêt lors de l'intervention" or equipmentSuppObj.etat == "C" or equipmentSuppObj.etat == "E" or equipmentSuppObj.etat == "F" %}
                                             Travaux urgent ou à l'arrêt
-                                        {% elseif equipment.etat == "Equipement non présent sur site" or equipment.etat == "G" %}
+                                        {% elseif equipmentSuppObj.etat == "Equipement non présent sur site" or equipmentSuppObj.etat == "G" %}
                                             Équipement non présent
-                                        {% elseif equipment.etat == "Equipement inaccessible le jour de la visite" or equipment.etat == "D" %}
+                                        {% elseif equipmentSuppObj.etat == "Equipement inaccessible le jour de la visite" or equipmentSuppObj.etat == "D" %}
                                             Équipement inaccessible
                                         {% else %}
-                                            {{ equipment.etat }}
+                                            {{ equipmentSuppObj.etat }}
                                         {% endif %}
                                     {% endif %}
                                 </td>
@@ -758,18 +759,18 @@
                             
                             <tr class="info-row">
                                 <td class="info-key">Mise en service</td>
-                                <td class="info-value">{{ equipment.dateEnregistrement|date('Y') }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.dateEnregistrement|date('Y') }}</td>
                             </tr>
                             
                             <tr class="info-row">
                                 <td class="info-key">Repère site client</td>
-                                <td class="info-value">{{ equipment.repereSiteClient }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.repereSiteClient }}</td>
                             </tr>
                             
-                            {% if equipment.anomalies is defined and equipment.anomalies|trim is not empty %}
+                            {% if equipmentSuppObj.anomalies is defined and equipmentSuppObj.anomalies|trim is not empty %}
                             <tr class="info-row anomalies-row">
                                 <td class="info-key">Anomalies</td>
-                                <td class="info-value">{{ equipment.anomalies }}</td>
+                                <td class="info-value">{{ equipmentSuppObj.anomalies }}</td>
                             </tr>
                             {% endif %}
                         </table>
