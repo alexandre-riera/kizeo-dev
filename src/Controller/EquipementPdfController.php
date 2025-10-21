@@ -641,7 +641,11 @@ class EquipementPdfController extends AbstractController
             $villep = trim($clientSelectedInformations->getVillep());
             $this->customLog("DEBUG - Client Address: {$nomClient}, {$adressep1} {$adressep2} {$cpostalp} {$villep}");
 
-            $nombreEquipementsAuContrat = $statistiques['total'] - $statistiquesSupplementaires['total'];
+            if ($statistiques['total'] && $statistiquesSupplementaires['total']) {
+                $nombreEquipementsAuContrat = $statistiques['total'] - $statistiquesSupplementaires['total'];
+            }else {
+                $nombreEquipementsAuContrat = $statistiques['total'] ?? 0;
+            }
 
             $templateVars = [
                 'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures),
