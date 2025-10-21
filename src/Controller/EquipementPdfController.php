@@ -641,11 +641,11 @@ class EquipementPdfController extends AbstractController
             $villep = trim($clientSelectedInformations->getVillep());
             $this->customLog("DEBUG - Client Address: {$nomClient}, {$adressep1} {$adressep2} {$cpostalp} {$villep}");
 
-            if ($statistiques['total'] && $statistiquesSupplementaires['total']) {
-                $nombreEquipementsAuContrat = $statistiques['total'] - $statistiquesSupplementaires['total'];
-            }else {
-                $nombreEquipementsAuContrat = $statistiques['total'] ?? 0;
-            }
+            // if ($statistiques['total'] && $statistiquesSupplementaires['total']) {
+            //     $nombreEquipementsAuContrat = $statistiques['total'] - $statistiquesSupplementaires['total'];
+            // }else {
+            //     $nombreEquipementsAuContrat = $statistiques['total'] ?? 0;
+            // }
 
             $templateVars = [
                 'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures),
@@ -659,7 +659,7 @@ class EquipementPdfController extends AbstractController
                 'clientVisiteFilter' => $clientVisiteFilter ?: '',
                 'statistiques' => $statistiques,
                 'statistiquesSupplementaires' => $statistiquesSupplementaires,
-                'nombreEquipementsAuContrat' => $nombreEquipementsAuContrat,
+                // 'nombreEquipementsAuContrat' => $nombreEquipementsAuContrat,
                 'photoSourceStats' => $photoSourceStats,
                 'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
                 'dateDeDerniererVisite' => $dateDeDerniererVisite,
