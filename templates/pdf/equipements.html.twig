@@ -554,7 +554,7 @@
             {# Table principale avec photo à gauche et infos à droite #}
             <table class="equipment-main-table">
                 <tr>
-                    {# Photo SI withPhotos = 'oui',  on les charge sur le PDF Client. Si withPhotos = 'non', on ne charge pas les photos #}
+                    {# Photo SI withPhotos = 'oui' #}
                     {% if withPhotos == 'oui' %}
                         <td class="equipment-photo-cell">
                             {% if pictures|length > 0 %}
@@ -657,12 +657,13 @@
                 </tr>
             </table>
             
-            {# Fermer la page SEULEMENT après 2 équipements OU si dernier #}
+            {# FERMER les divs tous les 2 équipements ou au dernier équipement #}
             {% if equipmentCount % 2 == 0 or loop.last %}
-                        </div>
-                    </div>
-                </div>
+                        </div> {# Ferme equipment-container #}
+                    </div> {# Ferme page-content #}
+                </div> {# Ferme equipment-page #}
             {% endif %}
+            
         {% endfor %}
     {% endif %}
     
