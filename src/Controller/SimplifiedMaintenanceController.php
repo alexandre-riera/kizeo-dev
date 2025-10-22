@@ -5993,15 +5993,19 @@ private function extractLibelleFromPath(string $equipementPath): string
     }
 
 
+    // ============================================================================
+    // SOLUTION COMPLÈTE POUR ÉVITER LES DOUBLONS D'ÉQUIPEMENTS HORS CONTRAT
+    // À intégrer dans SimplifiedMaintenanceController.php
+    // ============================================================================
+
     /**
-     * ✅ NOUVELLE MÉTHODE : Vérification par signature métier COMPLÈTE
+     * ✅ NOUVELLE MÉTHODE OPTIMISÉE : Vérification par clé métier minimale mais suffisante
      * 
-     * Vérifie si un équipement hors contrat existe déjà en comparant TOUTES les colonnes métier
-     * (sauf id et numero_equipement qui sont générés automatiquement)
+     * Utilise une approche hybride intelligente :
+     * - Critères OBLIGATOIRES : id_contact, visite, libelle_equipement, repere_site_client
+     * - Critères OPTIONNELS (seulement si renseignés) : mode_fonctionnement, numero_de_serie, marque
      * 
-     * Vérifie à la fois :
-     * - En base de données
-     * - Dans l'UnitOfWork (équipements en attente de flush)
+     * Vérifie à la fois en base de données ET dans l'UnitOfWork
      */
     private function offContractEquipmentExistsByFullSignature(
         array $equipmentData,
@@ -6010,132 +6014,104 @@ private function extractLibelleFromPath(string $equipementPath): string
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-        dump("=== VÉRIFICATION SIGNATURE COMPLÈTE ===");
+        dump("=== VÉRIFICATION SIGNATURE MÉTIER ===");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // 1. CONSTRUIRE LA REQUÊTE AVEC TOUTES LES COLONNES MÉTIER
+            // ========================================
+            // 1. CRITÈRES OBLIGATOIRES (CLÉ MINIMALE)
+            // ========================================
+            
             $qb = $repository->createQueryBuilder('e')
                 ->where('e.id_contact = :idContact')
                 ->andWhere('e.visite = :visite')
-                ->andWhere('e.en_maintenance = false')
+                ->andWhere('e.en_maintenance = 0')  // Utiliser 0 au lieu de false pour compatibilité
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
-            // 2. AJOUTER LES CRITÈRES POUR CHAQUE COLONNE
+            dump("Critères de base : id_contact=$idContact, visite=$visite");
             
-            // libelle_equipement (nature)
-            $libelleEquipement = $equipmentData['nature']['value'] ?? '';
+            // libelle_equipement (nature) - OBLIGATOIRE
+            $libelleEquipement = trim($equipmentData['nature']['value'] ?? '');
             if (!empty($libelleEquipement)) {
                 $qb->andWhere('e.libelle_equipement = :libelle')
                 ->setParameter('libelle', $libelleEquipement);
+                dump("+ libelle_equipement = '$libelleEquipement'");
             } else {
-                $qb->andWhere('(e.libelle_equipement IS NULL OR e.libelle_equipement = \'\')');
+                // Si pas de libellé, impossible de déterminer l'unicité
+                dump("⚠️ Pas de libellé équipement - création autorisée");
+                return false;
             }
             
-            // mode_fonctionnement
-            $modeFonctionnement = $equipmentData['mode_fonctionnement_']['value'] ?? '';
-            if (!empty($modeFonctionnement)) {
-                $qb->andWhere('e.mode_fonctionnement = :mode')
-                ->setParameter('mode', $modeFonctionnement);
-            } else {
-                $qb->andWhere('(e.mode_fonctionnement IS NULL OR e.mode_fonctionnement = \'\')');
-            }
-            
-            // repere_site_client (localisation_site_client1)
-            $repereSiteClient = $equipmentData['localisation_site_client1']['value'] ?? '';
+            // repere_site_client (localisation_site_client1) - OBLIGATOIRE
+            $repereSiteClient = trim($equipmentData['localisation_site_client1']['value'] ?? '');
             if (!empty($repereSiteClient)) {
                 $qb->andWhere('e.repere_site_client = :repere')
                 ->setParameter('repere', $repereSiteClient);
+                dump("+ repere_site_client = '$repereSiteClient'");
             } else {
-                $qb->andWhere('(e.repere_site_client IS NULL OR e.repere_site_client = \'\')');
+                // Sans repère, on ne peut pas garantir l'unicité (peut avoir plusieurs équipements même type)
+                dump("⚠️ Pas de repère site - création autorisée");
+                return false;
             }
             
-            // mise_en_service (annee)
-            $miseEnService = $equipmentData['annee']['value'] ?? '';
-            if (!empty($miseEnService)) {
-                $qb->andWhere('e.mise_en_service = :miseEnService')
-                ->setParameter('miseEnService', $miseEnService);
-            } else {
-                $qb->andWhere('(e.mise_en_service IS NULL OR e.mise_en_service = \'\')');
+            // ========================================
+            // 2. CRITÈRES OPTIONNELS (SI RENSEIGNÉS)
+            // ========================================
+            
+            // mode_fonctionnement - Si renseigné, on l'ajoute
+            $modeFonctionnement = trim($equipmentData['mode_fonctionnement_']['value'] ?? '');
+            if (!empty($modeFonctionnement)) {
+                $qb->andWhere('e.mode_fonctionnement = :mode')
+                ->setParameter('mode', $modeFonctionnement);
+                dump("+ mode_fonctionnement = '$modeFonctionnement'");
             }
             
-            // numero_de_serie (n_de_serie)
-            $numeroDeSerie = $equipmentData['n_de_serie']['value'] ?? '';
-            if (!empty($numeroDeSerie)) {
+            // numero_de_serie - Si renseigné ET valide, on l'ajoute (critère fort)
+            $numeroDeSerie = trim($equipmentData['n_de_serie']['value'] ?? '');
+            if (!empty($numeroDeSerie) && $numeroDeSerie !== 'Non renseigné' && $numeroDeSerie !== 'NC') {
                 $qb->andWhere('e.numero_de_serie = :numeroSerie')
                 ->setParameter('numeroSerie', $numeroDeSerie);
-            } else {
-                $qb->andWhere('(e.numero_de_serie IS NULL OR e.numero_de_serie = \'\')');
+                dump("+ numero_de_serie = '$numeroDeSerie' (critère fort)");
             }
             
-            // marque
-            $marque = $equipmentData['marque']['value'] ?? '';
-            if (!empty($marque)) {
+            // marque - Si renseignée, on l'ajoute
+            $marque = trim($equipmentData['marque']['value'] ?? '');
+            if (!empty($marque) && $marque !== 'NC') {
                 $qb->andWhere('e.marque = :marque')
                 ->setParameter('marque', $marque);
-            } else {
-                $qb->andWhere('(e.marque IS NULL OR e.marque = \'\')');
+                dump("+ marque = '$marque'");
             }
             
-            // hauteur
-            $hauteur = $equipmentData['hauteur']['value'] ?? '';
-            if (!empty($hauteur)) {
-                $qb->andWhere('e.hauteur = :hauteur')
-                ->setParameter('hauteur', $hauteur);
-            } else {
-                $qb->andWhere('(e.hauteur IS NULL OR e.hauteur = \'\')');
+            // mise_en_service - Si renseignée, on l'ajoute
+            $miseEnService = trim($equipmentData['annee']['value'] ?? '');
+            if (!empty($miseEnService) && $miseEnService !== 'NC') {
+                $qb->andWhere('e.mise_en_service = :miseEnService')
+                ->setParameter('miseEnService', $miseEnService);
+                dump("+ mise_en_service = '$miseEnService'");
             }
             
-            // largeur
-            $largeur = $equipmentData['largeur']['value'] ?? '';
-            if (!empty($largeur)) {
-                $qb->andWhere('e.largeur = :largeur')
-                ->setParameter('largeur', $largeur);
-            } else {
-                $qb->andWhere('(e.largeur IS NULL OR e.largeur = \'\')');
-            }
+            // ========================================
+            // 3. EXÉCUTION DE LA REQUÊTE
+            // ========================================
             
-            // longueur
-            $longueur = $equipmentData['longueur']['value'] ?? '';
-            if (!empty($longueur)) {
-                $qb->andWhere('e.longueur = :longueur')
-                ->setParameter('longueur', $longueur);
-            } else {
-                $qb->andWhere('(e.longueur IS NULL OR e.longueur = \'\')');
-            }
-            
-            // plaque_signaletique
-            $plaqueSignaletique = $equipmentData['plaque_signaletique']['value'] ?? '';
-            if (!empty($plaqueSignaletique)) {
-                $qb->andWhere('e.plaque_signaletique = :plaque')
-                ->setParameter('plaque', $plaqueSignaletique);
-            } else {
-                $qb->andWhere('(e.plaque_signaletique IS NULL OR e.plaque_signaletique = \'\')');
-            }
-            
-            // etat
-            $etat = $equipmentData['etat']['value'] ?? '';
-            if (!empty($etat)) {
-                $qb->andWhere('e.etat = :etat')
-                ->setParameter('etat', $etat);
-            } else {
-                $qb->andWhere('(e.etat IS NULL OR e.etat = \'\')');
-            }
-            
-            // Exécuter la requête
             $qb->setMaxResults(1);
             $existingInDb = $qb->getQuery()->getOneOrNullResult();
             
             if ($existingInDb !== null) {
                 dump("✅ TROUVÉ EN BASE: " . $existingInDb->getNumeroEquipement());
+                dump("→ SKIP (doublon détecté)");
                 return true;
             }
             
-            dump("❌ Pas trouvé en base, vérification UnitOfWork...");
+            dump("❌ Pas trouvé en base");
             
-            // 3. VÉRIFIER AUSSI DANS L'UNITOFWORK (équipements non encore flushés)
+            // ========================================
+            // 4. VÉRIFICATION DANS L'UNITOFWORK
+            // ========================================
+            
+            dump("Vérification UnitOfWork...");
             $uow = $entityManager->getUnitOfWork();
             $scheduledInserts = $uow->getScheduledEntityInsertions();
             
@@ -6143,24 +6119,42 @@ private function extractLibelleFromPath(string $equipementPath): string
             
             foreach ($scheduledInserts as $entity) {
                 if (get_class($entity) === $entityClass) {
-                    // Comparer TOUTES les colonnes
-                    if ($entity->getIdContact() === $idContact &&
-                        $entity->getVisite() === $visite &&
-                        !$entity->isEnMaintenance() &&
-                        $this->compareEquipmentSignature($entity, $equipmentData)) {
-                        dump("✅ TROUVÉ DANS UNITOFWORK: " . $entity->getNumeroEquipement());
-                        return true;
+                    // Vérifier les critères obligatoires
+                    $sameIdContact = $entity->getIdContact() === $idContact;
+                    $sameVisite = $entity->getVisite() === $visite;
+                    $sameEnMaintenance = $entity->isEnMaintenance() === false;
+                    $sameLibelle = $entity->getLibelleEquipement() === $libelleEquipement;
+                    $sameRepere = $entity->getRepereSiteClient() === $repereSiteClient;
+                    
+                    if ($sameIdContact && $sameVisite && $sameEnMaintenance && $sameLibelle && $sameRepere) {
+                        // Vérifier les critères optionnels s'ils sont renseignés
+                        $match = true;
+                        
+                        if (!empty($modeFonctionnement) && $entity->getModeFonctionnement() !== $modeFonctionnement) {
+                            $match = false;
+                        }
+                        
+                        if (!empty($numeroDeSerie) && $numeroDeSerie !== 'NC' && $entity->getNumeroDeSerie() !== $numeroDeSerie) {
+                            $match = false;
+                        }
+                        
+                        if ($match) {
+                            dump("✅ TROUVÉ DANS UNITOFWORK: " . $entity->getNumeroEquipement());
+                            dump("→ SKIP (doublon en attente de flush)");
+                            return true;
+                        }
                     }
                 }
             }
             
-            dump("✅ AUCUN DOUBLON - Équipement unique");
+            dump("✅ AUCUN DOUBLON DÉTECTÉ");
+            dump("→ CRÉATION AUTORISÉE");
             return false;
             
         } catch (\Exception $e) {
             dump("❌ ERREUR VÉRIFICATION: " . $e->getMessage());
             dump("Trace: " . $e->getTraceAsString());
-            // En cas d'erreur, on laisse passer pour ne pas bloquer
+            // En cas d'erreur, on autorise la création pour ne pas bloquer
             return false;
         }
     }
