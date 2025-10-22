@@ -491,77 +491,6 @@ class SimplifiedMaintenanceController extends AbstractController
         
         return $prochainNumero;
     }
-    
-    /**
-     * Générer un numéro d'équipement unique - VERSION SÉCURISÉE
-     */
-    private function generateUniqueEquipmentNumber(string $typeCode, string $idClient, string $entityClass, EntityManagerInterface $entityManager): string
-    {
-      // dump("=== GÉNÉRATION NUMÉRO UNIQUE ===");
-      // dump("Type code: {$typeCode}");
-      // dump("ID Client: {$idClient}");
-      // dump("Entity class: {$entityClass}");
-        
-        $maxTries = 10;
-        $attempt = 0;
-        
-        while ($attempt < $maxTries) {
-            $attempt++;
-          // dump("Tentative #{$attempt}");
-            
-            // ✅ APPEL AVEC TOUS LES PARAMÈTRES
-            $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
-            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-            
-          // dump("Numéro formaté généré: " . $numeroFormate);
-            
-            // Vérifier l'unicité
-            $repository = $entityManager->getRepository($entityClass);
-            $existant = $repository->findOneBy([
-                'id_contact' => $idClient,
-                'numero_equipement' => $numeroFormate
-            ]);
-            
-            if (!$existant) {
-              // dump("Numéro unique confirmé: " . $numeroFormate);
-                return $numeroFormate;
-            } else {
-              // dump("Collision détectée pour: " . $numeroFormate . ", nouvelle tentative...");
-            }
-        }
-        
-        // Fallback en cas d'échec
-        $timestamp = substr(time(), -4);
-        $numeroFallback = $typeCode . $timestamp;
-      // dump("FALLBACK utilisé: " . $numeroFallback);
-        
-        return $numeroFallback;
-    }
-
-    /**
-     * Vérifier si un numéro d'équipement existe déjà
-     */
-    private function equipmentNumberExists(string $numeroEquipement, string $idClient, string $entityClass, EntityManagerInterface $entityManager): bool
-    {
-        try {
-            $repository = $entityManager->getRepository($entityClass);
-            
-            $existing = $repository->createQueryBuilder('e')
-                ->where('e.numero_equipement = :numero')
-                ->andWhere('e.id_contact = :idClient')
-                ->setParameter('numero', $numeroEquipement)
-                ->setParameter('idClient', $idClient)
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
-            
-            return $existing !== null;
-            
-        } catch (\Exception $e) {
-            // En cas d'erreur, considérer que le numéro existe pour éviter les doublons
-            return true;
-        }
-    }
 
     private function getDefaultVisitType(array $fields): string
     {
@@ -3274,8 +3203,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
                                 $equipement, $equipmentHorsContrat, $fields, 
-                                $submission['form_id'], $submission['entry_id'], 
-                                $equipmentIndex,  // ← AJOUTER L'INDEX
+                                $submission['form_id'], $submission['entry_id'],
                                 $entityClass, $entityManager, $idSociete, $dateDerniereVisite
                             );
                             
@@ -3335,481 +3263,128 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Méthode modifiée : setOffContractDataWithFormPhotosAndDeduplication
+     * ✅ MÉTHODE MODIFIÉE : setOffContractDataWithFormPhotosAndDeduplication
      * 
-     * MODIFICATION : Passer l'index de l'équipement pour une identification unique
+     * CHANGEMENTS CRITIQUES :
+     * 1. Vérification de l'existence AVANT génération du numero_equipement
+     * 2. Utilisation de la signature complète (toutes colonnes métier)
+     * 3. Skip si l'équipement existe déjà
      */
     private function setOffContractDataWithFormPhotosAndDeduplication(
         $equipement, 
         array $equipmentHorsContrat, 
         array $fields, 
         string $formId, 
-        string $entryId,
-        int $equipmentIndex,
+        string $entryId, 
         string $entityClass,
         EntityManagerInterface $entityManager,
         $idSociete,
         $dateDerniereVisite
     ): bool {
-        dump("=== TRAITEMENT ÉQUIPEMENT HORS CONTRAT #$equipmentIndex ===");
+        dump("=== DÉBUT TRAITEMENT ÉQUIPEMENT HORS CONTRAT ===");
         
         try {
+            // 1. EXTRAIRE LA VISITE
             $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
-            dump("✅ Visite extraite: " . ($visite ?? 'NULL'));
-        } catch (\Exception $e) {
-            dump("❌ ERREUR getVisiteFromFields: " . $e->getMessage());
-            return false;
-        }
-        
-        $idClient = $fields['id_client_']['value'] ?? '';
-        dump("ID Client: '$idClient'");
-        
-        dump("=== VÉRIFICATION DOUBLON ===");
-        
-        // ✅ VÉRIFICATION avec FormId + EntryId + Index
-        if ($this->offContractEquipmentExistsByBusinessCriteria(
-            $equipmentHorsContrat,
-            $idClient,
-            $formId,
-            $entryId,
-            $equipmentIndex,
-            $entityClass,
-            $entityManager
-        )) {
-            dump("❌ SKIP: Équipement déjà traité (doublon détecté)");
-            return false;
-        }
-        
-        dump("✅ Pas de doublon, génération du numéro...");
-        
-        // Générer le numéro d'équipement
-        $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
-        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-        
-        if (empty($typeCode)) {
-            dump("❌ ERREUR: typeCode est vide");
-            return false;
-        }
-        
-        $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idClient, $entityClass, $entityManager);
-        $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-        dump("✅ Numéro généré: $numeroEquipement");
-
-        // Définir les propriétés de base
-        $equipement->setVisite($visite);
-        $equipement->setNumeroEquipement($numeroEquipement);
-        $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
-        $equipement->setCodeSociete($idSociete);
-        $equipement->setDateEnregistrement($dateDerniereVisite);
-        $equipement->setEnMaintenance(false); // IMPORTANT : équipement hors contrat
-        
-        dump("✅ Propriétés de base définies");
-        
-        // Remplir les données
-        $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
-        
-        dump("✅ Données remplies");
-        
-        // Téléchargement et sauvegarde des photos
-        $agence = $fields['code_agence']['value'] ?? '';
-        $raisonSociale = $fields['nom_client']['value'] ?? '';
-        $dateVisite = $fields['date_et_heure1']['value'] ?? '';
-        $anneeVisite = date('Y', strtotime($dateVisite));
-        $idContact = $fields['id_contact']['value'] ?? '';
-        
-        $savedPhotos = $this->downloadAndSavePhotosLocally(
-            $equipmentHorsContrat,
-            $formId,
-            $entryId,
-            $agence,
-            $idContact,
-            $anneeVisite,
-            $visite,
-            $equipmentIndex
-        );
-        
-        $this->savePhotosToFormEntityWithLocalPathsFixed(
-            $raisonSociale,
-            $visite,
-            $equipmentHorsContrat,
-            $formId,
-            $entryId,
-            $equipmentIndex,
-            $entityManager,
-            $savedPhotos,
-            $fields
-        );
-        
-        $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
-
-        dump("✅ ÉQUIPEMENT PRÊT À ÊTRE PERSISTÉ");
-        return true;
-    }
-
-    /**
-     * Vérifie si un équipement hors contrat existe déjà en base
-     * 
-     * NOUVELLE APPROCHE : Utilise l'ID de la soumission Kizeo comme identifiant unique
-     * et les données métier comme critères de backup
-     * 
-     * @param array $equipmentData Données de l'équipement hors contrat
-     * @param string $idClient ID du client
-     * @param string $formId ID du formulaire Kizeo
-     * @param string $entryId ID de la soumission Kizeo
-     * @param int $equipmentIndex Index de l'équipement dans la soumission
-     * @param string $entityClass Classe de l'entité (EquipementS160, etc.)
-     * @param EntityManagerInterface $entityManager
-     * @return bool True si l'équipement existe déjà
-     */
-    private function offContractEquipmentExistsByBusinessCriteria(
-        array $equipmentData,
-        string $idClient,
-        string $formId,
-        string $entryId,
-        int $equipmentIndex,
-        string $entityClass,
-        EntityManagerInterface $entityManager
-    ): bool {
-        dump("=== VÉRIFICATION DOUBLON ÉQUIPEMENT HORS CONTRAT ===");
-        dump("FormId: $formId | EntryId: $entryId | Index: $equipmentIndex | Client: $idClient");
-        
-        try {
-            $repository = $entityManager->getRepository($entityClass);
+            dump("✅ Visite: " . ($visite ?? 'NULL'));
             
-            // STRATÉGIE 1 : Vérifier par l'ID de soumission Kizeo (le plus fiable)
-            // On cherche dans la table Form pour voir si cet équipement a déjà été traité
-            $formRepository = $entityManager->getRepository(Form::class);
-            
-            // Construire une clé unique pour cet équipement
-            $uniqueKey = sprintf('%s_%s_HC_%d', $formId, $entryId, $equipmentIndex);
-            
-            $existingForm = $formRepository->createQueryBuilder('f')
-                ->where('f.form_id = :formId')
-                ->andWhere('f.entry_id = :entryId')
-                ->andWhere('f.id_contact = :idClient')
-                ->andWhere('f.numero_equipement_interne = :equipIndex')
-                ->setParameter('formId', $formId)
-                ->setParameter('entryId', $entryId)
-                ->setParameter('idClient', $idClient)
-                ->setParameter('equipIndex', $equipmentIndex)
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
-            
-            if ($existingForm) {
-                dump("⚠️ DOUBLON détecté via Form (submission déjà traitée)");
-                return true;
+            if (empty($visite)) {
+                dump("❌ ERREUR: Visite vide");
+                return false;
             }
             
-            // STRATÉGIE 2 : Vérifier par critères métier robustes
-            // Extraire les données significatives
-            $numeroSerie = $equipmentData['n_de_serie']['value'] ?? '';
-            $marque = $equipmentData['marque']['value'] ?? '';
-            $modeleNacelle = $equipmentData['modele_nacelle']['value'] ?? '';
-            $localisationSiteClient = $equipmentData['localisation_site_client1']['value'] ?? '';
-            $nature = $equipmentData['nature']['value'] ?? '';
-            $hauteurNacelle = $equipmentData['hauteur_nacelle']['value'] ?? '';
-            $largeur = $equipmentData['largeur']['value'] ?? '';
-            $derniereVisite = $equipmentData['derniere_visite']['value'] ?? '';
+            // 2. EXTRAIRE L'ID CLIENT
+            $idContact = $fields['id_contact']['value'] ?? '';
+            dump("ID Contact: '$idContact'");
             
-            // Construction de la requête avec critères significatifs
-            $qb = $repository->createQueryBuilder('e')
-                ->where('e.id_contact = :idClient')
-                ->andWhere('e.en_maintenance = false')
-                ->setParameter('idClient', $idClient);
-            
-            // 1. Critère FORT : Numéro de série valide
-            $hasStrongCriteria = false;
-            if (!empty($numeroSerie) && 
-                $numeroSerie !== 'Non renseigné' && 
-                $numeroSerie !== 'NC' && 
-                $numeroSerie !== 'nc') {
-                $qb->andWhere('e.numero_de_serie = :numeroSerie')
-                ->setParameter('numeroSerie', $numeroSerie);
-                $hasStrongCriteria = true;
-                dump("✓ Critère FORT : numero_serie = '$numeroSerie'");
+            if (empty($idContact)) {
+                dump("❌ ERREUR: ID Contact vide");
+                return false;
             }
             
-            // 2. Si pas de numéro de série, utiliser une combinaison de critères
-            if (!$hasStrongCriteria) {
-                $criteriaCount = 0;
-                
-                // Localisation (quasi obligatoire)
-                if (!empty($localisationSiteClient) && $localisationSiteClient !== 'nc') {
-                    $qb->andWhere('e.repere_site_client = :localisation')
-                    ->setParameter('localisation', $localisationSiteClient);
-                    $criteriaCount++;
-                    dump("✓ Critère : localisation = '$localisationSiteClient'");
-                }
-                
-                // Nature de l'équipement (obligatoire)
-                if (!empty($nature)) {
-                    $qb->andWhere('e.libelle_equipement = :nature')
-                    ->setParameter('nature', $nature);
-                    $criteriaCount++;
-                    dump("✓ Critère : nature = '$nature'");
-                }
-                
-                // Marque
-                if (!empty($marque) && $marque !== 'nc') {
-                    $qb->andWhere('e.marque = :marque')
-                    ->setParameter('marque', $marque);
-                    $criteriaCount++;
-                    dump("✓ Critère : marque = '$marque'");
-                }
-                
-                // Modèle
-                if (!empty($modeleNacelle) && $modeleNacelle !== 'nc') {
-                    $qb->andWhere('e.modele_nacelle = :modele')
-                    ->setParameter('modele', $modeleNacelle);
-                    $criteriaCount++;
-                    dump("✓ Critère : modele = '$modeleNacelle'");
-                }
-                
-                // Hauteur
-                if (!empty($hauteurNacelle) && $hauteurNacelle !== 'nc') {
-                    $qb->andWhere('e.hauteur_nacelle = :hauteur')
-                    ->setParameter('hauteur', $hauteurNacelle);
-                    $criteriaCount++;
-                    dump("✓ Critère : hauteur = '$hauteurNacelle'");
-                }
-                
-                // Largeur
-                if (!empty($largeur) && $largeur !== 'nc') {
-                    $qb->andWhere('e.largeur = :largeur')
-                    ->setParameter('largeur', $largeur);
-                    $criteriaCount++;
-                    dump("✓ Critère : largeur = '$largeur'");
-                }
-                
-                // Dernière visite (pour éviter les doublons sur même visite)
-                if (!empty($derniereVisite)) {
-                    $qb->andWhere('e.derniere_visite = :derniereVisite')
-                    ->setParameter('derniereVisite', $derniereVisite);
-                    $criteriaCount++;
-                    dump("✓ Critère : derniere_visite = '$derniereVisite'");
-                }
-                
-                // Si on a moins de 3 critères, c'est trop peu fiable
-                if ($criteriaCount < 3) {
-                    dump("⚠️ Seulement $criteriaCount critères, vérification non fiable - on considère comme nouveau");
-                    return false;
-                }
-                
-                dump("✓ Total critères métier : $criteriaCount");
+            // 3. ✅ VÉRIFIER L'EXISTENCE AVEC LA SIGNATURE COMPLÈTE (SANS numero_equipement)
+            dump("=== VÉRIFICATION DOUBLON PAR SIGNATURE ===");
+            
+            if ($this->offContractEquipmentExistsByFullSignature(
+                $equipmentHorsContrat,
+                $idContact,
+                $visite,
+                $entityClass,
+                $entityManager
+            )) {
+                dump("⚠️ ÉQUIPEMENT EXISTE DÉJÀ - SKIP");
+                return false; // Ne pas persister
             }
             
-            // Exécuter la requête en base
-            $existing = $qb->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
+            dump("✅ Équipement unique, génération du numéro...");
             
-            if ($existing) {
-                dump("⚠️ DOUBLON trouvé en BASE (critères métier)");
-                dump("   → ID équipement existant : " . $existing->getId());
-                dump("   → Numéro existant : " . $existing->getNumeroEquipement());
-                return true;
+            // 4. MAINTENANT SEULEMENT : GÉNÉRER LE NUMERO_EQUIPEMENT
+            $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
+            dump("Type libellé: '$typeLibelle'");
+            
+            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+            dump("Type code: '$typeCode'");
+            
+            if (empty($typeCode)) {
+                dump("❌ ERREUR: typeCode vide");
+                return false;
             }
             
-            // STRATÉGIE 3 : Vérifier dans l'UnitOfWork (équipements en attente de flush)
-            $uow = $entityManager->getUnitOfWork();
-            $scheduledInserts = $uow->getScheduledEntityInsertions();
+            $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idContact, $entityClass, $entityManager);
+            $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+            dump("✅ Numéro généré: $numeroEquipement");
             
-            foreach ($scheduledInserts as $entity) {
-                // Vérifier que c'est bien une instance de la bonne classe
-                if (!is_a($entity, $entityClass)) {
-                    continue;
-                }
-                
-                // Vérifier que c'est un équipement hors contrat
-                if ($entity->isEnMaintenance()) {
-                    continue;
-                }
-                
-                // Même client
-                if ($entity->getIdContact() !== $idClient) {
-                    continue;
-                }
-                
-                // Vérification avec numéro de série
-                if ($hasStrongCriteria && !empty($numeroSerie)) {
-                    $entityNumeroSerie = $entity->getNumeroDeSerie();
-                    if ($entityNumeroSerie && $entityNumeroSerie === $numeroSerie) {
-                        dump("⚠️ DOUBLON trouvé dans UnitOfWork (numéro série)");
-                        return true;
-                    }
-                } else {
-                    // Vérification avec critères combinés
-                    $matchCount = 0;
-                    
-                    if (!empty($localisationSiteClient)) {
-                        $entityLocalisation = $entity->getRepereSiteClient();
-                        if ($entityLocalisation && $entityLocalisation === $localisationSiteClient) {
-                            $matchCount++;
-                        }
-                    }
-                    
-                    if (!empty($nature)) {
-                        $entityNature = $entity->getLibelleEquipement();
-                        if ($entityNature && $entityNature === $nature) {
-                            $matchCount++;
-                        }
-                    }
-                    
-                    if (!empty($marque) && $marque !== 'nc') {
-                        $entityMarque = $entity->getMarque();
-                        if ($entityMarque && $entityMarque === $marque) {
-                            $matchCount++;
-                        }
-                    }
-                    
-                    if (!empty($modeleNacelle) && $modeleNacelle !== 'nc') {
-                        $entityModele = $entity->getModeleNacelle();
-                        if ($entityModele && $entityModele === $modeleNacelle) {
-                            $matchCount++;
-                        }
-                    }
-                    
-                    if (!empty($derniereVisite)) {
-                        $entityDerniereVisite = $entity->getDerniereVisite();
-                        if ($entityDerniereVisite && $entityDerniereVisite === $derniereVisite) {
-                            $matchCount++;
-                        }
-                    }
-                    
-                    // Si au moins 3 critères matchent, c'est probablement le même équipement
-                    if ($matchCount >= 3) {
-                        dump("⚠️ DOUBLON trouvé dans UnitOfWork ($matchCount critères matchés)");
-                        return true;
-                    }
-                }
-            }
+            // 5. DÉFINIR LES PROPRIÉTÉS DE BASE
+            $equipement->setVisite($visite);
+            $equipement->setNumeroEquipement($numeroEquipement);
+            $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
+            $equipement->setCodeSociete($idSociete);
+            $equipement->setDateEnregistrement($dateDerniereVisite);
             
-            dump("✅ Pas de doublon détecté - équipement nouveau");
-            return false;
+            dump("✅ Propriétés de base définies");
             
-        } catch (\Exception $e) {
-            dump("❌ Erreur vérification : " . $e->getMessage());
-            $this->logger->error("Erreur vérification doublon équipement", [
-                'error' => $e->getMessage(),
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'id_client' => $idClient
-            ]);
-            // En cas d'erreur, on considère comme nouveau pour ne pas bloquer
-            return false;
-        }
-    }
-
-    private function offContractEquipmentTypeExistsForClientVisit(
-        string $typeCode,      // "RID", "SEC", etc.
-        string $idClient,
-        string $visite,
-        string $entityClass,
-        EntityManagerInterface $entityManager
-    ): bool {
-        $repository = $entityManager->getRepository($entityClass);
-        
-        // Cherche en base
-        $qb = $repository->createQueryBuilder('e')
-            ->where('e.numero_equipement LIKE :typePattern')
-            ->andWhere('e.id_contact = :idClient')
-            ->andWhere('e.visite = :visite')
-            ->andWhere('e.en_maintenance = false')
-            ->setParameter('typePattern', $typeCode . '%') // RID%
-            ->setParameter('idClient', $idClient)
-            ->setParameter('visite', $visite)
-            ->setMaxResults(1);
-        
-        if ($qb->getQuery()->getOneOrNullResult() !== null) {
+            // 6. REMPLIR LES DONNÉES MÉTIER
+            $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
+            dump("✅ Données remplies");
+            
+            // 7. TÉLÉCHARGER ET SAUVEGARDER LES PHOTOS
+            $agence = $fields['code_agence']['value'] ?? '';
+            $raisonSociale = $fields['nom_client']['value'] ?? '';
+            $dateVisite = $fields['date_et_heure1']['value'] ?? '';
+            $anneeVisite = date('Y', strtotime($dateVisite));
+            
+            $savedPhotos = $this->downloadAndSavePhotosLocally(
+                $equipmentHorsContrat,
+                $formId,
+                $entryId,
+                $agence,
+                $idContact,
+                $anneeVisite,
+                $visite,
+                $numeroEquipement
+            );
+            
+            $this->savePhotosToFormEntityWithLocalPathsFixed(
+                $raisonSociale,
+                $visite,
+                $equipmentHorsContrat,
+                $formId,
+                $entryId,
+                $numeroEquipement,
+                $entityManager,
+                $savedPhotos,
+                $fields
+            );
+            
+            // 8. DÉFINIR LES ANOMALIES
+            $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
+            
+            dump("✅ ÉQUIPEMENT PRÊT À ÊTRE PERSISTÉ");
             return true;
-        }
-        
-        // Cherche aussi dans l'UnitOfWork
-        $uow = $entityManager->getUnitOfWork();
-        foreach ($uow->getScheduledEntityInsertions() as $entity) {
-            if (get_class($entity) === $entityClass 
-                && str_starts_with($entity->getNumeroEquipement() ?? '', $typeCode)
-                && $entity->getIdContact() === $idClient
-                && $entity->getVisite() === $visite
-                && !$entity->isEnMaintenance()) {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    /**
-     * ✅ MISE À JOUR : Vérification doublon avec UnitOfWork
-     * 
-     * Vérifie si un équipement hors contrat existe déjà en se basant sur :
-     * - numero_equipement + id_contact (combinaison unique et toujours présente)
-     * - Recherche en base de données ET dans l'UnitOfWork (objets en attente de flush)
-     * 
-     * @param string $numeroEquipement Le numéro d'équipement généré (ex: RID01)
-     * @param string $idClient L'identifiant du client
-     * @param string $entityClass La classe de l'entité (ex: EquipementS40::class)
-     * @param EntityManagerInterface $entityManager Le gestionnaire d'entités Doctrine
-     * @return bool true si l'équipement existe déjà, false sinon
-     */
-    private function offContractEquipmentExistsForSameVisit(
-        string $numeroEquipement,
-        string $idClient,
-        string $entityClass,
-        EntityManagerInterface $entityManager
-    ): bool {
-        try {
-            $repository = $entityManager->getRepository($entityClass);
-            
-            // ============================================
-            // 1. VÉRIFICATION EN BASE DE DONNÉES
-            // ============================================
-            $qb = $repository->createQueryBuilder('e')
-                ->where('e.numero_equipement = :numero')
-                ->andWhere('e.id_contact = :idClient')
-                ->andWhere('e.en_maintenance = false')  // Uniquement les équipements hors contrat
-                ->setParameter('numero', $numeroEquipement)
-                ->setParameter('idClient', $idClient)
-                ->setMaxResults(1);
-            
-            $existingInDb = $qb->getQuery()->getOneOrNullResult();
-            
-            if ($existingInDb !== null) {
-                // dump("✅ Doublon détecté en base : " . $numeroEquipement . " pour client " . $idClient);
-                return true;
-            }
-            
-            // ============================================
-            // 2. ✅ VÉRIFICATION DANS L'UNITOFWORK
-            //    (objets en attente de flush)
-            // ============================================
-            $uow = $entityManager->getUnitOfWork();
-            $scheduledInserts = $uow->getScheduledEntityInsertions();
-            
-            foreach ($scheduledInserts as $entity) {
-                // Vérifier que c'est bien la même classe d'entité
-                if (get_class($entity) === $entityClass) {
-                    // Vérifier les critères d'unicité
-                    if ($entity->getNumeroEquipement() === $numeroEquipement && 
-                        $entity->getIdContact() === $idClient &&
-                        !$entity->isEnMaintenance()) {  // Uniquement hors contrat
-                        
-                        // dump("✅ Doublon détecté dans UnitOfWork : " . $numeroEquipement . " pour client " . $idClient);
-                        return true;
-                    }
-                }
-            }
-            
-            // Aucun doublon trouvé
-            return false;
             
         } catch (\Exception $e) {
-            // En cas d'erreur, logger mais ne pas bloquer le traitement
-            // dump("❌ Erreur vérification doublon: " . $e->getMessage());
-            
-            // Par sécurité, retourner false pour ne pas bloquer la création
-            // (mieux vaut un doublon qu'un équipement manquant)
+            dump("❌ ERREUR: " . $e->getMessage());
+            dump("Trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -6417,4 +5992,200 @@ private function extractLibelleFromPath(string $equipementPath): string
         return 'CE1';
     }
 
+
+    /**
+     * ✅ NOUVELLE MÉTHODE : Vérification par signature métier COMPLÈTE
+     * 
+     * Vérifie si un équipement hors contrat existe déjà en comparant TOUTES les colonnes métier
+     * (sauf id et numero_equipement qui sont générés automatiquement)
+     * 
+     * Vérifie à la fois :
+     * - En base de données
+     * - Dans l'UnitOfWork (équipements en attente de flush)
+     */
+    private function offContractEquipmentExistsByFullSignature(
+        array $equipmentData,
+        string $idContact,
+        string $visite,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+    ): bool {
+        dump("=== VÉRIFICATION SIGNATURE COMPLÈTE ===");
+        
+        try {
+            $repository = $entityManager->getRepository($entityClass);
+            
+            // 1. CONSTRUIRE LA REQUÊTE AVEC TOUTES LES COLONNES MÉTIER
+            $qb = $repository->createQueryBuilder('e')
+                ->where('e.id_contact = :idContact')
+                ->andWhere('e.visite = :visite')
+                ->andWhere('e.en_maintenance = false')
+                ->setParameter('idContact', $idContact)
+                ->setParameter('visite', $visite);
+            
+            // 2. AJOUTER LES CRITÈRES POUR CHAQUE COLONNE
+            
+            // libelle_equipement (nature)
+            $libelleEquipement = $equipmentData['nature']['value'] ?? '';
+            if (!empty($libelleEquipement)) {
+                $qb->andWhere('e.libelle_equipement = :libelle')
+                ->setParameter('libelle', $libelleEquipement);
+            } else {
+                $qb->andWhere('(e.libelle_equipement IS NULL OR e.libelle_equipement = \'\')');
+            }
+            
+            // mode_fonctionnement
+            $modeFonctionnement = $equipmentData['mode_fonctionnement_']['value'] ?? '';
+            if (!empty($modeFonctionnement)) {
+                $qb->andWhere('e.mode_fonctionnement = :mode')
+                ->setParameter('mode', $modeFonctionnement);
+            } else {
+                $qb->andWhere('(e.mode_fonctionnement IS NULL OR e.mode_fonctionnement = \'\')');
+            }
+            
+            // repere_site_client (localisation_site_client1)
+            $repereSiteClient = $equipmentData['localisation_site_client1']['value'] ?? '';
+            if (!empty($repereSiteClient)) {
+                $qb->andWhere('e.repere_site_client = :repere')
+                ->setParameter('repere', $repereSiteClient);
+            } else {
+                $qb->andWhere('(e.repere_site_client IS NULL OR e.repere_site_client = \'\')');
+            }
+            
+            // mise_en_service (annee)
+            $miseEnService = $equipmentData['annee']['value'] ?? '';
+            if (!empty($miseEnService)) {
+                $qb->andWhere('e.mise_en_service = :miseEnService')
+                ->setParameter('miseEnService', $miseEnService);
+            } else {
+                $qb->andWhere('(e.mise_en_service IS NULL OR e.mise_en_service = \'\')');
+            }
+            
+            // numero_de_serie (n_de_serie)
+            $numeroDeSerie = $equipmentData['n_de_serie']['value'] ?? '';
+            if (!empty($numeroDeSerie)) {
+                $qb->andWhere('e.numero_de_serie = :numeroSerie')
+                ->setParameter('numeroSerie', $numeroDeSerie);
+            } else {
+                $qb->andWhere('(e.numero_de_serie IS NULL OR e.numero_de_serie = \'\')');
+            }
+            
+            // marque
+            $marque = $equipmentData['marque']['value'] ?? '';
+            if (!empty($marque)) {
+                $qb->andWhere('e.marque = :marque')
+                ->setParameter('marque', $marque);
+            } else {
+                $qb->andWhere('(e.marque IS NULL OR e.marque = \'\')');
+            }
+            
+            // hauteur
+            $hauteur = $equipmentData['hauteur']['value'] ?? '';
+            if (!empty($hauteur)) {
+                $qb->andWhere('e.hauteur = :hauteur')
+                ->setParameter('hauteur', $hauteur);
+            } else {
+                $qb->andWhere('(e.hauteur IS NULL OR e.hauteur = \'\')');
+            }
+            
+            // largeur
+            $largeur = $equipmentData['largeur']['value'] ?? '';
+            if (!empty($largeur)) {
+                $qb->andWhere('e.largeur = :largeur')
+                ->setParameter('largeur', $largeur);
+            } else {
+                $qb->andWhere('(e.largeur IS NULL OR e.largeur = \'\')');
+            }
+            
+            // longueur
+            $longueur = $equipmentData['longueur']['value'] ?? '';
+            if (!empty($longueur)) {
+                $qb->andWhere('e.longueur = :longueur')
+                ->setParameter('longueur', $longueur);
+            } else {
+                $qb->andWhere('(e.longueur IS NULL OR e.longueur = \'\')');
+            }
+            
+            // plaque_signaletique
+            $plaqueSignaletique = $equipmentData['plaque_signaletique']['value'] ?? '';
+            if (!empty($plaqueSignaletique)) {
+                $qb->andWhere('e.plaque_signaletique = :plaque')
+                ->setParameter('plaque', $plaqueSignaletique);
+            } else {
+                $qb->andWhere('(e.plaque_signaletique IS NULL OR e.plaque_signaletique = \'\')');
+            }
+            
+            // etat
+            $etat = $equipmentData['etat']['value'] ?? '';
+            if (!empty($etat)) {
+                $qb->andWhere('e.etat = :etat')
+                ->setParameter('etat', $etat);
+            } else {
+                $qb->andWhere('(e.etat IS NULL OR e.etat = \'\')');
+            }
+            
+            // Exécuter la requête
+            $qb->setMaxResults(1);
+            $existingInDb = $qb->getQuery()->getOneOrNullResult();
+            
+            if ($existingInDb !== null) {
+                dump("✅ TROUVÉ EN BASE: " . $existingInDb->getNumeroEquipement());
+                return true;
+            }
+            
+            dump("❌ Pas trouvé en base, vérification UnitOfWork...");
+            
+            // 3. VÉRIFIER AUSSI DANS L'UNITOFWORK (équipements non encore flushés)
+            $uow = $entityManager->getUnitOfWork();
+            $scheduledInserts = $uow->getScheduledEntityInsertions();
+            
+            dump("Objets en attente: " . count($scheduledInserts));
+            
+            foreach ($scheduledInserts as $entity) {
+                if (get_class($entity) === $entityClass) {
+                    // Comparer TOUTES les colonnes
+                    if ($entity->getIdContact() === $idContact &&
+                        $entity->getVisite() === $visite &&
+                        !$entity->isEnMaintenance() &&
+                        $this->compareEquipmentSignature($entity, $equipmentData)) {
+                        dump("✅ TROUVÉ DANS UNITOFWORK: " . $entity->getNumeroEquipement());
+                        return true;
+                    }
+                }
+            }
+            
+            dump("✅ AUCUN DOUBLON - Équipement unique");
+            return false;
+            
+        } catch (\Exception $e) {
+            dump("❌ ERREUR VÉRIFICATION: " . $e->getMessage());
+            dump("Trace: " . $e->getTraceAsString());
+            // En cas d'erreur, on laisse passer pour ne pas bloquer
+            return false;
+        }
+    }
+
+    /**
+     * ✅ MÉTHODE AUXILIAIRE : Compare la signature d'un équipement avec les données du formulaire
+     */
+    private function compareEquipmentSignature($entity, array $equipmentData): bool
+    {
+        // Comparer toutes les colonnes métier
+        $checks = [
+            $entity->getLibelleEquipement() === ($equipmentData['nature']['value'] ?? ''),
+            $entity->getModeFonctionnement() === ($equipmentData['mode_fonctionnement_']['value'] ?? ''),
+            $entity->getRepereSiteClient() === ($equipmentData['localisation_site_client1']['value'] ?? ''),
+            $entity->getMiseEnService() === ($equipmentData['annee']['value'] ?? ''),
+            $entity->getNumeroDeSerie() === ($equipmentData['n_de_serie']['value'] ?? ''),
+            $entity->getMarque() === ($equipmentData['marque']['value'] ?? ''),
+            $entity->getHauteur() === ($equipmentData['hauteur']['value'] ?? ''),
+            $entity->getLargeur() === ($equipmentData['largeur']['value'] ?? ''),
+            $entity->getLongueur() === ($equipmentData['longueur']['value'] ?? ''),
+            $entity->getPlaqueSignaletique() === ($equipmentData['plaque_signaletique']['value'] ?? ''),
+            $entity->getEtat() === ($equipmentData['etat']['value'] ?? '')
+        ];
+        
+        // Retourner true seulement si TOUS les checks passent
+        return !in_array(false, $checks, true);
+    }
 }
