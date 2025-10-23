@@ -526,7 +526,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // Configuration mémoire conservatrice
         ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 120); // 2 minutes max
+        ini_set('max_execution_time', 120);
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
@@ -541,7 +541,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $offContractEquipments = 0;
             $foundForms = [];
 
-            // 1. Récupérer SEULEMENT la liste des formulaires (pas les données)
+            // 1. Récupérer SEULEMENT la liste des formulaires
             $formsResponse = $this->client->request(
                 'GET',
                 'https://forms.kizeo.com/rest/v3/forms',
@@ -559,12 +559,12 @@ class SimplifiedMaintenanceController extends AbstractController
                 return $form['class'] === 'MAINTENANCE';
             });
 
-            // 2. Traiter chaque formulaire INDIVIDUELLEMENT pour économiser la mémoire
+            // 2. Traiter chaque formulaire INDIVIDUELLEMENT
             foreach ($maintenanceForms as $formIndex => $form) {
                 try {
-                  // dump("Traitement formulaire {$form['id']} ({$form['name']})");
+                    dump("Traitement formulaire {$form['id']} ({$form['name']})");
                     
-                    // Récupérer UNIQUEMENT les formulaires non lus pour commencer (plus léger)
+                    // Récupérer UNIQUEMENT les formulaires non lus
                     $unreadResponse = $this->client->request(
                         'GET',
                         'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/unread/read/10',
@@ -580,7 +580,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     $unreadData = $unreadResponse->toArray();
                     
                     if (empty($unreadData['data'])) {
-                      // dump("Aucune donnée non lue pour le formulaire {$form['id']}");
+                        dump("Aucune donnée non lue pour le formulaire {$form['id']}");
                         continue;
                     }
 
@@ -609,9 +609,9 @@ class SimplifiedMaintenanceController extends AbstractController
                                 continue;
                             }
 
-                          // dump("Trouvé entrée {$agencyCode}: {$entry['_id']}");
+                            dump("Trouvé entrée {$agencyCode}: {$entry['_id']}");
                             
-                            // 5. Traiter cette entrée S140
+                            // 5. Traiter cette entrée
                             $entityClass = $this->getEntityClassByAgency($agencyCode);
                             if (!$entityClass) {
                                 throw new \Exception("Classe d'entité non trouvée pour: " . $agencyCode);
@@ -621,11 +621,15 @@ class SimplifiedMaintenanceController extends AbstractController
                                 'form_id' => $form['id'],
                                 'form_name' => $form['name'],
                                 'entry_id' => $entry['_id'],
-                                'client_name' => $fields['nom_du_client']['value'] ?? 'N/A'
+                                'client_name' => $fields['nom_client']['value'] ?? 'N/A'
                             ];
 
-                            // Traitement des équipements sous contrat
-                            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
+                            // ========================================
+                            // TRAITEMENT ÉQUIPEMENTS AU CONTRAT
+                            // ========================================
+                            if (isset($fields['contrat_de_maintenance']['value']) && 
+                                !empty($fields['contrat_de_maintenance']['value'])) {
+                                
                                 foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
                                     $equipement = new $entityClass();
                                     $this->setCommonEquipmentData($equipement, $fields);
@@ -636,24 +640,41 @@ class SimplifiedMaintenanceController extends AbstractController
                                 }
                             }
 
-                            // Traitement des équipements hors contrat
-                            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-                                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
-                                    $equipement = new $entityClass();
-                                    $this->setCommonEquipmentData($equipement, $fields);
-                                    $shouldPersist = $this->setOffContractEquipmentData(
-                                        $equipement, 
-                                        $equipmentHorsContrat, 
-                                        $fields, 
-                                        $entityClass, 
-                                        $entityManager
-                                    );
-                                    
-                                    if ($shouldPersist) {
-                                        $entityManager->persist($equipement);
-                                        $offContractEquipments++;
+                            // ========================================
+                            // ✅ TRAITEMENT ÉQUIPEMENTS HORS CONTRAT CORRIGÉ
+                            // ========================================
+                            if (isset($fields['tableau2']['value']) && 
+                                !empty($fields['tableau2']['value'])) {
+                                
+                                dump(">>> Traitement de " . count($fields['tableau2']['value']) . " équipements hors contrat");
+                                
+                                foreach ($fields['tableau2']['value'] as $index => $equipmentHorsContrat) {
+                                    try {
+                                        dump("\n--- Équipement hors contrat " . ($index + 1) . " ---");
+                                        
+                                        $equipement = new $entityClass();
+                                        $this->setCommonEquipmentData($equipement, $fields);
+                                        
+                                        // ✅ APPEL DE LA MÉTHODE CORRIGÉE
+                                        $shouldPersist = $this->setOffContractEquipmentData(
+                                            $equipement, 
+                                            $equipmentHorsContrat, 
+                                            $fields, 
+                                            $entityClass, 
+                                            $entityManager
+                                        );
+                                        
+                                        if ($shouldPersist) {
+                                            $entityManager->persist($equipement);
+                                            $offContractEquipments++;
+                                            dump("✅ Persisté: " . $equipement->getNumeroEquipement());
+                                        } else {
+                                            dump("⚠️ Skippé (erreur ou doublon)");
+                                        }
+                                        
+                                    } catch (\Exception $e) {
+                                        dump("❌ Erreur équipement #{$index}: " . $e->getMessage());
                                     }
-                                    $offContractEquipments++;
                                 }
                             }
 
@@ -662,18 +683,14 @@ class SimplifiedMaintenanceController extends AbstractController
                             // Sauvegarder et nettoyer la mémoire après chaque entrée
                             $entityManager->flush();
                             $entityManager->clear();
-                            
-                            // Forcer le garbage collector
                             gc_collect_cycles();
-
-                            // NE PAS marquer comme lu pour l'instant - laisser en non lu pour debug
 
                         } catch (\Exception $e) {
                             $errors[] = [
                                 'entry_id' => $entry['_id'] ?? 'unknown',
                                 'error' => $e->getMessage()
                             ];
-                          // dump("Erreur traitement entrée: " . $e->getMessage());
+                            dump("Erreur traitement entrée: " . $e->getMessage());
                         }
                     }
 
@@ -681,7 +698,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     unset($unreadData);
                     gc_collect_cycles();
 
-                    // Arrêter après avoir trouvé des données pour éviter la surcharge
+                    // Arrêter après avoir trouvé des données
                     if ($processed > 0) {
                         break;
                     }
@@ -691,7 +708,7 @@ class SimplifiedMaintenanceController extends AbstractController
                         'form_id' => $form['id'],
                         'error' => $e->getMessage()
                     ];
-                  // dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
+                    dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
                 }
             }
 
@@ -711,7 +728,7 @@ class SimplifiedMaintenanceController extends AbstractController
             ]);
 
         } catch (\Exception $e) {
-          // dump("Erreur générale: " . $e->getMessage());
+            dump("Erreur générale: " . $e->getMessage());
             return new JsonResponse([
                 'success' => false,
                 'agency' => $agencyCode,
