@@ -1525,9 +1525,13 @@ class SimplifiedMaintenanceController extends AbstractController
                             
                             $equipement = new $entityClass();
                             
-                            // Étape 1: Données communes
+                            // Étape 1: Données communes SANS setEnMaintenance
                             $this->setRealCommonDataFixed($equipement, $fields);
-                            // dump("Données communes définies pour équipement sous contrat");
+                            dump("Données communes définies pour équipement hors contrat");
+
+                            // ✅ VÉRIFIER QU'ON A BIEN LES DONNÉES
+                            dump("Vérification ID client: " . ($fields['id_client_']['value'] ?? 'VIDE'));
+                            dump("Vérification visite depuis contrat: " . (isset($fields['contrat_de_maintenance']['value'][0]['equipement']['path']) ? 'EXISTE' : 'N\'EXISTE PAS'));
                             
                             // Étape 2: Données spécifiques sous contrat
                             $wasProcessed = $this->setRealContractDataWithFormPhotosAndDeduplication(
@@ -1675,7 +1679,12 @@ class SimplifiedMaintenanceController extends AbstractController
         $dateDerniereVisite
     ): bool {
         dump("=== DÉBUT TRAITEMENT ÉQUIPEMENT HORS CONTRAT ===");
+        // ✅ DEBUG: Afficher TOUTES les clés disponibles dans $fields
+        dump("Clés disponibles dans fields:");
+        dump(array_keys($fields));
         
+        // ✅ DEBUG: Afficher le contenu de id_client_
+        dump("Contenu id_client_: " . ($fields['id_client_']['value'] ?? 'N/A'));
         try {
             // 1. EXTRAIRE LA VISITE
             $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
@@ -1687,9 +1696,9 @@ class SimplifiedMaintenanceController extends AbstractController
             }
             
             // 2. EXTRAIRE L'ID CLIENT
-            $idContact = $fields['id_contact']['value'] ?? '';
-            dump("ID Contact: '$idContact'");
-            
+            $idContact = $fields['id_client_']['value'] ?? '';  // ✅ id_client_ pas id_contact
+            dump("ID Contact (depuis id_client_): '$idContact'");
+
             if (empty($idContact)) {
                 dump("❌ ERREUR: ID Contact vide");
                 return false;
