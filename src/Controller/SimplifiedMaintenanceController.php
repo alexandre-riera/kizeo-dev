@@ -4427,14 +4427,13 @@ private function extractLibelleFromPath(string $equipementPath): string
         try {
             $repository = $entityManager->getRepository($entityClass);
             
-            // ========================================
-            // 1. CRITÈRES OBLIGATOIRES (CLÉ MINIMALE)
-            // ========================================
+            // ✅ RÉCUPÉRER LA DATE DE VISITE depuis le contexte global
+            // On va l'ajouter en paramètre de la méthode
             
             $qb = $repository->createQueryBuilder('e')
-                ->where('e.id_contact = :idContact')  // ✅ Nom correct de la propriété
+                ->where('e.id_contact = :idContact')
                 ->andWhere('e.visite = :visite')
-                ->andWhere('e.en_maintenance = 0 OR e.en_maintenance IS NULL)')
+                ->andWhere('(e.en_maintenance = 0 OR e.en_maintenance IS NULL)')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
@@ -4443,7 +4442,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             // libelle_equipement (nature) - OBLIGATOIRE
             $libelleEquipement = strtolower(trim($equipmentData['nature']['value'] ?? ''));
             if (!empty($libelleEquipement)) {
-                $qb->andWhere('LOWER(e.libelle_equipement) = :libelle')  // ✅ LOWER pour comparaison insensible
+                $qb->andWhere('LOWER(e.libelle_equipement) = :libelle')
                 ->setParameter('libelle', $libelleEquipement);
                 dump("+ libelle_equipement = '$libelleEquipement'");
             } else {
@@ -4462,11 +4461,19 @@ private function extractLibelleFromPath(string $equipementPath): string
                 return false;
             }
             
-            // ========================================
-            // 2. CRITÈRES OPTIONNELS (SI RENSEIGNÉS)
-            // ========================================
+            // ✅ NOUVEAU CRITÈRE FORT : hauteur + largeur ENSEMBLE (signature physique)
+            $hauteur = trim($equipmentData['hauteur']['value'] ?? '');
+            $largeur = trim($equipmentData['largeur']['value'] ?? '');
             
-            // mode_fonctionnement - Si renseigné, on l'ajoute
+            if (!empty($hauteur) && !empty($largeur) && $hauteur !== 'NC' && $largeur !== 'NC') {
+                $qb->andWhere('e.hauteur = :hauteur')
+                ->andWhere('e.largeur = :largeur')
+                ->setParameter('hauteur', $hauteur)
+                ->setParameter('largeur', $largeur);
+                dump("+ dimensions = {$hauteur} x {$largeur}");
+            }
+            
+            // mode_fonctionnement
             $modeFonctionnement = trim($equipmentData['mode_fonctionnement_']['value'] ?? '');
             if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC') {
                 $qb->andWhere('e.mode_fonctionnement = :mode')
@@ -4474,7 +4481,7 @@ private function extractLibelleFromPath(string $equipementPath): string
                 dump("+ mode_fonctionnement = '$modeFonctionnement'");
             }
             
-            // numero_de_serie - Si renseigné ET valide, on l'ajoute (critère fort)
+            // numero_de_serie (critère très fort)
             $numeroDeSerie = trim($equipmentData['n_de_serie']['value'] ?? '');
             if (!empty($numeroDeSerie) && $numeroDeSerie !== 'Non renseigné' && $numeroDeSerie !== 'NC') {
                 $qb->andWhere('e.numero_de_serie = :numeroSerie')
@@ -4482,7 +4489,7 @@ private function extractLibelleFromPath(string $equipementPath): string
                 dump("+ numero_de_serie = '$numeroDeSerie' (critère fort)");
             }
             
-            // marque - Si renseignée, on l'ajoute
+            // marque
             $marque = trim($equipmentData['marque']['value'] ?? '');
             if (!empty($marque) && $marque !== 'NC') {
                 $qb->andWhere('e.marque = :marque')
@@ -4490,29 +4497,8 @@ private function extractLibelleFromPath(string $equipementPath): string
                 dump("+ marque = '$marque'");
             }
             
-            // hauteur - Si renseignée
-            $hauteur = trim($equipmentData['hauteur']['value'] ?? '');
-            if (!empty($hauteur) && $hauteur !== 'NC') {
-                $qb->andWhere('e.hauteur = :hauteur')
-                ->setParameter('hauteur', $hauteur);
-                dump("+ hauteur = '$hauteur'");
-            }
-            
-            // largeur - Si renseignée
-            $largeur = trim($equipmentData['largeur']['value'] ?? '');
-            if (!empty($largeur) && $largeur !== 'NC') {
-                $qb->andWhere('e.largeur = :largeur')
-                ->setParameter('largeur', $largeur);
-                dump("+ largeur = '$largeur'");
-            }
-            
-            // ========================================
-            // 3. EXÉCUTION DE LA REQUÊTE
-            // ========================================
-            
             $qb->setMaxResults(1);
             
-            // ✅ AFFICHER LA REQUÊTE SQL POUR DEBUG
             $sql = $qb->getQuery()->getSQL();
             dump("Requête SQL générée:");
             dump($sql);
@@ -4527,10 +4513,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             
             dump("❌ Pas trouvé en base");
             
-            // ========================================
-            // 4. VÉRIFICATION DANS L'UNITOFWORK
-            // ========================================
-            
+            // Vérification UnitOfWork (inchangé)
             dump("Vérification UnitOfWork...");
             $uow = $entityManager->getUnitOfWork();
             $scheduledInserts = $uow->getScheduledEntityInsertions();
@@ -4539,15 +4522,19 @@ private function extractLibelleFromPath(string $equipementPath): string
             
             foreach ($scheduledInserts as $entity) {
                 if (get_class($entity) === $entityClass) {
-                    // Vérifier les critères obligatoires
                     $sameIdContact = $entity->getIdContact() === $idContact;
                     $sameVisite = $entity->getVisite() === $visite;
                     $sameEnMaintenance = $entity->isEnMaintenance() === false;
                     $sameLibelle = strtolower($entity->getLibelleEquipement()) === $libelleEquipement;
                     $sameRepere = $entity->getRepereSiteClient() === $repereSiteClient;
                     
-                    if ($sameIdContact && $sameVisite && $sameEnMaintenance && $sameLibelle && $sameRepere) {
-                        // Vérifier les critères optionnels s'ils sont renseignés
+                    // ✅ Ajouter dimensions dans la comparaison UnitOfWork
+                    $sameDimensions = true;
+                    if (!empty($hauteur) && !empty($largeur)) {
+                        $sameDimensions = ($entity->getHauteur() === $hauteur && $entity->getLargeur() === $largeur);
+                    }
+                    
+                    if ($sameIdContact && $sameVisite && $sameEnMaintenance && $sameLibelle && $sameRepere && $sameDimensions) {
                         $match = true;
                         
                         if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC' && $entity->getModeFonctionnement() !== $modeFonctionnement) {
@@ -4573,8 +4560,6 @@ private function extractLibelleFromPath(string $equipementPath): string
             
         } catch (\Exception $e) {
             dump("❌ ERREUR VÉRIFICATION: " . $e->getMessage());
-            dump("Trace: " . $e->getTraceAsString());
-            // En cas d'erreur, on autorise la création pour ne pas bloquer
             return false;
         }
     }
