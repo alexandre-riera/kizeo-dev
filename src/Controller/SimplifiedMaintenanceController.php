@@ -526,7 +526,7 @@ class SimplifiedMaintenanceController extends AbstractController
         
         // Configuration mémoire conservatrice
         ini_set('memory_limit', '512M');
-        ini_set('max_execution_time', 120);
+        ini_set('max_execution_time', 600);
         
         $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
         
@@ -1573,71 +1573,74 @@ class SimplifiedMaintenanceController extends AbstractController
             // Traitement des équipements hors contrat
             
             if (!empty($offContractEquipments)) {
-                // dump("--- DÉBUT TRAITEMENT HORS CONTRAT ---");
+                dump("--- DÉBUT TRAITEMENT HORS CONTRAT ---");
                 
                 $offContractChunks = array_chunk($offContractEquipments, $chunkSize);
                 
                 foreach ($offContractChunks as $chunkIndex => $chunk) {
-                    // dump("Chunk hors contrat " . ($chunkIndex + 1) . "/" . count($offContractChunks));
+                    dump("Chunk hors contrat " . ($chunkIndex + 1) . "/" . count($offContractChunks));
                     
                     foreach ($chunk as $equipmentIndex => $equipmentHorsContrat) {
                         try {
-                            // dump("--- DÉBUT ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . "/" . count($chunk) . " ---");
+                            dump("--- DÉBUT ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . "/" . count($chunk) . " ---");
                             
                             $equipement = new $entityClass();
-                            // dump("Nouvel objet équipement créé");
+                            dump("Nouvel objet équipement créé");
                             
                             // Étape 1: Données communes SANS setEnMaintenance
                             $this->setRealCommonDataFixed($equipement, $fields);
-                            // dump("Données communes définies pour équipement hors contrat");
-                            // dump("État en_maintenance après données communes: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
+                            dump("Données communes définies pour équipement hors contrat");
                             
-                            // Étape 2: Données spécifiques hors contrat (avec setEnMaintenance(false))
+                            // ✅ CORRECTION : Utiliser la BONNE méthode avec la signature correcte
                             $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
-                                $equipement, $equipmentHorsContrat, $fields, 
-                                $submission['form_id'], $submission['entry_id'],
-                                $entityClass, $entityManager, $idSociete, $dateDerniereVisite
+                                $equipement, 
+                                $equipmentHorsContrat, 
+                                $fields, 
+                                $submission['form_id'],  // ✅ Ajouter form_id
+                                $submission['entry_id'], // ✅ Ajouter entry_id
+                                $entityClass, 
+                                $entityManager,
+                                $idSociete,
+                                $dateDerniereVisite
                             );
                             
                             if ($wasProcessed) {
-                                // Vérification finale avant persist
-                                // dump("VÉRIFICATION AVANT PERSIST:");
-                                // dump("- Numéro: " . $equipement->getNumeroEquipement());
-                                // dump("- Libellé: " . $equipement->getLibelleEquipement());
-                                // dump("- En maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
+                                dump("VÉRIFICATION AVANT PERSIST:");
+                                dump("- Numéro: " . $equipement->getNumeroEquipement());
+                                dump("- Libellé: " . $equipement->getLibelleEquipement());
+                                dump("- En maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
                                 
                                 $entityManager->persist($equipement);
-                                $entityManager->flush();
                                 $equipmentsProcessed++;
                                 $photosSaved++;
-                              // dump("Équipement hors contrat persisté et flushé avec succès");
+                                dump("✅ Équipement hors contrat persisté avec succès");
                             } else {
                                 $equipmentsSkipped++;
-                                // dump("Équipement hors contrat skippé (doublon)");
+                                dump("⚠️ Équipement hors contrat skippé (doublon)");
                             }
                             
-                            // dump("--- FIN ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . " ---");
+                            dump("--- FIN ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . " ---");
                             
                         } catch (\Exception $e) {
                             $errors++;
-                            // dump("Erreur traitement équipement hors contrat: " . $e->getMessage());
-                            // dump("Stack trace: " . $e->getTraceAsString());
+                            dump("❌ Erreur traitement équipement hors contrat: " . $e->getMessage());
+                            dump("Stack trace: " . $e->getTraceAsString());
                         }
                     }
                     
                     // Sauvegarder après chaque chunk
                     try {
-                        // dump("Sauvegarde chunk hors contrat " . ($chunkIndex + 1));
+                        dump("Sauvegarde chunk hors contrat " . ($chunkIndex + 1));
                         $entityManager->flush();
                         $entityManager->clear();
                         gc_collect_cycles();
-                        // dump("Chunk hors contrat " . ($chunkIndex + 1) . " sauvegardé");
+                        dump("Chunk hors contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {
                         $errors++;
-                        // dump("Erreur flush/clear hors contrat: " . $e->getMessage());
+                        dump("Erreur flush/clear hors contrat: " . $e->getMessage());
                     }
                 }
-                // dump("--- FIN TRAITEMENT HORS CONTRAT ---");
+                dump("--- FIN TRAITEMENT HORS CONTRAT ---");
             }
             
             // dump("===== FIN TRAITEMENT SOUMISSION " . $submission['entry_id'] . " =====");
