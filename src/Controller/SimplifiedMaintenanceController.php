@@ -1609,10 +1609,15 @@ class SimplifiedMaintenanceController extends AbstractController
                             );
                             
                             if ($wasProcessed) {
-                                dump("VÉRIFICATION AVANT PERSIST:");
+                                dump("VÉRIFICATION FINALE AVANT PERSIST:");
                                 dump("- Numéro: " . $equipement->getNumeroEquipement());
                                 dump("- Libellé: " . $equipement->getLibelleEquipement());
-                                dump("- En maintenance: " . ($equipement->isEnMaintenance() ? 'true' : 'false'));
+                                dump("- Repère: " . $equipement->getRepereSiteClient());
+                                dump("- En maintenance: " . ($equipement->isEnMaintenance() ? 'TRUE ❌' : 'FALSE ✅'));
+                                
+                                // ✅ SÉCURITÉ ABSOLUE : forcer encore une fois
+                                $equipement->setEnMaintenance(false);
+                                dump("✅ en_maintenance FORCÉ à false juste avant persist");
                                 
                                 $entityManager->persist($equipement);
                                 $equipmentsProcessed++;
@@ -1748,7 +1753,14 @@ class SimplifiedMaintenanceController extends AbstractController
             // 6. REMPLIR LES DONNÉES MÉTIER
             $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
             dump("✅ Données remplies");
-            
+            // ✅ AJOUTER CE DEBUG CRITIQUE
+            dump("VÉRIFICATION APRÈS fillOffContractEquipmentDataFixed:");
+            dump("- en_maintenance = " . ($equipement->isEnMaintenance() ? 'TRUE' : 'FALSE'));
+
+            // 7. ✅ IMPORTANT : Définir en_maintenance = false ENCORE UNE FOIS pour être SÛR
+            $equipement->setEnMaintenance(false);
+            dump("✅ en_maintenance RE-défini à false après fillOffContractEquipmentDataFixed");
+
             // 7. TÉLÉCHARGER ET SAUVEGARDER LES PHOTOS
             $agence = $fields['code_agence']['value'] ?? '';
             $raisonSociale = $fields['nom_client']['value'] ?? '';
@@ -4422,7 +4434,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             $qb = $repository->createQueryBuilder('e')
                 ->where('e.id_contact = :idContact')  // ✅ Nom correct de la propriété
                 ->andWhere('e.visite = :visite')
-                ->andWhere('e.en_maintenance = 0')
+                ->andWhere('e.en_maintenance = 0 OR e.en_maintenance IS NULL)')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
