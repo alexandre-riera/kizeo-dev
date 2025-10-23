@@ -4401,13 +4401,7 @@ private function extractLibelleFromPath(string $equipementPath): string
     // ============================================================================
 
     /**
-     * ✅ NOUVELLE MÉTHODE OPTIMISÉE : Vérification par clé métier minimale mais suffisante
-     * 
-     * Utilise une approche hybride intelligente :
-     * - Critères OBLIGATOIRES : id_contact, visite, libelle_equipement, repere_site_client
-     * - Critères OPTIONNELS (seulement si renseignés) : mode_fonctionnement, numero_de_serie, marque
-     * 
-     * Vérifie à la fois en base de données ET dans l'UnitOfWork
+     * ✅ VERSION CORRIGÉE : Vérification par clé métier avec noms de propriétés corrects
      */
     private function offContractEquipmentExistsByFullSignature(
         array $equipmentData,
@@ -4426,22 +4420,21 @@ private function extractLibelleFromPath(string $equipementPath): string
             // ========================================
             
             $qb = $repository->createQueryBuilder('e')
-                ->where('e.id_contact = :idContact')
+                ->where('e.id_contact = :idContact')  // ✅ Nom correct de la propriété
                 ->andWhere('e.visite = :visite')
-                ->andWhere('e.en_maintenance = 0')  // Utiliser 0 au lieu de false pour compatibilité
+                ->andWhere('e.en_maintenance = 0')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
             dump("Critères de base : id_contact=$idContact, visite=$visite");
             
             // libelle_equipement (nature) - OBLIGATOIRE
-            $libelleEquipement = trim($equipmentData['nature']['value'] ?? '');
+            $libelleEquipement = strtolower(trim($equipmentData['nature']['value'] ?? ''));
             if (!empty($libelleEquipement)) {
-                $qb->andWhere('e.libelle_equipement = :libelle')
+                $qb->andWhere('LOWER(e.libelle_equipement) = :libelle')  // ✅ LOWER pour comparaison insensible
                 ->setParameter('libelle', $libelleEquipement);
                 dump("+ libelle_equipement = '$libelleEquipement'");
             } else {
-                // Si pas de libellé, impossible de déterminer l'unicité
                 dump("⚠️ Pas de libellé équipement - création autorisée");
                 return false;
             }
@@ -4453,7 +4446,6 @@ private function extractLibelleFromPath(string $equipementPath): string
                 ->setParameter('repere', $repereSiteClient);
                 dump("+ repere_site_client = '$repereSiteClient'");
             } else {
-                // Sans repère, on ne peut pas garantir l'unicité (peut avoir plusieurs équipements même type)
                 dump("⚠️ Pas de repère site - création autorisée");
                 return false;
             }
@@ -4464,7 +4456,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             
             // mode_fonctionnement - Si renseigné, on l'ajoute
             $modeFonctionnement = trim($equipmentData['mode_fonctionnement_']['value'] ?? '');
-            if (!empty($modeFonctionnement)) {
+            if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC') {
                 $qb->andWhere('e.mode_fonctionnement = :mode')
                 ->setParameter('mode', $modeFonctionnement);
                 dump("+ mode_fonctionnement = '$modeFonctionnement'");
@@ -4486,12 +4478,20 @@ private function extractLibelleFromPath(string $equipementPath): string
                 dump("+ marque = '$marque'");
             }
             
-            // mise_en_service - Si renseignée, on l'ajoute
-            $miseEnService = trim($equipmentData['annee']['value'] ?? '');
-            if (!empty($miseEnService) && $miseEnService !== 'NC') {
-                $qb->andWhere('e.mise_en_service = :miseEnService')
-                ->setParameter('miseEnService', $miseEnService);
-                dump("+ mise_en_service = '$miseEnService'");
+            // hauteur - Si renseignée
+            $hauteur = trim($equipmentData['hauteur']['value'] ?? '');
+            if (!empty($hauteur) && $hauteur !== 'NC') {
+                $qb->andWhere('e.hauteur = :hauteur')
+                ->setParameter('hauteur', $hauteur);
+                dump("+ hauteur = '$hauteur'");
+            }
+            
+            // largeur - Si renseignée
+            $largeur = trim($equipmentData['largeur']['value'] ?? '');
+            if (!empty($largeur) && $largeur !== 'NC') {
+                $qb->andWhere('e.largeur = :largeur')
+                ->setParameter('largeur', $largeur);
+                dump("+ largeur = '$largeur'");
             }
             
             // ========================================
@@ -4499,6 +4499,12 @@ private function extractLibelleFromPath(string $equipementPath): string
             // ========================================
             
             $qb->setMaxResults(1);
+            
+            // ✅ AFFICHER LA REQUÊTE SQL POUR DEBUG
+            $sql = $qb->getQuery()->getSQL();
+            dump("Requête SQL générée:");
+            dump($sql);
+            
             $existingInDb = $qb->getQuery()->getOneOrNullResult();
             
             if ($existingInDb !== null) {
@@ -4525,14 +4531,14 @@ private function extractLibelleFromPath(string $equipementPath): string
                     $sameIdContact = $entity->getIdContact() === $idContact;
                     $sameVisite = $entity->getVisite() === $visite;
                     $sameEnMaintenance = $entity->isEnMaintenance() === false;
-                    $sameLibelle = $entity->getLibelleEquipement() === $libelleEquipement;
+                    $sameLibelle = strtolower($entity->getLibelleEquipement()) === $libelleEquipement;
                     $sameRepere = $entity->getRepereSiteClient() === $repereSiteClient;
                     
                     if ($sameIdContact && $sameVisite && $sameEnMaintenance && $sameLibelle && $sameRepere) {
                         // Vérifier les critères optionnels s'ils sont renseignés
                         $match = true;
                         
-                        if (!empty($modeFonctionnement) && $entity->getModeFonctionnement() !== $modeFonctionnement) {
+                        if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC' && $entity->getModeFonctionnement() !== $modeFonctionnement) {
                             $match = false;
                         }
                         
