@@ -45,144 +45,6 @@ class SimplifiedMaintenanceController extends AbstractController
         $this->client = $client;
         $this->logger = $logger;
     }
-
-    /**
-     * NOUVELLE MÉTHODE : Récupérer TOUS les formulaires de maintenance (pas seulement les non lus)
-     */
-    private function getAllMaintenanceFormsData($cache): array
-    {
-        // Cache des formulaires MAINTENANCE pour 1 heure
-        $allFormsArray = $cache->get('all-forms-on-kizeo-complete', function($item){
-            $item->expiresAfter(3600); // 1 heure au lieu de 1 mois
-            $result = $this->getForms();
-            return $result['forms'];
-        });
-
-        $formMaintenanceIds = [];
-        $allMaintenanceData = [];
-        
-        // Récupérer tous les IDs des formulaires MAINTENANCE
-        foreach ($allFormsArray as $form) {
-            if ($form['class'] === 'MAINTENANCE') {
-                $formMaintenanceIds[] = $form['id'];
-            }
-        }
-
-        // Pour chaque formulaire MAINTENANCE, récupérer TOUTES les données (pas seulement les non lues)
-        foreach ($formMaintenanceIds as $formId) {
-            try {
-                // Utiliser l'endpoint /data/advanced pour récupérer TOUTES les données
-                $response = $this->client->request(
-                    'POST',
-                    'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/advanced', 
-                    [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                        'timeout' => 30
-                    ]
-                );
-
-                $formData = $response->toArray();
-                
-                if (isset($formData['data']) && !empty($formData['data'])) {
-                    foreach ($formData['data'] as $entry) {
-                        // Récupérer les détails de chaque entrée
-                        $detailResponse = $this->client->request(
-                            'GET',
-                            'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
-                            [
-                                'headers' => [
-                                    'Accept' => 'application/json',
-                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                ],
-                                'timeout' => 15
-                            ]
-                        );
-
-                        $detailData = $detailResponse->toArray();
-                        
-                        // Ajouter les informations nécessaires pour le traitement
-                        $allMaintenanceData[] = [
-                            'form_id' => $entry['_form_id'],
-                            'id' => $entry['_id'],
-                            'data' => $detailData['data']
-                        ];
-                    }
-                }
-
-            } catch (\Exception $e) {
-                // dump("Erreur récupération données formulaire {$formId}: " . $e->getMessage());
-                continue;
-            }
-        }
-
-        return $allMaintenanceData;
-    }
-
-    /**
-     * Récupérer la liste des formulaires depuis Kizeo
-     */
-    private function getForms(): array
-    {
-        $response = $this->client->request(
-            'GET',
-            'https://forms.kizeo.com/rest/v3/forms', 
-            [
-                'headers' => [
-                    'Accept' => 'application/json',
-                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                ],
-                'timeout' => 30
-            ]
-        );
-        
-        return $response->toArray();
-    }
-
-    /**
-     * Traiter un formulaire spécifique pour une agence
-     */
-    private function processAgencyForm(array $fields, string $agencyCode, EntityManagerInterface $entityManager): array
-    {
-        $contractEquipments = 0;
-        $offContractEquipments = 0;
-        
-        $entityClass = $this->getEntityClassByAgency($agencyCode);
-        if (!$entityClass) {
-            throw new \Exception("Classe d'entité non trouvée pour l'agence: " . $agencyCode);
-        }
-
-        // Traitement des équipements sous contrat
-        if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-            foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
-                $equipement = new $entityClass();
-                $this->setCommonEquipmentData($equipement, $fields);
-                $this->setContractEquipmentData($equipement, $equipmentContrat);
-                
-                $entityManager->persist($equipement);
-                $contractEquipments++;
-            }
-        }
-
-        // Traitement des équipements hors contrat
-        if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-            foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
-                $equipement = new $entityClass();
-                $this->setCommonEquipmentData($equipement, $fields);
-                $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
-                
-                $entityManager->persist($equipement);
-                $offContractEquipments++;
-            }
-        }
-
-        return [
-            'contract' => $contractEquipments,
-            'off_contract' => $offContractEquipments
-        ];
-    }
     
     /**
      * Définir les données communes à tous les équipements - ADAPTÉE AUX PROPRIÉTÉS EXISTANTES
@@ -240,34 +102,140 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Définir les données spécifiques aux équipements hors contrat avec numérotation automatique
+     * ÉTAPE 2: Modifier setOffContractEquipmentData pour retourner un booléen
+     * REMPLACER la méthode existante par celle-ci
      */
-    private function setOffContractEquipmentData($equipement, array $equipmentHorsContrat, array $fields, string $entityClass, EntityManagerInterface $entityManager): void
-    {
-        $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
-        $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-        $idClient = $fields['id_client_']['value'] ?? '';
-        
-        $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
-        $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-        
-        $equipement->setNumeroEquipement($numeroFormate);
-        $equipement->setLibelleEquipement($typeLibelle);
-        $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
-        $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
-        $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
-        $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
-        $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
-        $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
-        $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
-        $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
-        $equipement->setEtat($equipmentHorsContrat['etat1']['value'] ?? '');
-        
-        $equipement->setVisite($this->getDefaultVisitType($fields));
-        $equipement->setStatutDeMaintenance($this->getMaintenanceStatusFromEtat($equipmentHorsContrat['etat1']['value'] ?? ''));
-        
-        $equipement->setEnMaintenance(false);
-        $equipement->setIsArchive(false);
+    private function setOffContractEquipmentData(
+        $equipement, 
+        array $equipmentHorsContrat, 
+        array $fields, 
+        string $entityClass, 
+        EntityManagerInterface $entityManager
+    ): bool {  // ✅ MAINTENANT RETOURNE UN BOOLÉEN
+        try {
+            // 1. ID CLIENT (utiliser id_client_ pas id_contact)
+            $idClient = $fields['id_client_']['value'] ?? '';
+            
+            if (empty($idClient)) {
+                return false;
+            }
+            
+            // 2. EXTRAIRE LA VISITE
+            $visite = $this->extractVisiteFromGlobalFields($fields);
+            
+            if (empty($visite)) {
+                return false;
+            }
+            
+            // 3. TYPE D'ÉQUIPEMENT
+            $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
+            
+            if (empty($typeLibelle)) {
+                return false;
+            }
+            
+            $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
+            
+            if (empty($typeCode)) {
+                return false;
+            }
+            
+            // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
+            if ($this->equipmentOffContractExists(
+                $typeLibelle,
+                $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
+                $equipmentHorsContrat['hauteur']['value'] ?? '',
+                $equipmentHorsContrat['largeur']['value'] ?? '',
+                $idClient,
+                $visite,
+                $entityClass,
+                $entityManager
+            )) {
+                return false;
+            }
+            
+            // 5. GÉNÉRER LE NUMÉRO
+            $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
+            $numeroFormate = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
+            
+            // 6. REMPLIR LES DONNÉES avec les BONS noms de champs
+            $equipement->setVisite($visite);
+            $equipement->setNumeroEquipement($numeroFormate);
+            $equipement->setLibelleEquipement($typeLibelle);
+            
+            // Données techniques
+            $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
+            $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
+            $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+            $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
+            $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
+            $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
+            $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
+            $equipement->setLongueur($equipmentHorsContrat['longueur']['value'] ?? '');
+            
+            // ✅ ATTENTION: plaque_signaletique1 et etat1 (pas plaque_signaletique et etat)
+            $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
+            
+            $etat = $equipmentHorsContrat['etat1']['value'] ?? 'NC';
+            $equipement->setEtat($etat);
+            
+            // Statut de maintenance
+            $statut = $this->getMaintenanceStatusFromEtat($etat);
+            $equipement->setStatutDeMaintenance($statut);
+            
+            // ✅ MARQUER COMME HORS CONTRAT
+            $equipement->setEnMaintenance(false);
+            $equipement->setIsArchive(false);
+            
+            return true;  // ✅ Succès
+            
+        } catch (\Exception $e) {
+            return false;  // ✅ Erreur
+        }
+    }
+
+    /**
+     * ✅ MÉTHODE SIMPLIFIÉE de déduplication
+     */
+    private function equipmentOffContractExists(
+        string $typeLibelle,
+        string $localisation,
+        string $hauteur,
+        string $largeur,
+        string $idClient,
+        string $visite,
+        string $entityClass,
+        EntityManagerInterface $entityManager
+        ): bool {
+        $qb = $entityManager->getRepository($entityClass)->createQueryBuilder('e');
+
+        $qb->where('e.idContact = :idClient')
+            ->andWhere('e.visite = :visite')
+            ->andWhere('LOWER(e.libelleEquipement) = :libelle')
+            ->andWhere('e.enMaintenance = false')
+            ->setParameter('idClient', $idClient)
+            ->setParameter('visite', $visite)
+            ->setParameter('libelle', strtolower($typeLibelle));
+
+        // Ajouter localisation si disponible
+        if (!empty($localisation)) {
+            $qb->andWhere('e.repereSiteClient = :localisation')
+                ->setParameter('localisation', $localisation);
+        }
+
+        // Ajouter dimensions si disponibles
+        if (!empty($hauteur) && !empty($largeur)) {
+            $qb->andWhere('e.hauteur = :hauteur')
+                ->andWhere('e.largeur = :largeur')
+                ->setParameter('hauteur', $hauteur)
+                ->setParameter('largeur', $largeur);
+        }
+
+        $count = $qb->select('COUNT(e.id)')
+                    ->getQuery()
+                    ->getSingleScalarResult();
+
+        return $count > 0;
     }
 
     /**
@@ -503,283 +471,6 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * SOLUTION 3: Route pour marquer tous les formulaires S140 comme "non lus"
-     * Pour forcer leur retraitement
-     */
-    #[Route('/api/maintenance/markasunread/{agencyCode}', name: 'app_maintenance_markasunread', methods: ['GET','POST'])]
-    public function markAsUnreadForAgency(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
-        
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
-
-        try {
-            $markedCount = 0;
-            $errors = [];
-
-            // 1. Récupérer tous les formulaires MAINTENANCE
-            $formsResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms',
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $allForms = $formsResponse->toArray();
-            $maintenanceForms = array_filter($allForms['forms'], function($form) {
-                return $form['class'] === 'MAINTENANCE';
-            });
-
-            // 2. Pour chaque formulaire, trouver les entrées S140 et les marquer comme non lues
-            foreach ($maintenanceForms as $form) {
-                try {
-                    // Récupérer toutes les données du formulaire
-                    $dataResponse = $this->client->request(
-                        'POST',
-                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/advanced',
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-
-                    $formData = $dataResponse->toArray();
-                    $s140DataIds = [];
-
-                    // Identifier les entrées S140
-                    foreach ($formData['data'] ?? [] as $entry) {
-                        $detailResponse = $this->client->request(
-                            'GET',
-                            'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
-                            [
-                                'headers' => [
-                                    'Accept' => 'application/json',
-                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                ],
-                            ]
-                        );
-
-                        $detailData = $detailResponse->toArray();
-                        
-                        if (isset($detailData['data']['fields']['code_agence']['value']) && 
-                            $detailData['data']['fields']['code_agence']['value'] === 'S140') {
-                            $s140DataIds[] = intval($entry['_id']);
-                        }
-                    }
-
-                    // Marquer comme non lus
-                    if (!empty($s140DataIds)) {
-                        $this->client->request(
-                            'POST',
-                            'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/markasunreadbyaction/read',
-                            [
-                                'headers' => [
-                                    'Accept' => 'application/json',
-                                    'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                ],
-                                'json' => [
-                                    'data_ids' => $s140DataIds
-                                ]
-                            ]
-                        );
-                        $markedCount += count($s140DataIds);
-                    }
-
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'form_id' => $form['id'],
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'marked_as_unread' => $markedCount,
-                'errors' => $errors,
-                'message' => "Marqué {$markedCount} entrées S140 comme non lues"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * SOLUTION 4: Route simplifiée qui force le traitement sans vérifier le statut "lu/non lu"
-     */
-    #[Route('/api/maintenance/force/{agencyCode}', name: 'app_maintenance_force_process', methods: ['GET'])]
-    public function forceProcessMaintenanceByAgency(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        ini_set('memory_limit', '2G');
-        set_time_limit(0);
-        
-        $validAgencies = ['S10', 'S40', 'S50', 'S60', 'S70', 'S80', 'S100', 'S120', 'S130', 'S140', 'S150', 'S160', 'S170'];
-        
-        if (!in_array($agencyCode, $validAgencies)) {
-            return new JsonResponse(['error' => 'Code agence non valide: ' . $agencyCode], 400);
-        }
-
-        try {
-            $processed = 0;
-            $errors = [];
-            $contractEquipments = 0;
-            $offContractEquipments = 0;
-
-            // 1. Récupérer directement TOUS les formulaires MAINTENANCE
-            $formsResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms',
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $allForms = $formsResponse->toArray();
-            $maintenanceForms = array_filter($allForms['forms'], function($form) {
-                return $form['class'] === 'MAINTENANCE';
-            });
-
-            // 2. Traiter chaque formulaire MAINTENANCE
-            foreach ($maintenanceForms as $form) {
-                try {
-                    // Récupérer toutes les données (ignore le statut lu/non lu)
-                    $dataResponse = $this->client->request(
-                        'POST',
-                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/advanced',
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-
-                    $formData = $dataResponse->toArray();
-
-                    // 3. Traiter chaque entrée du formulaire
-                    foreach ($formData['data'] ?? [] as $entry) {
-                        try {
-                            $detailResponse = $this->client->request(
-                                'GET',
-                                'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
-                                [
-                                    'headers' => [
-                                        'Accept' => 'application/json',
-                                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                    ],
-                                ]
-                            );
-
-                            $detailData = $detailResponse->toArray();
-                            $fields = $detailData['data']['fields'];
-
-                            // 4. Vérifier si c'est la bonne agence
-                            if (!isset($fields['code_agence']['value']) || 
-                                $fields['code_agence']['value'] !== $agencyCode) {
-                                continue;
-                            }
-
-                            // 5. Traiter cette entrée
-                            $entityClass = $this->getEntityClassByAgency($agencyCode);
-                            if (!$entityClass) {
-                                throw new \Exception("Classe d'entité non trouvée pour: " . $agencyCode);
-                            }
-
-                            // Traitement des équipements sous contrat
-                            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-                                foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
-                                    $equipement = new $entityClass();
-                                    $this->setCommonEquipmentData($equipement, $fields);
-                                    $this->setContractEquipmentData($equipement, $equipmentContrat);
-                                    
-                                    $entityManager->persist($equipement);
-                                    $contractEquipments++;
-                                }
-                            }
-
-                            // Traitement des équipements hors contrat
-                            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-                                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
-                                    $equipement = new $entityClass();
-                                    $this->setCommonEquipmentData($equipement, $fields);
-                                    $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
-                                    
-                                    $entityManager->persist($equipement);
-                                    $offContractEquipments++;
-                                }
-                            }
-
-                            $processed++;
-
-                            // Sauvegarder périodiquement
-                            if ($processed % 10 === 0) {
-                                $entityManager->flush();
-                                $entityManager->clear();
-                                gc_collect_cycles();
-                            }
-
-                        } catch (\Exception $e) {
-                            $errors[] = [
-                                'entry_id' => $entry['_id'],
-                                'error' => $e->getMessage()
-                            ];
-                        }
-                    }
-
-                } catch (\Exception $e) {
-                    $errors[] = [
-                        'form_id' => $form['id'],
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-
-            // Sauvegarder final
-            $entityManager->flush();
-
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'processed' => $processed,
-                'contract_equipments' => $contractEquipments,
-                'off_contract_equipments' => $offContractEquipments,
-                'total_equipments' => $contractEquipments + $offContractEquipments,
-                'errors' => $errors,
-                'message' => "Traitement forcé terminé pour {$agencyCode}: {$processed} formulaires, " . 
-                            ($contractEquipments + $offContractEquipments) . " équipements traités"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'agency' => $agencyCode,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
      * SOLUTION 5: Vider le cache pour S140
      */
     #[Route('/api/maintenance/clearcache/{agencyCode}', name: 'app_maintenance_clear_cache', methods: ['DELETE'])]
@@ -950,9 +641,18 @@ class SimplifiedMaintenanceController extends AbstractController
                                 foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                                     $equipement = new $entityClass();
                                     $this->setCommonEquipmentData($equipement, $fields);
-                                    $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
+                                    $shouldPersist = $this->setOffContractEquipmentData(
+                                        $equipement, 
+                                        $equipmentHorsContrat, 
+                                        $fields, 
+                                        $entityClass, 
+                                        $entityManager
+                                    );
                                     
-                                    $entityManager->persist($equipement);
+                                    if ($shouldPersist) {
+                                        $entityManager->persist($equipement);
+                                        $offContractEquipments++;
+                                    }
                                     $offContractEquipments++;
                                 }
                             }
@@ -1213,9 +913,18 @@ class SimplifiedMaintenanceController extends AbstractController
                 foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
                     $equipement = new $entityClass();
                     $this->setCommonEquipmentData($equipement, $fields);
-                    $this->setOffContractEquipmentData($equipement, $equipmentHorsContrat, $fields, $entityClass, $entityManager);
+                    $shouldPersist = $this->setOffContractEquipmentData(
+                        $equipement, 
+                        $equipmentHorsContrat, 
+                        $fields, 
+                        $entityClass, 
+                        $entityManager
+                    );
                     
-                    $entityManager->persist($equipement);
+                    if ($shouldPersist) {
+                        $entityManager->persist($equipement);
+                        $offContractEquipments++;
+                    }
                     $offContractEquipments++;
                 }
             }
@@ -1336,239 +1045,6 @@ class SimplifiedMaintenanceController extends AbstractController
             'details' => $results,
             'message' => "Traitement batch terminé: {$totalSuccess}/{" . count($entries) . "} entrées traitées, {$totalEquipments} équipements ajoutés"
         ]);
-    }
-
-    /**
-     * Route de test ultra-simple pour S140
-     */
-    #[Route('/api/maintenance/test/{agencyCode}', name: 'app_maintenance_test', methods: ['GET'])]
-    public function testMaintenanceProcessing(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
-
-        // Test avec les IDs trouvés précédemment
-        $formId = '1088761';
-        $entryId = '232647438'; // Premier ID trouvé
-
-        try {
-            // 1. Récupérer l'entrée spécifique
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
-
-            // 2. Vérifier que c'est bien S140
-            if ($fields['code_agence']['value'] !== 'S140') {
-                return new JsonResponse(['error' => 'Cette entrée n\'est pas S140'], 400);
-            }
-
-            // 3. Créer un équipement de test
-            $equipement = new EquipementS140();
-            
-            // Données de base
-            $equipement->setCodeAgence($fields['code_agence']['value']);
-            $equipement->setIdContact($fields['id_client_']['value'] ?? '');
-            $equipement->setRaisonSociale($fields['nom_client']['value'] ?? '');
-            $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? '');
-            $equipement->setDateEnregistrement($fields['date_et_heure1']['value'] ?? '');
-            
-            // Données d'équipement de test
-            $equipement->setNumeroEquipement('TEST_S140_001');
-            $equipement->setLibelleEquipement('Équipement de test');
-            $equipement->setVisite('CE1');
-            $equipement->setEtat('Test');
-            $equipement->setStatutDeMaintenance('TEST');
-            
-            // Valeurs par défaut
-            $equipement->setEtatDesLieuxFait(false);
-            $equipement->setEnMaintenance(true);
-            $equipement->setIsArchive(false);
-
-            // 4. Sauvegarder
-            $entityManager->persist($equipement);
-            $entityManager->flush();
-
-            return new JsonResponse([
-                'success' => true,
-                'message' => 'Équipement de test S140 créé avec succès',
-                'equipment_id' => $equipement->getId(),
-                'equipment_number' => $equipement->getNumeroEquipement(),
-                'client_name' => $equipement->getRaisonSociale(),
-                'technician' => $equipement->getTrigrammeTech(),
-                'form_data' => [
-                    'form_id' => $formId,
-                    'entry_id' => $entryId,
-                    'agency' => $fields['code_agence']['value'],
-                    'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_client']['value'] ?? '',
-                    'technician' => $fields['trigramme']['value'] ?? '',
-                    'date' => $fields['date_et_heure1']['value'] ?? ''
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * CONTROLLER PRÊT POUR LA PRODUCTION - Traitement des vraies données S140
-     */
-
-    /**
-     * Route pour traiter UN formulaire S140 spécifique avec ses vrais équipements
-     */
-    #[Route('/api/maintenance/process-real/{agencyCode}', name: 'app_maintenance_process_real', methods: ['GET'])]
-    public function processRealMaintenanceEntry(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
-
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id', '232647438');
-
-        try {
-            // 1. Récupérer l'entrée spécifique
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
-
-            // 2. Vérifier que c'est bien S140
-            if ($fields['code_agence']['value'] !== 'S140') {
-                return new JsonResponse([
-                    'error' => 'Cette entrée n\'est pas S140',
-                    'actual_agency' => $fields['code_agence']['value']
-                ], 400);
-            }
-
-            $contractEquipments = 0;
-            $offContractEquipments = 0;
-            $processedEquipments = [];
-
-            // 3. Traiter les équipements sous contrat
-            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-                foreach ($fields['contrat_de_maintenance']['value'] as $index => $equipmentContrat) {
-                    try {
-                        $equipement = new EquipementS140();
-                        
-                        // Données communes
-                        $this->setRealCommonData($equipement, $fields);
-                        
-                        // Données spécifiques contrat
-                        $this->setRealContractData($equipement, $equipmentContrat);
-                        
-                        $entityManager->persist($equipement);
-                        $contractEquipments++;
-                        
-                        $processedEquipments[] = [
-                            'type' => 'contract',
-                            'numero' => $equipement->getNumeroEquipement(),
-                            'libelle' => $equipement->getLibelleEquipement(),
-                            'etat' => $equipement->getEtat()
-                        ];
-                        
-                    } catch (\Exception $e) {
-                      // dump("Erreur équipement contrat $index: " . $e->getMessage());
-                    }
-                }
-            }
-
-            // 4. Traiter les équipements hors contrat
-            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-                foreach ($fields['tableau2']['value'] as $index => $equipmentHorsContrat) {
-                    try {
-                        $equipement = new EquipementS140();
-                        
-                        // Données communes
-                        $this->setRealCommonData($equipement, $fields);
-                        
-                        // Données spécifiques hors contrat
-                        $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
-                        
-                        $entityManager->persist($equipement);
-                        $offContractEquipments++;
-                        
-                        $processedEquipments[] = [
-                            'type' => 'off_contract',
-                            'numero' => $equipement->getNumeroEquipement(),
-                            'libelle' => $equipement->getLibelleEquipement(),
-                            'etat' => $equipement->getEtat()
-                        ];
-                        
-                    } catch (\Exception $e) {
-                      // dump("Erreur équipement hors contrat $index: " . $e->getMessage());
-                    }
-                }
-            }
-
-            // 5. Sauvegarder
-            $entityManager->flush();
-
-            // 6. Marquer comme lu
-            $this->markFormAsRead($formId, $entryId);
-
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'processed_entry' => [
-                    'form_id' => $formId,
-                    'entry_id' => $entryId,
-                    'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_client']['value'] ?? '',
-                    'technician' => $fields['trigramme']['value'] ?? '',
-                    'date' => $fields['date_et_heure1']['value'] ?? ''
-                ],
-                'contract_equipments' => $contractEquipments,
-                'off_contract_equipments' => $offContractEquipments,
-                'total_equipments' => $contractEquipments + $offContractEquipments,
-                'processed_equipments' => $processedEquipments,
-                'message' => "Formulaire {$entryId} traité: " . 
-                            ($contractEquipments + $offContractEquipments) . " équipements ajoutés"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
     }
 
     /**
@@ -1762,7 +1238,6 @@ class SimplifiedMaintenanceController extends AbstractController
         // ============================================
         return $dernierNumero + 1;
     }
-
     /**
      * EXEMPLE D'UTILISATION :
      * 
@@ -1774,796 +1249,6 @@ class SimplifiedMaintenanceController extends AbstractController
      * 
      * $numeroEquipement = 'RID' . str_pad($nextNumber, 2, '0', STR_PAD_LEFT);
      * // Résultat : "RID05" ✅
-     */
-
-    /**
-     * Route pour traiter TOUS les formulaires S140 trouvés
-     */
-    #[Route('/api/maintenance/process-all-s140', name: 'app_maintenance_process_all_s140', methods: ['GET'])]
-    public function processAllS140Maintenance(
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        // IDs trouvés lors du check
-        $entries = [
-            ['form_id' => '1088761', 'entry_id' => '232647438'],
-            ['form_id' => '1088761', 'entry_id' => '232647490'],  
-            ['form_id' => '1088761', 'entry_id' => '232647488'],
-            ['form_id' => '1088761', 'entry_id' => '232647486'],
-            ['form_id' => '1088761', 'entry_id' => '232647484']
-        ];
-
-        $results = [];
-        $totalSuccess = 0;
-        $totalErrors = 0;
-        $totalEquipments = 0;
-
-        foreach ($entries as $entry) {
-            try {
-                // Simuler l'appel à process-real
-                $subRequest = Request::create('/api/maintenance/process-real/S140', 'GET', [
-                    'form_id' => $entry['form_id'],
-                    'entry_id' => $entry['entry_id']
-                ]);
-
-                $response = $this->processRealMaintenanceEntry('S140', $entityManager, $subRequest);
-                $data = json_decode($response->getContent(), true);
-
-                if ($data['success']) {
-                    $totalSuccess++;
-                    $totalEquipments += $data['total_equipments'];
-                    $results[] = [
-                        'entry_id' => $entry['entry_id'],
-                        'status' => 'success',
-                        'equipments' => $data['total_equipments'],
-                        'client_name' => $data['processed_entry']['client_name']
-                    ];
-                } else {
-                    $totalErrors++;
-                    $results[] = [
-                        'entry_id' => $entry['entry_id'],
-                        'status' => 'error',
-                        'error' => $data['error']
-                    ];
-                }
-
-                // Pause pour éviter surcharge
-                sleep(1);
-
-            } catch (\Exception $e) {
-                $totalErrors++;
-                $results[] = [
-                    'entry_id' => $entry['entry_id'],
-                    'status' => 'error',
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-
-        return new JsonResponse([
-            'success' => true,
-            'agency' => 'S140',
-            'total_entries' => count($entries),
-            'successful' => $totalSuccess,
-            'errors' => $totalErrors,
-            'total_equipments_added' => $totalEquipments,
-            'details' => $results,
-            'message' => "Traitement terminé: {$totalSuccess}/" . count($entries) . " formulaires traités, {$totalEquipments} équipements ajoutés"
-        ]);
-    }
-
-    /**
-     * Route de debug pour analyser la structure des entrées qui posent problème
-     */
-    #[Route('/api/maintenance/debug-entry/{formId}/{entryId}', name: 'app_maintenance_debug_entry', methods: ['GET'])]
-    public function debugEntryStructure(
-        string $formId,
-        string $entryId,
-        Request $request
-    ): JsonResponse {
-        
-        try {
-            // Récupérer l'entrée spécifique
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            
-            return new JsonResponse([
-                'success' => true,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'raw_structure' => $detailData,
-                'has_data_key' => isset($detailData['data']),
-                'has_fields_key' => isset($detailData['data']['fields']),
-                'data_keys' => isset($detailData['data']) ? array_keys($detailData['data']) : null,
-                'fields_keys' => isset($detailData['data']['fields']) ? array_keys($detailData['data']['fields']) : null,
-                'analysis' => [
-                    'structure_type' => $this->analyzeStructure($detailData),
-                    'is_valid_maintenance_form' => $this->isValidMaintenanceForm($detailData)
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * Analyser la structure des données
-     */
-    private function analyzeStructure(array $data): string
-    {
-        if (!isset($data['data'])) {
-            return 'missing_data_key';
-        }
-        
-        if (!isset($data['data']['fields'])) {
-            return 'missing_fields_key';
-        }
-        
-        if (empty($data['data']['fields'])) {
-            return 'empty_fields';
-        }
-        
-        return 'valid_structure';
-    }
-
-    /**
-     * Vérifier si c'est un formulaire de maintenance valide
-     */
-    private function isValidMaintenanceForm(array $data): bool
-    {
-        if (!isset($data['data']['fields'])) {
-            return false;
-        }
-        
-        $fields = $data['data']['fields'];
-        
-        // Vérifier la présence des champs essentiels
-        $requiredFields = ['code_agence', 'nom_du_client', 'trigramme'];
-        
-        foreach ($requiredFields as $field) {
-            if (!isset($fields[$field]['value'])) {
-                return false;
-            }
-        }
-        
-        return true;
-    }
-
-    /**
-     * Route de debug rapide pour les 3 entrées en erreur
-     */
-    #[Route('/api/maintenance/debug-failed-entries', name: 'app_maintenance_debug_failed', methods: ['GET'])]
-    public function debugFailedEntries(Request $request): JsonResponse
-    {
-        $failedEntries = [
-            '232647490',
-            '232647486', 
-            '232647484'
-        ];
-        
-        $results = [];
-        
-        foreach ($failedEntries as $entryId) {
-            try {
-                $detailResponse = $this->client->request(
-                    'GET',
-                    'https://forms.kizeo.com/rest/v3/forms/1088761/data/' . $entryId,
-                    [
-                        'headers' => [
-                            'Accept' => 'application/json',
-                            'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                        ],
-                    ]
-                );
-
-                $detailData = $detailResponse->toArray();
-                
-                $results[$entryId] = [
-                    'status' => 'api_success',
-                    'has_data' => isset($detailData['data']),
-                    'has_fields' => isset($detailData['data']['fields']),
-                    'structure' => $this->analyzeStructure($detailData),
-                    'data_keys' => isset($detailData['data']) ? array_keys($detailData['data']) : null,
-                    'sample_data' => isset($detailData['data']) ? 
-                        array_slice($detailData['data'], 0, 3, true) : null
-                ];
-
-            } catch (\Exception $e) {
-                $results[$entryId] = [
-                    'status' => 'api_error',
-                    'error' => $e->getMessage()
-                ];
-            }
-        }
-        
-        return new JsonResponse([
-            'success' => true,
-            'failed_entries_analysis' => $results,
-            'recommendation' => $this->getRecommendation($results)
-        ]);
-    }
-
-    /**
-     * Générer une recommandation basée sur l'analyse
-     */
-    private function getRecommendation(array $results): string
-    {
-        $hasApiErrors = false;
-        $hasStructureIssues = false;
-        
-        foreach ($results as $entryId => $result) {
-            if ($result['status'] === 'api_error') {
-                $hasApiErrors = true;
-            } elseif ($result['structure'] !== 'valid_structure') {
-                $hasStructureIssues = true;
-            }
-        }
-        
-        if ($hasApiErrors) {
-            return 'Certaines entrées ne sont plus accessibles via l\'API - elles ont peut-être été supprimées';
-        }
-        
-        if ($hasStructureIssues) {
-            return 'Certaines entrées ont une structure différente - ajouter une validation avant traitement';
-        }
-        
-        return 'Toutes les entrées semblent valides - vérifier la logique de traitement';
-    }
-
-    /**
-     * Version corrigée du traitement avec validation de structure
-     */
-    #[Route('/api/maintenance/process-real-safe/{agencyCode}', name: 'app_maintenance_process_real_safe', methods: ['GET'])]
-    public function processRealMaintenanceEntrySafe(
-        string $agencyCode,
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
-
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id', '232647438');
-
-        try {
-            // 1. Récupérer l'entrée spécifique
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            
-            // 2. VALIDATION DE STRUCTURE
-            if (!isset($detailData['data'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Structure invalide: clé "data" manquante',
-                    'structure' => array_keys($detailData)
-                ], 400);
-            }
-            
-            if (!isset($detailData['data']['fields'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Structure invalide: clé "fields" manquante',
-                    'data_structure' => array_keys($detailData['data'])
-                ], 400);
-            }
-            
-            $fields = $detailData['data']['fields'];
-            
-            // 3. Validation des champs obligatoires
-            if (!isset($fields['code_agence']['value'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Champ code_agence manquant',
-                    'available_fields' => array_keys($fields)
-                ], 400);
-            }
-
-            // 4. Vérifier que c'est bien S140
-            if ($fields['code_agence']['value'] !== 'S140') {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Cette entrée n\'est pas S140',
-                    'actual_agency' => $fields['code_agence']['value']
-                ], 400);
-            }
-
-            // 5. Traitement normal à partir d'ici
-            $contractEquipments = 0;
-            $offContractEquipments = 0;
-            $processedEquipments = [];
-
-            // Traiter les équipements sous contrat
-            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-                foreach ($fields['contrat_de_maintenance']['value'] as $index => $equipmentContrat) {
-                    try {
-                        $equipement = new EquipementS140();
-                        $this->setRealCommonData($equipement, $fields);
-                        $this->setRealContractData($equipement, $equipmentContrat);
-                        
-                        $entityManager->persist($equipement);
-                        $contractEquipments++;
-                        
-                        $processedEquipments[] = [
-                            'type' => 'contract',
-                            'numero' => $equipement->getNumeroEquipement(),
-                            'libelle' => $equipement->getLibelleEquipement()
-                        ];
-                        
-                    } catch (\Exception $e) {
-                      // dump("Erreur équipement contrat $index: " . $e->getMessage());
-                    }
-                }
-            }
-
-            // Traiter les équipements hors contrat
-            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-                foreach ($fields['tableau2']['value'] as $index => $equipmentHorsContrat) {
-                    try {
-                        $equipement = new EquipementS140();
-                        $this->setRealCommonData($equipement, $fields);
-                        $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
-                        
-                        $entityManager->persist($equipement);
-                        $offContractEquipments++;
-                        
-                        $processedEquipments[] = [
-                            'type' => 'off_contract',
-                            'numero' => $equipement->getNumeroEquipement(),
-                            'libelle' => $equipement->getLibelleEquipement()
-                        ];
-                        
-                    } catch (\Exception $e) {
-                      // dump("Erreur équipement hors contrat $index: " . $e->getMessage());
-                    }
-                }
-            }
-
-            // Sauvegarder
-            $entityManager->flush();
-
-            // Marquer comme lu
-            $this->markFormAsRead($formId, $entryId);
-
-            return new JsonResponse([
-                'success' => true,
-                'agency' => $agencyCode,
-                'processed_entry' => [
-                    'form_id' => $formId,
-                    'entry_id' => $entryId,
-                    'client_id' => $fields['id_client_']['value'] ?? '',
-                    'client_name' => $fields['nom_client']['value'] ?? '',
-                    'technician' => $fields['trigramme']['value'] ?? '',
-                    'date' => $fields['date_et_heure1']['value'] ?? ''
-                ],
-                'contract_equipments' => $contractEquipments,
-                'off_contract_equipments' => $offContractEquipments,
-                'total_equipments' => $contractEquipments + $offContractEquipments,
-                'processed_equipments' => $processedEquipments,
-                'message' => "Formulaire {$entryId} traité: " . 
-                            ($contractEquipments + $offContractEquipments) . " équipements ajoutés"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ], 500);
-        }
-    }
-
-    /**
-     * SOLUTION FINALE : Traitement intelligent avec filtrage des entrées valides
-     */
-
-    /**
-     * Route améliorée pour récupérer SEULEMENT les formulaires S140 valides
-     */
-    #[Route('/api/maintenance/check-valid-s140', name: 'app_maintenance_check_valid_s140', methods: ['GET'])]
-    public function checkValidS140Entries(Request $request): JsonResponse
-    {
-        try {
-            $validEntries = [];
-            $invalidEntries = [];
-            $totalChecked = 0;
-
-            // 1. Récupérer la liste des formulaires MAINTENANCE
-            $formsResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms',
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $allForms = $formsResponse->toArray();
-            $maintenanceForms = array_filter($allForms['forms'], function($form) {
-                return $form['class'] === 'MAINTENANCE';
-            });
-
-            // 2. Pour chaque formulaire, chercher les entrées S140 VALIDES
-            foreach ($maintenanceForms as $form) {
-                try {
-                    // Récupérer les entrées non lues
-                    $unreadResponse = $this->client->request(
-                        'GET',
-                        'https://forms.kizeo.com/rest/v3/forms/' . $form['id'] . '/data/unread/read/20',
-                        [
-                            'headers' => [
-                                'Accept' => 'application/json',
-                                'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                            ],
-                        ]
-                    );
-
-                    $unreadData = $unreadResponse->toArray();
-                    $totalChecked += count($unreadData['data'] ?? []);
-
-                    // 3. Vérifier chaque entrée
-                    foreach ($unreadData['data'] ?? [] as $entry) {
-                        try {
-                            $detailResponse = $this->client->request(
-                                'GET',
-                                'https://forms.kizeo.com/rest/v3/forms/' . $entry['_form_id'] . '/data/' . $entry['_id'],
-                                [
-                                    'headers' => [
-                                        'Accept' => 'application/json',
-                                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                                    ],
-                                ]
-                            );
-
-                            $detailData = $detailResponse->toArray();
-                            
-                            // 4. VALIDATION DE STRUCTURE
-                            if (!isset($detailData['data']['fields'])) {
-                                $invalidEntries[] = [
-                                    'form_id' => $form['id'],
-                                    'entry_id' => $entry['_id'],
-                                    'reason' => 'no_fields_data'
-                                ];
-                                continue;
-                            }
-
-                            $fields = $detailData['data']['fields'];
-
-                            // 5. Vérifier si c'est S140 ET valide
-                            if (isset($fields['code_agence']['value']) && 
-                                $fields['code_agence']['value'] === 'S140') {
-                                
-                                $validEntries[] = [
-                                    'form_id' => $form['id'],
-                                    'form_name' => $form['name'],
-                                    'entry_id' => $entry['_id'],
-                                    'client_id' => $fields['id_client_']['value'] ?? '',
-                                    'client_name' => $fields['nom_client']['value'] ?? '',
-                                    'technician' => $fields['trigramme']['value'] ?? '',
-                                    'date' => $fields['date_et_heure1']['value'] ?? '',
-                                    'has_contract_equipment' => !empty($fields['contrat_de_maintenance']['value'] ?? []),
-                                    'has_offcontract_equipment' => !empty($fields['tableau2']['value'] ?? []),
-                                    'contract_count' => count($fields['contrat_de_maintenance']['value'] ?? []),
-                                    'offcontract_count' => count($fields['tableau2']['value'] ?? [])
-                                ];
-                            }
-
-                        } catch (\Exception $e) {
-                            $invalidEntries[] = [
-                                'form_id' => $form['id'],
-                                'entry_id' => $entry['_id'] ?? 'unknown',
-                                'reason' => 'api_error: ' . $e->getMessage()
-                            ];
-                        }
-                    }
-
-                } catch (\Exception $e) {
-                  // dump("Erreur formulaire {$form['id']}: " . $e->getMessage());
-                }
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'total_maintenance_forms' => count($maintenanceForms),
-                'total_entries_checked' => $totalChecked,
-                'valid_s140_entries' => count($validEntries),
-                'invalid_entries' => count($invalidEntries),
-                'valid_entries' => $validEntries,
-                'invalid_entries_details' => $invalidEntries,
-                'ready_to_process' => count($validEntries) > 0,
-                'recommendation' => count($validEntries) > 0 ? 
-                    'Utiliser /process-valid-s140 pour traiter les ' . count($validEntries) . ' entrées valides' :
-                    'Aucune entrée S140 valide trouvée'
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Route pour traiter SEULEMENT les entrées S140 valides
-     */
-    #[Route('/api/maintenance/process-valid-s140', name: 'app_maintenance_process_valid_s140', methods: ['GET'])]
-    public function processValidS140Entries(
-        EntityManagerInterface $entityManager,
-        Request $request
-    ): JsonResponse {
-        
-        try {
-            // 1. D'abord récupérer les entrées valides
-            $checkRequest = Request::create('/api/maintenance/check-valid-s140', 'GET');
-            $checkResponse = $this->checkValidS140Entries($checkRequest);
-            $checkData = json_decode($checkResponse->getContent(), true);
-
-            if (!$checkData['success'] || empty($checkData['valid_entries'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'message' => 'Aucune entrée S140 valide trouvée',
-                    'details' => $checkData
-                ], 400);
-            }
-
-            $validEntries = $checkData['valid_entries'];
-            $results = [];
-            $totalSuccess = 0;
-            $totalErrors = 0;
-            $totalEquipments = 0;
-
-            // 2. Traiter chaque entrée valide
-            foreach ($validEntries as $entry) {
-                try {
-                    $result = $this->processSingleValidEntry(
-                        $entry['form_id'], 
-                        $entry['entry_id'], 
-                        $entityManager
-                    );
-
-                    if ($result['success']) {
-                        $totalSuccess++;
-                        $totalEquipments += $result['total_equipments'];
-                        $results[] = [
-                            'entry_id' => $entry['entry_id'],
-                            'client_name' => $entry['client_name'],
-                            'status' => 'success',
-                            'equipments' => $result['total_equipments'],
-                            'contract_equipments' => $result['contract_equipments'],
-                            'off_contract_equipments' => $result['off_contract_equipments']
-                        ];
-                    } else {
-                        $totalErrors++;
-                        $results[] = [
-                            'entry_id' => $entry['entry_id'],
-                            'client_name' => $entry['client_name'],
-                            'status' => 'error',
-                            'error' => $result['error']
-                        ];
-                    }
-
-                    // Pause entre traitements
-                    sleep(1);
-
-                } catch (\Exception $e) {
-                    $totalErrors++;
-                    $results[] = [
-                        'entry_id' => $entry['entry_id'],
-                        'client_name' => $entry['client_name'],
-                        'status' => 'error',
-                        'error' => $e->getMessage()
-                    ];
-                }
-            }
-
-            return new JsonResponse([
-                'success' => true,
-                'agency' => 'S140',
-                'total_valid_entries' => count($validEntries),
-                'successful' => $totalSuccess,
-                'errors' => $totalErrors,
-                'total_equipments_added' => $totalEquipments,
-                'processing_details' => $results,
-                'message' => "Traitement filtré terminé: {$totalSuccess}/" . count($validEntries) . 
-                            " entrées valides traitées, {$totalEquipments} équipements ajoutés"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Traiter une entrée valide spécifique
-     */
-    private function processSingleValidEntry(
-        string $formId, 
-        string $entryId, 
-        EntityManagerInterface $entityManager
-    ): array {
-        
-        try {
-            // Récupérer les données
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            $fields = $detailData['data']['fields'];
-
-            $contractEquipments = 0;
-            $offContractEquipments = 0;
-
-            // Traiter équipements sous contrat
-            if (isset($fields['contrat_de_maintenance']['value']) && !empty($fields['contrat_de_maintenance']['value'])) {
-                foreach ($fields['contrat_de_maintenance']['value'] as $equipmentContrat) {
-                    $equipement = new EquipementS140();
-                    $this->setRealCommonData($equipement, $fields);
-                    $this->setRealContractData($equipement, $equipmentContrat);
-                    
-                    $entityManager->persist($equipement);
-                    $contractEquipments++;
-                }
-            }
-
-            // Traiter équipements hors contrat
-            if (isset($fields['tableau2']['value']) && !empty($fields['tableau2']['value'])) {
-                foreach ($fields['tableau2']['value'] as $equipmentHorsContrat) {
-                    $equipement = new EquipementS140();
-                    $this->setRealCommonData($equipement, $fields);
-                    $this->setRealOffContractData($equipement, $equipmentHorsContrat, $fields, $entityManager);
-                    
-                    $entityManager->persist($equipement);
-                    $offContractEquipments++;
-                }
-            }
-
-            // Sauvegarder
-            $entityManager->flush();
-
-            // Marquer comme lu
-            $this->markFormAsRead($formId, $entryId);
-
-            return [
-                'success' => true,
-                'total_equipments' => $contractEquipments + $offContractEquipments,
-                'contract_equipments' => $contractEquipments,
-                'off_contract_equipments' => $offContractEquipments
-            ];
-
-        } catch (\Exception $e) {
-            return [
-                'success' => false,
-                'error' => $e->getMessage()
-            ];
-        }
-    }
-
-    /**
-     * Route pour analyser un formulaire AVANT traitement
-     */
-    #[Route('/api/maintenance/analyze/{agencyCode}', name: 'app_maintenance_analyze', methods: ['GET'])]
-    public function analyzeMaintenanceForm(
-        string $agencyCode,
-        Request $request
-    ): JsonResponse {
-        
-        if ($agencyCode !== 'S140') {
-            return new JsonResponse(['error' => 'Cette route est spécifique à S140'], 400);
-        }
-
-        $formId = $request->query->get('form_id', '1088761');
-        $entryId = $request->query->get('entry_id');
-
-        if (!$entryId) {
-            return new JsonResponse(['error' => 'Paramètre entry_id requis'], 400);
-        }
-
-        try {
-            $detailResponse = $this->client->request(
-                'GET',
-                'https://forms.kizeo.com/rest/v3/forms/' . $formId . '/data/' . $entryId,
-                [
-                    'headers' => [
-                        'Accept' => 'application/json',
-                        'Authorization' => $_ENV["KIZEO_API_TOKEN"],
-                    ],
-                ]
-            );
-
-            $detailData = $detailResponse->toArray();
-            
-            if (!isset($detailData['data']['fields'])) {
-                return new JsonResponse([
-                    'success' => false,
-                    'error' => 'Formulaire sans données valides'
-                ], 400);
-            }
-
-            $fields = $detailData['data']['fields'];
-            $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
-            $offContractEquipments = $fields['tableau2']['value'] ?? [];
-            
-            $totalEquipments = count($contractEquipments) + count($offContractEquipments);
-            $recommendedChunkSize = max(10, min(20, intval($totalEquipments / 4)));
-
-            return new JsonResponse([
-                'success' => true,
-                'form_id' => $formId,
-                'entry_id' => $entryId,
-                'client_name' => $fields['nom_client']['value'] ?? '',
-                'technician' => $fields['trigramme']['value'] ?? '',
-                'date' => $fields['date_et_heure1']['value'] ?? '',
-                'equipment_analysis' => [
-                    'contract_equipments' => count($contractEquipments),
-                    'off_contract_equipments' => count($offContractEquipments),
-                    'total_equipments' => $totalEquipments,
-                    'memory_risk' => $totalEquipments > 30 ? 'HIGH' : ($totalEquipments > 15 ? 'MEDIUM' : 'LOW'),
-                    'recommended_chunk_size' => $recommendedChunkSize,
-                    'estimated_batches' => ceil($totalEquipments / $recommendedChunkSize)
-                ],
-                'processing_recommendation' => $totalEquipments > 20 ? 
-                    "Utiliser le traitement par lots avec chunk_size={$recommendedChunkSize}" :
-                    "Traitement normal possible",
-                'next_call' => $totalEquipments > 20 ?
-                    "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}&chunk_size={$recommendedChunkSize}" :
-                    "/api/maintenance/process-chunked/S140?form_id={$formId}&entry_id={$entryId}"
-            ]);
-
-        } catch (\Exception $e) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * SETTERS CORRIGÉS pour la vraie structure des données S140
      */
 
     /**
@@ -2589,73 +1274,6 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Données contrat corrigées selon la vraie structure S140
-     */
-    private function setRealContractDataFixed($equipement, array $equipmentContrat): void
-    {
-        // CORRECTION : Utiliser la vraie structure S140
-        
-        // 1. Type de visite depuis le path
-        $equipementPath = $equipmentContrat['equipement']['path'] ?? '';
-        $visite = $this->extractVisitTypeFromPath($equipementPath);
-        $equipement->setVisite($visite);
-        
-        // 2. Numéro d'équipement (simple valeur, pas de parsing)
-        $numeroEquipement = $equipmentContrat['equipement']['value'] ?? '';
-        $equipement->setNumeroEquipement($numeroEquipement);
-        
-        // 3. Libellé depuis reference7
-        $libelle = $equipmentContrat['reference7']['value'] ?? '';
-        $equipement->setLibelleEquipement($libelle);
-        
-        // 4. Année mise en service depuis reference2
-        $miseEnService = $equipmentContrat['reference2']['value'] ?? '';
-        $equipement->setMiseEnService($miseEnService);
-        
-        // 5. Numéro de série depuis reference6
-        $numeroSerie = $equipmentContrat['reference6']['value'] ?? '';
-        $equipement->setNumeroDeSerie($numeroSerie);
-        
-        // 6. Marque depuis reference5
-        $marque = $equipmentContrat['reference5']['value'] ?? '';
-        $equipement->setMarque($marque);
-        
-        // 7. Hauteur depuis reference1
-        $hauteur = $equipmentContrat['reference1']['value'] ?? '';
-        $equipement->setHauteur($hauteur);
-        
-        // 8. Largeur depuis reference3 (si disponible)
-        $largeur = $equipmentContrat['reference3']['value'] ?? '';
-        $equipement->setLargeur($largeur);
-        
-        // 9. Localisation depuis localisation_site_client
-        $localisation = $equipmentContrat['localisation_site_client']['value'] ?? '';
-        $equipement->setRepereSiteClient($localisation);
-        
-        // 10. Mode fonctionnement corrigé
-        $modeFonctionnement = $equipmentContrat['mode_fonctionnement_2']['value'] ?? '';
-        $equipement->setModeFonctionnement($modeFonctionnement);
-        
-        // 11. Plaque signalétique
-        $plaqueSignaletique = $equipmentContrat['plaque_signaletique']['value'] ?? '';
-        $equipement->setPlaqueSignaletique($plaqueSignaletique);
-        
-        // 12. État
-        $etat = $equipmentContrat['etat']['value'] ?? '';
-        $equipement->setEtat($etat);
-        
-        // 13. Longueur (peut ne pas exister pour certains équipements)
-        $longueur = $equipmentContrat['longueur']['value'] ?? '';
-        $equipement->setLongueur($longueur);
-        
-        // 14. Statut de maintenance basé sur l'état
-        $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
-        $equipement->setStatutDeMaintenance($statut);
-        
-        $equipement->setEnMaintenance(true);
-    }
-
-    /**
      * Correspondance états pour le nouveau format
      */
     private function getMaintenanceStatusFromEtatFixed(string $etat): string
@@ -2671,157 +1289,6 @@ class SimplifiedMaintenanceController extends AbstractController
                 return "HS";
             default:
                 return "RAS";
-        }
-    }
-
-    /**
-     * Sauvegarder les photos dans l'entité Form
-     */
-    private function savePhotosToFormEntity(array $equipmentData, array $fields, string $formId, string $entryId, string $equipmentCode, EntityManagerInterface $entityManager): void
-    {
-        try {
-            // Créer une nouvelle entrée Form pour chaque équipement
-            $form = new \App\Entity\Form();
-            
-            // Informations de référence
-            $form->setFormId($formId);
-            $form->setDataId($entryId);
-            $form->setEquipmentId($equipmentCode);
-            $form->setCodeEquipement($equipmentCode);
-            $raisonSociale = $fields['nom_client']['value'] ?? '';
-            $typeVisite = $this->extractVisitTypeFromPath($equipmentData['equipement']['path'] ?? '');
-
-            $form->setRaisonSocialeVisite($raisonSociale . '\\' . $typeVisite);
-            $form->setUpdateTime(date('Y-m-d H:i:s'));
-            
-            // Photo étiquette SOMAFI
-            if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
-                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
-            }
-            
-            // Photos principales de l'équipement
-            if (!empty($equipmentData['photo2']['value'])) {
-                $form->setPhoto2($equipmentData['photo2']['value']);
-            }
-            
-            // Photos complémentaires
-            if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
-                $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
-            }
-            
-            // Photos de déformation (pour niveleurs)
-            if (!empty($equipmentData['photo_deformation_levre']['value'])) {
-                $form->setPhotoDeformationLevre($equipmentData['photo_deformation_levre']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_joue']['value'])) {
-                $form->setPhotoJoue($equipmentData['photo_joue']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_deformation_plateau']['value'])) {
-                $form->setPhotoDeformationPlateau($equipmentData['photo_deformation_plateau']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_deformation_plaque']['value'])) {
-                $form->setPhotoDeformationPlaque($equipmentData['photo_deformation_plaque']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_deformation_structure']['value'])) {
-                $form->setPhotoDeformationStructure($equipmentData['photo_deformation_structure']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_deformation_chassis']['value'])) {
-                $form->setPhotoDeformationChassis($equipmentData['photo_deformation_chassis']['value']);
-            }
-            
-            // Photos techniques
-            if (!empty($equipmentData['photo_moteur']['value'])) {
-                $form->setPhotoMoteur($equipmentData['photo_moteur']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_coffret_de_commande']['value'])) {
-                $form->setPhotoCoffretDeCommande($equipmentData['photo_coffret_de_commande']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_carte']['value'])) {
-                $form->setPhotoCarte($equipmentData['photo_carte']['value']);
-            }
-            
-            // Photos de chocs et anomalies
-            if (!empty($equipmentData['photo_choc']['value'])) {
-                $form->setPhotoChoc($equipmentData['photo_choc']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_choc_tablier']['value'])) {
-                $form->setPhotoChocTablier($equipmentData['photo_choc_tablier']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_choc_tablier_porte']['value'])) {
-                $form->setPhotoChocTablierPorte($equipmentData['photo_choc_tablier_porte']['value']);
-            }
-            
-            // Photos de plaques et serrures
-            if (!empty($equipmentData['photo_plaque']['value'])) {
-                $form->setPhotoPlaque($equipmentData['photo_plaque']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_serrure']['value'])) {
-                $form->setPhotoSerrure($equipmentData['photo_serrure']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_serrure1']['value'])) {
-                $form->setPhotoSerrure1($equipmentData['photo_serrure1']['value']);
-            }
-            
-            // Photos de rails et fixations
-            if (!empty($equipmentData['photo_rail']['value'])) {
-                $form->setPhotoRail($equipmentData['photo_rail']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_equerre_rail']['value'])) {
-                $form->setPhotoEquerreRail($equipmentData['photo_equerre_rail']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_fixation_coulisse']['value'])) {
-                $form->setPhotoFixationCoulisse($equipmentData['photo_fixation_coulisse']['value']);
-            }
-            
-            // Photos d'axe
-            if (!empty($equipmentData['photo_axe']['value'])) {
-                $form->setPhotoAxe($equipmentData['photo_axe']['value']);
-            }
-            
-            // Photos de feux
-            if (!empty($equipmentData['photo_feux']['value'])) {
-                $form->setPhotoFeux($equipmentData['photo_feux']['value']);
-            }
-            
-            // Photos diverses
-            if (!empty($equipmentData['photo_bache']['value'])) {
-                $form->setPhotoBache($equipmentData['photo_bache']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_marquage_au_sol']['value'])) {
-                $form->setPhotoMarquageAuSol($equipmentData['photo_marquage_au_sol']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_butoir']['value'])) {
-                $form->setPhotoButoir($equipmentData['photo_butoir']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_vantail']['value'])) {
-                $form->setPhotoVantail($equipmentData['photo_vantail']['value']);
-            }
-            
-            if (!empty($equipmentData['photo_linteau']['value'])) {
-                $form->setPhotoLinteau($equipmentData['photo_linteau']['value']);
-            }
-            
-            // Sauvegarder l'entité Form
-            $entityManager->persist($form);
-            
-        } catch (\Exception $e) {
-          // dump("Erreur sauvegarde photos Form: " . $e->getMessage());
         }
     }
 
@@ -2849,31 +1316,6 @@ class SimplifiedMaintenanceController extends AbstractController
         ];
     }
 
-    /**
-     * Vérifier si une entrée Form existe déjà
-     */
-    private function formEntryExists(string $formId, string $entryId, string $equipmentCode, EntityManagerInterface $entityManager): bool
-    {
-        try {
-            $repository = $entityManager->getRepository(\App\Entity\Form::class);
-            
-            $existing = $repository->createQueryBuilder('f')
-                ->where('f.form_id = :formId')
-                ->andWhere('f.data_id = :entryId')
-                ->andWhere('f.equipment_id = :equipmentCode')
-                ->setParameter('formId', $formId)
-                ->setParameter('entryId', $entryId)
-                ->setParameter('equipmentCode', $equipmentCode)
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
-            
-            return $existing !== null;
-            
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
     /**
      * ✅ CORRECTION 2 : Version corrigée pour équipements au contrat
      */
@@ -2975,105 +1417,38 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Sauvegarder les photos avec vérification de doublons
+     * ✅ MÉTHODE CORRIGÉE: extractVisiteFromGlobalFields
+     * Extrait la visite depuis le path du premier équipement au contrat
      */
-    private function savePhotosToFormEntityWithDeduplication(
-        string $equipementPath,
-        array $equipmentData,
-        string $formId, 
-        string $entryId, 
-        string $equipmentCode, 
-        EntityManagerInterface $entityManager
-    ): void {
-        
-      // dump("=== DÉBUT DEBUG PHOTOS HORS CONTRAT ===");
-      // dump("Equipment Code: " . $equipmentCode);
-      // dump("Form ID: " . $formId);
-      // dump("Entry ID: " . $entryId);
-        
-        // Log des données photo disponibles
-      // dump("Photo3 présente: " . (isset($equipmentData['photo3']) ? 'OUI' : 'NON'));
-        if (isset($equipmentData['photo3'])) {
-          // dump("Photo3 value: " . ($equipmentData['photo3']['value'] ?? 'VIDE'));
-          // dump("Photo3 empty check: " . (empty($equipmentData['photo3']['value']) ? 'VIDE' : 'PAS VIDE'));
-        }
-
-        // Vérifier si l'entrée Form existe déjà
-        $existsAlready = $this->formEntryExists($formId, $entryId, $equipmentCode, $entityManager);
-      // dump("Entry existe déjà: " . ($existsAlready ? 'OUI - SKIP' : 'NON - PROCEED'));
-        
-        if ($existsAlready) {
-          // dump("ATTENTION: Entry ignorée car déjà existante!");
-            return; 
+    private function extractVisiteFromGlobalFields(array $fields): ?string
+    {
+        // Méthode 1: Chercher dans le path du premier équipement au contrat
+        if (isset($fields['contrat_de_maintenance']['value']) && 
+            !empty($fields['contrat_de_maintenance']['value'])) {
+            
+            $firstContractEquip = $fields['contrat_de_maintenance']['value'][0];
+            
+            if (isset($firstContractEquip['equipement']['path'])) {
+                $path = $firstContractEquip['equipement']['path'];
+                // Format: "KUEHNE + NAGEL 78\\CE1"
+                // On extrait "CE1"
+                $parts = explode('\\', $path);
+                if (count($parts) > 1) {
+                    $visite = $parts[count($parts) - 1];
+                    dump("Visite extraite du path: '$visite'");
+                    return $visite;
+                }
+            }
         }
         
-        try {
-            // Créer une nouvelle entrée Form
-            $form = new \App\Entity\Form();
-            
-            // Informations de référence
-            $form->setFormId($formId);
-            $form->setDataId($entryId);
-            $form->setEquipmentId($equipmentCode);
-            $form->setCodeEquipement($equipmentCode);
-            $form->setRaisonSocialeVisite($equipementPath);
-            $form->setUpdateTime(date('Y-m-d H:i:s'));
-            
-            // DEBUG: Photos avant assignation
-          // dump("=== ASSIGNATION PHOTOS ===");
-            
-            if (!empty($equipmentData['photo_etiquette_somafi']['value'])) {
-                $form->setPhotoEtiquetteSomafi($equipmentData['photo_etiquette_somafi']['value']);
-              // dump("Photo étiquette assignée: " . $equipmentData['photo_etiquette_somafi']['value']);
-            }
-            
-            if (!empty($equipmentData['photo2']['value'])) {
-                $form->setPhoto2($equipmentData['photo2']['value']);
-              // dump("Photo2 assignée: " . $equipmentData['photo2']['value']);
-            }
-            
-            // POINT CRITIQUE: Photo compte rendu
-            if (!empty($equipmentData['photo3']['value'])) {
-                $photoValue = $equipmentData['photo3']['value'];
-                $form->setPhotoCompteRendu($photoValue);
-              // dump("PHOTO COMPTE RENDU assignée: " . $photoValue);
-                
-                // Vérification immédiate
-                $verification = $form->getPhotoCompteRendu();
-              // dump("Vérification getter après set: " . ($verification ?? 'NULL'));
-            } else {
-              // dump("ATTENTION: photo3 est vide ou n'existe pas!");
-              // dump("Structure equipmentData: " . print_r(array_keys($equipmentData), true));
-            }
-            
-            if (!empty($equipmentData['photo_complementaire_equipeme']['value'])) {
-                $form->setPhotoEnvironnementEquipement1($equipmentData['photo_complementaire_equipeme']['value']);
-              // dump("Photo environnement assignée: " . $equipmentData['photo_complementaire_equipeme']['value']);
-            }
-            
-            // Autres photos...
-            $this->setAllPhotosToForm($form, $equipmentData);
-            
-            // DEBUG: État de l'entité avant persist
-          // dump("=== AVANT PERSIST ===");
-          // dump("Form ID: " . $form->getFormId());
-          // dump("Equipment ID: " . $form->getEquipmentId());
-          // dump("Photo compte rendu final: " . ($form->getPhotoCompteRendu() ?? 'NULL'));
-            
-            // Sauvegarder l'entité Form
-            $entityManager->persist($form);
-          // dump("Entity form persistée avec succès");
-            
-            // IMPORTANT: Ajouter un flush immédiat pour tester
-            $entityManager->flush();
-          // dump("Entity form flushée avec succès");
-        } catch (\Exception $e) {
-          // dump("ERREUR sauvegarde photos Form: " . $e->getMessage());
-          // dump("Stack trace: " . $e->getTraceAsString());
-            throw $e;
+        // Méthode 2: Chercher un champ type_de_visite
+        if (isset($fields['type_de_visite']['value']) && !empty($fields['type_de_visite']['value'])) {
+            return $fields['type_de_visite']['value'];
         }
         
-      // dump("=== FIN DEBUG PHOTOS HORS CONTRAT ===");
+        // Méthode 3: Si aucune visite trouvée, retourner null
+        dump("⚠️ Impossible d'extraire la visite depuis les champs globaux");
+        return null;
     }
 
     /**
@@ -3263,8 +1638,6 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * ✅ MÉTHODE MODIFIÉE : setOffContractDataWithFormPhotosAndDeduplication
-     * 
      * CHANGEMENTS CRITIQUES :
      * 1. Vérification de l'existence AVANT génération du numero_equipement
      * 2. Utilisation de la signature complète (toutes colonnes métier)
