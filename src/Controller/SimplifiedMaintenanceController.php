@@ -1686,7 +1686,7 @@ class SimplifiedMaintenanceController extends AbstractController
         error_log("=== DÉBUT TRAITEMENT ÉQUIPEMENT HORS CONTRAT ===");
         // ✅ DEBUG: Afficher TOUTES les clés disponibles dans $fields
         error_log("Clés disponibles dans fields:");
-        error_log(array_keys($fields));
+        // error_log(array_keys($fields));
         
         // ✅ DEBUG: Afficher le contenu de id_client_
         error_log("Contenu id_client_: " . ($fields['id_client_']['value'] ?? 'N/A'));
