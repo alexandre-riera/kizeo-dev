@@ -1683,34 +1683,34 @@ class SimplifiedMaintenanceController extends AbstractController
         $idSociete,
         $dateDerniereVisite
     ): bool {
-        dump("=== DÉBUT TRAITEMENT ÉQUIPEMENT HORS CONTRAT ===");
+        error_log("=== DÉBUT TRAITEMENT ÉQUIPEMENT HORS CONTRAT ===");
         // ✅ DEBUG: Afficher TOUTES les clés disponibles dans $fields
-        dump("Clés disponibles dans fields:");
-        dump(array_keys($fields));
+        error_log("Clés disponibles dans fields:");
+        error_log(array_keys($fields));
         
         // ✅ DEBUG: Afficher le contenu de id_client_
-        dump("Contenu id_client_: " . ($fields['id_client_']['value'] ?? 'N/A'));
+        error_log("Contenu id_client_: " . ($fields['id_client_']['value'] ?? 'N/A'));
         try {
             // 1. EXTRAIRE LA VISITE
             $visite = $this->getVisiteFromFields($fields, $equipmentHorsContrat);
-            dump("✅ Visite: " . ($visite ?? 'NULL'));
+            error_log("✅ Visite: " . ($visite ?? 'NULL'));
             
             if (empty($visite)) {
-                dump("❌ ERREUR: Visite vide");
+                error_log("❌ ERREUR: Visite vide");
                 return false;
             }
             
             // 2. EXTRAIRE L'ID CLIENT
             $idContact = $fields['id_client_']['value'] ?? '';  // ✅ id_client_ pas id_contact
-            dump("ID Contact (depuis id_client_): '$idContact'");
+            error_log("ID Contact (depuis id_client_): '$idContact'");
 
             if (empty($idContact)) {
-                dump("❌ ERREUR: ID Contact vide");
+                error_log("❌ ERREUR: ID Contact vide");
                 return false;
             }
             
             // 3. ✅ VÉRIFIER L'EXISTENCE AVEC LA SIGNATURE COMPLÈTE (SANS numero_equipement)
-            dump("=== VÉRIFICATION DOUBLON PAR SIGNATURE ===");
+            error_log("=== VÉRIFICATION DOUBLON PAR SIGNATURE ===");
             
             if ($this->offContractEquipmentExistsByFullSignature(
                 $equipmentHorsContrat,
@@ -1719,27 +1719,27 @@ class SimplifiedMaintenanceController extends AbstractController
                 $entityClass,
                 $entityManager
             )) {
-                dump("⚠️ ÉQUIPEMENT EXISTE DÉJÀ - SKIP");
+                error_log("⚠️ ÉQUIPEMENT EXISTE DÉJÀ - SKIP");
                 return false; // Ne pas persister
             }
             
-            dump("✅ Équipement unique, génération du numéro...");
+            error_log("✅ Équipement unique, génération du numéro...");
             
             // 4. MAINTENANT SEULEMENT : GÉNÉRER LE NUMERO_EQUIPEMENT
             $typeLibelle = $equipmentHorsContrat['nature']['value'] ?? '';
-            dump("Type libellé: '$typeLibelle'");
+            error_log("Type libellé: '$typeLibelle'");
             
             $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
-            dump("Type code: '$typeCode'");
+            error_log("Type code: '$typeCode'");
             
             if (empty($typeCode)) {
-                dump("❌ ERREUR: typeCode vide");
+                error_log("❌ ERREUR: typeCode vide");
                 return false;
             }
             
             $nouveauNumero = $this->getNextEquipmentNumberReal($typeCode, $idContact, $entityClass, $entityManager);
             $numeroEquipement = $typeCode . str_pad($nouveauNumero, 2, '0', STR_PAD_LEFT);
-            dump("✅ Numéro généré: $numeroEquipement");
+            error_log("✅ Numéro généré: $numeroEquipement");
             
             // 5. DÉFINIR LES PROPRIÉTÉS DE BASE
             $equipement->setVisite($visite);
@@ -1748,18 +1748,18 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipement->setCodeSociete($idSociete);
             $equipement->setDateEnregistrement($dateDerniereVisite);
             
-            dump("✅ Propriétés de base définies");
+            error_log("✅ Propriétés de base définies");
             
             // 6. REMPLIR LES DONNÉES MÉTIER
             $this->fillOffContractEquipmentDataFixed($equipement, $equipmentHorsContrat, $fields);
-            dump("✅ Données remplies");
+            error_log("✅ Données remplies");
             // ✅ AJOUTER CE DEBUG CRITIQUE
-            dump("VÉRIFICATION APRÈS fillOffContractEquipmentDataFixed:");
-            dump("- en_maintenance = " . ($equipement->isEnMaintenance() ? 'TRUE' : 'FALSE'));
+            error_log("VÉRIFICATION APRÈS fillOffContractEquipmentDataFixed:");
+            error_log("- en_maintenance = " . ($equipement->isEnMaintenance() ? 'TRUE' : 'FALSE'));
 
             // 7. ✅ IMPORTANT : Définir en_maintenance = false ENCORE UNE FOIS pour être SÛR
             $equipement->setEnMaintenance(false);
-            dump("✅ en_maintenance RE-défini à false après fillOffContractEquipmentDataFixed");
+            error_log("✅ en_maintenance RE-défini à false après fillOffContractEquipmentDataFixed");
 
             // 7. TÉLÉCHARGER ET SAUVEGARDER LES PHOTOS
             $agence = $fields['code_agence']['value'] ?? '';
@@ -1793,12 +1793,12 @@ class SimplifiedMaintenanceController extends AbstractController
             // 8. DÉFINIR LES ANOMALIES
             $this->setSimpleEquipmentAnomalies($equipement, $equipmentHorsContrat);
             
-            dump("✅ ÉQUIPEMENT PRÊT À ÊTRE PERSISTÉ");
+            error_log("✅ ÉQUIPEMENT PRÊT À ÊTRE PERSISTÉ");
             return true;
             
         } catch (\Exception $e) {
-            dump("❌ ERREUR: " . $e->getMessage());
-            dump("Trace: " . $e->getTraceAsString());
+            error_log("❌ ERREUR: " . $e->getMessage());
+            error_log("Trace: " . $e->getTraceAsString());
             return false;
         }
     }
@@ -4043,7 +4043,7 @@ private function extractLibelleFromPath(string $equipementPath): string
         string $entityClass,
         EntityManagerInterface $entityManager
     ): bool {
-        dump("=== VÉRIFICATION SIGNATURE MÉTIER ===");
+        error_log("=== VÉRIFICATION SIGNATURE MÉTIER ===");
         
         try {
             $repository = $entityManager->getRepository($entityClass);
@@ -4058,16 +4058,16 @@ private function extractLibelleFromPath(string $equipementPath): string
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
-            dump("Critères de base : id_contact=$idContact, visite=$visite");
+            error_log("Critères de base : id_contact=$idContact, visite=$visite");
             
             // libelle_equipement (nature) - OBLIGATOIRE
             $libelleEquipement = strtolower(trim($equipmentData['nature']['value'] ?? ''));
             if (!empty($libelleEquipement)) {
                 $qb->andWhere('LOWER(e.libelle_equipement) = :libelle')
                 ->setParameter('libelle', $libelleEquipement);
-                dump("+ libelle_equipement = '$libelleEquipement'");
+                error_log("+ libelle_equipement = '$libelleEquipement'");
             } else {
-                dump("⚠️ Pas de libellé équipement - création autorisée");
+                error_log("⚠️ Pas de libellé équipement - création autorisée");
                 return false;
             }
             
@@ -4076,9 +4076,9 @@ private function extractLibelleFromPath(string $equipementPath): string
             if (!empty($repereSiteClient)) {
                 $qb->andWhere('e.repere_site_client = :repere')
                 ->setParameter('repere', $repereSiteClient);
-                dump("+ repere_site_client = '$repereSiteClient'");
+                error_log("+ repere_site_client = '$repereSiteClient'");
             } else {
-                dump("⚠️ Pas de repère site - création autorisée");
+                error_log("⚠️ Pas de repère site - création autorisée");
                 return false;
             }
             
@@ -4091,7 +4091,7 @@ private function extractLibelleFromPath(string $equipementPath): string
                 ->andWhere('e.largeur = :largeur')
                 ->setParameter('hauteur', $hauteur)
                 ->setParameter('largeur', $largeur);
-                dump("+ dimensions = {$hauteur} x {$largeur}");
+                error_log("+ dimensions = {$hauteur} x {$largeur}");
             }
             
             // mode_fonctionnement
@@ -4099,7 +4099,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC') {
                 $qb->andWhere('e.mode_fonctionnement = :mode')
                 ->setParameter('mode', $modeFonctionnement);
-                dump("+ mode_fonctionnement = '$modeFonctionnement'");
+                error_log("+ mode_fonctionnement = '$modeFonctionnement'");
             }
             
             // numero_de_serie (critère très fort)
@@ -4107,7 +4107,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             if (!empty($numeroDeSerie) && $numeroDeSerie !== 'Non renseigné' && $numeroDeSerie !== 'NC') {
                 $qb->andWhere('e.numero_de_serie = :numeroSerie')
                 ->setParameter('numeroSerie', $numeroDeSerie);
-                dump("+ numero_de_serie = '$numeroDeSerie' (critère fort)");
+                error_log("+ numero_de_serie = '$numeroDeSerie' (critère fort)");
             }
             
             // marque
@@ -4115,31 +4115,31 @@ private function extractLibelleFromPath(string $equipementPath): string
             if (!empty($marque) && $marque !== 'NC') {
                 $qb->andWhere('e.marque = :marque')
                 ->setParameter('marque', $marque);
-                dump("+ marque = '$marque'");
+                error_log("+ marque = '$marque'");
             }
             
             $qb->setMaxResults(1);
             
             $sql = $qb->getQuery()->getSQL();
-            dump("Requête SQL générée:");
-            dump($sql);
+            error_log("Requête SQL générée:");
+            error_log($sql);
             
             $existingInDb = $qb->getQuery()->getOneOrNullResult();
             
             if ($existingInDb !== null) {
-                dump("✅ TROUVÉ EN BASE: " . $existingInDb->getNumeroEquipement());
-                dump("→ SKIP (doublon détecté)");
+                error_log("✅ TROUVÉ EN BASE: " . $existingInDb->getNumeroEquipement());
+                error_log("→ SKIP (doublon détecté)");
                 return true;
             }
             
-            dump("❌ Pas trouvé en base");
+            error_log("❌ Pas trouvé en base");
             
             // Vérification UnitOfWork (inchangé)
-            dump("Vérification UnitOfWork...");
+            error_log("Vérification UnitOfWork...");
             $uow = $entityManager->getUnitOfWork();
             $scheduledInserts = $uow->getScheduledEntityInsertions();
             
-            dump("Objets en attente: " . count($scheduledInserts));
+            error_log("Objets en attente: " . count($scheduledInserts));
             
             foreach ($scheduledInserts as $entity) {
                 if (get_class($entity) === $entityClass) {
@@ -4167,20 +4167,20 @@ private function extractLibelleFromPath(string $equipementPath): string
                         }
                         
                         if ($match) {
-                            dump("✅ TROUVÉ DANS UNITOFWORK: " . $entity->getNumeroEquipement());
-                            dump("→ SKIP (doublon en attente de flush)");
+                            error_log("✅ TROUVÉ DANS UNITOFWORK: " . $entity->getNumeroEquipement());
+                            error_log("→ SKIP (doublon en attente de flush)");
                             return true;
                         }
                     }
                 }
             }
             
-            dump("✅ AUCUN DOUBLON DÉTECTÉ");
-            dump("→ CRÉATION AUTORISÉE");
+            error_log("✅ AUCUN DOUBLON DÉTECTÉ");
+            error_log("→ CRÉATION AUTORISÉE");
             return false;
             
         } catch (\Exception $e) {
-            dump("❌ ERREUR VÉRIFICATION: " . $e->getMessage());
+            error_log("❌ ERREUR VÉRIFICATION: " . $e->getMessage());
             return false;
         }
     }
