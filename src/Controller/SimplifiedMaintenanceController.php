@@ -4054,7 +4054,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             $qb = $repository->createQueryBuilder('e')
                 ->where('e.id_contact = :idContact')
                 ->andWhere('e.visite = :visite')
-                ->andWhere('(e.en_maintenance = false OR e.en_maintenance IS NULL)')
+                ->andWhere('(e.is_en_maintenance = false OR e.is_en_maintenance IS NULL)')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
