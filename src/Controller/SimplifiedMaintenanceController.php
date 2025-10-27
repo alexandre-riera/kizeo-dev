@@ -227,7 +227,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $qb->where('e.idContact = :idClient')
                 ->andWhere('e.visite = :visite')
                 ->andWhere('LOWER(e.libelleEquipement) = :libelle')
-                ->andWhere('(e.isEnMaintenance = 0 OR e.isEnMaintenance IS NULL)')  // ✅ CORRIGÉ : isEnMaintenance au lieu de enMaintenance
+                ->andWhere('(e.isEnMaintenance = false OR e.isEnMaintenance IS NULL)')  // ✅ CORRIGÉ : isEnMaintenance au lieu de enMaintenance
                 ->setParameter('idClient', $idClient)
                 ->setParameter('visite', $visite)
                 ->setParameter('libelle', strtolower($typeLibelle));
@@ -285,7 +285,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     $sameIdContact = $entity->getIdContact() === $idClient;
                     $sameVisite = $entity->getVisite() === $visite;
                     $sameLibelle = strtolower($entity->getLibelleEquipement()) === strtolower($typeLibelle);
-                    $sameEnMaintenance = ($entity->isEnMaintenance() === 0 || $entity->isEnMaintenance() === null);
+                    $sameEnMaintenance = ($entity->isEnMaintenance() === false || $entity->isEnMaintenance() === null);
                     
                     if ($sameIdContact && $sameVisite && $sameLibelle && $sameEnMaintenance) {
                         // Si localisation fournie, la vérifier aussi
@@ -1686,37 +1686,56 @@ class SimplifiedMaintenanceController extends AbstractController
                             error_log("Données communes définies pour équipement hors contrat");
                             
                             // ✅ CORRECTION : Utiliser la BONNE méthode avec la signature correcte
-                            $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
+                            // $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
+                            //     $equipement, 
+                            //     $equipmentHorsContrat, 
+                            //     $fields, 
+                            //     $submission['form_id'],  // ✅ Ajouter form_id
+                            //     $submission['entry_id'], // ✅ Ajouter entry_id
+                            //     $entityClass, 
+                            //     $entityManager,
+                            //     $idSociete,
+                            //     $dateDerniereVisite
+                            // );
+                            
+                            // if ($wasProcessed) {
+                            //     error_log("VÉRIFICATION FINALE AVANT PERSIST:");
+                            //     error_log("- Numéro: " . $equipement->getNumeroEquipement());
+                            //     error_log("- Libellé: " . $equipement->getLibelleEquipement());
+                            //     error_log("- Repère: " . $equipement->getRepereSiteClient());
+                            //     error_log("- En maintenance: " . ($equipement->isEnMaintenance() ? '1 ❌' : '0 ✅'));
+                                
+                            //     // ✅ SÉCURITÉ ABSOLUE : forcer encore une fois
+                            //     $equipement->setEnMaintenance(false);
+                            //     error_log("✅ en_maintenance FORCÉ à false juste avant persist");
+                                
+                            //     $entityManager->persist($equipement);
+                            //     $equipmentsProcessed++;
+                            //     $photosSaved++;
+                            //     error_log("✅ Équipement hors contrat persisté avec succès");
+                            // } else {
+                            //     $equipmentsSkipped++;
+                            //     error_log("⚠️ Équipement hors contrat skippé (doublon)");
+                            // }
+                            
+                            // ✅ APPEL DE LA MÉTHODE CORRIGÉE
+                            $shouldPersist = $this->setOffContractEquipmentData(
                                 $equipement, 
                                 $equipmentHorsContrat, 
                                 $fields, 
-                                $submission['form_id'],  // ✅ Ajouter form_id
-                                $submission['entry_id'], // ✅ Ajouter entry_id
                                 $entityClass, 
-                                $entityManager,
-                                $idSociete,
-                                $dateDerniereVisite
+                                $entityManager
                             );
                             
-                            if ($wasProcessed) {
-                                error_log("VÉRIFICATION FINALE AVANT PERSIST:");
-                                error_log("- Numéro: " . $equipement->getNumeroEquipement());
-                                error_log("- Libellé: " . $equipement->getLibelleEquipement());
-                                error_log("- Repère: " . $equipement->getRepereSiteClient());
-                                error_log("- En maintenance: " . ($equipement->isEnMaintenance() ? '1 ❌' : '0 ✅'));
-                                
-                                // ✅ SÉCURITÉ ABSOLUE : forcer encore une fois
-                                $equipement->setEnMaintenance(false);
-                                error_log("✅ en_maintenance FORCÉ à false juste avant persist");
-                                
+                            if ($shouldPersist) {
                                 $entityManager->persist($equipement);
                                 $equipmentsProcessed++;
                                 $photosSaved++;
-                                error_log("✅ Équipement hors contrat persisté avec succès");
+                                dump("✅ Persisté: " . $equipement->getNumeroEquipement());
                             } else {
-                                $equipmentsSkipped++;
-                                error_log("⚠️ Équipement hors contrat skippé (doublon)");
+                                dump("⚠️ Skippé (erreur ou doublon)");
                             }
+                            
                             
                             error_log("--- FIN ÉQUIPEMENT HORS CONTRAT " . ($equipmentIndex + 1) . " ---");
                             
@@ -3859,20 +3878,20 @@ class SimplifiedMaintenanceController extends AbstractController
             // On va l'ajouter en paramètre de la méthode
             
             $qb = $repository->createQueryBuilder('e')
-                ->where('e.id_contact = :idContact')
+                ->where('e.idContact = :idContact')
                 ->andWhere('e.visite = :visite')
-                ->andWhere('(e.is_en_maintenance = 0 OR e.is_en_maintenance IS NULL)')
+                ->andWhere('(e.isEnMaintenance = 0 OR e.isEnMaintenance IS NULL)')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
-            error_log("Critères de base : id_contact=$idContact, visite=$visite");
+            error_log("Critères de base : idContact=$idContact, visite=$visite");
             
             // libelle_equipement (nature) - OBLIGATOIRE
             $libelleEquipement = strtolower(trim($equipmentData['nature']['value'] ?? ''));
             if (!empty($libelleEquipement)) {
-                $qb->andWhere('LOWER(e.libelle_equipement) = :libelle')
+                $qb->andWhere('LOWER(e.libelleEquipement) = :libelle')
                 ->setParameter('libelle', $libelleEquipement);
-                error_log("+ libelle_equipement = '$libelleEquipement'");
+                error_log("+ libelleEquipement = '$libelleEquipement'");
             } else {
                 error_log("⚠️ Pas de libellé équipement - création autorisée");
                 return false;
@@ -3881,9 +3900,9 @@ class SimplifiedMaintenanceController extends AbstractController
             // repere_site_client (localisation_site_client1) - OBLIGATOIRE
             $repereSiteClient = trim($equipmentData['localisation_site_client1']['value'] ?? '');
             if (!empty($repereSiteClient)) {
-                $qb->andWhere('e.repere_site_client = :repere')
+                $qb->andWhere('e.repereSiteClient = :repere')
                 ->setParameter('repere', $repereSiteClient);
-                error_log("+ repere_site_client = '$repereSiteClient'");
+                error_log("+ repereSiteClient = '$repereSiteClient'");
             } else {
                 error_log("⚠️ Pas de repère site - création autorisée");
                 return false;
@@ -3901,20 +3920,20 @@ class SimplifiedMaintenanceController extends AbstractController
                 error_log("+ dimensions = {$hauteur} x {$largeur}");
             }
             
-            // mode_fonctionnement
+            // modeFonctionnement
             $modeFonctionnement = trim($equipmentData['mode_fonctionnement_']['value'] ?? '');
             if (!empty($modeFonctionnement) && $modeFonctionnement !== 'NC') {
-                $qb->andWhere('e.mode_fonctionnement = :mode')
+                $qb->andWhere('e.modeFonctionnement = :mode')
                 ->setParameter('mode', $modeFonctionnement);
-                error_log("+ mode_fonctionnement = '$modeFonctionnement'");
+                error_log("+ modeFonctionnement = '$modeFonctionnement'");
             }
             
-            // numero_de_serie (critère très fort)
+            // numeroDeSerie (critère très fort)
             $numeroDeSerie = trim($equipmentData['n_de_serie']['value'] ?? '');
             if (!empty($numeroDeSerie) && $numeroDeSerie !== 'Non renseigné' && $numeroDeSerie !== 'NC') {
-                $qb->andWhere('e.numero_de_serie = :numeroSerie')
+                $qb->andWhere('e.numeroDeSerie = :numeroSerie')
                 ->setParameter('numeroSerie', $numeroDeSerie);
-                error_log("+ numero_de_serie = '$numeroDeSerie' (critère fort)");
+                error_log("+ numeroDeSerie = '$numeroDeSerie' (critère fort)");
             }
             
             // marque
