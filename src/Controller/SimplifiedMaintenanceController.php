@@ -195,7 +195,17 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * ✅ MÉTHODE SIMPLIFIÉE de déduplication
+     * Vérifier si un équipement hors contrat existe déjà par signature métier
+     * 
+     * @param string $typeLibelle Libellé de l'équipement (ex: "porte sectionnelle")
+     * @param string $localisation Repère site client
+     * @param string $hauteur Hauteur de l'équipement
+     * @param string $largeur Largeur de l'équipement
+     * @param string $idClient ID du client
+     * @param string $visite Type de visite (CE1, CE2, etc.)
+     * @param string $entityClass Classe de l'entité (EquipementS10, EquipementS160, etc.)
+     * @param EntityManagerInterface $entityManager
+     * @return bool True si l'équipement existe déjà (doublon), False sinon
      */
     private function equipmentOffContractExists(
         string $typeLibelle,
@@ -206,36 +216,116 @@ class SimplifiedMaintenanceController extends AbstractController
         string $visite,
         string $entityClass,
         EntityManagerInterface $entityManager
-        ): bool {
-        $qb = $entityManager->getRepository($entityClass)->createQueryBuilder('e');
+    ): bool {
+        try {
+            error_log("=== VÉRIFICATION DÉDUPLICATION HORS CONTRAT ===");
+            error_log("Critères: idClient=$idClient, visite=$visite, libelle=$typeLibelle");
+            
+            $qb = $entityManager->getRepository($entityClass)->createQueryBuilder('e');
 
-        $qb->where('e.idContact = :idClient')
-            ->andWhere('e.visite = :visite')
-            ->andWhere('LOWER(e.libelleEquipement) = :libelle')
-            ->andWhere('e.enMaintenance = false')
-            ->setParameter('idClient', $idClient)
-            ->setParameter('visite', $visite)
-            ->setParameter('libelle', strtolower($typeLibelle));
+            // ✅ Critères OBLIGATOIRES (doivent tous être présents pour la déduplication)
+            $qb->where('e.idContact = :idClient')
+                ->andWhere('e.visite = :visite')
+                ->andWhere('LOWER(e.libelleEquipement) = :libelle')
+                ->andWhere('(e.isEnMaintenance = false OR e.isEnMaintenance IS NULL)')  // ✅ CORRIGÉ : isEnMaintenance au lieu de enMaintenance
+                ->setParameter('idClient', $idClient)
+                ->setParameter('visite', $visite)
+                ->setParameter('libelle', strtolower($typeLibelle));
 
-        // Ajouter localisation si disponible
-        if (!empty($localisation)) {
-            $qb->andWhere('e.repereSiteClient = :localisation')
-                ->setParameter('localisation', $localisation);
+            // ✅ Critères OPTIONNELS : on les ajoute seulement s'ils sont valides
+            
+            // Ajouter localisation si disponible ET valide
+            if (!empty($localisation) && 
+                $localisation !== 'NC' && 
+                $localisation !== 'Non renseigné' &&
+                $localisation !== 'nc') {
+                
+                $qb->andWhere('e.repereSiteClient = :localisation')
+                    ->setParameter('localisation', $localisation);
+                error_log("+ Critère localisation: $localisation");
+            }
+
+            // Ajouter dimensions si disponibles ET valides
+            if (!empty($hauteur) && !empty($largeur) && 
+                $hauteur !== 'NC' && $largeur !== 'NC' &&
+                $hauteur !== 'Non renseigné' && $largeur !== 'Non renseigné' &&
+                $hauteur !== 'nc' && $largeur !== 'nc') {
+                
+                $qb->andWhere('e.hauteur = :hauteur')
+                    ->andWhere('e.largeur = :largeur')
+                    ->setParameter('hauteur', $hauteur)
+                    ->setParameter('largeur', $largeur);
+                error_log("+ Critère dimensions: {$hauteur} x {$largeur}");
+            }
+
+            // ✅ Vérification en base de données
+            $count = $qb->select('COUNT(e.id)')
+                        ->getQuery()
+                        ->getSingleScalarResult();
+
+            $existsInDb = $count > 0;
+            
+            if ($existsInDb) {
+                error_log("✅ DOUBLON TROUVÉ EN BASE - SKIP (count=$count)");
+                return true;
+            }
+            
+            error_log("❌ Pas de doublon en base");
+            
+            // ✅ BONUS : Vérifier aussi dans l'UnitOfWork (équipements en attente de flush)
+            error_log("Vérification dans UnitOfWork...");
+            $uow = $entityManager->getUnitOfWork();
+            $scheduledInserts = $uow->getScheduledEntityInsertions();
+            
+            $uowCount = 0;
+            foreach ($scheduledInserts as $entity) {
+                if (get_class($entity) === $entityClass) {
+                    $uowCount++;
+                    
+                    $sameIdContact = $entity->getIdContact() === $idClient;
+                    $sameVisite = $entity->getVisite() === $visite;
+                    $sameLibelle = strtolower($entity->getLibelleEquipement()) === strtolower($typeLibelle);
+                    $sameEnMaintenance = ($entity->isEnMaintenance() === false || $entity->isEnMaintenance() === null);
+                    
+                    if ($sameIdContact && $sameVisite && $sameLibelle && $sameEnMaintenance) {
+                        // Si localisation fournie, la vérifier aussi
+                        if (!empty($localisation) && 
+                            $localisation !== 'NC' && 
+                            $entity->getRepereSiteClient() === $localisation) {
+                            
+                            error_log("✅ DOUBLON TROUVÉ DANS UNITOFWORK - SKIP");
+                            error_log("   NuméroÉquipement du doublon: " . $entity->getNumeroEquipement());
+                            return true;
+                        }
+                        
+                        // Si dimensions fournies, les vérifier aussi
+                        if (!empty($hauteur) && !empty($largeur) &&
+                            $hauteur !== 'NC' && $largeur !== 'NC' &&
+                            $entity->getHauteur() === $hauteur && 
+                            $entity->getLargeur() === $largeur) {
+                            
+                            error_log("✅ DOUBLON TROUVÉ DANS UNITOFWORK (par dimensions) - SKIP");
+                            error_log("   NuméroÉquipement du doublon: " . $entity->getNumeroEquipement());
+                            return true;
+                        }
+                    }
+                }
+            }
+            
+            error_log("Objets $entityClass en attente dans UnitOfWork: $uowCount");
+            error_log("❌ Aucun doublon détecté");
+            error_log("✅ NOUVEL ÉQUIPEMENT - CRÉATION AUTORISÉE");
+            
+            return false;
+            
+        } catch (\Exception $e) {
+            error_log("❌ ERREUR LORS DE LA VÉRIFICATION DÉDUPLICATION: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
+            
+            // En cas d'erreur, on retourne false pour laisser créer l'équipement
+            // C'est plus sûr que de bloquer toute création
+            return false;
         }
-
-        // Ajouter dimensions si disponibles
-        if (!empty($hauteur) && !empty($largeur)) {
-            $qb->andWhere('e.hauteur = :hauteur')
-                ->andWhere('e.largeur = :largeur')
-                ->setParameter('hauteur', $hauteur)
-                ->setParameter('largeur', $largeur);
-        }
-
-        $count = $qb->select('COUNT(e.id)')
-                    ->getQuery()
-                    ->getSingleScalarResult();
-
-        return $count > 0;
     }
 
     /**
