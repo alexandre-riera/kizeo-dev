@@ -1507,21 +1507,21 @@ class SimplifiedMaintenanceController extends AbstractController
             $contractEquipments = $fields['contrat_de_maintenance']['value'] ?? [];
             $offContractEquipments = $fields['tableau2']['value'] ?? [];
             
-            // dump("===== TRAITEMENT SOUMISSION " . $submission['entry_id'] . " =====");
-            // dump("Équipements sous contrat: " . count($contractEquipments));
-            // dump("Équipements hors contrat: " . count($offContractEquipments));
+            dump("===== TRAITEMENT SOUMISSION " . $submission['entry_id'] . " =====");
+            dump("Équipements sous contrat: " . count($contractEquipments));
+            dump("Équipements hors contrat: " . count($offContractEquipments));
             
             // Traitement des équipements sous contrat
             if (!empty($contractEquipments)) {
-                // dump("--- DÉBUT TRAITEMENT SOUS CONTRAT ---");
+                dump("--- DÉBUT TRAITEMENT SOUS CONTRAT ---");
                 $contractChunks = array_chunk($contractEquipments, $chunkSize);
                 
                 foreach ($contractChunks as $chunkIndex => $chunk) {
-                    // dump("Chunk sous contrat " . ($chunkIndex + 1) . "/" . count($contractChunks));
+                    dump("Chunk sous contrat " . ($chunkIndex + 1) . "/" . count($contractChunks));
                     
                     foreach ($chunk as $equipmentIndex => $equipmentContrat) {
                         try {
-                            // dump("Traitement équipement sous contrat " . ($equipmentIndex + 1) . "/" . count($chunk));
+                            dump("Traitement équipement sous contrat " . ($equipmentIndex + 1) . "/" . count($chunk));
                             
                             $equipement = new $entityClass();
                             
@@ -1548,15 +1548,15 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $entityManager->persist($equipement);
                                 $equipmentsProcessed++;
                                 $photosSaved++;
-                                // dump("Équipement sous contrat persisté");
+                                dump("Équipement sous contrat persisté");
                             } else {
                                 $equipmentsSkipped++;
-                                // dump("Équipement sous contrat skippé (doublon)");
+                                dump("Équipement sous contrat skippé (doublon)");
                             }
                             
                         } catch (\Exception $e) {
                             $errors++;
-                            // dump("Erreur traitement équipement sous contrat: " . $e->getMessage());
+                            dump("Erreur traitement équipement sous contrat: " . $e->getMessage());
                         }
                     }
                     
@@ -1565,13 +1565,13 @@ class SimplifiedMaintenanceController extends AbstractController
                         $entityManager->flush();
                         // $entityManager->clear();
                         gc_collect_cycles();
-                      // dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
+                      dump("Chunk sous contrat " . ($chunkIndex + 1) . " sauvegardé");
                     } catch (\Exception $e) {
                         $errors++;
-                        // dump("Erreur flush/clear sous contrat: " . $e->getMessage());
+                        dump("Erreur flush/clear sous contrat: " . $e->getMessage());
                     }
                 }
-                // dump("--- FIN TRAITEMENT SOUS CONTRAT ---");
+                dump("--- FIN TRAITEMENT SOUS CONTRAT ---");
             }
             
             // Traitement des équipements hors contrat
@@ -2348,18 +2348,6 @@ class SimplifiedMaintenanceController extends AbstractController
      */
 
     /**
-     * Trouver le champ d'agence le plus commun
-     */
-    private function getMostCommonField(array $agencyFieldsFound): ?string
-    {
-        if (empty($agencyFieldsFound)) {
-            return null;
-        }
-        
-        return array_key_first(array_slice($agencyFieldsFound, 0, 1, true));
-    }
-
-    /**
      * ROUTE CORRIGÉE AVEC REDIS CACHE
      * Usage : /api/maintenance/process-fixed/S40?chunk_size=5&max_submissions=300&use_cache=true
      */
@@ -2763,153 +2751,6 @@ class SimplifiedMaintenanceController extends AbstractController
     }
 
     /**
-     * Méthodes helper adaptées pour différentes agences
-     */
-    private function setCommonDataForAgency($equipement, array $fields, string $agencyCode): void
-    {
-        // Données communes selon l'agence
-        $equipement->setCodeAgence($agencyCode);
-        $equipement->setIdContact($fields['id_client_']['value'] ?? $fields['id_contact']['value'] ?? '');
-        
-        // Le nom du client peut varier selon les formulaires
-        $clientName = $fields['nom_client']['value'] ?? 
-                    $fields['nom_du_client']['value'] ?? 
-                    $fields['client_name']['value'] ?? '';
-        $equipement->setRaisonSociale($clientName);
-        
-        // Date peut varier
-        $date = $fields['date_et_heure1']['value'] ?? 
-            $fields['date_et_heure']['value'] ?? 
-            $fields['date']['value'] ?? '';
-        $equipement->setDateEnregistrement($date);
-        
-        // Technicien peut varier
-        $technicien = $fields['trigramme']['value'] ?? 
-                    $fields['technicien']['value'] ?? 
-                    $fields['tech']['value'] ?? '';
-        $equipement->setTrigrammeTech($technicien);
-        
-        // Valeurs par défaut
-        $equipement->setEtatDesLieuxFait(false);
-        $equipement->setIsArchive(false);
-    }
-
-    /**
-     * Extrait et structure les anomalies d'un équipement selon son type (trigramme)
-     * basé sur le numero_equipement et les données du formulaire Kizeo
-     */
-    private function extractAnomaliesByEquipmentType(array $equipmentData, string $numeroEquipement): ?string
-    {
-        // Extraire le trigramme du numéro d'équipement (ex: SEC01 -> SEC)
-        $trigramme = $this->extractTrigrammeFromNumero($numeroEquipement);
-        
-        if (!$trigramme) {
-            // dump("Impossible d'extraire le trigramme du numéro: " . $numeroEquipement);
-            return null;
-        }
-        
-        $anomalies = [];
-        
-        // Mapping des trigrammes vers les champs d'anomalies correspondants
-        switch ($trigramme) {
-            case 'SEC': // Porte sectionnelle
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_sec_rid_rap_vor_pac',
-                    'anomalies_sec_'
-                ]);
-                break;
-                
-            case 'RID': // Rideau métallique
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_rid_vor',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'RAP': // Porte rapide
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_rapide',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'VOR': // Volet roulant
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_rid_vor',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'PAC': // Porte accordéon
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'NIV': // Niveleur
-            case 'PLQ': // Plaque de quai
-            case 'MIP': // Mini-pont
-            case 'TEL': // Table élévatrice
-            case 'BLR': // Bloc roue
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_niv_plq_mip_tel_blr_'
-                ]);
-                break;
-                
-            case 'SAS': // Sas
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_sas'
-                ]);
-                break;
-                
-            case 'BLE': // Barrière levante
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_ble1',
-                    'anomalie_ble_moto_auto'
-                ]);
-                break;
-                
-            case 'TOU': // Tourniquet
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_tou1'
-                ]);
-                break;
-                
-            case 'PAU': // Portail automatique
-            case 'PMO': // Portail motorisé
-            case 'PMA': // Portail manuel
-            case 'PCO': // Portail coulissant
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_portail',
-                    'anomalie_portail_auto_moto'
-                ]);
-                break;
-                
-            case 'PPV': // Porte piétonne
-            case 'CFE': // Porte coupe-feu
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_ppv_cfe',
-                    'anomalie_cfe_ppv_auto_moto'
-                ]);
-                break;
-                
-            case 'HYD': // Équipement hydraulique
-                $anomalies = $this->extractAnomaliesFromFields($equipmentData, [
-                    'anomalie_hydraulique'
-                ]);
-                break;
-                
-            default:
-                // dump("Type d'équipement non géré pour le trigramme: " . $trigramme);
-                // Essayer de récupérer toutes les anomalies disponibles
-                $anomalies = $this->extractAllAnomalies($equipmentData);
-                break;
-        }
-        
-        return $this->formatAnomaliesForDatabase($anomalies);
-    }
-
-    /**
      * Extrait le trigramme du numéro d'équipement
      */
     private function extractTrigrammeFromNumero(string $numeroEquipement): ?string
@@ -2958,194 +2799,6 @@ class SimplifiedMaintenanceController extends AbstractController
         }
         
         return $anomalies;
-    }
-
-    /**
-     * Extrait toutes les anomalies disponibles (fallback)
-     */
-    private function extractAllAnomalies(array $equipmentData): array
-    {
-        $anomalies = [];
-        
-        // Liste de tous les champs d'anomalies possibles
-        $allAnomalieFields = [
-            'anomalie_sec_rid_rap_vor_pac',
-            'anomalies_sec_',
-            'anomalie_rid_vor',
-            'anomalie_rapide',
-            'anomalie_niv_plq_mip_tel_blr_',
-            'anomalie_sas',
-            'anomalie_ble1',
-            'anomalie_tou1',
-            'anomalie_portail',
-            'anomalie_ppv_cfe',
-            'anomalie_portail_auto_moto',
-            'anomalie_cfe_ppv_auto_moto',
-            'anomalie_ble_moto_auto',
-            'anomalie_hydraulique'
-        ];
-        
-        return $this->extractAnomaliesFromFields($equipmentData, $allAnomalieFields);
-    }
-
-    /**
-     * Formate les anomalies pour l'enregistrement en base de données
-     */
-    private function formatAnomaliesForDatabase(array $anomalies): ?string
-    {
-        if (empty($anomalies)) {
-            return null;
-        }
-        
-        $formattedAnomalies = [];
-        
-        foreach ($anomalies as $fieldName => $anomalieData) {
-            if (!empty($anomalieData['values'])) {
-                $formattedAnomalies[] = [
-                    'field' => $fieldName,
-                    'type' => $anomalieData['type'],
-                    'anomalies' => $anomalieData['values'],
-                    'details' => $anomalieData['columns'],
-                    'timestamps' => $anomalieData['time']
-                ];
-            }
-        }
-        
-        return !empty($formattedAnomalies) ? json_encode($formattedAnomalies, JSON_UNESCAPED_UNICODE) : null;
-    }
-
-    /**
-     * Méthode mise à jour pour intégrer l'extraction des anomalies
-     * dans setContractEquipmentData ou setOffContractEquipmentData
-     */
-    private function setEquipmentAnomalies($equipement, array $equipmentData): void
-    {
-        $numeroEquipement = $equipement->getNumeroEquipement();
-        
-        if ($numeroEquipement) {
-            $anomalies = $this->extractAnomaliesByEquipmentType($equipmentData, $numeroEquipement);
-            
-            if ($anomalies) {
-                $equipement->setAnomalies($anomalies);
-                // dump("Anomalies définies pour l'équipement " . $numeroEquipement . ": " . $anomalies);
-            } else {
-                // dump("Aucune anomalie trouvée pour l'équipement " . $numeroEquipement);
-            }
-        }
-    }
-
-    /**
-    * Version simplifiée - Extrait uniquement les valeurs des anomalies 
-    * selon le type d'équipement (trigramme du numero_equipement)
-    */
-    private function extractSimpleAnomaliesByEquipmentType(array $equipmentData, string $numeroEquipement): ?string
-    {
-        // Extraire le trigramme du numéro d'équipement (ex: SEC01 -> SEC, RID24 -> RID)
-        $trigramme = $this->extractTrigrammeFromNumero($numeroEquipement);
-        
-        if (!$trigramme) {
-            // dump("Impossible d'extraire le trigramme du numéro: " . $numeroEquipement);
-            return null;
-        }
-        
-        $allAnomalies = [];
-        
-        // Mapping des trigrammes vers les champs d'anomalies correspondants
-        switch ($trigramme) {
-            case 'SEC': // Porte sectionnelle
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_sec_rid_rap_vor_pac',
-                    'anomalies_sec_'
-                ]);
-                break;
-                
-            case 'RID': // Rideau métallique
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_rid_vor',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'RAP': // Porte rapide
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_rapide',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'VOR': // Volet roulant
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_rid_vor',
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'PAC': // Porte accordéon
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_sec_rid_rap_vor_pac'
-                ]);
-                break;
-                
-            case 'NIV': // Niveleur
-            case 'PLQ': // Plaque de quai
-            case 'MIP': // Mini-pont
-            case 'TEL': // Table élévatrice
-            case 'BLR': // Bloc roue
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_niv_plq_mip_tel_blr_'
-                ]);
-                break;
-                
-            case 'SAS': // Sas
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_sas'
-                ]);
-                break;
-                
-            case 'BLE': // Barrière levante
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_ble1',
-                    'anomalie_ble_moto_auto'
-                ]);
-                break;
-                
-            case 'TOU': // Tourniquet
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_tou1'
-                ]);
-                break;
-                
-            case 'PAU': // Portail automatique
-            case 'PMO': // Portail motorisé
-            case 'PMA': // Portail manuel
-            case 'PCO': // Portail coulissant
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_portail',
-                    'anomalie_portail_auto_moto'
-                ]);
-                break;
-                
-            case 'PPV': // Porte piétonne
-            case 'CFE': // Porte coupe-feu
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_ppv_cfe',
-                    'anomalie_cfe_ppv_auto_moto'
-                ]);
-                break;
-                
-            case 'HYD': // Équipement hydraulique
-                $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_hydraulique'
-                ]);
-                break;
-                
-            default:
-                // dump("Type d'équipement non géré pour le trigramme: " . $trigramme);
-                return null;
-        }
-        
-        // Retourner les anomalies sous forme de JSON array simple
-        return !empty($allAnomalies) ? json_encode($allAnomalies, JSON_UNESCAPED_UNICODE) : null;
     }
 
     /**
@@ -4225,38 +3878,6 @@ private function fillContractEquipmentData($equipement, array $equipmentContrat)
 }
 
 /**
- * Remplit les données spécifiques aux équipements hors contrat
- */
-private function fillOffContractEquipmentData($equipement, array $equipmentHorsContrat, array $fields): void
-{
-    // Pour les équipements hors contrat, on utilise principalement les données du formulaire global
-    $equipement->setEnMaintenance(false);
-    
-    // Libellé depuis le path ou une valeur par défaut
-    $equipementPath = $equipmentHorsContrat['equipement_supplementaire']['path'] ?? '';
-    $libelle = $this->extractLibelleFromPath($equipementPath);
-    $equipement->setLibelleEquipement($libelle);
-    
-    // Données par défaut pour les équipements supplémentaires
-    $equipement->setMiseEnService('nc');
-    $equipement->setNumeroDeSerie('');
-    $equipement->setMarque('');
-    $equipement->setHauteur('');
-    $equipement->setLargeur('');
-    $equipement->setLongueur('');
-    $equipement->setRepereSiteClient('');
-    $equipement->setModeFonctionnement('');
-    $equipement->setPlaqueSignaletique('');
-    
-    // État depuis le formulaire ou par défaut
-    $etat = $fields['etat_equipement_supplementaire']['value'] ?? 'Non renseigné';
-    $equipement->setEtat($etat);
-    
-    $statut = $this->getMaintenanceStatusFromEtatFixed($etat);
-    $equipement->setStatutDeMaintenance($statut);
-}
-
-/**
  * Détermine le repository approprié pour l'agence
  */
 private function getRepositoryForAgency(string $agencyCode, EntityManagerInterface $entityManager)
@@ -4433,7 +4054,7 @@ private function extractLibelleFromPath(string $equipementPath): string
             $qb = $repository->createQueryBuilder('e')
                 ->where('e.id_contact = :idContact')
                 ->andWhere('e.visite = :visite')
-                ->andWhere('(e.en_maintenance = 0 OR e.en_maintenance IS NULL)')
+                ->andWhere('(e.en_maintenance = false OR e.en_maintenance IS NULL)')
                 ->setParameter('idContact', $idContact)
                 ->setParameter('visite', $visite);
             
@@ -4564,27 +4185,4 @@ private function extractLibelleFromPath(string $equipementPath): string
         }
     }
 
-    /**
-     * ✅ MÉTHODE AUXILIAIRE : Compare la signature d'un équipement avec les données du formulaire
-     */
-    private function compareEquipmentSignature($entity, array $equipmentData): bool
-    {
-        // Comparer toutes les colonnes métier
-        $checks = [
-            $entity->getLibelleEquipement() === ($equipmentData['nature']['value'] ?? ''),
-            $entity->getModeFonctionnement() === ($equipmentData['mode_fonctionnement_']['value'] ?? ''),
-            $entity->getRepereSiteClient() === ($equipmentData['localisation_site_client1']['value'] ?? ''),
-            $entity->getMiseEnService() === ($equipmentData['annee']['value'] ?? ''),
-            $entity->getNumeroDeSerie() === ($equipmentData['n_de_serie']['value'] ?? ''),
-            $entity->getMarque() === ($equipmentData['marque']['value'] ?? ''),
-            $entity->getHauteur() === ($equipmentData['hauteur']['value'] ?? ''),
-            $entity->getLargeur() === ($equipmentData['largeur']['value'] ?? ''),
-            $entity->getLongueur() === ($equipmentData['longueur']['value'] ?? ''),
-            $entity->getPlaqueSignaletique() === ($equipmentData['plaque_signaletique']['value'] ?? ''),
-            $entity->getEtat() === ($equipmentData['etat']['value'] ?? '')
-        ];
-        
-        // Retourner true seulement si TOUS les checks passent
-        return !in_array(false, $checks, true);
-    }
 }
