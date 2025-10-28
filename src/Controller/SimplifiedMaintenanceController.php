@@ -1685,39 +1685,6 @@ class SimplifiedMaintenanceController extends AbstractController
                             $this->setRealCommonDataFixed($equipement, $fields);
                             error_log("Données communes définies pour équipement hors contrat");
                             
-                            // ✅ CORRECTION : Utiliser la BONNE méthode avec la signature correcte
-                            // $wasProcessed = $this->setOffContractDataWithFormPhotosAndDeduplication(
-                            //     $equipement, 
-                            //     $equipmentHorsContrat, 
-                            //     $fields, 
-                            //     $submission['form_id'],  // ✅ Ajouter form_id
-                            //     $submission['entry_id'], // ✅ Ajouter entry_id
-                            //     $entityClass, 
-                            //     $entityManager,
-                            //     $idSociete,
-                            //     $dateDerniereVisite
-                            // );
-                            
-                            // if ($wasProcessed) {
-                            //     error_log("VÉRIFICATION FINALE AVANT PERSIST:");
-                            //     error_log("- Numéro: " . $equipement->getNumeroEquipement());
-                            //     error_log("- Libellé: " . $equipement->getLibelleEquipement());
-                            //     error_log("- Repère: " . $equipement->getRepereSiteClient());
-                            //     error_log("- En maintenance: " . ($equipement->isEnMaintenance() ? '1 ❌' : '0 ✅'));
-                                
-                            //     // ✅ SÉCURITÉ ABSOLUE : forcer encore une fois
-                            //     $equipement->setEnMaintenance(false);
-                            //     error_log("✅ en_maintenance FORCÉ à false juste avant persist");
-                                
-                            //     $entityManager->persist($equipement);
-                            //     $equipmentsProcessed++;
-                            //     $photosSaved++;
-                            //     error_log("✅ Équipement hors contrat persisté avec succès");
-                            // } else {
-                            //     $equipmentsSkipped++;
-                            //     error_log("⚠️ Équipement hors contrat skippé (doublon)");
-                            // }
-                            
                             // ✅ APPEL DE LA MÉTHODE CORRIGÉE
                             $shouldPersist = $this->setOffContractEquipmentData(
                                 $equipement, 
@@ -2405,7 +2372,6 @@ class SimplifiedMaintenanceController extends AbstractController
                         // Flush périodique pour libérer la mémoire
                         if ($processedCount % 3 == 0) {
                             $entityManager->flush();
-                            // $entityManager->clear(); 
                             gc_collect_cycles();
                         }
                         
@@ -2421,7 +2387,6 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Sauvegarde après chaque chunk
                 try {
                     $entityManager->flush();
-                    // $entityManager->clear();
                     gc_collect_cycles();
                 } catch (\Exception $e) {
                   // dump("Erreur sauvegarde chunk {$chunkIndex}: " . $e->getMessage());
