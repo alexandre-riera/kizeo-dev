@@ -2403,6 +2403,40 @@ class SimplifiedMaintenanceController extends AbstractController
                 // dump("Erreur sauvegarde finale: " . $e->getMessage());
             }
             
+            // Suppression des doublons après enregistrement
+            $deletedDuplicatesCount = 0;
+            try {
+                $connection = $entityManager->getConnection();
+                $tableName = 'equipement_' . strtolower($agencyCode);
+                
+                // Requête pour supprimer les doublons en gardant le MIN(id)
+                $sql = "
+                    DELETE FROM {$tableName}
+                    WHERE id NOT IN (
+                        SELECT id_a_garder FROM (
+                            SELECT MIN(id) as id_a_garder
+                            FROM {$tableName}
+                            GROUP BY 
+                                mode_fonctionnement, repere_site_client, 
+                                mise_en_service, numero_de_serie, marque, hauteur, largeur,
+                                plaque_signaletique, anomalies, etat, derniere_visite,
+                                trigramme_tech, id_contact, code_societe, signature_tech,
+                                if_exist_db, code_agence, hauteur_nacelle, modele_nacelle,
+                                raison_sociale, test, statut_de_maintenance, date_enregistrement,
+                                presence_carnet_entretien, statut_conformite,
+                                date_mise_en_conformite, longueur, is_etat_des_lieux_fait,
+                                is_en_maintenance, visite, contrat_{$agencyCode}_id, remplace_par,
+                                numero_identification, is_archive
+                        ) AS tmp
+                    )
+                ";
+                
+                $deletedDuplicatesCount = $connection->executeStatement($sql);
+            } catch (\Exception $e) {
+                // dump("Erreur suppression doublons: " . $e->getMessage());
+                // On ne bloque pas le processus si la suppression échoue
+            }
+            
             $processingTime = time() - $startTime;
             
             return new JsonResponse([
@@ -2414,6 +2448,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     'total_submissions_found' => count($submissions),
                     'total_equipments_processed' => $totalEquipments,
                     'total_photos_processed' => $totalPhotos,
+                    'duplicates_removed' => $deletedDuplicatesCount,  // ← LIGNE AJOUTÉE
                     'processing_time' => $processingTime . 's',
                     'errors_count' => count($errors)
                 ],
