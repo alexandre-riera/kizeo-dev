@@ -519,7 +519,7 @@ class HomeController extends AbstractController
 
             // FILTRAGE DES ÉQUIPEMENTS AVEC LA MÉTHODE RÉUTILISABLE
             $equipmentData = $this->filterEquipments($clientSelectedEquipments, $clientAnneeFilter, $clientVisiteFilter);
-            
+            dump($equipmentData);
             $clientSelectedEquipmentsFiltered = $equipmentData['filtered'];
             $clientSelectedEquipmentsFilteredAuContrat = $equipmentData['auContrat'];
             $clientSelectedEquipmentsFilteredHorsContrat = $equipmentData['horsContrat'];
