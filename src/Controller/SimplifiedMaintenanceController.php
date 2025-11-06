@@ -140,19 +140,19 @@ class SimplifiedMaintenanceController extends AbstractController
                 return false;
             }
             
-            // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
-            if ($this->equipmentOffContractExists(
-                $typeLibelle,
-                $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
-                $equipmentHorsContrat['hauteur']['value'] ?? '',
-                $equipmentHorsContrat['largeur']['value'] ?? '',
-                $idClient,
-                $visite,
-                $entityClass,
-                $entityManager
-            )) {
-                return false;
-            }
+            // // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
+            // if ($this->equipmentOffContractExists(
+            //     $typeLibelle,
+            //     $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
+            //     $equipmentHorsContrat['hauteur']['value'] ?? '',
+            //     $equipmentHorsContrat['largeur']['value'] ?? '',
+            //     $idClient,
+            //     $visite,
+            //     $entityClass,
+            //     $entityManager
+            // )) {
+            //     return false;
+            // }
             
             // 5. GÉNÉRER LE NUMÉRO
             $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
@@ -167,6 +167,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
             $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
             $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+            $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
             $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
             $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
             $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
