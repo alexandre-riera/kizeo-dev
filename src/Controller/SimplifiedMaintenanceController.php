@@ -140,19 +140,31 @@ class SimplifiedMaintenanceController extends AbstractController
                 return false;
             }
             
-            // // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
-            // if ($this->equipmentOffContractExists(
-            //     $typeLibelle,
-            //     $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
-            //     $equipmentHorsContrat['hauteur']['value'] ?? '',
-            //     $equipmentHorsContrat['largeur']['value'] ?? '',
-            //     $idClient,
-            //     $visite,
-            //     $entityClass,
-            //     $entityManager
-            // )) {
-            //     return false;
-            // }
+            // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
+            if ($this->equipmentOffContractExists(
+                $typeLibelle,
+                $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
+                $equipmentHorsContrat['hauteur']['value'] ?? '',
+                $equipmentHorsContrat['largeur']['value'] ?? '',
+                $idClient,
+                $visite,
+                $entityClass,
+                $entityManager
+            )) {
+                return false;
+            }
+
+            // ✅ AJOUTER CECI
+            if ($this->offContractEquipmentExistsByFullSignature(
+                $equipmentHorsContrat,
+                $idClient,
+                $visite,
+                $entityClass,
+                $entityManager
+            )) {
+                error_log("⚠️ DOUBLON DÉTECTÉ - SKIP");
+                return false;
+            }
             
             // 5. GÉNÉRER LE NUMÉRO
             $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
@@ -1541,8 +1553,8 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Format: "KUEHNE + NAGEL 78\\CE1"
                 // On extrait "CE1"
                 $parts = explode('\\', $path);
-                if (count($parts) > 1) {
-                    $visite = $parts[count($parts) - 1];
+                if (!empty($parts[0]) && preg_match('/^CE[A\d]+$/i', $parts[0])) {
+                    $visite = $parts[0];
                     dump("Visite extraite du path: '$visite'");
                     return $visite;
                 }
