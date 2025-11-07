@@ -153,18 +153,6 @@ class SimplifiedMaintenanceController extends AbstractController
             )) {
                 return false;
             }
-
-            // ✅ AJOUTER CECI
-            if ($this->offContractEquipmentExistsByFullSignature(
-                $equipmentHorsContrat,
-                $idClient,
-                $visite,
-                $entityClass,
-                $entityManager
-            )) {
-                error_log("⚠️ DOUBLON DÉTECTÉ - SKIP");
-                return false;
-            }
             
             // 5. GÉNÉRER LE NUMÉRO
             $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
