@@ -140,19 +140,19 @@ class SimplifiedMaintenanceController extends AbstractController
                 return false;
             }
             
-            // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
-            if ($this->equipmentOffContractExists(
-                $typeLibelle,
-                $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
-                $equipmentHorsContrat['hauteur']['value'] ?? '',
-                $equipmentHorsContrat['largeur']['value'] ?? '',
-                $idClient,
-                $visite,
-                $entityClass,
-                $entityManager
-            )) {
-                return false;
-            }
+            // // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
+            // if ($this->equipmentOffContractExists(
+            //     $typeLibelle,
+            //     $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
+            //     $equipmentHorsContrat['hauteur']['value'] ?? '',
+            //     $equipmentHorsContrat['largeur']['value'] ?? '',
+            //     $idClient,
+            //     $visite,
+            //     $entityClass,
+            //     $entityManager
+            // )) {
+            //     return false;
+            // }
             
             // 5. GÉNÉRER LE NUMÉRO
             $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
@@ -167,6 +167,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
             $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
             $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
+            $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
             $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
             $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
             $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
@@ -2427,6 +2428,28 @@ class SimplifiedMaintenanceController extends AbstractController
                                 date_mise_en_conformite, longueur, is_etat_des_lieux_fait,
                                 is_en_maintenance, visite, contrat_{$agencyCode}_id, remplace_par,
                                 numero_identification, is_archive
+                        ) AS tmp
+                    )
+                ";
+                
+                $deletedDuplicatesCount = $connection->executeStatement($sql);
+                // Requête pour supprimer les doublons en gardant le MIN(id)
+                $sql = "
+                    DELETE FROM {$tableName}
+                    WHERE id NOT IN (
+                        SELECT id_a_garder FROM (
+                            SELECT MIN(id) as id_a_garder
+                            FROM {$tableName}
+                            GROUP BY 
+                                numero_equipementmode_fonctionnement,
+                                mise_en_service, numero_de_serie, marque, hauteur, largeur,
+                                plaque_signaletique, anomalies, etat, derniere_visite,
+                                trigramme_tech, id_contact, code_societe, signature_tech,
+                                if_exist_db, code_agence, hauteur_nacelle, modele_nacelle,
+                                raison_sociale, test, statut_de_maintenance, date_enregistrement,
+                                presence_carnet_entretien, statut_conformite,
+                                date_mise_en_conformite, longueur, is_etat_des_lieux_fait,
+                                is_en_maintenance, visite
                         ) AS tmp
                     )
                 ";
