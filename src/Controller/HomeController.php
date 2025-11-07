@@ -177,13 +177,11 @@ class HomeController extends AbstractController
                 $clientAnneeFilter ?: $defaultYear, 
                 $clientVisiteFilter ?: $defaultVisit
             );
-            dump('Equipements DATA');
-            dump($equipmentData);
+            
             $clientSelectedEquipmentsFiltered = $equipmentData['filtered'];
             $clientSelectedEquipmentsFilteredAuContrat = $equipmentData['auContrat'];
             $clientSelectedEquipmentsFilteredHorsContrat = $equipmentData['horsContrat'];
-            dump('Equipements filtrés hors contrat');
-            dump($clientSelectedEquipmentsFilteredHorsContrat);
+
             // Si aucun équipement filtré, montrer tous
             if (empty($clientSelectedEquipmentsFiltered)) {
                 $clientSelectedEquipmentsFiltered = $clientSelectedEquipments;
@@ -521,7 +519,7 @@ class HomeController extends AbstractController
 
             // FILTRAGE DES ÉQUIPEMENTS AVEC LA MÉTHODE RÉUTILISABLE
             $equipmentData = $this->filterEquipments($clientSelectedEquipments, $clientAnneeFilter, $clientVisiteFilter);
-            dump($equipmentData);
+            
             $clientSelectedEquipmentsFiltered = $equipmentData['filtered'];
             $clientSelectedEquipmentsFilteredAuContrat = $equipmentData['auContrat'];
             $clientSelectedEquipmentsFilteredHorsContrat = $equipmentData['horsContrat'];

@@ -184,7 +184,6 @@
                 </thead>
                 <tbody>
                     {% if clientSelectedEquipmentsFilteredHorsContrat is not empty %}
-                        {% dump(clientSelectedEquipmentsFilteredHorsContrat) %}
                         {% for equipment in clientSelectedEquipmentsFilteredHorsContrat %}
                             <tr class="bkg_row_visite_1" id="{{ equipment.getId() }}" data-visite="{{ equipment.getVisite() }}" data-libelle="{{ equipment.getLibelleEquipement() }}" data-statut="{{ equipment.getStatutDeMaintenance() }}">
                                 <td>{{ equipment.getVisite() }}</td>

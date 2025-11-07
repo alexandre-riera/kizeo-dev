@@ -202,7 +202,7 @@ class EquipementPdfController extends AbstractController
             // Récupérer les filtres depuis les paramètres de la requête
             $clientAnneeFilter = $request->query->get('clientAnneeFilter', '');
             $clientVisiteFilter = $request->query->get('clientVisiteFilter', '');
-            $withPhotos = $request->query->get('withPhotos', '');
+            $withPhotos = $request->query->get('withPhotos', 'non');
             
             $maxEquipments = (int) $request->query->get('maxEquipments', 500);
             
@@ -680,7 +680,6 @@ class EquipementPdfController extends AbstractController
                     ? "Mode optimisé : Affichage des photos générales uniquement - " . count($equipmentsWithPictures) . " équipement(s) traité(s) sur " . count($equipmentsFiltered) . " total(aux)"
                     : null
             ];
-            
             // Vérifier que imageUrl est bien définie
             if (empty($templateVars['imageUrl'])) {
                 $templateVars['imageUrl'] = 'https://www.pdf.somafi-group.fr/background/group.jpg';
