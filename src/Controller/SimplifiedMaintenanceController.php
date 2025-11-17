@@ -2422,10 +2422,10 @@ class SimplifiedMaintenanceController extends AbstractController
                                 mise_en_service, numero_de_serie, marque, hauteur, largeur,
                                 plaque_signaletique, anomalies, etat, derniere_visite,
                                 trigramme_tech, id_contact, code_societe, signature_tech,
-                                if_exist_db, code_agence, hauteur_nacelle, modele_nacelle,
+                                if_exist_db, code_agence, 
                                 raison_sociale, test, statut_de_maintenance, date_enregistrement,
-                                presence_carnet_entretien, statut_conformite,
-                                date_mise_en_conformite, longueur, is_etat_des_lieux_fait,
+                                presence_carnet_entretien,
+                                longueur,
                                 is_en_maintenance, visite, contrat_{$agencyCode}_id, remplace_par,
                                 numero_identification, is_archive
                         ) AS tmp
@@ -2441,14 +2441,14 @@ class SimplifiedMaintenanceController extends AbstractController
                             SELECT MIN(id) as id_a_garder
                             FROM {$tableName}
                             GROUP BY 
-                                numero_equipementmode_fonctionnement,
+                                numero_equipement, mode_fonctionnement,
                                 mise_en_service, numero_de_serie, marque, hauteur, largeur,
                                 plaque_signaletique, anomalies, etat, derniere_visite,
                                 trigramme_tech, id_contact, code_societe, signature_tech,
-                                if_exist_db, code_agence, hauteur_nacelle, modele_nacelle,
+                                if_exist_db, code_agence, 
                                 raison_sociale, test, statut_de_maintenance, date_enregistrement,
-                                presence_carnet_entretien, statut_conformite,
-                                date_mise_en_conformite, longueur, is_etat_des_lieux_fait,
+                                presence_carnet_entretien,
+                                longueur,
                                 is_en_maintenance, visite
                         ) AS tmp
                     )
