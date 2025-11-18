@@ -2429,29 +2429,31 @@ class SimplifiedMaintenanceController extends AbstractController
                         ) AS tmp
                     )
                 ";
-                
                 $deletedDuplicatesCount = $connection->executeStatement($sql);
-                // Requête pour supprimer les doublons en gardant le MIN(id)
-                $sql = "
-                    DELETE FROM {$tableName}
-                    WHERE id NOT IN (
-                        SELECT id_a_garder FROM (
-                            SELECT MIN(id) as id_a_garder
-                            FROM {$tableName}
-                            GROUP BY 
-                                numero_equipement, mode_fonctionnement,
-                                mise_en_service, numero_de_serie, marque, hauteur, largeur,
-                                plaque_signaletique, anomalies, etat, derniere_visite,
-                                trigramme_tech, id_contact, code_societe, signature_tech, code_agence, 
-                                raison_sociale, test, statut_de_maintenance, date_enregistrement,
-                                presence_carnet_entretien,
-                                longueur,
-                                is_en_maintenance, visite
-                        ) AS tmp
-                    )
-                ";
                 
-                $deletedDuplicatesCount = $connection->executeStatement($sql);
+                // LA SUPPRESSION APRES LA PREMIERE EXECUTION SUPPRIME TOUS LES EQUIPEMENTS HORS CONTRAT
+                // IL FAUT DONC LAISSER COMMENTEE ET REVOIR LA LOGIQUE
+                // // Requête pour supprimer les doublons en gardant le MIN(id)
+                // $sql = "
+                //     DELETE FROM {$tableName}
+                //     WHERE id NOT IN (
+                //         SELECT id_a_garder FROM (
+                //             SELECT MIN(id) as id_a_garder
+                //             FROM {$tableName}
+                //             GROUP BY 
+                //                 numero_equipement, mode_fonctionnement,
+                //                 mise_en_service, numero_de_serie, marque, hauteur, largeur,
+                //                 plaque_signaletique, anomalies, etat, derniere_visite,
+                //                 trigramme_tech, id_contact, code_societe, signature_tech, code_agence, 
+                //                 raison_sociale, test, statut_de_maintenance, date_enregistrement,
+                //                 presence_carnet_entretien,
+                //                 longueur,
+                //                 is_en_maintenance, visite
+                //         ) AS tmp
+                //     )
+                // ";
+                
+                // $deletedDuplicatesCount = $connection->executeStatement($sql);
             } catch (\Exception $e) {
                 // dump("Erreur suppression doublons: " . $e->getMessage());
                 // On ne bloque pas le processus si la suppression échoue
