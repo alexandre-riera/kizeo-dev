@@ -715,8 +715,8 @@ class EquipementPdfController extends AbstractController
             return $this->generateLightErrorPdf($agence, $id, $e->getMessage(), $equipmentsFiltered);
         } finally {
             // Remettre les limites par défaut
-            ini_restore('memory_limit');
-            ini_restore('max_execution_time');
+            // ini_restore('memory_limit');
+            // ini_restore('max_execution_time');
         }
     }
 
