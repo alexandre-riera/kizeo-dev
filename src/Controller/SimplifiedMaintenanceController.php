@@ -110,7 +110,9 @@ class SimplifiedMaintenanceController extends AbstractController
         array $equipmentHorsContrat, 
         array $fields, 
         string $entityClass, 
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        $agencyCode,
+        $dateDerniereVisite
     ): bool {  // ✅ MAINTENANT RETOURNE UN BOOLÉEN
         try {
             // 1. ID CLIENT (utiliser id_client_ pas id_contact)
@@ -167,12 +169,13 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipement->setModeFonctionnement($equipmentHorsContrat['mode_fonctionnement_']['value'] ?? '');
             $equipement->setRepereSiteClient($equipmentHorsContrat['localisation_site_client1']['value'] ?? '');
             $equipement->setMiseEnService($equipmentHorsContrat['annee']['value'] ?? '');
-            $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? '');
+            $equipement->setDerniereVisite($dateDerniereVisite ?? '');
             $equipement->setNumeroDeSerie($equipmentHorsContrat['n_de_serie']['value'] ?? '');
             $equipement->setMarque($equipmentHorsContrat['marque']['value'] ?? '');
             $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
             $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
             $equipement->setLongueur($equipmentHorsContrat['longueur']['value'] ?? '');
+            $equipement->setCodeAgence($codeAgence ?? '');
             
             // ✅ ATTENTION: plaque_signaletique1 et etat1 (pas plaque_signaletique et etat)
             $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
@@ -752,7 +755,9 @@ class SimplifiedMaintenanceController extends AbstractController
                                             $equipmentHorsContrat, 
                                             $fields, 
                                             $entityClass, 
-                                            $entityManager
+                                            $entityManager,
+                                            $agencyCode,
+                                            $fields['date_et_heure1']['value'] ?? ''
                                         );
                                         
                                         if ($shouldPersist) {
@@ -1026,7 +1031,9 @@ class SimplifiedMaintenanceController extends AbstractController
                         $equipmentHorsContrat, 
                         $fields, 
                         $entityClass, 
-                        $entityManager
+                        $entityManager,
+                        $agencyCode,
+                        $fields['date_et_heure1']['value'] ?? ''
                     );
                     
                     if ($shouldPersist) {
@@ -1372,6 +1379,7 @@ class SimplifiedMaintenanceController extends AbstractController
         $equipement->setRaisonSociale($fields['nom_client']['value'] ?? ''); // CORRIGÉ
         $equipement->setTrigrammeTech($fields['trigramme']['value'] ?? ''); // CORRIGÉ
         $equipement->setDateEnregistrement($fields['date_et_heure1']['value'] ?? ''); // CORRIGÉ
+        $equipement->setDerniereVisite($fields['date_et_heure1']['value'] ?? ''); // CORRIGÉ
         
         // Valeurs par défaut SANS setEnMaintenance (sera défini spécifiquement)
         $equipement->setEtatDesLieuxFait(false);
@@ -1692,7 +1700,9 @@ class SimplifiedMaintenanceController extends AbstractController
                                 $equipmentHorsContrat, 
                                 $fields, 
                                 $entityClass, 
-                                $entityManager
+                                $entityManager,
+                                $agencyCode,
+                                $dateDerniereVisite
                             );
                             
                             if ($shouldPersist) {
