@@ -175,7 +175,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $equipement->setLargeur($equipmentHorsContrat['largeur']['value'] ?? '');
             $equipement->setHauteur($equipmentHorsContrat['hauteur']['value'] ?? '');
             $equipement->setLongueur($equipmentHorsContrat['longueur']['value'] ?? '');
-            $equipement->setCodeAgence($codeAgence ?? '');
+            $equipement->setCodeAgence($agencyCode ?? '');
             
             // ✅ ATTENTION: plaque_signaletique1 et etat1 (pas plaque_signaletique et etat)
             $equipement->setPlaqueSignaletique($equipmentHorsContrat['plaque_signaletique1']['value'] ?? '');
