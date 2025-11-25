@@ -372,6 +372,7 @@ class HomeController extends AbstractController
                 $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
             case 'S40':
+                dump($idClientSelected);
                 $clientSelectedInformations = $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
                 dump('Client selected informations S40: ');
                 dump($clientSelectedInformations);
