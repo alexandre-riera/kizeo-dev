@@ -2487,7 +2487,7 @@ class SimplifiedMaintenanceController extends AbstractController
                     'total_submissions_found' => count($submissions),
                     'total_equipments_processed' => $totalEquipments,
                     'total_photos_processed' => $totalPhotos,
-                    // 'duplicates_removed' => $deletedDuplicatesCount,  // ← LIGNE AJOUTÉE
+                    'duplicates_removed' => $deletedDuplicatesCount,  // ← LIGNE AJOUTÉE
                     'processing_time' => $processingTime . 's',
                     'errors_count' => count($errors)
                 ],
