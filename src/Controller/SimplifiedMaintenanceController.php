@@ -145,7 +145,8 @@ class SimplifiedMaintenanceController extends AbstractController
                 return false;
             }
             
-            // 4. VÉRIFICATION DÉDUPLICATION (optionnel)
+            // 4. VÉRIFICATION DÉDUPLICATION
+            error_log("Vérification déduplication...");
             if ($this->equipmentOffContractExists(
                 $typeLibelle,
                 $equipmentHorsContrat['localisation_site_client1']['value'] ?? '',
@@ -156,8 +157,10 @@ class SimplifiedMaintenanceController extends AbstractController
                 $entityClass,
                 $entityManager
             )) {
+                error_log("❌ SKIP: Équipement existe déjà (doublon détecté)");
                 return false;
             }
+            error_log("✅ Pas de doublon, création autorisée");
             
             // 5. GÉNÉRER LE NUMÉRO
             $nouveauNumero = $this->getNextEquipmentNumber($typeCode, $idClient, $entityClass, $entityManager);
@@ -1552,11 +1555,10 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Format: "KUEHNE + NAGEL 78\\CE1"
                 // On extrait "CE1"
                 $parts = explode('\\', $path);
-                // Prendre le DERNIER élément du path
-                $lastPart = end($parts);
-                if (!empty($lastPart) && preg_match('/^CE[A\d]+$/i', $lastPart)) {
-                    $visite = $lastPart;
-                    dump("Visite extraite du path: '$visite'");
+                // Le path est "SOCIETE\\CE1", donc la visite est dans $parts[1]
+                if (count($parts) >= 2 && preg_match('/^CE[A\d]+$/i', $parts[1])) {
+                    $visite = $parts[1];
+                    error_log("✅ Visite extraite du path: '$visite'");
                     return $visite;
                 }
             }
