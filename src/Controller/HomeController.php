@@ -126,7 +126,8 @@ class HomeController extends AbstractController
             // Extraire seulement l'ID et le nom, pas l'agence
             if ($clientSelected != "") {
                 $clientSelectedSplitted = preg_split("/[-]/", $clientSelected, 2); // Limiter à 2 parties max
-                dump('Client splitted : ' . $clientSelectedSplitted);
+                dump('Client séléctionné splitté : ');
+                dump($clientSelectedSplitted);
                 if (count($clientSelectedSplitted) >= 2) {
                     $idClientSelected = trim($clientSelectedSplitted[0]);
                     $clientSelected = trim($clientSelectedSplitted[1]);
