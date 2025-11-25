@@ -126,6 +126,7 @@ class SimplifiedMaintenanceController extends AbstractController
             $visite = $this->extractVisiteFromGlobalFields($fields);
             
             if (empty($visite)) {
+                error_log("❌ SKIP: idClient vide");
                 return false;
             }
             
@@ -133,12 +134,14 @@ class SimplifiedMaintenanceController extends AbstractController
             $typeLibelle = strtolower($equipmentHorsContrat['nature']['value'] ?? '');
             
             if (empty($typeLibelle)) {
+                error_log("❌ SKIP: libelle vide");
                 return false;
             }
             
             $typeCode = $this->getTypeCodeFromLibelle($typeLibelle);
             
             if (empty($typeCode)) {
+                error_log("❌ SKIP: typecode vide");
                 return false;
             }
             
@@ -1549,8 +1552,10 @@ class SimplifiedMaintenanceController extends AbstractController
                 // Format: "KUEHNE + NAGEL 78\\CE1"
                 // On extrait "CE1"
                 $parts = explode('\\', $path);
-                if (!empty($parts[0]) && preg_match('/^CE[A\d]+$/i', $parts[0])) {
-                    $visite = $parts[0];
+                // Prendre le DERNIER élément du path
+                $lastPart = end($parts);
+                if (!empty($lastPart) && preg_match('/^CE[A\d]+$/i', $lastPart)) {
+                    $visite = $lastPart;
                     dump("Visite extraite du path: '$visite'");
                     return $visite;
                 }
