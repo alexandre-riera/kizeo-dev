@@ -2436,13 +2436,7 @@ class SimplifiedMaintenanceController extends AbstractController
                             FROM {$tableName}
                             GROUP BY 
                                 mode_fonctionnement, repere_site_client, 
-                                mise_en_service, numero_de_serie, marque, hauteur, largeur,
-                                plaque_signaletique, anomalies, etat, derniere_visite,
-                                trigramme_tech, id_contact, code_societe, signature_tech, code_agence, 
-                                raison_sociale, test, statut_de_maintenance, date_enregistrement,
-                                longueur,
-                                is_en_maintenance, visite, contrat_{$agencyCode}_id, remplace_par,
-                                numero_identification, is_archive
+                                mise_en_service, numero_de_serie, marque, hauteur, largeur
                         ) AS tmp
                     )
                 ";
