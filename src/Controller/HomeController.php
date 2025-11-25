@@ -372,11 +372,32 @@ class HomeController extends AbstractController
                 $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
             case 'S40':
-                dump($idClientSelected);
-                $clientSelectedInformations = $entityManager->getRepository(ContactS40::class)->findOneBy(['idContact' => $idClientSelected]);
-                dump('Client selected informations S40: ');
-                dump($clientSelectedInformations);
+                $repository = $entityManager->getRepository(ContactS40::class);
+                dump("Repository ContactS40 OK");
+                
+                $totalContacts = count($repository->findAll());
+                dump("Total contacts S40: {$totalContacts}");
+                
+                $sampleContacts = $repository->findBy([], [], 5);
+                dump("Échantillon contacts S40:");
+                foreach ($sampleContacts as $contact) {
+                    dump([
+                        'id_contact' => $contact->getIdContact(),
+                        'class' => get_class($contact),
+                    ]);
+                }
+                
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                dump("Résultat findOneBy(['id_contact' => '{$idClientSelected}']): " . ($clientSelectedInformations ? 'TROUVÉ' : 'NULL'));
+                
+                if (!$clientSelectedInformations) {
+                    dump("Tentative avec 'id' au lieu de 'id_contact'...");
+                    $clientSelectedInformations = $repository->findOneBy(['id' => $idClientSelected]);
+                    dump("Résultat findOneBy(['id' => '{$idClientSelected}']): " . ($clientSelectedInformations ? 'TROUVÉ' : 'NULL'));
+                }
+                
                 $clientSelectedEquipments = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                dump("Équipements S40 trouvés: " . count($clientSelectedEquipments));
                 break;
             case 'S50':
                 $clientSelectedInformations = $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
