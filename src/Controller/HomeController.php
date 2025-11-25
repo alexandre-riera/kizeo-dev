@@ -122,16 +122,21 @@ class HomeController extends AbstractController
         // **ÉTAPE 2 : Logique de sélection de client**
         if (isset($_POST['clientName']) && !empty($agenceSelected)) {
             $clientSelected = $_POST['clientName'];
-
+            dump('Client séléctionné via POST : ' . $clientSelected);
             // Extraire seulement l'ID et le nom, pas l'agence
             if ($clientSelected != "") {
                 $clientSelectedSplitted = preg_split("/[-]/", $clientSelected, 2); // Limiter à 2 parties max
+                dump('Client splitted : ' . $clientSelectedSplitted);
                 if (count($clientSelectedSplitted) >= 2) {
                     $idClientSelected = trim($clientSelectedSplitted[0]);
                     $clientSelected = trim($clientSelectedSplitted[1]);
+                    dump('ID Client séléctionné : ' . $idClientSelected);
+                    dump('Nom Client séléctionné : ' . $clientSelected);
                     
                     // Charger les informations et équipements du client
+                    // ATTENTION CLIENTSELECTEDINFORMATIONS EST NULL ICI
                     $this->loadClientData($agenceSelected, $idClientSelected, $entityManager, $clientSelectedInformations, $clientSelectedEquipments, $homeRepository, $idClientSelected);
+                    dump('Informations Client séléctionné : ' . $clientSelectedInformations);
                 }
             }
         }
