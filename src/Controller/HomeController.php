@@ -137,7 +137,7 @@ class HomeController extends AbstractController
                     // Charger les informations et équipements du client
                     // ATTENTION CLIENTSELECTEDINFORMATIONS EST NULL ICI
                     $this->loadClientData($agenceSelected, $idClientSelected, $entityManager, $clientSelectedInformations, $clientSelectedEquipments, $homeRepository, $idClientSelected);
-                    dump('Informations Client séléctionné : ' . $clientSelectedInformations);
+                    dump($clientSelectedInformations);
                 }
             }
         }
