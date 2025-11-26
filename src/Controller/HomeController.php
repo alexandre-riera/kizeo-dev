@@ -176,7 +176,6 @@ class HomeController extends AbstractController
                     $this->addFlash('error', 'Sélectionne la visite.');
                 }
             }
-            dump($clientSelectedEquipments);
             // **REFACTORISATION : Utiliser la méthode privée pour le filtrage**
             $equipmentData = $this->filterEquipments(
                 $clientSelectedEquipments, 
