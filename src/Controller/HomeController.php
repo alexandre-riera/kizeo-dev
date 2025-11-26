@@ -366,58 +366,182 @@ class HomeController extends AbstractController
      */
     private function loadClientData(string $agenceSelected, string $idClientSelected, EntityManagerInterface $entityManager, &$clientSelectedInformations, array &$clientSelectedEquipments, ?HomeRepository $homeRepository, string $clientSelected): void
     {
+        $idClientSelected = trim($idClientSelected);
+        $connection = $entityManager->getConnection();
+        
+        // Fonction helper pour fallback SQL
+        $getContactViaSQL = function($tableName, $id) use ($connection) {
+            try {
+                $sql = "SELECT * FROM {$tableName} WHERE id_contact = :id LIMIT 1";
+                $stmt = $connection->prepare($sql);
+                $result = $stmt->executeQuery(['id' => $id]);
+                $contactData = $result->fetchAssociative();
+                
+                if ($contactData) {
+                    return (object) $contactData;
+                }
+            } catch (\Exception $e) {
+                dump("Erreur SQL fallback: " . $e->getMessage());
+            }
+            return null;
+        };
+
+        // Charger les informations et équipements selon l'agence
         switch ($agenceSelected) {
             case 'S10':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS10::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS10::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s10', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S40':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS40::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS40::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS40::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s40', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS40::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S50':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS50::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS50::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS50::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s50', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS50::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S60':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS60::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS60::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS60::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s60', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS60::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S70':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS70::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS70::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS70::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s70', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS70::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S80':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS80::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS80::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS80::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s80', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS80::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S100':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS100::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS100::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS100::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s100', $idClientSelected);
+                }
+                
+                $clientSelectedEquipements = $entityManager->getRepository(EquipementS100::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S120':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS120::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS120::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS120::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s120', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS120::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S130':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS130::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS130::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS130::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s130', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS130::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S140':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS140::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS140::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS140::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s140', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS140::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S150':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS150::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS150::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS150::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s150', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS150::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S160':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS160::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS160::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS160::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s160', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS160::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
+                
             case 'S170':
-                $clientSelectedInformations = $entityManager->getRepository(ContactS170::class)->findOneBy(['id_contact' => $idClientSelected]);
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS170::class)->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
+                $repository = $entityManager->getRepository(ContactS170::class);
+                $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
+                
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s170', $idClientSelected);
+                }
+                
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS170::class)
+                    ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
                 break;
         }
     }
