@@ -388,86 +388,16 @@ class HomeController extends AbstractController
         // Charger les informations et équipements selon l'agence
         switch ($agenceSelected) {
             case 'S10':
-                dump("=== DIAGNOSTIC APPROFONDI S10 ===");
-    
-                // 1. Vérifier quelle base de données on utilise
-                $connection = $entityManager->getConnection();
-                dump("Base de données: " . $connection->getDatabase());
-                // dump("Driver: " . $connection->getDriver()->getName());
-                
-                // // 2. Activer le logger SQL pour voir EXACTEMENT ce que Doctrine exécute
-                // $logger = new \Doctrine\DBAL\Logging\DebugStack();
-                // $entityManager->getConfiguration()->setSQLLogger($logger);
-                
-                // 3. Essayer de récupérer tous les contacts
-                $repository = $entityManager->getRepository(ContactS40::class);
-                dump("Repository class: " . get_class($repository));
-                
-                // 4. Tester findAll()
-                $allContacts = $repository->findAll();
-                dump("Nombre de contacts (findAll): " . count($allContacts));
-                
-                // 5. Afficher la requête SQL générée
-                if (isset($logger->queries) && count($logger->queries) > 0) {
-                    $lastQuery = end($logger->queries);
-                    dump("SQL généré par Doctrine:");
-                    dump($lastQuery['sql']);
-                    dump("Params: " . json_encode($lastQuery['params']));
-                }
-                
-                // 6. Tester avec une requête SQL directe pour comparer
-                dump("=== REQUÊTE SQL DIRECTE ===");
-                try {
-                    $stmt = $connection->prepare("SELECT COUNT(*) as total FROM contact_s40");
-                    $result = $stmt->executeQuery();
-                    $count = $result->fetchAssociative();
-                    dump("Nombre de contacts (SQL direct): " . $count['total']);
-                    
-                    // Essayer de récupérer le contact spécifique
-                    $stmt2 = $connection->prepare("SELECT * FROM contact_s40 WHERE id_contact = :id LIMIT 1");
-                    $result2 = $stmt2->executeQuery(['id' => $idClientSelected]);
-                    $contactData = $result2->fetchAssociative();
-                    dump("Contact trouvé via SQL direct:");
-                    dump($contactData);
-                    
-                } catch (\Exception $e) {
-                    dump("Erreur SQL: " . $e->getMessage());
-                }
-                
-                // 7. Vérifier les métadonnées de l'entité
-                $metadata = $entityManager->getClassMetadata(ContactS40::class);
-                dump("Table name dans metadata: " . $metadata->getTableName());
-                dump("Primary key: " . implode(', ', $metadata->getIdentifierFieldNames()));
-                dump("Field mappings:");
-                foreach ($metadata->getFieldNames() as $fieldName) {
-                    $mapping = $metadata->getFieldMapping($fieldName);
-                    dump("  {$fieldName} -> {$mapping['columnName']} ({$mapping['type']})");
-                }
-                
-                // 8. Essayer findOneBy avec id_contact
-                dump("=== TEST findOneBy ===");
+                $repository = $entityManager->getRepository(ContactS10::class);
                 $clientSelectedInformations = $repository->findOneBy(['id_contact' => $idClientSelected]);
-                dump("Résultat findOneBy(['id_contact' => '{$idClientSelected}']): " . ($clientSelectedInformations ? 'TROUVÉ' : 'NULL'));
                 
-                if (isset($logger->queries) && count($logger->queries) > 0) {
-                    $lastQuery = end($logger->queries);
-                    dump("SQL généré pour findOneBy:");
-                    dump($lastQuery['sql']);
-                    dump("Params: " . json_encode($lastQuery['params']));
+                if (!$clientSelectedInformations) {
+                    $clientSelectedInformations = $getContactViaSQL('contact_s10', $idClientSelected);
                 }
                 
-                // 9. Si toujours rien, utiliser le fallback SQL
-                if (!$clientSelectedInformations && $contactData) {
-                    dump("⚠️ UTILISATION DU FALLBACK SQL");
-                    $clientSelectedInformations = (object) $contactData;
-                }
-                
-                $clientSelectedEquipments = $entityManager->getRepository(EquipementS40::class)
+                $clientSelectedEquipments = $entityManager->getRepository(EquipementS10::class)
                     ->findBy(['id_contact' => $idClientSelected], ['numero_equipement' => 'ASC']);
-                dump("Équipements trouvés: " . count($clientSelectedEquipments));
-                
-                dump("=== FIN DIAGNOSTIC ===");
-            break;
+                break;
                 
             case 'S40':
                 $repository = $entityManager->getRepository(ContactS40::class);
