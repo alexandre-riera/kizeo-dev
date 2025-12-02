@@ -2744,7 +2744,8 @@ class SimplifiedMaintenanceController extends AbstractController
             case 'TEL': // Table élévatrice
             case 'BLR': // Bloc roue
                 $allAnomalies = $this->getAnomaliesValues($equipmentData, [
-                    'anomalie_niv_plq_mip_tel_blr_'
+                    'anomalie_niv_plq_mip_tel_blr_',
+                    'anomalie_hydraulique'
                 ]);
                 break;
                 
