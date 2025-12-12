@@ -736,7 +736,7 @@ class HomeController extends AbstractController
             $equipmentNewStatutClient = $_POST['newstatutclient'];
             $equipmentCarnetEntretien = $_POST['carnetentretien'];
             $equipmentStatutConformite = $_POST['statutconformite'];
-
+            dd($equipmentCodeAgence);
             // Save IT
             $entityAgency = null;
             switch ($equipmentCodeAgence) {
