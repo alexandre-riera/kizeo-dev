@@ -699,106 +699,249 @@ class HomeController extends AbstractController
         }
     }
 
-    #[Route('/save/modal/equipement', name: 'app_save_modal_equipement')]
-    public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request)//: Response
-    {
+    // #[Route('/save/modal/equipement', name: 'app_save_modal_equipement')]
+    // public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request)//: Response
+    // {
 
-        // Récupération de l'équipement édité dans la modal
-        if(isset($_POST['saveEquipmentFromModal'])){
-            $equipmentidEquipementAndIdRow= $_POST['id'];
-            $equipmentNom = $_POST['nom'];
-            $equipmentPrenom = $_POST['prenom'];
-            $equipmentLibelle = $_POST['libelle'];
-            $equipmentVisite = $_POST['visite'];
-            $equipmentRaisonSociale = $_POST['raisonSociale'];
-            $equipmentModeleNacelle = $_POST['modeleNacelle'];
-            $equipmentHauteurNacelle = $_POST['hauteurNacelle'];
-            $equipmentIfExistDB = $_POST['ifExistDB'];
-            $equipmentSignatureTech = $_POST['signatureTech'];
-            $equipmentTrigrammeTech = $_POST['trigrammeTech'];
-            $equipmentAnomalies = $_POST['anomalies'];
-            $equipmentIdContact = $_POST['idContact'];
-            $equipmentIdSociete = $_POST['idSociete'];
-            $equipmentCodeAgence = $_POST['codeAgence'];
-            $equipmentTrigramme = $_POST['trigramme'];
-            $equipmentModeFonctionnement = $_POST['modefonctionnement'];
-            $equipmentRepereSiteClient = $_POST['reperesiteclient'];
-            $equipmentMiseEnService = $_POST['miseenservice'];
-            $equipmentNumeroDeSerie = $_POST['numerodeserie'];
-            $equipmentMarque = $_POST['marque'];
-            $equipmentHauteur = $_POST['hauteur'];
-            $equipmentLargeur = $_POST['largeur'];
-            $equipmentLongueur = $_POST['longueur'];
-            $equipmentPlaqueSignaletique = $_POST['plaquesignaletique'];
-            $equipmentEtat = $_POST['etat'];
-            $equipmentDerniereVisiteDeMaintenance = $_POST['dernierevisitedemaintenance'];
-            $equipmentOldStatut = $_POST['oldstatut'];
-            $equipmentNewStatutClient = $_POST['newstatutclient'];
-            $equipmentCarnetEntretien = $_POST['carnetentretien'];
-            $equipmentStatutConformite = $_POST['statutconformite'];
-            // Save IT
-            $entityAgency = null;
-            switch ($equipmentCodeAgence) {
-                case 'S10':
-                    $entityAgency = EquipementS10::class;
-                    break;
-                case 'S40':
-                    $entityAgency = EquipementS40::class;
-                    break;
-                case 'S50':
-                    $entityAgency = EquipementS50::class;
-                    break;
-                case 'S60':
-                    $entityAgency = EquipementS60::class;
-                    break;
-                case 'S70':
-                    $entityAgency = EquipementS70::class;
-                    break;
-                case 'S80':
-                    $entityAgency = EquipementS80::class;
-                    break;
-                case 'S100':
-                    $entityAgency = EquipementS100::class;
-                    break;
-                case 'S120':
-                    $entityAgency = EquipementS120::class;
-                    break;
-                case 'S130':
-                    $entityAgency = EquipementS130::class;
-                    break;
-                case 'S140':
-                    $entityAgency = EquipementS140::class;
-                    break;
-                case 'S150':
-                    $entityAgency = EquipementS150::class;
-                    break;
-                case 'S160':
-                    $entityAgency = EquipementS160::class;
-                    break;
-                case 'S170':
-                    $entityAgency = EquipementS170::class;
-                    break;
+    //     // Récupération de l'équipement édité dans la modal
+    //     if(isset($_POST['saveEquipmentFromModal'])){
+    //         $equipmentidEquipementAndIdRow= $_POST['id'];
+    //         $equipmentNom = $_POST['nom'];
+    //         $equipmentPrenom = $_POST['prenom'];
+    //         $equipmentLibelle = $_POST['libelle'];
+    //         $equipmentVisite = $_POST['visite'];
+    //         $equipmentRaisonSociale = $_POST['raisonSociale'];
+    //         $equipmentModeleNacelle = $_POST['modeleNacelle'];
+    //         $equipmentHauteurNacelle = $_POST['hauteurNacelle'];
+    //         $equipmentIfExistDB = $_POST['ifExistDB'];
+    //         $equipmentSignatureTech = $_POST['signatureTech'];
+    //         $equipmentTrigrammeTech = $_POST['trigrammeTech'];
+    //         $equipmentAnomalies = $_POST['anomalies'];
+    //         $equipmentIdContact = $_POST['idContact'];
+    //         $equipmentIdSociete = $_POST['idSociete'];
+    //         $equipmentCodeAgence = $_POST['codeAgence'];
+    //         $equipmentTrigramme = $_POST['trigramme'];
+    //         $equipmentModeFonctionnement = $_POST['modefonctionnement'];
+    //         $equipmentRepereSiteClient = $_POST['reperesiteclient'];
+    //         $equipmentMiseEnService = $_POST['miseenservice'];
+    //         $equipmentNumeroDeSerie = $_POST['numerodeserie'];
+    //         $equipmentMarque = $_POST['marque'];
+    //         $equipmentHauteur = $_POST['hauteur'];
+    //         $equipmentLargeur = $_POST['largeur'];
+    //         $equipmentLongueur = $_POST['longueur'];
+    //         $equipmentPlaqueSignaletique = $_POST['plaquesignaletique'];
+    //         $equipmentEtat = $_POST['etat'];
+    //         $equipmentDerniereVisiteDeMaintenance = $_POST['dernierevisitedemaintenance'];
+    //         $equipmentOldStatut = $_POST['oldstatut'];
+    //         $equipmentNewStatutClient = $_POST['newstatutclient'];
+    //         $equipmentCarnetEntretien = $_POST['carnetentretien'];
+    //         $equipmentStatutConformite = $_POST['statutconformite'];
+    //         // Save IT
+    //         $entityAgency = null;
+    //         switch ($equipmentCodeAgence) {
+    //             case 'S10':
+    //                 $entityAgency = EquipementS10::class;
+    //                 break;
+    //             case 'S40':
+    //                 $entityAgency = EquipementS40::class;
+    //                 break;
+    //             case 'S50':
+    //                 $entityAgency = EquipementS50::class;
+    //                 break;
+    //             case 'S60':
+    //                 $entityAgency = EquipementS60::class;
+    //                 break;
+    //             case 'S70':
+    //                 $entityAgency = EquipementS70::class;
+    //                 break;
+    //             case 'S80':
+    //                 $entityAgency = EquipementS80::class;
+    //                 break;
+    //             case 'S100':
+    //                 $entityAgency = EquipementS100::class;
+    //                 break;
+    //             case 'S120':
+    //                 $entityAgency = EquipementS120::class;
+    //                 break;
+    //             case 'S130':
+    //                 $entityAgency = EquipementS130::class;
+    //                 break;
+    //             case 'S140':
+    //                 $entityAgency = EquipementS140::class;
+    //                 break;
+    //             case 'S150':
+    //                 $entityAgency = EquipementS150::class;
+    //                 break;
+    //             case 'S160':
+    //                 $entityAgency = EquipementS160::class;
+    //                 break;
+    //             case 'S170':
+    //                 $entityAgency = EquipementS170::class;
+    //                 break;
                 
-                default:
-                    # code...
-                    break;
+    //             default:
+    //                 # code...
+    //                 break;
+    //         }
+    //         // $equipement = new $entityAgency;
+    //         $equipement = $entityManager->getRepository($entityAgency)->findOneBy(['id' => $equipmentidEquipementAndIdRow]);
+    //         $equipement->setIdContact($equipmentIdContact);
+    //         // Pour avoir l'heure exacte de l'enregistrement
+    //         $date = new DateTime(date("Y-m-d H:i:s"));
+    //         $dateValable = clone $date;
+    //         $dateValable->modify('+2 hour');
+    //         $equipement->setDateEnregistrement($dateValable->format('d-m-Y H:i:s'));
+    //         $equipement->setCodeSociete($equipmentIdSociete);
+    //         $equipement->setCodeAgence($equipmentCodeAgence);
+    //         $equipement->setDerniereVisite($equipmentDerniereVisiteDeMaintenance);
+    //         if (empty($equipmentNom) && empty($equipmentPrenom)) {
+    //             $equipement->setTrigrammeTech($equipmentTrigrammeTech);
+    //         }else{
+    //             $equipement->setTrigrammeTech($equipmentNom . " " . $equipmentPrenom);
+    //         }
+    //         $equipement->setSignatureTech($equipmentSignatureTech);
+    //         $equipement->setVisite($equipmentVisite);
+    //         $equipement->setNumeroEquipement($equipmentTrigramme);
+    //         $equipement->setIfExistDB($equipmentIfExistDB);
+    //         $equipement->setLibelleEquipement(strtolower($equipmentLibelle));
+    //         $equipement->setModeFonctionnement($equipmentModeFonctionnement);
+    //         $equipement->setRepereSiteClient($equipmentRepereSiteClient);
+    //         $equipement->setMiseEnService($equipmentMiseEnService);
+    //         $equipement->setNumeroDeSerie($equipmentNumeroDeSerie);
+    //         $equipement->setMarque($equipmentMarque);
+    //         $equipement->setLargeur($equipmentLargeur);
+    //         $equipement->setHauteur($equipmentHauteur);
+    //         $equipement->setLongueur($equipmentLongueur);
+    //         $equipement->setPlaqueSignaletique($equipmentPlaqueSignaletique);
+    //         $equipement->setAnomalies($equipmentAnomalies);
+    //         $equipement->setEtat($equipmentEtat);
+    //         $equipement->setHauteurNacelle($equipmentHauteurNacelle);
+    //         $equipement->setModeleNacelle($equipmentModeleNacelle);
+    //         if (isset($equipmentNewStatutClient) && $equipmentNewStatutClient != "Choose...") {
+    //             $equipement->setStatutDeMaintenance($equipmentNewStatutClient);
+    //         }else{
+    //             $equipement->setStatutDeMaintenance($equipmentOldStatut);
+    //         }
+    //         $equipement->setRaisonSociale($equipmentRaisonSociale);
+    //         $equipement->setPresenceCarnetEntretien($equipmentCarnetEntretien);
+    //         $equipement->setStatutConformite($equipmentStatutConformite);
+    //         $equipement->setEnMaintenance(true);
+            
+    //         // tell Doctrine you want to (eventually) save the Product (no queries yet)
+    //         $entityManager->persist($equipement);
+    //         // actually executes the queries (i.e. the INSERT query)
+    //         $entityManager->flush();
+    //     }
+    //     $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
+    //     return $this->redirectToRoute('app_show_equipement_details_by_id', [
+    //         'agence' => $equipmentCodeAgence,
+    //         'id' => $equipmentidEquipementAndIdRow
+    //     ]);
+    //     // return new Response("<html><body><p  style='font-size:18px; font-weight:bold;'>L'équipement édité dans la modal a bien été enregistré en base de données</p></body></html>", Response::HTTP_OK, [], true);
+    //     // return $this->redirect($request->getUri());
+    // }
+
+    #[Route('/save/modal/equipement', name: 'app_save_modal_equipement', methods: ['POST'])]
+    public function saveModalInDatabase(EntityManagerInterface $entityManager, Request $request): JsonResponse
+    {
+        // Vérification du formulaire
+        if (!$request->request->has('saveEquipmentFromModal')) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Formulaire invalide'
+            ], 400);
+        }
+
+        // Récupération des données POST
+        $equipmentId = $request->request->get('id');
+        $equipmentNom = $request->request->get('nom');
+        $equipmentPrenom = $request->request->get('prenom');
+        $equipmentLibelle = $request->request->get('libelle');
+        $equipmentVisite = $request->request->get('visite');
+        $equipmentRaisonSociale = $request->request->get('raisonSociale');
+        $equipmentModeleNacelle = $request->request->get('modeleNacelle');
+        $equipmentHauteurNacelle = $request->request->get('hauteurNacelle');
+        $equipmentIfExistDB = $request->request->get('ifExistDB');
+        $equipmentSignatureTech = $request->request->get('signatureTech');
+        $equipmentTrigrammeTech = $request->request->get('trigrammeTech');
+        $equipmentAnomalies = $request->request->get('anomalies');
+        $equipmentIdContact = $request->request->get('idContact');
+        $equipmentIdSociete = $request->request->get('idSociete');
+        $equipmentCodeAgence = $request->request->get('codeAgence');
+        $equipmentTrigramme = $request->request->get('trigramme');
+        $equipmentModeFonctionnement = $request->request->get('modefonctionnement');
+        $equipmentRepereSiteClient = $request->request->get('reperesiteclient');
+        $equipmentMiseEnService = $request->request->get('miseenservice');
+        $equipmentNumeroDeSerie = $request->request->get('numerodeserie');
+        $equipmentMarque = $request->request->get('marque');
+        $equipmentHauteur = $request->request->get('hauteur');
+        $equipmentLargeur = $request->request->get('largeur');
+        $equipmentLongueur = $request->request->get('longueur');
+        $equipmentPlaqueSignaletique = $request->request->get('plaquesignaletique');
+        $equipmentEtat = $request->request->get('etat');
+        $equipmentDerniereVisiteDeMaintenance = $request->request->get('dernierevisitedemaintenance');
+        $equipmentOldStatut = $request->request->get('oldstatut');
+        $equipmentNewStatutClient = $request->request->get('newstatutclient');
+        $equipmentCarnetEntretien = $request->request->get('carnetentretien');
+        $equipmentStatutConformite = $request->request->get('statutconformite');
+
+        // Mapping des entités par agence
+        $agencyMapping = [
+            'S10' => EquipementS10::class,
+            'S40' => EquipementS40::class,
+            'S50' => EquipementS50::class,
+            'S60' => EquipementS60::class,
+            'S70' => EquipementS70::class,
+            'S80' => EquipementS80::class,
+            'S100' => EquipementS100::class,
+            'S120' => EquipementS120::class,
+            'S130' => EquipementS130::class,
+            'S140' => EquipementS140::class,
+            'S150' => EquipementS150::class,
+            'S160' => EquipementS160::class,
+            'S170' => EquipementS170::class,
+        ];
+
+        // Validation du code agence
+        if (empty($equipmentCodeAgence) || !isset($agencyMapping[$equipmentCodeAgence])) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => "Code agence '{$equipmentCodeAgence}' non reconnu"
+            ], 400);
+        }
+
+        $entityAgency = $agencyMapping[$equipmentCodeAgence];
+
+        try {
+            // Récupérer l'équipement existant
+            $equipement = $entityManager->getRepository($entityAgency)->findOneBy(['id' => $equipmentId]);
+
+            if (!$equipement) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Équipement non trouvé'
+                ], 404);
             }
-            // $equipement = new $entityAgency;
-            $equipement = $entityManager->getRepository($entityAgency)->findOneBy(['id' => $equipmentidEquipementAndIdRow]);
-            $equipement->setIdContact($equipmentIdContact);
-            // Pour avoir l'heure exacte de l'enregistrement
+
+            // Mise à jour de la date d'enregistrement
             $date = new DateTime(date("Y-m-d H:i:s"));
             $dateValable = clone $date;
             $dateValable->modify('+2 hour');
-            $equipement->setDateEnregistrement($dateValable->format('d-m-Y H:i:s'));
+            $dateEnregistrement = $dateValable->format('d-m-Y H:i:s');
+
+            // Mise à jour des champs
+            $equipement->setIdContact($equipmentIdContact);
+            $equipement->setDateEnregistrement($dateEnregistrement);
             $equipement->setCodeSociete($equipmentIdSociete);
             $equipement->setCodeAgence($equipmentCodeAgence);
             $equipement->setDerniereVisite($equipmentDerniereVisiteDeMaintenance);
+            
             if (empty($equipmentNom) && empty($equipmentPrenom)) {
                 $equipement->setTrigrammeTech($equipmentTrigrammeTech);
-            }else{
+            } else {
                 $equipement->setTrigrammeTech($equipmentNom . " " . $equipmentPrenom);
             }
+            
             $equipement->setSignatureTech($equipmentSignatureTech);
             $equipement->setVisite($equipmentVisite);
             $equipement->setNumeroEquipement($equipmentTrigramme);
@@ -817,28 +960,65 @@ class HomeController extends AbstractController
             $equipement->setEtat($equipmentEtat);
             $equipement->setHauteurNacelle($equipmentHauteurNacelle);
             $equipement->setModeleNacelle($equipmentModeleNacelle);
-            if (isset($equipmentNewStatutClient) && $equipmentNewStatutClient != "Choose...") {
+            
+            if (!empty($equipmentNewStatutClient) && $equipmentNewStatutClient !== "Choose...") {
                 $equipement->setStatutDeMaintenance($equipmentNewStatutClient);
-            }else{
+            } else {
                 $equipement->setStatutDeMaintenance($equipmentOldStatut);
             }
+            
             $equipement->setRaisonSociale($equipmentRaisonSociale);
             $equipement->setPresenceCarnetEntretien($equipmentCarnetEntretien);
             $equipement->setStatutConformite($equipmentStatutConformite);
             $equipement->setEnMaintenance(true);
-            
-            // tell Doctrine you want to (eventually) save the Product (no queries yet)
+
+            // Sauvegarde
             $entityManager->persist($equipement);
-            // actually executes the queries (i.e. the INSERT query)
             $entityManager->flush();
+
+            // Retourner les données mises à jour pour actualiser le tableau
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Équipement mis à jour avec succès',
+                'equipment' => [
+                    'id' => $equipement->getId(),
+                    'visite' => $equipement->getVisite(),
+                    'numeroEquipement' => $equipement->getNumeroEquipement(),
+                    'libelleEquipement' => $equipement->getLibelleEquipement(),
+                    'derniereVisite' => $equipement->getDerniereVisite(),
+                    'repereSiteClient' => $equipement->getRepereSiteClient(),
+                    'miseEnService' => $equipement->getMiseEnService(),
+                    'numeroDeSerie' => $equipement->getNumeroDeSerie(),
+                    'marque' => $equipement->getMarque(),
+                    'hauteur' => $equipement->getHauteur(),
+                    'largeur' => $equipement->getLargeur(),
+                    'longueur' => $equipement->getLongueur(),
+                    'dateEnregistrement' => $dateEnregistrement,
+                    'anomalies' => $equipement->getAnomalies(),
+                    'etat' => $equipement->getEtat(),
+                    'statutDeMaintenance' => $equipement->getStatutDeMaintenance(),
+                    'codeAgence' => $equipement->getCodeAgence(),
+                    'idContact' => $equipement->getIdContact(),
+                    'codeSociete' => $equipement->getCodeSociete(),
+                    'raisonSociale' => $equipement->getRaisonSociale(),
+                    'trigrammeTech' => $equipement->getTrigrammeTech(),
+                    'signatureTech' => $equipement->getSignatureTech(),
+                    'modeFonctionnement' => $equipement->getModeFonctionnement(),
+                    'plaqueSignaletique' => $equipement->getPlaqueSignaletique(),
+                    'presenceCarnetEntretien' => $equipement->getPresenceCarnetEntretien(),
+                    'statutConformite' => $equipement->getStatutConformite(),
+                    'modeleNacelle' => $equipement->getModeleNacelle(),
+                    'hauteurNacelle' => $equipement->getHauteurNacelle(),
+                    'ifExistDB' => $equipement->getIfExistDB(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la sauvegarde : ' . $e->getMessage()
+            ], 500);
         }
-        $this->addFlash('success', 'L\'équipement a été mit à jour avec succès !');
-        return $this->redirectToRoute('app_show_equipement_details_by_id', [
-            'agence' => $equipmentCodeAgence,
-            'id' => $equipmentidEquipementAndIdRow
-        ]);
-        // return new Response("<html><body><p  style='font-size:18px; font-weight:bold;'>L'équipement édité dans la modal a bien été enregistré en base de données</p></body></html>", Response::HTTP_OK, [], true);
-        // return $this->redirect($request->getUri());
     }
 
     #[Route('/show/equipement/details/{agence}/{id}', name: 'app_show_equipement_details_by_id')]

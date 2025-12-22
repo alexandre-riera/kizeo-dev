@@ -942,7 +942,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <form action="/save/modal/equipement" method="post" class="row g-12">
+                            <form id="editEquipmentForm" action="/save/modal/equipement" method="post" class="row g-12">
                                 <input type="hidden" class="form-control" id="modal_libelle" value="" name="libelle" />
                                 <input type="hidden" class="form-control" id="modal_idContact" value="" name="idContact" />
                                 <input type="hidden" class="form-control" id="modal_idSociete" value="" name="idSociete" />
@@ -1525,4 +1525,5 @@
             });
         });
     </script>
+<script src="{{ asset('js/saveEquipmentAjax.js') }}"></script>
 {% endblock %}
