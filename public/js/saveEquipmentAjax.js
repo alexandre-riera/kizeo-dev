@@ -22,9 +22,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('📤 Soumission du formulaire interceptée');
         
         const formData = new FormData(form);
-        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"], button[name="saveEquipmentFromModal"]');
+        formData.append('saveEquipmentFromModal', '1');  // ← AJOUTER ICI
+        
+        const submitBtn = document.getElementById('saveEquipmentFromModal');
         
         if (!submitBtn) {
             console.error('Bouton submit non trouvé');
