@@ -305,16 +305,19 @@ class EquipementPdfController extends AbstractController
                 }
                 
                 if ($derniereVisiteMax) {
-                    $anneeDerniereVisite = date("Y", strtotime($derniereVisiteMax));
-                    $this->customLog("Dernière visite trouvée: {$derniereVisiteMax} (année: {$anneeDerniereVisite})");
+                    // ✅ CORRECTION : Filtrer par DATE EXACTE (format Y-m-d) au lieu de l'année
+                    $dateDerniereVisite = date("Y-m-d", strtotime($derniereVisiteMax));
+                    $this->customLog("Dernière visite trouvée: {$derniereVisiteMax} (date exacte: {$dateDerniereVisite})");
                     
-                    // Filtrer les équipements de cette dernière visite (même année)
+                    // Filtrer les équipements de cette dernière visite (même DATE, pas même année)
                     foreach ($equipments as $equipment) {
                         $derniereVisite = $equipment->getDerniereVisite();
-                        if ($derniereVisite && date("Y", strtotime($derniereVisite)) === $anneeDerniereVisite) {
+                        if ($derniereVisite && date("Y-m-d", strtotime($derniereVisite)) === $dateDerniereVisite) {
                             $equipmentsFiltered[] = $equipment;
                         }
                     }
+                    
+                    $this->customLog("Équipements filtrés par date exacte ({$dateDerniereVisite}): " . count($equipmentsFiltered));
                 } else {
                     // Fallback : tous les équipements si aucune date trouvée
                     $this->customLog("Aucune date de dernière visite trouvée - utilisation de tous les équipements");
@@ -588,21 +591,33 @@ class EquipementPdfController extends AbstractController
             
             $this->customLog("DEBUG - equipmentsWithPictures count: " . count($equipmentsWithPictures));
             
-            // 7. SÉPARATION DES ÉQUIPEMENTS - VERSION SÉCURISÉE
+            // 7. SÉPARATION DES ÉQUIPEMENTS - VERSION CORRIGÉE
+            // ✅ CORRECTION : On sépare EN RETIRANT les hors contrat de la liste principale
+            $equipementsAuContrat = [];
             $equipementsSupplementaires = [];
             $equipementsNonPresents = [];
-            
+
             foreach ($equipmentsWithPictures as $equipmentData) {
                 try {
+                    $equipment = $equipmentData['equipment'];
+                    $isEnMaintenance = true; // Par défaut, considéré au contrat
+                    
                     // Vérifier si la méthode isEnMaintenance existe avant de l'appeler
-                    if (method_exists($equipmentData['equipment'], 'isEnMaintenance')) {
-                        if ($equipmentData['equipment']->isEnMaintenance() === false) {
-                            $equipementsSupplementaires[] = $equipmentData;
-                        }
+                    if (method_exists($equipment, 'isEnMaintenance')) {
+                        $isEnMaintenance = $equipment->isEnMaintenance();
                     }
                     
-                    // Équipements non présents
-                    $etat = $equipmentData['equipment']->getEtat();
+                    if ($isEnMaintenance === false) {
+                        // ✅ Équipement HORS contrat → va dans supplémentaires UNIQUEMENT
+                        $equipementsSupplementaires[] = $equipmentData;
+                        $this->customLog("Équipement HORS contrat: {$equipment->getNumeroEquipement()}");
+                    } else {
+                        // ✅ Équipement AU contrat → va dans la liste principale
+                        $equipementsAuContrat[] = $equipmentData;
+                    }
+                    
+                    // Équipements non présents (pour référence, peut être au contrat ou hors contrat)
+                    $etat = $equipment->getEtat();
                     if ($etat === "Equipement non présent sur site" || $etat === "G") {
                         $equipementsNonPresents[] = $equipmentData;
                     }
@@ -610,19 +625,26 @@ class EquipementPdfController extends AbstractController
                     $this->customLog("Erreur séparation équipement: " . $e->getMessage());
                 }
             }
-            
+
+            // ✅ CORRECTION : Remplacer equipmentsWithPictures par la liste filtrée (AU CONTRAT uniquement)
+            $equipmentsWithPictures = $equipementsAuContrat;
+
+            $this->customLog("DEBUG - equipementsAuContrat count: " . count($equipmentsWithPictures));
             $this->customLog("DEBUG - equipementsSupplementaires count: " . count($equipementsSupplementaires));
-            
-            // 8. CALCUL DES STATISTIQUES
-            $statistiques = $this->calculateEquipmentStatisticsImproved($equipmentsFiltered);
-            
+
+            // 8. CALCUL DES STATISTIQUES - ✅ Sur les équipements AU CONTRAT après séparation
+            $equipmentsAuContratEntities = array_map(function($item) {
+                return $item['equipment'];
+            }, $equipmentsWithPictures);
+            $statistiques = $this->calculateEquipmentStatisticsFromEntities($equipmentsAuContratEntities);
+
             // 9. CALCUL DES STATISTIQUES SUPPLÉMENTAIRES
             $statistiquesSupplementaires = [];
             if (!empty($equipementsSupplementaires)) {
-                $equipmentsSupplementairesOnly = array_map(function($item) {
+                $equipmentsSupplementairesEntities = array_map(function($item) {
                     return $item['equipment'];
                 }, $equipementsSupplementaires);
-                $statistiquesSupplementaires = $this->calculateEquipmentOffContractStatisticsImproved($equipmentsSupplementairesOnly);
+                $statistiquesSupplementaires = $this->calculateEquipmentOffContractStatisticsFromEntities($equipmentsSupplementairesEntities);
             }
             
             // 10. GÉNÉRATION DU PDF AVEC MESSAGE D'AVERTISSEMENT
@@ -648,7 +670,7 @@ class EquipementPdfController extends AbstractController
             // }
 
             $templateVars = [
-                'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures),
+                'equipmentsWithPictures' => $this->convertStdClassToArray($equipmentsWithPictures), // ✅ Contient maintenant UNIQUEMENT les équipements au contrat
                 'equipementsSupplementaires' => $this->convertStdClassToArray($equipementsSupplementaires ?? []),
                 'equipementsNonPresents' => $this->convertStdClassToArray($equipementsNonPresents ?? []),
                 'withPhotos' => $withPhotos,
@@ -659,11 +681,13 @@ class EquipementPdfController extends AbstractController
                 'clientVisiteFilter' => $clientVisiteFilter ?: '',
                 'statistiques' => $statistiques,
                 'statistiquesSupplementaires' => $statistiquesSupplementaires,
-                // 'nombreEquipementsAuContrat' => $nombreEquipementsAuContrat,
+                // ✅ NOUVEAU : Compteurs distincts pour l'affichage
+                'nombreEquipementsAuContrat' => count($equipmentsWithPictures),
+                'nombreEquipementsSupplementaires' => count($equipementsSupplementaires),
                 'photoSourceStats' => $photoSourceStats,
                 'isFiltered' => !empty($clientAnneeFilter) || !empty($clientVisiteFilter),
-                'dateDeDerniererVisite' => $dateDeDerniererVisite,
-                'derniereVisite' => $derniereVisite,
+                'dateDeDerniererVisite' => $dateDeDerniererVisite ?? null,
+                'derniereVisite' => $derniereVisite ?? $derniereVisiteMax ?? null, // ✅ Fallback si $derniereVisite n'est pas défini
                 'filtrage_success' => true,
                 'total_equipements_bruts' => count($equipments),
                 'total_equipements_filtres' => count($equipmentsFiltered),
@@ -672,7 +696,7 @@ class EquipementPdfController extends AbstractController
                 'adressep2' => $adressep2,
                 'cpostalp' => $cpostalp,
                 'villep' => $villep,
-                // NOUVELLES VARIABLES POUR L'OPTIMISATION
+                // VARIABLES POUR L'OPTIMISATION
                 'isOptimizedMode' => count($equipmentsFiltered) > $maxEquipments,
                 'maxEquipmentsProcessed' => min(count($equipmentsFiltered), $maxEquipments),
                 'totalEquipmentsFound' => count($equipmentsFiltered),
@@ -2040,6 +2064,128 @@ class EquipementPdfController extends AbstractController
                         break;
                 }
             }    
+        }
+        
+        return [
+            'total' => $total,
+            'visitedCount' => $visitedCount,
+            'status_counts' => $statusCounts
+        ];
+    }
+
+    /**
+     * Calcule les statistiques pour les équipements AU CONTRAT
+     * Version qui prend directement des entités (après séparation contrat/hors contrat)
+     */
+    private function calculateEquipmentStatisticsFromEntities(array $equipments): array
+    {
+        $total = count($equipments);
+        $statusCounts = [
+            'green' => 0,
+            'orange' => 0, 
+            'red' => 0,
+            'black' => 0,
+            'unknown' => 0
+        ];
+        
+        $visitedCount = 0;
+        
+        foreach ($equipments as $equipment) {
+            // Tous ces équipements sont AU CONTRAT (déjà filtrés)
+            // Compter les équipements visités (avec photos ou état)
+            if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
+                $visitedCount++;
+            }
+            
+            // Compter par état
+            $etat = $equipment->getEtat();
+            switch ($etat) {
+                case 'Bon état':
+                case 'A':
+                    $statusCounts['green']++;
+                    break;
+                case 'Travaux à prévoir':
+                case 'B':
+                    $statusCounts['orange']++;
+                    break;
+                case 'Travaux curatifs urgents':
+                case 'Travaux urgent ou à l\'arrêt':
+                case 'C':
+                case 'E':
+                case 'F':
+                    $statusCounts['red']++;
+                    break;
+                case 'Equipement à l\'arrêt':
+                case 'Equipement à l\'arrêt le jour de la visite':
+                case 'Equipement non présent sur site':
+                case 'G':
+                case 'D':
+                case 'Equipement inaccessible':
+                    $statusCounts['black']++;
+                    break;
+                default:
+                    $statusCounts['unknown']++;
+                    break;
+            }
+        }
+        
+        return [
+            'total' => $total,
+            'visitedCount' => $visitedCount,
+            'status_counts' => $statusCounts
+        ];
+    }
+
+    /**
+     * Calcule les statistiques pour les équipements HORS CONTRAT
+     * Version qui prend directement des entités
+     */
+    private function calculateEquipmentOffContractStatisticsFromEntities(array $equipments): array
+    {
+        $total = count($equipments);
+        $statusCounts = [
+            'green' => 0,
+            'orange' => 0, 
+            'red' => 0,
+            'black' => 0,
+            'unknown' => 0
+        ];
+        
+        $visitedCount = 0;
+        
+        foreach ($equipments as $equipment) {
+            // Tous ces équipements sont HORS CONTRAT (déjà filtrés)
+            if ($equipment->getEtat() || $equipment->getDerniereVisite()) {
+                $visitedCount++;
+            }
+            
+            $etat = $equipment->getEtat();
+            switch ($etat) {
+                case 'Bon état':
+                case 'A':
+                    $statusCounts['green']++;
+                    break;
+                case 'Travaux à prévoir':
+                case 'B':
+                    $statusCounts['orange']++;
+                    break;
+                case 'Travaux curatifs urgents':
+                case 'Travaux urgent ou à l\'arrêt':
+                case 'C':
+                case 'E':
+                case 'F':
+                    $statusCounts['red']++;
+                    break;
+                case 'Equipement inaccessible':
+                case 'D':
+                case 'Equipement non présent sur site':
+                case 'G':
+                    $statusCounts['black']++;
+                    break;
+                default:
+                    $statusCounts['unknown']++;
+                    break;
+            }
         }
         
         return [

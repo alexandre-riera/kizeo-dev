@@ -430,12 +430,18 @@
             
             <div class="summary-section">
                 <h2 class="summary-title">Résumé</h2>
-                <!-- SOUS RESUME -->
+                <!-- SOUS RESUME - VERSION CORRIGÉE AVEC DEUX COMPTEURS -->
                 <div class="summary-stats">
                     <div class="stat-item">
                         <div class="stat-label">Nombre d'équipements au contrat</div>
-                        <div class="stat-value">{{ equipmentsWithPictures|length }}</div>
+                        <div class="stat-value">{{ nombreEquipementsAuContrat ?? equipmentsWithPictures|length }}</div>
                     </div>
+                    {% if nombreEquipementsSupplementaires is defined and nombreEquipementsSupplementaires > 0 %}
+                    <div class="stat-item" style="border-left-color: #f39c12;">
+                        <div class="stat-label">Nombre d'équipements supplémentaires</div>
+                        <div class="stat-value" style="color: #f39c12;">{{ nombreEquipementsSupplementaires }}</div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             
